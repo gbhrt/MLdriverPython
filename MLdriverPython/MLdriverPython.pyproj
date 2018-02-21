@@ -1,0 +1,107 @@
+﻿<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>67d1be9f-78bf-410b-b3ad-9001facbb70e</ProjectGuid>
+    <ProjectHome>.</ProjectHome>
+    <StartupFile>MLdriverPython.py</StartupFile>
+    <SearchPath>
+    </SearchPath>
+    <WorkingDirectory>.</WorkingDirectory>
+    <OutputPath>.</OutputPath>
+    <Name>MLdriverPython</Name>
+    <RootNamespace>MLdriverPython</RootNamespace>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <DebugSymbols>true</DebugSymbols>
+    <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <DebugSymbols>true</DebugSymbols>
+    <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="classes.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="communicationLib.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="create_train_data.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="deepLearnProject\ReinforceLearn.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="deepLearnProject\ReinforceNet.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="deepLearnProject\testes.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="policyBased\policyBasedLearn1.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Qlearn\QlearnContinuesPath.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="tests\getchClass.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="library.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="deepLearnProject\linear_regression.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Qlearn\linear_reg_Qlearn.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="MLdriverPython.py" />
+    <Compile Include="deepLearnProject\neuralNetwork.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="planner.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="plot.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="policyBased\policyBasedLearn.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="policyBased\policyBasedNet.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Qlearn\Qlearn.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Qlearn\Qlearn1.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="tests\RL.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="runTest.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Qlearn\simpleQlearn.py">
+      <SubType>Code</SubType>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="deepLearnProject\" />
+    <Folder Include="tests\" />
+    <Folder Include="Qlearn\" />
+    <Folder Include="policyBased\" />
+  </ItemGroup>
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
+  <!-- Uncomment the CoreCompile target to enable the Build command in
+       Visual Studio and specify your pre- and post-build commands in
+       the BeforeBuild and AfterBuild targets below. -->
+  <!--<Target Name="CoreCompile" />-->
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+</Project>
