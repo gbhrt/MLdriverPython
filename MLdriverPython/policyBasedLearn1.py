@@ -342,20 +342,20 @@ if __name__ == "__main__":
                     action_vec.append(one_hot_a)
                     value_vec.append([reward])#the reward is on the last state and action  
                     
-                    if(len(state_vec) > num_of_TD_steps):
-                        reward_vec.pop(0)#remove first
-                        reward_vec.append(reward)
-                        future_reward = 0
-                        for k in range(num_of_TD_steps):
-                            future_reward += reward_vec[k]*gamma**k 
-                        #update num_of_TD_steps back the reward with the num_of_TD_steps rewards
-                        #for k in range(-1,-num_of_TD_steps,-1):
-                        #    value_vec[k-1][0] = value_vec[k-1][0] +value_vec[k][0]*gamma
-                       # net.Update_policy([state_vec[-num_of_TD_steps]],[action_vec[-num_of_TD_steps]],[value_vec[-num_of_TD_steps]])
-                        net.Update_policy([state_vec[-num_of_TD_steps]],[action_vec[-num_of_TD_steps]],[[future_reward]])
-                    else:
-                         reward_vec.append(reward)
-
+                    #if(len(state_vec) > num_of_TD_steps):
+                    #    reward_vec.pop(0)#remove first
+                    #    reward_vec.append(reward)
+                    #    future_reward = 0
+                    #    for k in range(num_of_TD_steps):
+                    #        future_reward += reward_vec[k]*gamma**k 
+                    #    #update num_of_TD_steps back the reward with the num_of_TD_steps rewards
+                    #    #for k in range(-1,-num_of_TD_steps,-1):
+                    #    #    value_vec[k-1][0] = value_vec[k-1][0] +value_vec[k][0]*gamma
+                    #   # net.Update_policy([state_vec[-num_of_TD_steps]],[action_vec[-num_of_TD_steps]],[value_vec[-num_of_TD_steps]])
+                    #    net.Update_policy([state_vec[-num_of_TD_steps]],[action_vec[-num_of_TD_steps]],[[future_reward]])
+                    #else:
+                    #     reward_vec.append(reward)
+                    #dddd
                        
                     #update policy 
                     #net.Update_policy([state_vec[-num_of_TD_steps]],[action_vec[-num_of_TD_steps]],[value_vec[-num_of_TD_steps]])

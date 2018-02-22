@@ -1,10 +1,11 @@
-﻿<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>67d1be9f-78bf-410b-b3ad-9001facbb70e</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>MLdriverPython.py</StartupFile>
+    <StartupFile>policyBasedLearn1.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -39,7 +40,7 @@
     <Compile Include="deepLearnProject\testes.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="policyBased\policyBasedLearn1.py">
+    <Compile Include="policyBasedLearn1.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Qlearn\QlearnContinuesPath.py">
@@ -70,7 +71,7 @@
     <Compile Include="policyBased\policyBasedLearn.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="policyBased\policyBasedNet.py">
+    <Compile Include="policyBasedNet.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Qlearn\Qlearn.py">
