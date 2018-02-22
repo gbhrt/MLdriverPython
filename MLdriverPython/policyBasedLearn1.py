@@ -19,7 +19,7 @@ def copy_path(path,start, end = None):#return path from start to end
     for i in range(start,end):
         cpath.position.append(path.position[i])
         cpath.angle.append(path.angle[i])
-        cpath.velocity.append(path.velocity[i])
+        cpath.velocity_limit.append(path.velocity_limit[i])
     return cpath
 
 def comp_path(pl,main_path,main_index,num_of_points = None):
@@ -51,14 +51,14 @@ def choose_points(local_path,number,skip):#return points from the local path, ch
     return points
 
 def find_low_vel(local_path):
-    for i in range(len(local_path.velocity)):
-        if local_path.velocity[i] < 0.1:
+    for i in range(len(local_path.velocity_limit)):
+        if local_path.velocity_limit[i] < 0.1:
             return i
     return -1
 
 def get_state(pl,local_path,points,velocity_limit):
     state = []
-    velocity_limit = local_path.velocity[0]
+    velocity_limit = local_path.velocity_limit[0]
    # print("vel limit: ", velocity_limit)
     #steer = pl.simulator.vehicle.steering #current steering of the vehicle
     vel = pl.simulator.vehicle.velocity
@@ -196,13 +196,13 @@ if __name__ == "__main__":
     #omega = 0.7 # [rad/s] maximum steering angular velocity need to be more then maximum steering angular velocity in real
     acc = 3 # [m/s^2]  need to be more then maximum acceleration in real
     res = 1
-    plot_flag = False
-    restore_flag = False
+    plot_flag = True
+    restore_flag = True
     skip_run = False
-    path_name = "paths/straight_path_limit.txt"    #long random path: path3.txt  #long straight path: straight_path.txt
-    save_name = "policy/model9.ckpt" #model6.ckpt - constant velocity limit - good. model7.ckpt - relative velocity.
+    path_name = "paths\straight_path_limit.txt"    #long random path: path3.txt  #long straight path: straight_path.txt
+    save_name = "policy\model9.ckpt" #model6.ckpt - constant velocity limit - good. model7.ckpt - relative velocity.
     #model8.ckpt - offline trained after 5 episode - very clear
-    restore_name = "policy/model9.ckpt" # model2.ckpt - MC estimation 
+    restore_name = "policy\model9.ckpt" # model2.ckpt - MC estimation 
     run_data_file_name = 'running_record1'
     ###################
     stop = []
@@ -254,6 +254,7 @@ if __name__ == "__main__":
             state_vec = []
             action_vec = []
             value_vec = []
+            reward_vec = [] #save lambda rewards
             main_path_trans = pl.path_tranformation_to_local(main_path)# transform to vehicle position and angle
             #first step:
             pl.simulator.get_vehicle_data()#read data after time step from last action
@@ -285,7 +286,7 @@ if __name__ == "__main__":
                     index = pl.find_index_on_path(0)
                     main_index += index
                     local_path = comp_path(pl,main_path_trans,main_index,visualized_points)#compute local path and global path(inside the planner)
-                    local_path = comp_path(pl,main_path_trans,main_index)
+                    #local_path = comp_path(pl,main_path_trans,main_index)
                     last_state[batch_index] =copy.copy(state)#copy current state to list of last states
                     state = get_state(pl,local_path,feature_points,velocity_limit)
 
@@ -338,24 +339,27 @@ if __name__ == "__main__":
                         #print("PI after: ",Pi)
                  
                     #print ("state: ",state)
+                
+                    
+                    if(len(state_vec) > num_of_TD_steps):
+                        future_reward = 0
+                        for k in range(num_of_TD_steps):
+                            future_reward += reward_vec[k]*gamma**k 
+                        #update num_of_TD_steps back the reward with the num_of_TD_steps rewards
+                        #for k in range(-1,-num_of_TD_steps,-1):
+                        #    value_vec[k-1][0] = value_vec[k-1][0] +value_vec[k][0]*gamma
+                       # net.Update_policy([state_vec[-num_of_TD_steps]],[action_vec[-num_of_TD_steps]],[value_vec[-num_of_TD_steps]])
+                        net.Update_policy([state_vec[-num_of_TD_steps]],[action_vec[-num_of_TD_steps]],[[future_reward]])
+                        reward_vec.pop(0)#remove first
+                        value_vec[-num_of_TD_steps] = [future_reward]#the reward is on the last state and action
+                    
+                    reward_vec.append(reward)
+
                     state_vec.append(last_state[0])#for one batch only
                     action_vec.append(one_hot_a)
-                    value_vec.append([reward])#the reward is on the last state and action  
+                    value_vec.append([reward])#the reward is on the last state and action
+
                     
-                    #if(len(state_vec) > num_of_TD_steps):
-                    #    reward_vec.pop(0)#remove first
-                    #    reward_vec.append(reward)
-                    #    future_reward = 0
-                    #    for k in range(num_of_TD_steps):
-                    #        future_reward += reward_vec[k]*gamma**k 
-                    #    #update num_of_TD_steps back the reward with the num_of_TD_steps rewards
-                    #    #for k in range(-1,-num_of_TD_steps,-1):
-                    #    #    value_vec[k-1][0] = value_vec[k-1][0] +value_vec[k][0]*gamma
-                    #   # net.Update_policy([state_vec[-num_of_TD_steps]],[action_vec[-num_of_TD_steps]],[value_vec[-num_of_TD_steps]])
-                    #    net.Update_policy([state_vec[-num_of_TD_steps]],[action_vec[-num_of_TD_steps]],[[future_reward]])
-                    #else:
-                    #     reward_vec.append(reward)
-                    #dddd
                        
                     #update policy 
                     #net.Update_policy([state_vec[-num_of_TD_steps]],[action_vec[-num_of_TD_steps]],[value_vec[-num_of_TD_steps]])
@@ -367,7 +371,11 @@ if __name__ == "__main__":
                     target_index = pl.select_target_index(index)
                     steer_ang1 = comp_steer(pl.simulator.vehicle,pl.desired_path.position[target_index])#target in global
                     pl.simulator.send_drive_commands(des_vel,steer_ang1) #send commands
-                    pl.update_real_path()#state[0]
+                    #print("index: ",index, "limit: ",pl.local_path.velocity_limit)
+                    #if index > len(pl.desired_path.velocity_limit):
+                    #    print ("what?")
+                    pl.update_real_path(velocity_limit = local_path.velocity_limit[0])#state[0]
+                    
                
                     if local_path.distance[find_low_vel(local_path)] <0.01: #check if end of the episode
                         #net.save_model()
@@ -391,9 +399,9 @@ if __name__ == "__main__":
             #    value_vec[i] += gamma * value_vec[i+1]
             #value_vec = [[x] for x in value_vec]
 
-            value_vec_tot += value_vec
-            state_vec_tot += state_vec
-            action_vec_tot += action_vec
+            #value_vec_tot += value_vec
+            #state_vec_tot += state_vec
+            #action_vec_tot += action_vec
             #for i in range(1000000):
             #    if stop:
             #        break
@@ -414,16 +422,16 @@ if __name__ == "__main__":
         pl.stop_vehicle()
 
 
-        with open(run_data_file_name, 'w') as f:
-            json.dump([state_vec_tot,action_vec_tot,value_vec_tot], f)
+        #with open(run_data_file_name, 'w') as f:
+        #    json.dump([state_vec_tot,action_vec_tot,value_vec_tot], f)
 
 
         pl.end()
-    else:#run skiped
-        with open(run_data_file_name, 'r') as f:
-            [state_vec_tot,action_vec_tot,value_vec_tot] = json.load(f)
-    for i in range(len(state_vec_tot)):
-        print("s: ",state_vec_tot[i], "a: ",action_vec_tot[i],"r:",value_vec_tot[i])
+    #else:#run skiped
+    #    with open(run_data_file_name, 'r') as f:
+    #        [state_vec_tot,action_vec_tot,value_vec_tot] = json.load(f)
+    #for i in range(len(state_vec_tot)):
+    #    print("s: ",state_vec_tot[i], "a: ",action_vec_tot[i],"r:",value_vec_tot[i])
     #for i in range(1000000):
     #    if stop:
     #        break

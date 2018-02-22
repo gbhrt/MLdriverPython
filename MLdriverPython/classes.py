@@ -22,18 +22,14 @@ class Vehicle:
         self.angle = [0,0,0]
         self.steering = 0
         self.velocity = 0
-    position=[0,0,0]
-    backPosition = [0,0,0]
-    angle = [0,0,0]
-    steering = 0
-    velocity = 0
 class Path:
     def __init__(self):
         self.position = []#vector3D()
         self.backPosition = []
         self.angle = []
         self.curvature = []
-        self.velocity = []
+        self.velocity = [] #real velocity for a real path and planed velocity for a planned path
+        self.velocity_limit = []#velocity limit at each point
         self.steering = []
         self.distance = []
         self.time = []

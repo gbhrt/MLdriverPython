@@ -144,6 +144,7 @@ class Planner:#planner - get and send data to simulator. input - mission, output
         return to_global(position,self.simulator.vehicle.position,self.simulator.vehicle.angle[1])
     def path_tranformation_to_local(self,path):#get a path at any location, transform to vehicle position and angle
         trans_path = Path()
+        trans_path.velocity_limit = copy.copy(path.velocity_limit)
         trans_path.velocity = copy.copy(path.velocity)
         path_start = path.position[0]
         path_ang = path.angle[0][1] #- math.pi/2
@@ -168,6 +169,7 @@ class Planner:#planner - get and send data to simulator. input - mission, output
 
     def path_to_global(self,path):
         global_path = Path()
+        global_path.velocity_limit = copy.copy(path.velocity_limit)
         global_path.velocity = copy.copy(path.velocity)
         for i in range(len(path.position)):
             global_pos = self.to_global(path.position[i])
@@ -177,6 +179,7 @@ class Planner:#planner - get and send data to simulator. input - mission, output
     def path_to_local(self,path):
         local_path = Path()
         local_path.velocity = copy.copy(path.velocity)
+        local_path.velocity_limit = copy.copy(path.velocity_limit)
         for i in range(len(path.position)):
             local_pos = self.to_local(path.position[i])
             local_path.position.append(local_pos) 
@@ -293,7 +296,7 @@ class Planner:#planner - get and send data to simulator. input - mission, output
                 path.position.append(pos)
                 ang = [0,float(x[2]),0]
                 path.angle.append(ang)
-                path.velocity.append(float(x[3]))
+                path.velocity_limit.append(float(x[3]))
                 path.steering.append(float(x[4]))
             self.desired_path = path
         return path
@@ -355,12 +358,14 @@ class Planner:#planner - get and send data to simulator. input - mission, output
     def update_desired_path(self,index,vel_command):
         self.desired_path.velocity[index] = vel_command
 
-    def update_real_path(self,dist = None):
+    def update_real_path(self,dist = None, velocity_limit = None):
         if dist != None:
             self.real_path.distance.append(dist)
         self.real_path.position.append(self.simulator.vehicle.position)
         self.real_path.velocity.append(self.simulator.vehicle.velocity)
+        self.real_path.velocity_limit.append(velocity_limit)
         self.real_path.time.append(self.get_time())
+      
         #print("velocity: ",self.real_path.velocity)
         #print("time: ",self.real_path.time)
 

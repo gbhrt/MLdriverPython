@@ -6,17 +6,16 @@ import copy
 from library import *
 import random
 from communicationLib import Comm
+import matplotlib.pyplot as plt
 
-d = 0.9
-x = 0
-a = [5 for t in range(10)]
-print (a)
-print (a[-10])
-for i in range(-1,-10,-1):
-    a[i-1] = a[i-1] +a[i]*d
-    print (a[i-1])
+fig = plt.figure()
+ax = fig.add_subplot(211)
 
+x = np.arange(10)
 
+ax.plot(x, x*2)
+ax.plot(x, x)
+plt.show()
 #def restore_Q(file,Q):
 #    with open(file, 'r') as f:#append data to the file
 #        data = f.readlines()
