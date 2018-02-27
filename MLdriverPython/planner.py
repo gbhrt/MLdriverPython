@@ -79,17 +79,20 @@ class SimVehicle:#simulator class - include communication to simulator, vehicle 
 
 
 class Planner:#planner - get and send data to simulator. input - mission, output - simulator performance 
-    desired_path = Path()
-    real_path = Path()
-    target = [0,0,0]
-    simulator = SimVehicle()
-    init_state = Vehicle()
-    local_vehicle = Vehicle()
     def __init__(self):
         self.desired_path = Path()
         self.real_path = Path()
+        self.reference_free_path = Path()#a path without reference system (start at (0,0) and angle 0)
+        self.in_vehicle_reference_path = Path()# reference_free_path shifted and rotated to vehicle position (vehicle on the path start)
         self.simulator = SimVehicle()
+        target = [0,0,0]
+        simulator = SimVehicle()
+        init_state = Vehicle()
+        local_vehicle = Vehicle()
         self.start_time = 0
+        self.index = 0
+        self.main_index = 0
+        self.max_velocity = 30 #global speed limit
     def init_timer(self):
         self.start_time = time.time()
     def get_time(self):
@@ -285,20 +288,23 @@ class Planner:#planner - get and send data to simulator. input - mission, output
 
     def read_path_data(self,file_name):#, x,y,steer_ang
         path = Path()
-        with open(file_name, 'r') as f:
-            data = f.readlines()
-            data = [x.strip().split() for x in data]
+        try:
+            with open(file_name, 'r') as f:
+                data = f.readlines()
+                data = [x.strip().split() for x in data]
 
-            results = []
-            for x in data:
-                results.append(list(map(float, x)))
-                pos = [float(x[0]),float(x[1])]
-                path.position.append(pos)
-                ang = [0,float(x[2]),0]
-                path.angle.append(ang)
-                path.velocity_limit.append(float(x[3]))
-                path.steering.append(float(x[4]))
-            self.desired_path = path
+                results = []
+                for x in data:
+                    results.append(list(map(float, x)))
+                    pos = [float(x[0]),float(x[1])]
+                    path.position.append(pos)
+                    ang = [0,float(x[2]),0]
+                    path.angle.append(ang)
+                    path.velocity_limit.append(float(x[3]))
+                    path.steering.append(float(x[4]))
+                self.desired_path = path
+        except:
+            print("cannot read file",file_name)
         return path
 
     def paths_to_local(self,paths):
@@ -321,9 +327,6 @@ class Planner:#planner - get and send data to simulator. input - mission, output
             if target_index >= len(self.desired_path.distance) - 1:
                 break
             target_index += 1
-        
-        
-        
         return target_index
 
     def run_on_path(self):
@@ -368,4 +371,36 @@ class Planner:#planner - get and send data to simulator. input - mission, output
       
         #print("velocity: ",self.real_path.velocity)
         #print("time: ",self.real_path.time)
+        return
+    def delta_velocity_command(self, delta_vel):
+        des_vel = np.clip(self.simulator.vehicle.velocity + delta_vel,0,self.max_velocity)#assume velocity is updated
+        target_index = self.select_target_index(self.index)
+        steer_ang1 = comp_steer(self.simulator.vehicle,self.desired_path.position[target_index])#target in global
+        self.simulator.send_drive_commands(des_vel,steer_ang1) #send commands
+        return
+    def load_path(self,path_file_name):
+        self.reference_free_path = self.read_path_data(path_file_name)#get a path at any location
+        self.reference_free_path.comp_angle()
+        return
+    def new_episode(self):
+        self.index = 0
+        self.main_index = 0
+        self.in_vehicle_reference_path = self.path_tranformation_to_local(self.reference_free_path)# transform to vehicle position and angle
+        self.desired_path = copy_path(self.in_vehicle_reference_path,self.main_index,10)#just for the first time
+    def get_local_path(self,num_of_points = None):
+        #local_path = comp_path(pl,main_path_trans,main_index,num_of_points)#compute local path and global path(inside the planner)
+        self.index = self.find_index_on_path(0)
+        self.main_index += self.index
+        self.desired_path = copy_path(self.in_vehicle_reference_path,self.main_index,num_of_points)#choose 100 next points from vehicle position
+        self.simulator.send_path(self.desired_path)
+        local_path = self.path_to_local(self.desired_path)#translate path in vehicle reference system
+        self.desired_path.comp_path_parameters()
+        local_path.distance = copy.copy(self.desired_path.distance)
+        return local_path
+    def check_end(self):
+        if self.main_index >= len(self.in_vehicle_reference_path.position)-1:#end of the main path
+            return True
+        else:
+            return False
+
 

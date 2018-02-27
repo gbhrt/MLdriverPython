@@ -1,7 +1,4 @@
 import tensorflow as tf
-from mpl_toolkits.mplot3d import Axes3D
-from matplotlib import cm
-import matplotlib.pyplot as plt
 import numpy as np
 import random
 import math
@@ -40,23 +37,23 @@ class Network:
         hidden_layer_nodes2 = 25
 
         #linear regression:
-        W1 = tf.Variable(tf.truncated_normal([features,action_space_n], stddev=1e-5))
-        b1 = tf.Variable(tf.constant(0.0, shape=[action_space_n]))
-        Q = tf.matmul(state,W1) + b1
+        #W1 = tf.Variable(tf.truncated_normal([features,action_space_n], stddev=1e-5))
+        #b1 = tf.Variable(tf.constant(0.0, shape=[action_space_n]))
+        #Q = tf.matmul(state,W1) + b1
         #############################################################
         
-        ##hidden layer 1:
-        #W1 = tf.Variable(tf.truncated_normal([features,hidden_layer_nodes1], stddev=0.1))
-        #b1 = tf.Variable(tf.constant(0.1, shape=[hidden_layer_nodes1]))
-        #z1 = tf.nn.relu(tf.add(tf.matmul(state,W1),b1))
-        ##hidden layer 2:
-        #W2 = tf.Variable(tf.truncated_normal([hidden_layer_nodes1,hidden_layer_nodes2], stddev=0.1))
-        #b2 = tf.Variable(tf.constant(0.1, shape=[hidden_layer_nodes2]))
-        #z2 = tf.nn.relu(tf.add(tf.matmul(z1,W2),b2))
-        ##output layer:
-        #W3 = tf.Variable(tf.truncated_normal([hidden_layer_nodes2,action_space_n], stddev=0.1))
-        #b3 = tf.Variable(tf.constant(0.1, shape=[action_space_n]))
-        #Q = tf.add(tf.matmul(z2,W3), b3)
+        #hidden layer 1:
+        W1 = tf.Variable(tf.truncated_normal([features,hidden_layer_nodes1], stddev=0.1))
+        b1 = tf.Variable(tf.constant(0.1, shape=[hidden_layer_nodes1]))
+        z1 = tf.nn.relu(tf.add(tf.matmul(state,W1),b1))
+        #hidden layer 2:
+        W2 = tf.Variable(tf.truncated_normal([hidden_layer_nodes1,hidden_layer_nodes2], stddev=0.1))
+        b2 = tf.Variable(tf.constant(0.1, shape=[hidden_layer_nodes2]))
+        z2 = tf.nn.relu(tf.add(tf.matmul(z1,W2),b2))
+        #output layer:
+        W3 = tf.Variable(tf.truncated_normal([hidden_layer_nodes2,action_space_n], stddev=0.1))
+        b3 = tf.Variable(tf.constant(0.1, shape=[action_space_n]))
+        Q = tf.add(tf.matmul(z2,W3), b3)
         #############################################################
         return Q
     def value_estimator(self,features,state):#define a net - input: state (and dimentions) - output: Q - Value
@@ -91,22 +88,22 @@ class Network:
 
         self.Pi = self.policy_estimator(features,action_space_n, self.state)
         self.Q = self.Q_estimator(features,action_space_n, self.state)
-        self.V = self.value_estimator(features,self.state)
+        #self.V = self.value_estimator(features,self.state)
 
         self.V_ = tf.placeholder(tf.float32,shape=[None, 1])
         self.action = tf.placeholder( tf.float32, [None,2] )
         self.Q_ = tf.placeholder(tf.float32, shape=[None, action_space_n])
 
-        self.value_loss = tf.squared_difference(self.V,self.V_)
-        self.update_value = tf.train.GradientDescentOptimizer(alpha_critic).minimize(self.value_loss)
+        #self.value_loss = tf.squared_difference(self.V,self.V_)
+        #self.update_value = tf.train.GradientDescentOptimizer(alpha_critic).minimize(self.value_loss)
 
         self.Q_loss = tf.squared_difference(self.Q,self.Q_)
-        self.update_Q = tf.train.GradientDescentOptimizer(alpha_critic).minimize(self.Q_loss)
+        self.update_Q = tf.train.AdamOptimizer(alpha_critic).minimize(self.Q_loss)
         
-        self.policy_loss = - tf.reduce_mean(tf.log(tf.matmul(self.Pi,tf.transpose(self.action))+1e-8)*self.V_)# *self.action
+        self.policy_loss = - tf.reduce_mean(tf.log(tf.matmul(self.Pi,tf.transpose(self.action))+1e-8)*self.V_)
         self.update_policy = tf.train.AdamOptimizer(alpha_actor).minimize(self.policy_loss)
 
-        self.test = -tf.reduce_mean(tf.clip_by_value(tf.log(tf.matmul(self.Pi,tf.transpose(self.action))),-10,10)*self.V_)
+        #self.test = -tf.reduce_mean(tf.clip_by_value(tf.log(tf.matmul(self.Pi,tf.transpose(self.action))),-10,10)*self.V_)
 
         self.sess = tf.Session()
         self.sess.run(tf.global_variables_initializer())

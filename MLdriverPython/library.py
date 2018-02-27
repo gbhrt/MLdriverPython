@@ -20,35 +20,35 @@ class vector3D:
         return [self.x, self.y,self.z]
 
 
-class Path:
-    def __init__(self):
-        self.position = []#vector3D()
-        self.backPosition = [vector3D()]
-        self.angle = []
-        self.curvature = []
-        self.velocity = []
-        self.steering = []
-        distance = []
+#class Path:
+#    def __init__(self):
+#        self.position = []#vector3D()
+#        self.backPosition = [vector3D()]
+#        self.angle = []
+#        self.curvature = []
+#        self.velocity = []
+#        self.steering = []
+#        distance = []
         
-    #position = []#vector3D()
-    #backPosition = [vector3D()]
-    #angle = []#0.
-    #curvature =[]# [0.]
-    #velocity = []#[0.]
-    #steering = []#[0.]
-    #distance = []#[0.]
-    def comp_path_parameters(self):
-        self.distance.append(0.)
-        for i in range (1,len(self.position)):#start from 2
-            self.distance.append(self.distance[i-1] + dist(self.position[i].x,self.position[i].y,self.position[i-1].x,self.position[i-1].y))
-        return
-    def set_velocity(self, vel):
-        for i in range (len(self.position)):
-            self.velocity.append(vel)
-        return
-    #def compute_path_derivatives(self):
-    #    for i in range (2,len(self.position)):#start from 2
-    #        self.angle[i] = 
+#    #position = []#vector3D()
+#    #backPosition = [vector3D()]
+#    #angle = []#0.
+#    #curvature =[]# [0.]
+#    #velocity = []#[0.]
+#    #steering = []#[0.]
+#    #distance = []#[0.]
+#    def comp_path_parameters(self):
+#        self.distance.append(0.)
+#        for i in range (1,len(self.position)):#start from 2
+#            self.distance.append(self.distance[i-1] + dist(self.position[i].x,self.position[i].y,self.position[i-1].x,self.position[i-1].y))
+#        return
+#    def set_velocity(self, vel):
+#        for i in range (len(self.position)):
+#            self.velocity.append(vel)
+#        return
+#    #def compute_path_derivatives(self):
+#    #    for i in range (2,len(self.position)):#start from 2
+#    #        self.angle[i] = 
 
 
 
@@ -175,6 +175,18 @@ def comp_steer_local(local_target):
     curv = 2*local_target[0]/ld2
     steer_ang = -math.atan(curv*vehicle_lenght)
     return steer_ang
+def copy_path(path,start, num_of_points = None):#return path from start to end
+    cpath = Path()
+    
+    if num_of_points == None:
+        end = len(path.position)
+    else:
+        end = np.clip(start + num_of_points,0,len(path.position))
+    for i in range(start,end):
+        cpath.position.append(path.position[i])
+        cpath.angle.append(path.angle[i])
+        cpath.velocity_limit.append(path.velocity_limit[i])
+    return cpath
 
 def comp_steer(vehicle,target):
     vehicle_lenght = 3.6

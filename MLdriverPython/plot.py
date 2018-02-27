@@ -8,7 +8,7 @@ class Plot():
         self.ax = 0
     def plot_path(self,path):
         self.fig = plt.figure()
-        self.ax = self.fig.add_subplot(211)
+        self.ax = self.fig.add_subplot(111)#211
         #self.ax1 = self.fig.add_subplot(212)
         #datax = [x for x in range(9)]
         #datay = [x for x in range(5)]

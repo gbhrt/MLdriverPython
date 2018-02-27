@@ -31,10 +31,10 @@
     <Compile Include="create_train_data.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="deepLearnProject\ReinforceLearn.py">
+    <Compile Include="ReinforceLearn.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="deepLearnProject\ReinforceNet.py">
+    <Compile Include="ReinforceNet.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="deepLearnProject\testes.py">

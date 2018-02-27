@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import random
 import math
-
+import os
 
 class Network:
     def __init__(self,alpha,features,action_space_n):#
@@ -65,7 +65,11 @@ class Network:
         return
 
     def save_model(self,*args):
-         path = "C:\MachineLearning\MLdriverPython\MLdriverPython\models\ "
+        
+         path = os.getcwd()
+         path += "\models\ "
+         
+         #path = "C:\MachineLearning\MLdriverPython\MLdriverPython\models\ "
          if len(args) > 0:
              file_name = path+args[0]
          else:
@@ -75,7 +79,9 @@ class Network:
          print("Model saved in file: %s" % save_path)
 
     def restore(self,*args):
-        path = "C:\MachineLearning\MLdriverPython\MLdriverPython\models\ "
+        path = os.getcwd()
+        path += "\models\ "
+        #path = "C:\MachineLearning\MLdriverPython\MLdriverPython\models\ "
         if args:
             file_name = path+args[0]
         else:
