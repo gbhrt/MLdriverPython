@@ -97,7 +97,7 @@ def get_reward(last_state,state,velocity_limit):
     if state[0] < 0: 
         reward = velocity_limit + state[0]
     else: 
-        reward = -state[0]
+        reward = 0#-state[0]
 
     return reward
 
@@ -170,10 +170,10 @@ if __name__ == "__main__":
     distance_between_points = 2.5
     features = feature_points #vehicle state points on the path (distance)
     #epsilon = 0.2
-    gamma = 0.9
+    gamma = 0.999
     num_of_runs = 5000
     step_time = 0.2#0.02
-    alpha_actor = 0.0001# for Pi 1e-5 #learning rate
+    alpha_actor = 0.01# for Pi 1e-5 #learning rate
     alpha_critic = 0.0001#for Q
     #max_deviation = 3 # [m] if more then maximum - end episode 
     batch_size = 1
@@ -182,7 +182,7 @@ if __name__ == "__main__":
     acc = 1 # [m/s^2]  need to be more then maximum acceleration in real
     res = 1
     plot_flag = True
-    restore_flag = True
+    restore_flag = False
     skip_run = False
     path_name = "paths\‏‏straight_path_limit2.txt"    #long random path: path3.txt  #long straight path: straight_path.txt
     save_name = "policy\model12.ckpt" #model6.ckpt - constant velocity limit - good. model7.ckpt - relative velocity.
@@ -261,14 +261,14 @@ if __name__ == "__main__":
                    # print("Q - before: ",Q)
 
                     #actor-critic:
-                    Q = net.get_Q(state)#from this state
-                    #print("correcting with action: ",a)
-                    Q_[batch_index][a] = reward +gamma*np.max(Q)#compute Q_: reward,a - from last to this state, Q - from this state
-                    net.Update_Q(last_state,Q_)
-                    Q_last = net.get_Q(last_state[0])#Q for last state for update policy on last state values
+                    ##Q = net.get_Q(state)#from this state
+                    ###print("correcting with action: ",a)
+                    ##Q_[batch_index][a] = reward +gamma*np.max(Q)#compute Q_: reward,a - from last to this state, Q - from this state
+                    ##net.Update_Q(last_state,Q_)
+                    ##Q_last = net.get_Q(last_state[0])#Q for last state for update policy on last state values
                     
-                    A = Q_last[a] - sum(Q_last)/len(Q_last)
-                    net.Update_policy(last_state,[one_hot_a],[[A]])
+                    ##A = Q_last[a] - sum(Q_last)/len(Q_last)
+                    ##net.Update_policy(last_state,[one_hot_a],[[A]])
 
                     #print("Q_: ",Q_[batch_index])
                     #loss = net.get_value_loss(last_state[batch_index],Q_[batch_index])
@@ -300,18 +300,18 @@ if __name__ == "__main__":
                     
                     
                     #TD(lambda):
-                    #if(len(state_vec) > num_of_TD_steps):
-                    #    future_reward = 0
-                    #    for k in range(num_of_TD_steps):
-                    #        future_reward += reward_vec[k]*gamma**k 
-                    #    net.Update_policy([state_vec[-num_of_TD_steps]],[action_vec[-num_of_TD_steps]],[[future_reward]])
-                    #    reward_vec.pop(0)#remove first
-                    #    value_vec[-num_of_TD_steps] = [future_reward]#the reward is on the last state and action
-                    #reward_vec.append(reward)
+                    if(len(state_vec) > num_of_TD_steps):
+                        future_reward = 0
+                        for k in range(num_of_TD_steps):
+                            future_reward += reward_vec[k]*gamma**k 
+                        net.Update_policy([state_vec[-num_of_TD_steps]],[action_vec[-num_of_TD_steps]],[[future_reward]])
+                        reward_vec.pop(0)#remove first
+                        value_vec[-num_of_TD_steps] = [future_reward]#the reward is on the last state and action
+                    reward_vec.append(reward)
 
-                    #state_vec.append(last_state[0])#for one batch only
-                    #action_vec.append(one_hot_a)
-                    #value_vec.append([reward])#the reward is on the last state and action
+                    state_vec.append(last_state[0])#for one batch only
+                    action_vec.append(one_hot_a)
+                    value_vec.append([reward])#the reward is on the last state and action
 
                 
                     #make action:
@@ -323,7 +323,7 @@ if __name__ == "__main__":
                     pl.update_real_path(velocity_limit = local_path.velocity_limit[0])#state[0]
                     
                
-                    if pl.check_end():#check if end of the episode
+                    if pl.check_end():#check if end of the episode state
                         break
                 
                 #end if time

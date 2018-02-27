@@ -397,10 +397,11 @@ class Planner:#planner - get and send data to simulator. input - mission, output
         self.desired_path.comp_path_parameters()
         local_path.distance = copy.copy(self.desired_path.distance)
         return local_path
-    def check_end(self):
+    def check_end(self,state = None):
         if self.main_index >= len(self.in_vehicle_reference_path.position)-1:#end of the main path
             return True
-        else:
-            return False
+        if state != None and state[0] > 0:
+            return True
+        return False
 
 
