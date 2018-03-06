@@ -97,7 +97,7 @@ def get_reward(last_state,state,velocity_limit):
     if state[0] < 0: 
         reward = velocity_limit + state[0]
     else: 
-        reward = 0#-state[0]
+        reward = -state[0]
 
     return reward
 
@@ -163,32 +163,36 @@ def comp_value(net,max_vel):
 
 if __name__ == "__main__": 
     #run simulator: cd C:\Users\student_2\Documents\ArielUnity - learning2\sim_2_1
+    # cd C:\Users\gavri\Desktop\sim_2_1
     #sim_2_1_17 -quit -batchmode -nographics
 
     #pre-defined parameters:
-    feature_points = 5 #not neccecery at the begining also 1 is good
-    distance_between_points = 2.5
+    feature_points = 10 #not neccecery at the begining also 1 is good
+    distance_between_points = 1.0 #meter
     features = feature_points #vehicle state points on the path (distance)
     #epsilon = 0.2
-    gamma = 0.999
+    gamma = 0.99
     num_of_runs = 5000
     step_time = 0.2#0.02
-    alpha_actor = 0.01# for Pi 1e-5 #learning rate
+    alpha_actor = 0.0001# for Pi 1e-5 #learning rate
     alpha_critic = 0.0001#for Q
     #max_deviation = 3 # [m] if more then maximum - end episode 
     batch_size = 1
     num_of_TD_steps = 15 #for TD(lambda)
-    visualized_points = 200 #how many points show on the map - just visualy
-    acc = 1 # [m/s^2]  need to be more then maximum acceleration in real
+    visualized_points = 100 #how many points show on the map - just visualy
+    max_pitch = 0.3
+    max_roll = 0.3
+    acc = 2.5 # [m/s^2]  need to be more then maximum acceleration in real
     res = 1
     plot_flag = True
-    restore_flag = False
+    restore_flag = True
     skip_run = False
-    path_name = "paths\‏‏straight_path_limit2.txt"    #long random path: path3.txt  #long straight path: straight_path.txt
-    save_name = "policy\model12.ckpt" #model6.ckpt - constant velocity limit - good. model7.ckpt - relative velocity.
-    #model10.ckpt TD(5) dt = 0.2 alpha 0.001
+    random_paths_flag = True
+    path_name = "paths\\‏‏straight_path_limit3.txt"     #long random path: path3.txt  #long straight path: straight_path.txt
+    save_name = "policy\\model13.ckpt" #model6.ckpt - constant velocity limit - good. model7.ckpt - relative velocity.
+    #model10.ckpt TD(5) dt = 0.2 alpha 0.001 model13.ckpt - 5 points 2.5 m 0.001 TD 15
     #model8.ckpt - offline trained after 5 episode - very clear
-    restore_name = "policy\model12.ckpt" # model2.ckpt - MC estimation 
+    restore_name = "policy\\model13.ckpt" # model2.ckpt - MC estimation 
     run_data_file_name = 'running_record1'
     ###################
     value_vec_tot = []
@@ -206,7 +210,8 @@ if __name__ == "__main__":
     if not skip_run:
         pl = Planner()
         pl.start_simple()
-        pl.load_path(path_name)
+        if(pl.load_path(path_name,random_paths_flag)):
+            stop[0] = 1
 
         last_state = [0 for _ in range(batch_size)]
         Q_ = [0 for _ in range(batch_size)]
@@ -228,9 +233,13 @@ if __name__ == "__main__":
             reward_vec = [] #save lambda rewards
             #########################
             pl.simulator.get_vehicle_data()#read data after time step from last action
+            if random_paths_flag:
+                if(pl.load_path(path_name,random_paths_flag)):#if cannot load path
+                    break
+                
             pl.new_episode()#compute path in current vehicle position
             #first step:
-            local_path = pl.get_local_path(num_of_points = visualized_points)
+            local_path = pl.get_local_path()#num_of_points = visualized_points
             state = get_state(pl,local_path,feature_points,distance_between_points)
             Q = net.get_Q(state)
             Pi = net.get_Pi(state)
@@ -244,7 +253,8 @@ if __name__ == "__main__":
             while not stop:#while not stoped, the loop break if reached the end or the deviation is to big
                 if step_now(last_time,step_time):#check if make the next step (after step_time) 
                     pl.simulator.get_vehicle_data()#read data after time step from last action
-                    local_path = pl.get_local_path(num_of_points = visualized_points)
+                    print("angle: ",pl.simulator.vehicle.angle)
+                    local_path = pl.get_local_path(send_path = False,num_of_points = visualized_points)#num_of_points = visualized_points
                     last_state[batch_index] =copy.copy(state)#copy current state to list of last states
                     state = get_state(pl,local_path,feature_points,distance_between_points)
 
@@ -322,8 +332,8 @@ if __name__ == "__main__":
                     pl.delta_velocity_command(action_space[a])#update velocity (and steering) and send to simulator. index - index on global path (pl.desired_path)        
                     pl.update_real_path(velocity_limit = local_path.velocity_limit[0])#state[0]
                     
-               
-                    if pl.check_end():#check if end of the episode state
+                    dev = dist(local_path.position[0][0],local_path.position[0][1],0,0)
+                    if pl.check_end(deviation = dev):#check if end of the episode state
                         break
                 
                 #end if time
@@ -331,8 +341,10 @@ if __name__ == "__main__":
             #after episode end:
             #net.save_model()
             #time.sleep(1)
-            if i % 2 == 0 and i > 0:#i - episode number
+            if (i % 2 == 0 and i > 0) or abs(pl.simulator.vehicle.angle[0]) > max_pitch or abs(pl.simulator.vehicle.angle[2]) > max_roll:#i - episode number
+                #pl.stop_vehicle()
                 pl.simulator.reset_position()
+                pl.stop_vehicle()
                 #net.save_model()
             if plot_flag:
                 plot.close()

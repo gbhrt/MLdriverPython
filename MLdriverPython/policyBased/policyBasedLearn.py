@@ -149,7 +149,7 @@ def choose_action(epsilon,action_space_len,Pi):
         print("best a: ",a)
     return a
 def comp_path(pl,main_path,main_index,num_of_points):
-    pl.desired_path = copy_path(main_path,main_index,main_index+num_of_points)#choose 100 next points from vehicle position
+    pl.desired_path = pl.copy_path(main_path,main_index,main_index+num_of_points)#choose 100 next points from vehicle position
     pl.simulator.send_path(pl.desired_path)
     local_path = pl.path_to_local(pl.desired_path)#translate path in vehicle reference system
     pl.desired_path.comp_path_parameters()

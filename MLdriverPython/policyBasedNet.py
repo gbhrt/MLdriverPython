@@ -161,7 +161,7 @@ class Network:
     def save_model(self,*args):
         
          path = os.getcwd()
-         path += "\models\ "
+         path += "\\models\\ "
          
          #path = "C:\MachineLearning\MLdriverPython\MLdriverPython\models\ "
          if len(args) > 0:
@@ -174,7 +174,7 @@ class Network:
 
     def restore(self,*args):
         path = os.getcwd()
-        path += "\models\ "
+        path += "\\models\\ "
         #path = "C:\MachineLearning\MLdriverPython\MLdriverPython\models\ "
         if args:
             file_name = path+args[0]

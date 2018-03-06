@@ -192,9 +192,8 @@ if __name__ == "__main__":
                 last_t = t
                 
                 pl.simulator.get_vehicle_data()#read data after time step from last action
-                if not first_time:
-                    index = pl.find_index_on_path(0)
-                    main_index += index
+                index = pl.find_index_on_path(0)
+                main_index += index
                 local_path = comp_path(pl,main_path_trans,main_index,visualized_points)#compute local path and global path(inside the planner)
 
                 #print("main index: ", main_index, " index: ",index)

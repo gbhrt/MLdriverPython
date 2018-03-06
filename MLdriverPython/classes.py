@@ -1,5 +1,7 @@
 import math
 import json
+import numpy as np
+import os
 class SteerData:
     def __init__(self):
         self.start_vel = 0
@@ -73,8 +75,97 @@ class Path:
 #        with open(file_name, 'w') as f:
 #            f.write(
 
+class PathManager:#
+    def __init__(self):
+        self.random_count = 0
+        self.max_count = 30
+        return
+    def read_path_data(self,file_name):#, x,y,steer_ang
+        path = Path()
+        try:
+            with open(file_name, 'r') as f:
+                data = f.readlines()
+                data = [x.strip().split() for x in data]
 
-   
+                results = []
+                for x in data:
+                    results.append(list(map(float, x)))
+                    pos = [float(x[0]),float(x[1]),float(x[2])]
+                    path.position.append(pos)
+                    ang = [0,float(x[3]),0]
+                    path.angle.append(ang)
+                    path.velocity_limit.append(float(x[4]))
+                    path.steering.append(float(x[5]))
+                #self.desired_path = path
+        except ValueError:
+            print("cannot read file",file_name,"ValueError: ",ValueError)
+        return path  
+
+    def save_path(self,path,file_name):
+        with open(file_name, 'w') as f:
+            #for i in range (len(path.position)):
+            #    f.write("%s \t %s\t %s\t %s\t %s\n" % (path.position[i][0],path.position[i][1],path.angle[i][1],path.velocity[i],path.steering[i]))
+            #f.write("\n")
+            json.dump([path.position,path.angle,path.distance,path.velocity,path.velocity_limit],f)
+        return
+    def read_path(self,file_name):
+        path = Path()
+        try:
+            with open(file_name, 'r') as f:#append data to the file
+                #for i in range (len(path.position)):
+                #    f.write("%s \t %s\t %s\t %s\t %s\n" % (path.position[i][0],path.position[i][1],path.angle[i][1],path.velocity[i],path.steering[i]))
+                #f.write("\n")
+                [path.position,path.angle,path.distance,path.velocity,path.velocity_limit] = json.load(f)
+        except:
+            print("cannot read file: ",file_name)
+            return None
+        return path
+    def convert_to_json(self,in_file_name,out_file_name):
+        path = self.read_path_data(in_file_name)
+        self.save_path(path,out_file_name)
+        print("done")
+        return
+    def copy_path(self,path,start, num_of_points = None):#return path from start to end
+        cpath = Path()
+        if num_of_points == None:
+            end = len(path.position)
+        else:
+            end = np.clip(start + num_of_points,0,len(path.position))
+        for i in range(start,end):
+            cpath.position.append(path.position[i])
+            cpath.angle.append(path.angle[i])
+            cpath.velocity_limit.append(path.velocity_limit[i])
+        return cpath
+
+    def split_path(self,input_path_name,num_points,output_name):#input file name of a path, split to paths in num_points lenght. save to output_name_i
+        in_path = self.read_path(input_path_name)
+        location = os.getcwd()
+        paths_count = 0
+        i = 0
+        while i < len(in_path.position):
+            out_path = self.copy_path(in_path,i,num_points)
+            i+=num_points
+            paths_count+=1
+            #name = output_name#'splited_files\straight_path_limit2'#input_path_name#
+            name = output_name + str(paths_count)+ '.txt'
+            
+            self.save_path(out_path,name)#out_name)
+        return
+    def get_next_random_path(self):
+        def read():
+            self.random_count+=1
+            return self.read_path('splited_files\\random_paths'+ str(self.random_count) +'.txt')
+        path = read()
+        if path == None:
+            self.random_count = 1
+            path = read()
+            if path == None:
+                return None
+        return path
 
 
 
+#pm = PathManager()
+#path = pm.read_path_data("paths\path3.txt")
+#name = r'splits\straight_path_limit_splits1'
+#pm.save_path(path, name +str(1)+ '.txt')

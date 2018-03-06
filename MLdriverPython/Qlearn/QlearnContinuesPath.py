@@ -2,7 +2,7 @@
 from planner import Planner
 import numpy as np
 from library import *  #temp
-from classes import Path
+from classes import Path, PathManager
 import copy
 import random
 from policyBasedNet import Network
@@ -120,9 +120,9 @@ if __name__ == "__main__":
 
     pl = Planner()
     pl.start_simple()
+    pm = PathManager()
 
-
-    main_path = pl.read_path_data(path_name)#get a path at any location
+    main_path = pm.read_path_data(path_name)#get a path at any location
    
     
     dv = acc * step_time /res

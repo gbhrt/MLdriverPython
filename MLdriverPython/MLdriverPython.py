@@ -1,21 +1,35 @@
-import socket
-import time
-import atexit
-import numpy as np
-import copy
+#import socket
+#import time
+#import atexit
+#import numpy as np
+#import copy
 from library import *
-import random
-from communicationLib import Comm
+#import random
+#from communicationLib import Comm
+#import matplotlib.pyplot as plt
+import os
+from classes import *
 import matplotlib.pyplot as plt
+import numpy as np
+pm = PathManager()
+#path_name = "paths\\‏‏straight_path_limit2.txt" 
+#path = pm.read_path_data(path_name)
+#name = r'splits\straight_path_limit_splits1'
+#pm.save_path(path, name +str(1)+ '.txt')
+#path = pm.read_path("paths\‏‏straight_path_limit2.txt")
+#pm.split_path("paths\\random_path.txt",1500,"splited_files\\random_paths")
+pm.convert_to_json("paths\\‏‏straight_path_limit2.txt","paths\\‏‏straight_path_limit3.txt.txt")
+#path = pm.read_path("splited_files\\random_paths4.txt")
 
-fig = plt.figure()
-ax = fig.add_subplot(211)
+#comp_velocity_limit(path)
+#pos = np.array(path.position)
 
-x = np.arange(10)
+##plt.plot(pos[:,0],pos[:,1])
+#plt.plot(np.arange(len(path.velocity_limit)), np.array(path.velocity_limit))
 
-ax.plot(x, x*2)
-ax.plot(x, x)
-plt.show()
+#plt.show()
+
+print("end")
 #def restore_Q(file,Q):
 #    with open(file, 'r') as f:#append data to the file
 #        data = f.readlines()
