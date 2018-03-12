@@ -62,11 +62,11 @@ for x in test_data:
 
 
 
-features = 8
-x=tf.placeholder(tf.float32, [None,features])
+features_num = 8
+x=tf.placeholder(tf.float32, [None,features_num])
 y_=tf.placeholder(tf.float32,[None,1])
 
-W=tf.Variable(tf.zeros([features,1]))
+W=tf.Variable(tf.zeros([features_num,1]))
 b=tf.Variable(tf.zeros([1]))
 y=tf.matmul(x,W)+b
 

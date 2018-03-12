@@ -7,18 +7,18 @@ import os
 
 class Network:
 
-    def policy_estimator(self,features,action_space_n,state): #define a net - input: state (and dimentions) - output: Pi - policy
-        hidden_layer_nodes1 = 50
-        hidden_layer_nodes2 = 25
+    def policy_estimator(self,action_space_n,state,features_num): #define a net - input: state (and dimentions) - output: Pi - policy
+        hidden_layer_nodes1 = 100
+        hidden_layer_nodes2 = 50
 
         #linear regression:
-        #theta1 = tf.Variable(tf.truncated_normal([features,action_space_n], stddev=1e-5))
+        #theta1 = tf.Variable(tf.truncated_normal([features_num,action_space_n], stddev=1e-5))
         #theta_b1 = tf.Variable(tf.constant(0.0, shape=[action_space_n]))
         #pi = tf.nn.softmax(tf.matmul(state,theta1) + theta_b1)
         #############################################################
         
         #hidden layer 1:
-        theta1 = tf.Variable(tf.truncated_normal([features,hidden_layer_nodes1], stddev=0.1))
+        theta1 = tf.Variable(tf.truncated_normal([features_num,hidden_layer_nodes1], stddev=0.1))
         theta_b1 = tf.Variable(tf.constant(0.1, shape=[hidden_layer_nodes1]))
         theta_z1 = tf.nn.relu(tf.add(tf.matmul(state,theta1),theta_b1))
         #hidden layer 2:
@@ -32,18 +32,18 @@ class Network:
         pi = tf.nn.softmax(pi)
         #############################################################
         return pi
-    def Q_estimator(self,features,action_space_n,state):#define a net - input: state (and dimentions) - output: Q - Value
-        hidden_layer_nodes1 = 50
-        hidden_layer_nodes2 = 25
+    def Q_estimator(self,action_space_n,state,features_num):#define a net - input: state (and dimentions) - output: Q - Value
+        hidden_layer_nodes1 = 100
+        hidden_layer_nodes2 = 50
 
         #linear regression:
-        #W1 = tf.Variable(tf.truncated_normal([features,action_space_n], stddev=1e-5))
+        #W1 = tf.Variable(tf.truncated_normal([features_num,action_space_n], stddev=1e-5))
         #b1 = tf.Variable(tf.constant(0.0, shape=[action_space_n]))
         #Q = tf.matmul(state,W1) + b1
         #############################################################
         
         #hidden layer 1:
-        W1 = tf.Variable(tf.truncated_normal([features,hidden_layer_nodes1], stddev=0.1))
+        W1 = tf.Variable(tf.truncated_normal([features_num,hidden_layer_nodes1], stddev=0.1))
         b1 = tf.Variable(tf.constant(0.1, shape=[hidden_layer_nodes1]))
         z1 = tf.nn.relu(tf.add(tf.matmul(state,W1),b1))
         #hidden layer 2:
@@ -56,19 +56,43 @@ class Network:
         Q = tf.add(tf.matmul(z2,W3), b3)
         #############################################################
         return Q
-    def value_estimator(self,features,state):#define a net - input: state (and dimentions) - output: Q - Value
+    def dynamic_model_estimator(self,action,state,features_num):#define a net - input: state and action - output: next state
+        hidden_layer_nodes1 = 50
+        hidden_layer_nodes2 = 25
+
+        #linear regression:
+        #W1 = tf.Variable(tf.truncated_normal([features_num,action_space_n], stddev=1e-5))
+        #b1 = tf.Variable(tf.constant(0.0, shape=[action_space_n]))
+        #Q = tf.matmul(state,W1) + b1
+        #############################################################
+        state_and_action = tf.concat([state,action],1)
+        #hidden layer 1:
+        W1 = tf.Variable(tf.truncated_normal([features_num+1,hidden_layer_nodes1], stddev=0.1))
+        b1 = tf.Variable(tf.constant(0.1, shape=[hidden_layer_nodes1]))
+        z1 = tf.nn.relu(tf.add(tf.matmul(state_and_action,W1),b1))
+        #hidden layer 2:
+        W2 = tf.Variable(tf.truncated_normal([hidden_layer_nodes1,hidden_layer_nodes2], stddev=0.1))
+        b2 = tf.Variable(tf.constant(0.1, shape=[hidden_layer_nodes2]))
+        z2 = tf.nn.relu(tf.add(tf.matmul(z1,W2),b2))
+        #output layer:
+        W3 = tf.Variable(tf.truncated_normal([hidden_layer_nodes2,features_num], stddev=0.1))
+        b3 = tf.Variable(tf.constant(0.1, shape=[features_num]))
+        next_state = tf.add(tf.matmul(z2,W3), b3)
+        #############################################################
+        return next_state
+    def value_estimator(self,features_num,state):#define a net - input: state (and dimentions) - output: Q - Value
         hidden_layer_nodes1 = 50
         hidden_layer_nodes2 = 25
         output_nodes = 1
         #linear regression:
-        #W1 = tf.Variable(tf.constant(0.0, shape=[features,output_nodes]))#tf.truncated_normal([features,1], stddev=1e-5))
+        #W1 = tf.Variable(tf.constant(0.0, shape=[features_num,output_nodes]))#tf.truncated_normal([features_num,1], stddev=1e-5))
         #b1 = tf.Variable(tf.constant(0.0, shape=[output_nodes]))
         #V = tf.matmul(state,W1) + b1
 
         #############################################################
         
         #hidden layer 1:
-        W1 = tf.Variable(tf.truncated_normal([features,hidden_layer_nodes1], stddev=0.1))
+        W1 = tf.Variable(tf.truncated_normal([features_num,hidden_layer_nodes1], stddev=0.1))
         b1 = tf.Variable(tf.constant(0.1, shape=[hidden_layer_nodes1]))
         z1 = tf.nn.relu(tf.add(tf.matmul(state,W1),b1))
         #hidden layer 2:
@@ -82,26 +106,32 @@ class Network:
         #############################################################
         return V
 
-    def __init__(self,alpha_actor,alpha_critic,features,action_space_n):#
+    def __init__(self,features_num,action_space_n,alpha_actor = None,alpha_critic = None):#
 
-        self.state = tf.placeholder(tf.float32, [None,features] )
-
-        self.Pi = self.policy_estimator(features,action_space_n, self.state)
-        self.Q = self.Q_estimator(features,action_space_n, self.state)
-        #self.V = self.value_estimator(features,self.state)
-
+        self.state = tf.placeholder(tf.float32, [None,features_num] )
         self.V_ = tf.placeholder(tf.float32,shape=[None, 1])
-        self.action = tf.placeholder( tf.float32, [None,2] )
+        self.action = tf.placeholder( tf.float32, [None,2] )#one hot
         self.Q_ = tf.placeholder(tf.float32, shape=[None, action_space_n])
 
+        self.Pi = self.policy_estimator(action_space_n, self.state,features_num)
+        self.Q = self.Q_estimator(action_space_n, self.state,features_num)
+        #self.V = self.value_estimator(features_num,self.state)
+        #self.next_state = self.dynamic_model_estimator(
+
+         
         #self.value_loss = tf.squared_difference(self.V,self.V_)
         #self.update_value = tf.train.GradientDescentOptimizer(alpha_critic).minimize(self.value_loss)
-
-        self.Q_loss = tf.squared_difference(self.Q,self.Q_)
-        self.update_Q = tf.train.AdamOptimizer(alpha_critic).minimize(self.Q_loss)
+        if alpha_actor !=None and alpha_critic != None:#for training the network
+            self.Q_loss = tf.squared_difference(self.Q,self.Q_)
+            self.update_Q = tf.train.AdamOptimizer(alpha_critic).minimize(self.Q_loss)
         
-        self.policy_loss = - tf.reduce_mean(tf.log(tf.matmul(self.Pi,tf.transpose(self.action))+1e-8)*self.V_)
-        self.update_policy = tf.train.AdamOptimizer(alpha_actor).minimize(self.policy_loss)
+            self.policy_loss = - tf.reduce_mean(tf.log(tf.matmul(self.Pi,tf.transpose(self.action))+1e-8)*self.V_)
+            optimizer = tf.train.AdamOptimizer(alpha_actor)
+            gradients, variables = zip(*optimizer.compute_gradients(self.policy_loss))
+            gradients, _ = tf.clip_by_global_norm(gradients, 5.0)
+            self.update_policy = optimizer.apply_gradients(zip(gradients, variables))
+
+        #self.update_policy = tf.train.AdamOptimizer(alpha_actor).minimize(self.policy_loss)
 
         #self.test = -tf.reduce_mean(tf.clip_by_value(tf.log(tf.matmul(self.Pi,tf.transpose(self.action))),-10,10)*self.V_)
 
@@ -159,18 +189,21 @@ class Network:
 
 
     def save_model(self,*args):
-        
-         path = os.getcwd()
-         path += "\\models\\ "
+        try:
+             path = os.getcwd()
+             path += "\\models\\ "
          
-         #path = "C:\MachineLearning\MLdriverPython\MLdriverPython\models\ "
-         if len(args) > 0:
-             file_name = path+args[0]
-         else:
-            file_name =  path+"model3.ckpt" #/media/windows-share/MLdriverPython/MLdriverPython/
-         saver = tf.train.Saver()
-         save_path = saver.save(self.sess, file_name)
-         print("Model saved in file: %s" % save_path)
+             #path = "C:\MachineLearning\MLdriverPython\MLdriverPython\models\ "
+             if len(args) > 0:
+                 file_name = path+args[0]
+             else:
+                file_name =  path+"model3.ckpt" #/media/windows-share/MLdriverPython/MLdriverPython/
+             saver = tf.train.Saver()
+             save_path = saver.save(self.sess, file_name)
+             print("Model saved in file: %s" % save_path)
+        except:
+            print('cannot save')
+
 
     def restore(self,*args):
         path = os.getcwd()

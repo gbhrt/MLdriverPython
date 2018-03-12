@@ -516,7 +516,12 @@ def run_on_path(comm, path, vehicle):
 
 
 def comp_velocity_limit(path):
-    skip = 20#to close points cause error in the velocity limit computation (due to diffrention without filtering)
+    skip = 10
+    reduce_factor = 0.5
+    if len(path.position)<skip*2:
+        velocity_limit = [30 for _ in range(len(path.position))]
+        return False
+    #to close points cause error in the velocity limit computation (due to diffrention without filtering)
     pos = path.position[0::skip]
 
     x = [row[0] for row in pos]
@@ -526,7 +531,7 @@ def comp_velocity_limit(path):
 
     skiped_x = range(0,len(path.position),skip)
     real_x = range(len(path.position))
-    path.velocity_limit = np.interp(np.array(real_x), np.array(skiped_x), np.array(velocity_limit))
+    path.velocity_limit = np.interp(np.array(real_x), np.array(skiped_x), np.array(velocity_limit))*reduce_factor
 
     #plt.plot(np.array(skiped_x), np.array(velocity_limit), 'o')
     #plt.plot(real_x, path.velocity_limit, '-x')
@@ -534,7 +539,7 @@ def comp_velocity_limit(path):
     #plt.show()
 
   
-    return
+    return False
 
 
 

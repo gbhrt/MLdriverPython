@@ -10,7 +10,7 @@ class StateSpace:
     def __init__(self):
         self.data = []
         self.n = 0
-        self.features = 0
+        self.features_num = 0
         return
     def comp_lenght(self):
         for item in self.data:
@@ -107,7 +107,7 @@ if __name__ == "__main__":
     #sim_2_1_17 -quit -batchmode -nographics
     #pre-defined parameters:
     feature_points = 3 #not neccecery at the beginning also 1 is good
-    features = 1+feature_points*2 #vehicle state (now just steering) + points on the path (x,y)
+    features_num = 1+feature_points*2 #vehicle state (now just steering) + points on the path (x,y)
     epsilon = 0.2
     gamma = 0.99
     num_of_runs = 100000
@@ -137,7 +137,7 @@ if __name__ == "__main__":
     last_state = [0 for _ in range(batch_size)]
     Q_corrected = [0 for _ in range(batch_size)]
 
-    net = Network(alpha,features,len(action_space))   
+    net = Network(alpha,features_num,len(action_space))   
     print("Network ready")
 
     if restore_flag:
@@ -266,6 +266,7 @@ if __name__ == "__main__":
                     #time.sleep(1)
                     if i % 20 == 0:
                         pl.simulator.reset_position()
+                        pl.stop_vehicle()
                         #net.save_model()
                         time.sleep(1)
                     pl.restart()#stop vehicle, and initalize real path

@@ -11,16 +11,16 @@ import _thread
 
 class neuralNetwork():
     def __init__(self):
-        self.features = 2
+        self.features_num = 2
         self.hidden_layer_nodes1 = 20
         self.hidden_layer_nodes2 = 10
 
         self.alpha = 0.001
-        self.x=tf.placeholder(tf.float32, [None,self.features])
+        self.x=tf.placeholder(tf.float32, [None,self.features_num])
         self.y_=tf.placeholder(tf.float32,[None,1])
 
 
-        self.W1 = tf.Variable(tf.truncated_normal([self.features,self.hidden_layer_nodes1], stddev=0.1))
+        self.W1 = tf.Variable(tf.truncated_normal([self.features_num,self.hidden_layer_nodes1], stddev=0.1))
         self.b1 = tf.Variable(tf.constant(0.1, shape=[self.hidden_layer_nodes1]))
         self.z1 = tf.tanh(tf.add(tf.matmul(self.x,self.W1),self.b1))
 
@@ -73,7 +73,7 @@ class neuralNetwork():
         train_data = data[:int(0.75*len(data))]
         test_data = data[int(0.25*len(data)):]
 
-        #features = self.features #old data
+        #features_num = self.features_num #old data
         data_x= np.asarray([[x[0],x[1]] for x in train_data])
         data_y= np.asarray([[x[2]] for x in train_data])
 

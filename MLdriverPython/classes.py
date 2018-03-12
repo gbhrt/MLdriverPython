@@ -35,14 +35,7 @@ class Path:
         self.steering = []
         self.distance = []
         self.time = []
-        
-    #position = []#vector3D()
-    #backPosition = []
-    #angle = []#0.
-    #curvature =[]# [0.]
-    #velocity = []#[0.]
-    #steering = []#[0.]
-    #distance = []#[0.]
+  
     def dist(self,x1,y1,x2,y2):
         tmp = (x2-x1)**2 + (y2- y1)**2
         if tmp > 0:
@@ -131,10 +124,13 @@ class PathManager:#
             end = len(path.position)
         else:
             end = np.clip(start + num_of_points,0,len(path.position))
-        for i in range(start,end):
-            cpath.position.append(path.position[i])
-            cpath.angle.append(path.angle[i])
-            cpath.velocity_limit.append(path.velocity_limit[i])
+        if len(path.position) >= end: cpath.position =  path.position[start:end]
+        if len(path.angle) >= end: cpath.angle =  path.angle[start:end]
+        if len(path.velocity_limit) >= end: cpath.velocity_limit =  path.velocity_limit[start:end]
+        #for i in range(start,end):
+        #    cpath.position.append(path.position[i])
+        #    cpath.angle.append(path.angle[i])
+        #    cpath.velocity_limit.append(path.velocity_limit[i])
         return cpath
 
     def split_path(self,input_path_name,num_points,output_name):#input file name of a path, split to paths in num_points lenght. save to output_name_i
@@ -148,13 +144,13 @@ class PathManager:#
             paths_count+=1
             #name = output_name#'splited_files\straight_path_limit2'#input_path_name#
             name = output_name + str(paths_count)+ '.txt'
-            
+
             self.save_path(out_path,name)#out_name)
         return
     def get_next_random_path(self):
         def read():
             self.random_count+=1
-            return self.read_path('splited_files\\random_paths'+ str(self.random_count) +'.txt')
+            return self.read_path('splited_files\\random2\\path_'+ str(self.random_count) +'.txt')
         path = read()
         if path == None:
             self.random_count = 1
@@ -165,7 +161,3 @@ class PathManager:#
 
 
 
-#pm = PathManager()
-#path = pm.read_path_data("paths\path3.txt")
-#name = r'splits\straight_path_limit_splits1'
-#pm.save_path(path, name +str(1)+ '.txt')

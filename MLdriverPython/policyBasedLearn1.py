@@ -8,158 +8,8 @@ import random
 from policyBasedNet import Network
 from plot import Plot
 import json
-
-
-
-def choose_points(local_path,number,distance_between_points):#return points from the local path, choose a point every "skip" points
-    index = 0
-    last_index = 0
-    points = []
-    points.append(local_path.velocity_limit[index])
-    for _ in range(number-1):
-        while local_path.distance[index] - local_path.distance[last_index] < distance_between_points: #search the next point 
-            if index >= len(local_path.distance)-1:#at the end of the path - break, cause doublication of the last velocity limit
-                break
-            index += 1
-        points.append(local_path.velocity_limit[index])
-        last_index = index
-
-
-    #n = 0
-    #points = []
-    #while n < len(local_path.position):
-    #    points.append(local_path.position[n][0])
-    #    points.append(local_path.position[n][1])
-    #    if len(points) == number * 2:
-    #        break
-    #    n+=skip
-    #dis = 2
-    #ang = local_path.angle[-1][1]
-    #while len(points) < number * 2:
-    #    points.append(local_path.position[-1][0] + dis* math.sin(ang))
-    #    points.append(local_path.position[-1][1] + dis* math.cos(ang))
-    return points
-
- 
-
-def get_state(pl = None,local_path = None,points = 1,distance_between = 1):
-    state = []
-    velocity_limits = choose_points(local_path,points,distance_between)
-    # print("vel limit: ", velocity_limit)
-    vel = pl.simulator.vehicle.velocity
-    for i in range(points):
-        state.append(vel - velocity_limits[i])
-        
-    #i = find_low_vel(local_path)
-    #dis = local_path.distance[i]
-    #state.append(dis)
-
-    #state += choose_points(local_path,points,30)
-
-    #path_ang = local_path.angle[0][1]
-    #state.append(path_ang)
-    #point1 = math.copysign(dist(local_path.position[0][0],local_path.position[0][1],0,0),local_path.position[0][0])#distance from path
-    #state.append(point1)
-
-    #for i in range (points):
-    #    state.append(local_path.position[i][0])#x
-    #    state.append(local_path.position[i][1])#y
-    #state.append(local_path.position[target_index][0])#x
-    #state.append(local_path.position[target_index][1])#y
-
-    return state
-
-def get_reward(last_state,state,velocity_limit):   
-    #if state[1] < 0.01: # finished the path
-    #    reward =(max_velocity - state[0])
-    #else:
-    #    reward =  0#state[0]*0.01
-
-
-    #velocity_limit = state[1]
-    #acc = state[0] - last_state[0]#acceleration
-    #if state[0] < velocity_limit:
-    #    if last_state[0] > velocity_limit:
-    #        reward = -acc 
-    #    else:
-    #        reward = acc 
-    #else:
-
-    #    reward = -acc
-    #acc = state[0] - last_state[0]#acceleration
-    #if state[0] < 0:
-    #    if last_state[0] > velocity_limit:
-    #        reward = -acc 
-    #    else:
-    #        reward = acc 
-    #else:
-    #    reward = -acc
-    if state[0] < 0: 
-        reward = velocity_limit + state[0]
-    else: 
-        reward = -state[0]
-
-    return reward
-
-def choose_action(action_space,Pi,steps):
-    #epsilon = 0.0
-    #if random.random() < epsilon:
-    #    a = random.randint(0,len(action_space) - 1)#random.randint(0,(len(action_space.data) - 1))
-    #    print("random a: ",a)
-    #else:
-    #    a = np.argmax(Pi)
-    #    print("best a: ",a)
-    
-    #action = np.random.choice(list_of_candidates, number_of_items_to_pick, p=probability_distribution)
-
-    #choose a random action for the next random steps:
-    #if steps[0] == 0:
-    #    steps[0] = random.randint(1,10)
-    #    steps[1] = random.randint(0,len(action_space) - 1)
-    #    print("choose: steps: ",steps[0],"action: ",steps[1])
-    #a = steps[1]
-    #steps[0] -= 1
-    #print("steps: ",steps[0])
-
-    #choose action from propbilities of Pi:
-    rand = random.random()
-    prob = 0
-    for i in range(len(action_space)):
-        prob += Pi[i]
-        if rand < prob:
-            a =  i
-            break
-
-    #always the highest probability:
-    #a = np.argmax(Pi)
-
-
-    if a == 1:
-        one_hot_a = [0,1]
-    else:
-        one_hot_a = [1,0]
-    return a,one_hot_a
-
-def comp_Pi(net):
-    for v0 in range(-5,5):
-        for v in range(-5,5):
-            Pi = net.get_Pi([v0,v])
-            print(Pi,'\t', end='')
-
-def comp_value(net,max_vel):
-    distance = 10
-    for v in range(max_vel):
-        for p in range(10):
-            #Q = net.get_Q([v,p])
-            #A = sum(Q) / float(len(Q))
-            #print(Q,'\t', end='')
-            #V = net.get_V([v,p])
-            #print(V,'\t', end='')
-            Pi = net.get_Pi([v,p])
-            print(Pi,'\t', end='')
-
-        print()
-
+import policyBasedLib as pLib
+import data_manager
 
 if __name__ == "__main__": 
     #run simulator: cd C:\Users\student_2\Documents\ArielUnity - learning2\sim_2_1
@@ -169,31 +19,34 @@ if __name__ == "__main__":
     #pre-defined parameters:
     feature_points = 10 #not neccecery at the begining also 1 is good
     distance_between_points = 1.0 #meter
-    features = feature_points #vehicle state points on the path (distance)
+    features_num = feature_points #vehicle state points on the path (distance)
     #epsilon = 0.2
     gamma = 0.99
     num_of_runs = 5000
     step_time = 0.2#0.02
-    alpha_actor = 0.0001# for Pi 1e-5 #learning rate
-    alpha_critic = 0.0001#for Q
+    alpha_actor = 0.00001# for Pi 1e-5 #learning rate
+    alpha_critic = 0.00001#for Q
     #max_deviation = 3 # [m] if more then maximum - end episode 
     batch_size = 1
     num_of_TD_steps = 15 #for TD(lambda)
-    visualized_points = 100 #how many points show on the map - just visualy
+    visualized_points = 300 #how many points show on the map - just visualy
     max_pitch = 0.3
     max_roll = 0.3
-    acc = 2.5 # [m/s^2]  need to be more then maximum acceleration in real
+    acc = 1.5 # [m/s^2]  need to be more then maximum acceleration in real
     res = 1
     plot_flag = True
     restore_flag = True
     skip_run = False
     random_paths_flag = True
+    reset_every = 3
+    save_every = 25
     path_name = "paths\\‏‏straight_path_limit3.txt"     #long random path: path3.txt  #long straight path: straight_path.txt
-    save_name = "policy\\model13.ckpt" #model6.ckpt - constant velocity limit - good. model7.ckpt - relative velocity.
+    save_name = "policy\\model14.ckpt" #model6.ckpt - constant velocity limit - good. model7.ckpt - relative velocity.
     #model10.ckpt TD(5) dt = 0.2 alpha 0.001 model13.ckpt - 5 points 2.5 m 0.001 TD 15
     #model8.ckpt - offline trained after 5 episode - very clear
-    restore_name = "policy\\model13.ckpt" # model2.ckpt - MC estimation 
+    restore_name = "policy\\model14.ckpt" # model2.ckpt - MC estimation 
     run_data_file_name = 'running_record1'
+
     ###################
     value_vec_tot = []
     state_vec_tot= []
@@ -203,7 +56,7 @@ if __name__ == "__main__":
     wait_for(stop)#wait for "enter" in another thread - then stop = true
     dv = acc * step_time / res
     action_space =[-dv,dv]
-    net = Network(alpha_actor,alpha_critic,features,len(action_space))   
+    net = Network(features_num,len(action_space),alpha_actor,alpha_critic)   
     print("Network ready")
     if restore_flag:
         net.restore(restore_name)
@@ -217,6 +70,7 @@ if __name__ == "__main__":
         Q_ = [0 for _ in range(batch_size)]
 
         plot = Plot()
+        dataManager = data_manager.DataManager()
 
         for i in range(num_of_runs): #number of runs - run end at the end of the main path and if vehicle deviation error is to big
             if stop:
@@ -240,25 +94,25 @@ if __name__ == "__main__":
             pl.new_episode()#compute path in current vehicle position
             #first step:
             local_path = pl.get_local_path()#num_of_points = visualized_points
-            state = get_state(pl,local_path,feature_points,distance_between_points)
+            state = pLib.get_state(pl,local_path,feature_points,distance_between_points)
             Q = net.get_Q(state)
             Pi = net.get_Pi(state)
             #make action: 
-            a,one_hot_a = choose_action(action_space,Pi,steps)#choose action 
-            #a,one_hot_a = choose_action(action_space,Q,steps)
+            a,one_hot_a = pLib.choose_action(action_space,Pi,steps)#choose action 
+            #a,one_hot_a = pLib..choose_action(action_space,Q,steps)
             pl.delta_velocity_command(action_space[a])#update velocity (and steering) and send to simulator. index - index on global path (pl.desired_path)
-            pl.update_real_path(state[0])
+            dataManager.update_real_path(pl = pl,velocity_limit = local_path.velocity_limit[0])
         
 
             while not stop:#while not stoped, the loop break if reached the end or the deviation is to big
                 if step_now(last_time,step_time):#check if make the next step (after step_time) 
                     pl.simulator.get_vehicle_data()#read data after time step from last action
-                    print("angle: ",pl.simulator.vehicle.angle)
+                    #print("angle: ",pl.simulator.vehicle.angle)
                     local_path = pl.get_local_path(send_path = False,num_of_points = visualized_points)#num_of_points = visualized_points
                     last_state[batch_index] =copy.copy(state)#copy current state to list of last states
-                    state = get_state(pl,local_path,feature_points,distance_between_points)
+                    state = pLib.get_state(pl,local_path,feature_points,distance_between_points)
 
-                    reward = get_reward(last_state[batch_index],state,local_path.velocity_limit[0])
+                    reward = pLib.get_reward(last_state[batch_index],state,local_path.velocity_limit[0])
                     Q_[batch_index] = np.copy(Q)#save Q from last state
                
                   #  print("__________________________________________")
@@ -271,14 +125,14 @@ if __name__ == "__main__":
                    # print("Q - before: ",Q)
 
                     #actor-critic:
-                    ##Q = net.get_Q(state)#from this state
-                    ###print("correcting with action: ",a)
-                    ##Q_[batch_index][a] = reward +gamma*np.max(Q)#compute Q_: reward,a - from last to this state, Q - from this state
-                    ##net.Update_Q(last_state,Q_)
-                    ##Q_last = net.get_Q(last_state[0])#Q for last state for update policy on last state values
+                    Q = net.get_Q(state)#from this state
+                    #print("correcting with action: ",a)
+                    Q_[batch_index][a] = reward +gamma*np.max(Q)#compute Q_: reward,a - from last to this state, Q - from this state
+                    net.Update_Q(last_state,Q_)
+                    Q_last = net.get_Q(last_state[0])#Q for last state for update policy on last state values
                     
-                    ##A = Q_last[a] - sum(Q_last)/len(Q_last)
-                    ##net.Update_policy(last_state,[one_hot_a],[[A]])
+                    A = Q_last[a] - sum(Q_last)/len(Q_last)
+                    net.Update_policy(last_state,[one_hot_a],[[A]])
 
                     #print("Q_: ",Q_[batch_index])
                     #loss = net.get_value_loss(last_state[batch_index],Q_[batch_index])
@@ -310,30 +164,31 @@ if __name__ == "__main__":
                     
                     
                     #TD(lambda):
-                    if(len(state_vec) > num_of_TD_steps):
-                        future_reward = 0
-                        for k in range(num_of_TD_steps):
-                            future_reward += reward_vec[k]*gamma**k 
-                        net.Update_policy([state_vec[-num_of_TD_steps]],[action_vec[-num_of_TD_steps]],[[future_reward]])
-                        reward_vec.pop(0)#remove first
-                        value_vec[-num_of_TD_steps] = [future_reward]#the reward is on the last state and action
-                    reward_vec.append(reward)
+                    ##if(len(state_vec) > num_of_TD_steps):
+                    ##    future_reward = 0
+                    ##    for k in range(num_of_TD_steps):
+                    ##        future_reward += reward_vec[k]*gamma**k 
+                    ##    net.Update_policy([state_vec[-num_of_TD_steps]],[action_vec[-num_of_TD_steps]],[[future_reward]])
+                    ##    reward_vec.pop(0)#remove first
+                    ##    value_vec[-num_of_TD_steps] = [future_reward]#the reward is on the last state and action
+                    ##reward_vec.append(reward)
 
-                    state_vec.append(last_state[0])#for one batch only
-                    action_vec.append(one_hot_a)
-                    value_vec.append([reward])#the reward is on the last state and action
+                    ##state_vec.append(last_state[0])#for one batch only
+                    ##action_vec.append(one_hot_a)
+                    ##value_vec.append([reward])#the reward is on the last state and action
 
                 
                     #make action:
                     Pi = net.get_Pi(state)
                     print("velocity1: ",state[0],"Q: ",Q,"PI: ",Pi)#"velocity2: ",state[1],
-                    a,one_hot_a = choose_action(action_space,Pi,steps)#choose action 
-                    #a,one_hot_a = choose_action(action_space,Q,steps)
+                    a,one_hot_a = pLib.choose_action(action_space,Pi,steps)#choose action 
+                    #a,one_hot_a = pLib.choose_action(action_space,Q,steps)
                     pl.delta_velocity_command(action_space[a])#update velocity (and steering) and send to simulator. index - index on global path (pl.desired_path)        
-                    pl.update_real_path(velocity_limit = local_path.velocity_limit[0])#state[0]
+                    dataManager.update_real_path(pl = pl,velocity_limit = local_path.velocity_limit[0])#state[0]
                     
                     dev = dist(local_path.position[0][0],local_path.position[0][1],0,0)
-                    if pl.check_end(deviation = dev):#check if end of the episode state
+                    mode = pl.check_end(deviation = dev)#check if end of the episode 
+                    if mode != 'ok':
                         break
                 
                 #end if time
@@ -341,15 +196,23 @@ if __name__ == "__main__":
             #after episode end:
             #net.save_model()
             #time.sleep(1)
-            if (i % 2 == 0 and i > 0) or abs(pl.simulator.vehicle.angle[0]) > max_pitch or abs(pl.simulator.vehicle.angle[2]) > max_roll:#i - episode number
+            if mode != 'kipp':
+                pl.stop_vehicle()
+
+            if (i % reset_every == 0 and i > 0) or mode == 'kipp': 
                 #pl.stop_vehicle()
                 pl.simulator.reset_position()
                 pl.stop_vehicle()
                 #net.save_model()
+            if (i % save_every == 0 and i > 0): 
+                net.save_model(save_name)
+
             if plot_flag:
                 plot.close()
-                plot.plot_path(pl.real_path)
+                plot.plot_path(dataManager.real_path)
             pl.restart()#stop vehicle, and initalize real path
+            dataManager.restart()
+           
             #comp_Pi(net)
             #update policy at the end of the episode:
 
@@ -407,4 +270,3 @@ if __name__ == "__main__":
             
     net.save_model(save_name)#model4.ckpt - LINEAR, LINE. model5.ckpt - net, line - good, model6.ckpt - 3 points model7.ckpt -very good
     
-

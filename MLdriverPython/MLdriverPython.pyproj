@@ -32,29 +32,26 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="c_functions.py" />
-    <Compile Include="ReinforceLearn.py" />
-    <Compile Include="ReinforceNet.py">
+    <Compile Include="data_manager.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="deepLearnProject\testes.py">
+    <Compile Include="policyBasedLib.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="ReinforceLearn.py" />
+    <Compile Include="ReinforceNet.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="policyBasedLearn1.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Qlearn\QlearnContinuesPath.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="tests\getchClass.py">
+    <Compile Include="tasks.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="library.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="deepLearnProject\linear_regression.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Qlearn\linear_reg_Qlearn.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="MLdriverPython.py" />
@@ -67,33 +64,12 @@
     <Compile Include="plot.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="policyBased\policyBasedLearn.py">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="policyBasedNet.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Qlearn\Qlearn.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Qlearn\Qlearn1.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="tests\RL.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="runTest.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Qlearn\simpleQlearn.py">
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>
   <ItemGroup>
     <Folder Include="deepLearnProject\" />
-    <Folder Include="tests\" />
-    <Folder Include="Qlearn\" />
-    <Folder Include="policyBased\" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in

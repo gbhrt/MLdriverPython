@@ -8,24 +8,24 @@ import math
 import os
 
 class Network:
-    def __init__(self,alpha,features,action_space_n):#
+    def __init__(self,alpha,features_num,action_space_n):#
         
         
         self.hidden_layer_nodes1 = 50
         self.hidden_layer_nodes2 = 25
 
-        self.state = tf.placeholder(tf.float32, [None,features] )
-        #self.state_vec = tf.reshape(self.state, [1, features])
+        self.state = tf.placeholder(tf.float32, [None,features_num] )
+        #self.state_vec = tf.reshape(self.state, [1, features_num])
         self.Q_ = tf.placeholder(tf.float32, shape=[None, action_space_n])
 
         #linear regression:
-        #self.W1 = tf.Variable(tf.truncated_normal([features,action_space_n], stddev=1e-5))
+        #self.W1 = tf.Variable(tf.truncated_normal([features_num,action_space_n], stddev=1e-5))
         #self.b1 = tf.Variable(tf.constant(0.0, shape=[action_space_n]))
         #self.Q = tf.matmul(self.state,self.W1) + self.b1
         #############################################################
         
         #hidden layer 1:
-        self.W1 = tf.Variable(tf.truncated_normal([features,self.hidden_layer_nodes1], stddev=0.1))
+        self.W1 = tf.Variable(tf.truncated_normal([features_num,self.hidden_layer_nodes1], stddev=0.1))
         self.b1 = tf.Variable(tf.constant(0.1, shape=[self.hidden_layer_nodes1]))
         self.z1 = tf.nn.relu(tf.add(tf.matmul(self.state,self.W1),self.b1))
         #hidden layer 2:

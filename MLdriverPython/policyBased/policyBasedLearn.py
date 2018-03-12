@@ -241,7 +241,7 @@ if __name__ == "__main__":
              #print("des vel: ", pl.simulator.vehicle.velocity," + ", action_space.data[a]," = ",des_vel)
              pl.simulator.send_drive_commands(des_vel,0)
              
-             pl.update_real_path(pos)
+             dataManager.update_real_path(pos)
              
              time.sleep(step_time)
 
@@ -287,15 +287,15 @@ if __name__ == "__main__":
              #print("max_pos: ",pl.desired_path.distance[-1]," pos: ", pos_next)
              if pos_next < 0.01:
                 #print("total reward: ",total_reward)
-                pl.update_real_path(pos)
+                dataManager.update_real_path(pos)
                 done = True
                 if i % 20 == 0:
                     pl.simulator.reset_position()
                     #net.save_model()
                     time.sleep(1)
                 plot.close()
-                plot.plot_path(pl.real_path)
-                #plot.update(pl.real_path)
+                plot.plot_path(dataManager.real_path)
+                #plot.update(dataManager.real_path)
                 pl.restart()
                 
                 pl.create_path1()
