@@ -18,21 +18,23 @@ class Plot():
                 plt.plot(np.array(data.real_path.distance),np.array(data.real_path.velocity_limit))
                 x = [x*distance_between_points+data.real_path.distance[index] for x in range(len(data.features[index]))]
                 plt.plot(np.array(x),np.array(data.features[index]),'ro')
-                ac = np.array(data.acc)
-                x = ac[:,1]
-                y = []
-                for i in range( len(data.acc)):
-                    y.append(data.real_path.velocity[data.acc[i][0]])
-                #plt.plot(x,np.array(y))
-                plt.scatter(x,np.array(y),c = "g")
-                dc = np.array(data.dec)
-                x = dc[:,1]
-                y = []
-                for i in range( len(data.dec)):
-                    y.append(data.real_path.velocity[data.dec[i][0]])
-                #plt.plot(x,np.array(y))
-                plt.scatter(x,np.array(y),c = "r")
-                plt.show()
+                if len (data.acc)>0:
+                    ac = np.array(data.acc)
+                    x = ac[:,1]
+                    y = []
+                    for i in range( len(data.acc)):
+                        y.append(data.real_path.velocity[data.acc[i][0]])
+                    #plt.plot(x,np.array(y))
+                    plt.scatter(x,np.array(y),c = "g")
+                if len(data.dec) > 0:
+                    dc = np.array(data.dec)
+                    x = dc[:,1]
+                    y = []
+                    for i in range( len(data.dec)):
+                        y.append(data.real_path.velocity[data.dec[i][0]])
+                    #plt.plot(x,np.array(y))
+                    plt.scatter(x,np.array(y),c = "r")
+                plt.show(block = False)
    
     def plot_path(self,path, block = False):
         self.fig = plt.figure()

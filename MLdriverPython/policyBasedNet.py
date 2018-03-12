@@ -3,6 +3,7 @@ import numpy as np
 import random
 import math
 import os
+import pathlib
 
 
 class Network:
@@ -190,14 +191,13 @@ class Network:
 
     def save_model(self,*args):
         try:
-             path = os.getcwd()
-             path += "\\models\\ "
-         
+             name = "model3" #.ckpt
              #path = "C:\MachineLearning\MLdriverPython\MLdriverPython\models\ "
              if len(args) > 0:
-                 file_name = path+args[0]
-             else:
-                file_name =  path+"model3.ckpt" #/media/windows-share/MLdriverPython/MLdriverPython/
+                 name = args[0]
+             path = os.getcwd()+ "\\models\\policy\\"+name+"\\"
+             pathlib.Path(path).mkdir(parents=True, exist_ok=True) 
+             file_name =  path+name+".ckpt " #/media/windows-share/MLdriverPython/MLdriverPython/
              saver = tf.train.Saver()
              save_path = saver.save(self.sess, file_name)
              print("Model saved in file: %s" % save_path)
@@ -206,19 +206,19 @@ class Network:
 
 
     def restore(self,*args):
-        path = os.getcwd()
-        path += "\\models\\ "
-        #path = "C:\MachineLearning\MLdriverPython\MLdriverPython\models\ "
-        if args:
-            file_name = path+args[0]
-        else:
-            file_name = path+"model3.ckpt"#/media/windows-share/MLdriverPython/MLdriverPython/
-       
-        
+        try:
+            name = "model3" #.ckpt
+            if len(args) > 0:
+                name = args[0]
+            path = os.getcwd()+ "\\models\\policy\\"+name+"\\"#
+              
+            file_name =  path+name+".ckpt " #/media/windows-share/MLdriverPython/MLdriverPython/
             # Restore variables from disk.
-        saver = tf.train.Saver()
-        saver.restore(self.sess, file_name)
-        print("Model restored.")
+            saver = tf.train.Saver()
+            saver.restore(self.sess, file_name)
+            print("Model restored.")
+        except:
+            print('cannot restore')
 
 
 

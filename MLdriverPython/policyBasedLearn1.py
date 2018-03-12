@@ -41,10 +41,10 @@ if __name__ == "__main__":
     reset_every = 3
     save_every = 25
     path_name = "paths\\‏‏straight_path_limit3.txt"     #long random path: path3.txt  #long straight path: straight_path.txt
-    save_name = "policy\\model14.ckpt" #model6.ckpt - constant velocity limit - good. model7.ckpt - relative velocity.
+    save_name = "model14" #model6.ckpt - constant velocity limit - good. model7.ckpt - relative velocity.
     #model10.ckpt TD(5) dt = 0.2 alpha 0.001 model13.ckpt - 5 points 2.5 m 0.001 TD 15
     #model8.ckpt - offline trained after 5 episode - very clear
-    restore_name = "policy\\model14.ckpt" # model2.ckpt - MC estimation 
+    restore_name = "model14" # model2.ckpt - MC estimation 
     run_data_file_name = 'running_record1'
 
     ###################
@@ -129,8 +129,10 @@ if __name__ == "__main__":
                     #print("correcting with action: ",a)
                     Q_[batch_index][a] = reward +gamma*np.max(Q)#compute Q_: reward,a - from last to this state, Q - from this state
                     net.Update_Q(last_state,Q_)
+
                     Q_last = net.get_Q(last_state[0])#Q for last state for update policy on last state values
-                    
+                    Q_loss = net.get_Q_loss(last_state[0],Q_[batch_index])
+                    print("Q_loss: ",Q_loss[0][a])
                     A = Q_last[a] - sum(Q_last)/len(Q_last)
                     net.Update_policy(last_state,[one_hot_a],[[A]])
 
@@ -175,7 +177,7 @@ if __name__ == "__main__":
 
                     ##state_vec.append(last_state[0])#for one batch only
                     ##action_vec.append(one_hot_a)
-                    ##value_vec.append([reward])#the reward is on the last state and action
+                    value_vec.append([reward])#the reward is on the last state and action
 
                 
                     #make action:
@@ -185,7 +187,7 @@ if __name__ == "__main__":
                     #a,one_hot_a = pLib.choose_action(action_space,Q,steps)
                     pl.delta_velocity_command(action_space[a])#update velocity (and steering) and send to simulator. index - index on global path (pl.desired_path)        
                     dataManager.update_real_path(pl = pl,velocity_limit = local_path.velocity_limit[0])#state[0]
-                    
+                    dataManager.save_additional_data(pl,features = state,action = a)
                     dev = dist(local_path.position[0][0],local_path.position[0][1],0,0)
                     mode = pl.check_end(deviation = dev)#check if end of the episode 
                     if mode != 'ok':
@@ -206,10 +208,13 @@ if __name__ == "__main__":
                 #net.save_model()
             if (i % save_every == 0 and i > 0): 
                 net.save_model(save_name)
-
+            reward_sum = 0
+            for item in value_vec: reward_sum+=item[0]
+            print("mean reward: ",reward_sum/len(value_vec))
             if plot_flag:
                 plot.close()
-                plot.plot_path(dataManager.real_path)
+                plot.plot_path_with_features(dataManager,distance_between_points)
+                #plot.plot_path(dataManager.real_path)
             pl.restart()#stop vehicle, and initalize real path
             dataManager.restart()
            
