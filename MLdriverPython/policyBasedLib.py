@@ -33,15 +33,26 @@ def choose_points(local_path,number,distance_between_points):#return points from
     return points
 
  
+def normalize(val,min,max):
+    nval = []
+    for item in val:
+        nval.append( (item - min)/(max - min))
+    return nval
+def denormalize(nval, min, max):
+    val = []
+    for item in nval:
+        val.append( item * (max - min) + min)
+    return val
 
 def get_state(pl = None,local_path = None,points = 1,distance_between = 1):
-    state = []
+    #state = []
     velocity_limits = choose_points(local_path,points,distance_between)
     # print("vel limit: ", velocity_limit)
     vel = pl.simulator.vehicle.velocity
-    for i in range(points):
-        state.append(vel - velocity_limits[i])
-        
+    state = [vel] +  velocity_limits
+    #for i in range(points):
+    #    state.append(vel - velocity_limits[i])
+    state = normalize(state,0,30)
     #i = find_low_vel(local_path)
     #dis = local_path.distance[i]
     #state.append(dis)
@@ -61,7 +72,7 @@ def get_state(pl = None,local_path = None,points = 1,distance_between = 1):
 
     return state
 
-def get_reward(last_state,state,velocity_limit):   
+def get_reward(last_state,state,velocity_limit,velocity):   
     #if state[1] < 0.01: # finished the path
     #    reward =(max_velocity - state[0])
     #else:
@@ -86,23 +97,30 @@ def get_reward(last_state,state,velocity_limit):
     #        reward = acc 
     #else:
     #    reward = -acc
-    if state[0] < 0: 
-        reward = velocity_limit + state[0]
-        if reward < 0.01:
+    if velocity < velocity_limit: 
+        reward = velocity
+        if velocity < 0.01:
             reward = - 2
     else: 
-        reward = -10*state[0]
+        reward = -1.*(velocity - velocity_limit)
+
+    #if state[0] < 0: 
+    #    reward = velocity_limit + state[0]
+    #    if reward < 0.01:
+    #        reward = - 2
+    #else: 
+    #    reward = -10*state[0]
 
     return reward
 
 def choose_action(action_space,Pi,steps = None):
-    #epsilon = 0.0
-    #if random.random() < epsilon:
-    #    a = random.randint(0,len(action_space) - 1)#random.randint(0,(len(action_space.data) - 1))
-    #    print("random a: ",a)
-    #else:
-    #    a = np.argmax(Pi)
-    #    print("best a: ",a)
+    epsilon = 0.1
+    if random.random() < epsilon:
+        a = random.randint(0,len(action_space) - 1)#random.randint(0,(len(action_space.data) - 1))
+        print("random a: ",a)
+    else:
+        a = np.argmax(Pi)
+        print("best a: ",a)
     
     #action = np.random.choice(list_of_candidates, number_of_items_to_pick, p=probability_distribution)
 
@@ -116,13 +134,13 @@ def choose_action(action_space,Pi,steps = None):
     #print("steps: ",steps[0])
 
     #choose action from propbilities of Pi:
-    rand = random.random()
-    prob = 0
-    for i in range(len(action_space)):
-        prob += Pi[i]
-        if rand < prob:
-            a =  i
-            break
+    #rand = random.random()
+    #prob = 0
+    #for i in range(len(action_space)):
+    #    prob += Pi[i]
+    #    if rand < prob:
+    #        a =  i
+    #        break
 
     #always the highest probability:
     #a = np.argmax(Pi)

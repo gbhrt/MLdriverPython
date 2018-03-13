@@ -16,9 +16,10 @@ class DataManager:
         self.ind = 0
     def save_additional_data(self,pl,features = None, action = None):
         if features != None:
+            vel = []
             for i in range(len(features)):
-                features[i] = pl.simulator.vehicle.velocity - features[i] 
-            self.features.append(features)
+                vel.append(pl.simulator.vehicle.velocity - features[i] )
+            self.features.append(vel)
         dist = pl.in_vehicle_reference_path.distance[pl.main_index]
         if action > 0:
             self.acc.append([self.ind,dist])

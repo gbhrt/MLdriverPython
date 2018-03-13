@@ -34,8 +34,8 @@ class Network:
         #############################################################
         return pi
     def Q_estimator(self,action_space_n,state,features_num):#define a net - input: state (and dimentions) - output: Q - Value
-        hidden_layer_nodes1 = 100
-        hidden_layer_nodes2 = 50
+        hidden_layer_nodes1 = 10
+        hidden_layer_nodes2 = 5
 
         #linear regression:
         #W1 = tf.Variable(tf.truncated_normal([features_num,action_space_n], stddev=1e-5))

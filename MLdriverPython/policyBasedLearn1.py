@@ -17,15 +17,15 @@ if __name__ == "__main__":
     #sim_2_1_17 -quit -batchmode -nographics
 
     #pre-defined parameters:
-    feature_points = 10 #not neccecery at the begining also 1 is good
+    feature_points = 1 #
     distance_between_points = 1.0 #meter
-    features_num = feature_points #vehicle state points on the path (distance)
+    features_num = 1 + feature_points #vehicle state points on the path (distance)
     #epsilon = 0.2
     gamma = 0.99
     num_of_runs = 5000
     step_time = 0.2#0.02
-    alpha_actor = 0.00001# for Pi 1e-5 #learning rate
-    alpha_critic = 0.00001#for Q
+    alpha_actor = 0.0001# for Pi 1e-5 #learning rate
+    alpha_critic = 0.0001#for Q
     #max_deviation = 3 # [m] if more then maximum - end episode 
     batch_size = 1
     num_of_TD_steps = 15 #for TD(lambda)
@@ -34,14 +34,14 @@ if __name__ == "__main__":
     max_roll = 0.3
     acc = 1.5 # [m/s^2]  need to be more then maximum acceleration in real
     res = 1
-    plot_flag = True
+    plot_flag = False
     restore_flag = True
     skip_run = False
-    random_paths_flag = True
+    random_paths_flag = False
     reset_every = 3
     save_every = 25
-    path_name = "paths\\‏‏straight_path_limit3.txt"     #long random path: path3.txt  #long straight path: straight_path.txt
-    save_name = "model14" #model6.ckpt - constant velocity limit - good. model7.ckpt - relative velocity.
+    path_name = "paths\\path.txt"     #long random path: path3.txt  #long straight path: straight_path.txt
+    save_name = "model15" #model6.ckpt - constant velocity limit - good. model7.ckpt - relative velocity.
     #model10.ckpt TD(5) dt = 0.2 alpha 0.001 model13.ckpt - 5 points 2.5 m 0.001 TD 15
     #model8.ckpt - offline trained after 5 episode - very clear
     restore_name = "model14" # model2.ckpt - MC estimation 
@@ -64,7 +64,7 @@ if __name__ == "__main__":
         pl = Planner()
         pl.start_simple()
         if(pl.load_path(path_name,random_paths_flag)):
-            stop[0] = 1
+            stop = [1]
 
         last_state = [0 for _ in range(batch_size)]
         Q_ = [0 for _ in range(batch_size)]
@@ -98,8 +98,8 @@ if __name__ == "__main__":
             Q = net.get_Q(state)
             Pi = net.get_Pi(state)
             #make action: 
-            a,one_hot_a = pLib.choose_action(action_space,Pi,steps)#choose action 
-            #a,one_hot_a = pLib..choose_action(action_space,Q,steps)
+            a,one_hot_a = pLib.choose_action(action_space,Q,steps)#choose action 
+            #a,one_hot_a = pLib..choose_action(action_space,Pi,steps)
             pl.delta_velocity_command(action_space[a])#update velocity (and steering) and send to simulator. index - index on global path (pl.desired_path)
             dataManager.update_real_path(pl = pl,velocity_limit = local_path.velocity_limit[0])
         
@@ -112,7 +112,7 @@ if __name__ == "__main__":
                     last_state[batch_index] =copy.copy(state)#copy current state to list of last states
                     state = pLib.get_state(pl,local_path,feature_points,distance_between_points)
 
-                    reward = pLib.get_reward(last_state[batch_index],state,local_path.velocity_limit[0])
+                    reward = pLib.get_reward(last_state[batch_index],state,local_path.velocity_limit[0],pl.simulator.vehicle.velocity)
                     Q_[batch_index] = np.copy(Q)#save Q from last state
                
                   #  print("__________________________________________")
@@ -183,11 +183,11 @@ if __name__ == "__main__":
                     #make action:
                     Pi = net.get_Pi(state)
                     print("velocity1: ",state[0],"Q: ",Q,"PI: ",Pi)#"velocity2: ",state[1],
-                    a,one_hot_a = pLib.choose_action(action_space,Pi,steps)#choose action 
-                    #a,one_hot_a = pLib.choose_action(action_space,Q,steps)
+                    #a,one_hot_a = pLib.choose_action(action_space,Pi,steps)#choose action 
+                    a,one_hot_a = pLib.choose_action(action_space,Q,steps)
                     pl.delta_velocity_command(action_space[a])#update velocity (and steering) and send to simulator. index - index on global path (pl.desired_path)        
                     dataManager.update_real_path(pl = pl,velocity_limit = local_path.velocity_limit[0])#state[0]
-                    dataManager.save_additional_data(pl,features = state,action = a)
+                    #dataManager.save_additional_data(pl,features = state,action = a)
                     dev = dist(local_path.position[0][0],local_path.position[0][1],0,0)
                     mode = pl.check_end(deviation = dev)#check if end of the episode 
                     if mode != 'ok':
@@ -210,11 +210,12 @@ if __name__ == "__main__":
                 net.save_model(save_name)
             reward_sum = 0
             for item in value_vec: reward_sum+=item[0]
-            print("mean reward: ",reward_sum/len(value_vec))
+            if len(value_vec) > 0:
+                print("mean reward: ",reward_sum/len(value_vec))
             if plot_flag:
                 plot.close()
-                plot.plot_path_with_features(dataManager,distance_between_points)
-                #plot.plot_path(dataManager.real_path)
+                #plot.plot_path_with_features(dataManager,distance_between_points)
+                plot.plot_path(dataManager.real_path)
             pl.restart()#stop vehicle, and initalize real path
             dataManager.restart()
            
