@@ -34,29 +34,43 @@ class Network:
         #############################################################
         return pi
     def Q_estimator(self,action_space_n,state,features_num):#define a net - input: state (and dimentions) - output: Q - Value
-        hidden_layer_nodes1 = 10
-        hidden_layer_nodes2 = 5
+        hidden_layer_nodes1 = 100
+        hidden_layer_nodes2 = 50
 
         #linear regression:
         #W1 = tf.Variable(tf.truncated_normal([features_num,action_space_n], stddev=1e-5))
         #b1 = tf.Variable(tf.constant(0.0, shape=[action_space_n]))
         #Q = tf.matmul(state,W1) + b1
         #############################################################
-        
+        #value layers:
         #hidden layer 1:
-        W1 = tf.Variable(tf.truncated_normal([features_num,hidden_layer_nodes1], stddev=0.1))
-        b1 = tf.Variable(tf.constant(0.1, shape=[hidden_layer_nodes1]))
-        z1 = tf.nn.relu(tf.add(tf.matmul(state,W1),b1))
+        V_W1 = tf.Variable(tf.truncated_normal([features_num,hidden_layer_nodes1], stddev=0.1),name = "Q_W1")
+        V_b1 = tf.Variable(tf.constant(0.1, shape=[hidden_layer_nodes1]),name = "Q_b1")
+        V_z1 = tf.nn.relu(tf.add(tf.matmul(state,V_W1),V_b1))
         #hidden layer 2:
-        W2 = tf.Variable(tf.truncated_normal([hidden_layer_nodes1,hidden_layer_nodes2], stddev=0.1))
-        b2 = tf.Variable(tf.constant(0.1, shape=[hidden_layer_nodes2]))
-        z2 = tf.nn.relu(tf.add(tf.matmul(z1,W2),b2))
+        V_W2 = tf.Variable(tf.truncated_normal([hidden_layer_nodes1,hidden_layer_nodes2], stddev=0.1),name = "Q_W2")
+        V_b2 = tf.Variable(tf.constant(0.1, shape=[hidden_layer_nodes2]),name = "Q_b2")
+        V_z2 = tf.nn.relu(tf.add(tf.matmul(V_z1,V_W2),V_b2))
         #output layer:
-        W3 = tf.Variable(tf.truncated_normal([hidden_layer_nodes2,action_space_n], stddev=0.1))
-        b3 = tf.Variable(tf.constant(0.1, shape=[action_space_n]))
-        Q = tf.add(tf.matmul(z2,W3), b3)
+        V_W3 = tf.Variable(tf.truncated_normal([hidden_layer_nodes2,action_space_n], stddev=0.1),name = "Q_W3")
+        V_b3 = tf.Variable(tf.constant(0.1, shape=[action_space_n]),name = "Q_b3")
+        Value = tf.add(tf.matmul(V_z2,V_W3), V_b3)
         #############################################################
-        return Q
+        #Advantage layers:
+        #hidden layer 1:
+        A_W1 = tf.Variable(tf.truncated_normal([features_num,hidden_layer_nodes1], stddev=0.1),name = "Q_W1")
+        A_b1 = tf.Variable(tf.constant(0.1, shape=[hidden_layer_nodes1]),name = "Q_b1")
+        A_z1 = tf.nn.relu(tf.add(tf.matmul(state,A_W1),A_b1))
+        #hidden layer 2:
+        A_W2 = tf.Variable(tf.truncated_normal([hidden_layer_nodes1,hidden_layer_nodes2], stddev=0.1),name = "Q_W2")
+        A_b2 = tf.Variable(tf.constant(0.1, shape=[hidden_layer_nodes2]),name = "Q_b2")
+        A_z2 = tf.nn.relu(tf.add(tf.matmul(A_z1,A_W2),A_b2))
+        #output layer:
+        A_W3 = tf.Variable(tf.truncated_normal([hidden_layer_nodes2,action_space_n], stddev=0.1),name = "Q_W3")
+        A_b3 = tf.Variable(tf.constant(0.1, shape=[action_space_n]),name = "Q_b3")
+        Advantage = tf.add(tf.matmul(A_z2,A_W3), A_b3)
+        return Value + tf.subtract(Advantage,tf.reduce_mean(Advantage,axis=1,keepdims=True))
+        
     def dynamic_model_estimator(self,action,state,features_num):#define a net - input: state and action - output: next state
         hidden_layer_nodes1 = 50
         hidden_layer_nodes2 = 25
@@ -107,15 +121,17 @@ class Network:
         #############################################################
         return V
 
-    def __init__(self,features_num,action_space_n,alpha_actor = None,alpha_critic = None):#
+    def __init__(self,features_num,action_space_n,alpha_actor = None,alpha_critic = None, tau = 1.0):#
 
         self.state = tf.placeholder(tf.float32, [None,features_num] )
         self.V_ = tf.placeholder(tf.float32,shape=[None, 1])
-        self.action = tf.placeholder( tf.float32, [None,2] )#one hot
-        self.Q_ = tf.placeholder(tf.float32, shape=[None, action_space_n])
+        self.action = tf.placeholder( dtype=tf.int32, shape=[None] )
+        self.actions_one_hot = tf.one_hot(self.action,action_space_n,dtype=tf.float32)#one hot
+        self.input_targetQa = tf.placeholder(tf.float32, shape=[None])
 
         self.Pi = self.policy_estimator(action_space_n, self.state,features_num)
         self.Q = self.Q_estimator(action_space_n, self.state,features_num)
+        self.targetQ = self.Q_estimator(action_space_n, self.state,features_num)
         #self.V = self.value_estimator(features_num,self.state)
         #self.next_state = self.dynamic_model_estimator(
 
@@ -123,14 +139,16 @@ class Network:
         #self.value_loss = tf.squared_difference(self.V,self.V_)
         #self.update_value = tf.train.GradientDescentOptimizer(alpha_critic).minimize(self.value_loss)
         if alpha_actor !=None and alpha_critic != None:#for training the network
-            self.Q_loss = tf.squared_difference(self.Q,self.Q_)
+            self.Qa = tf.reduce_sum(tf.multiply(self.Q, self.actions_one_hot),axis=1)
+            
+            self.Q_loss = tf.squared_difference(self.Qa,self.input_targetQa)
             self.update_Q = tf.train.AdamOptimizer(alpha_critic).minimize(self.Q_loss)
-        
-            self.policy_loss = - tf.reduce_mean(tf.log(tf.matmul(self.Pi,tf.transpose(self.action))+1e-8)*self.V_)
-            optimizer = tf.train.AdamOptimizer(alpha_actor)
-            gradients, variables = zip(*optimizer.compute_gradients(self.policy_loss))
-            gradients, _ = tf.clip_by_global_norm(gradients, 5.0)
-            self.update_policy = optimizer.apply_gradients(zip(gradients, variables))
+            self.update_target_init(tau)
+          #  self.policy_loss = - tf.reduce_mean(tf.log(tf.matmul(self.Pi,tf.transpose(self.actions_one_hot))+1e-8)*self.V_)
+            #optimizer = tf.train.AdamOptimizer(alpha_actor)
+            #gradients, variables = zip(*optimizer.compute_gradients(self.policy_loss))
+            #gradients, _ = tf.clip_by_global_norm(gradients, 5.0)
+            #self.update_policy = optimizer.apply_gradients(zip(gradients, variables))
 
         #self.update_policy = tf.train.AdamOptimizer(alpha_actor).minimize(self.policy_loss)
 
@@ -158,8 +176,12 @@ class Network:
         Pi = self.sess.run(self.Pi, feed_dict={self.state: [s]})
         return Pi[0]
     def get_Q(self,s):#get one pi at a specific state
-        Q = self.sess.run(self.Q, feed_dict={self.state: [s]})
-        return Q[0]
+        Q = self.sess.run(self.Q, feed_dict={self.state: s})
+        return Q
+    def get_targetQ(self,s):#get one pi at a specific state
+        Q = self.sess.run(self.targetQ, feed_dict={self.state: s})
+        return Q
+ 
     def get_V(self,s):#get one pi at a specific state
         V = self.sess.run(self.V, feed_dict={self.state: [s]})
         return V[0]
@@ -170,9 +192,13 @@ class Network:
     def Update_policy(self,s,action,V_):
         self.sess.run(self.update_policy, feed_dict={self.state: s, self.action: action, self.V_: V_})
         return 
-    def Update_Q(self,s,Q_):
-        self.sess.run(self.update_Q, feed_dict={self.state: s ,self.Q_: Q_})# 
+    def Update_Q(self,s,a,input_targetQa):
+        self.sess.run(self.update_Q, feed_dict={self.state: s ,self.input_targetQa: input_targetQa,self.action: a})# 
         return 
+
+    #def Update_Q(self,Q,Q_):
+    #    self.sess.run(self.update_Q, feed_dict={self.Q: Q ,self.Q_: Q_})# 
+    #    return 
     def Update_value(self,s,V_):
         self.sess.run(self.update_value, feed_dict={self.state: s ,self.V_: V_})# 
         return 
@@ -180,14 +206,32 @@ class Network:
     def get_par(self):
         return self.sess.run(self.W1),self.sess.run(self.b1), 
 
-    def get_Q_loss(self,s,Q_):
-        return self.sess.run(self.Q_loss ,feed_dict={self.state: [s], self.Q_: [Q_]})
+    def get_Q_loss(self,s,a,input_targetQa):
+        return self.sess.run(self.Q_loss ,feed_dict={self.state: [s], self.input_targetQa: [input_targetQa],self.action:a})
     def get_value_loss(self,s,V_):
         return self.value_loss.eval(session=self.sess,feed_dict={self.state: s, self.V_: V_})
         #return self.sess.run(self.value_loss ,feed_dict={self.state: s, self.V_: V_})
     def get_policy_loss(self,s,action,V_):
         return self.policy_loss.eval(session=self.sess,feed_dict={self.state: s, self.action: action, self.V_: V_})
 
+    
+    def update_target_init(self,tau):
+        tvars = tf.trainable_variables()
+        #Q_vars = [var for var in tvars if 'Q_' in var.name]
+        #tarQ_vars = [var for var in tvars if 't_' in var.name]
+        tvars = [var for var in tvars if 'Q_' in var.name]
+        Q_vars = tvars[0:len(tvars)//2]
+        tarQ_vars = tvars[len(tvars)//2:len(tvars)]
+        self.update_var_vec = []
+        for i in range(len(Q_vars)):
+            self.update_var_vec.append(tarQ_vars[i].assign((Q_vars[i].value()*tau) + ((1-tau) * tarQ_vars[i])))
+        #for idx,var in enumerate(tfVars[0:total_vars//2]):
+        #    op_holder.append(tfVars[idx+total_vars//2].assign((var.value()*tau) + ((1-tau)*tfVars[idx+total_vars//2].value())))
+        return self.update_var_vec
+
+    def update_target(self):
+        for var in self.update_var_vec:
+            self.sess.run(var)
 
     def save_model(self,*args):
         try:
@@ -202,7 +246,8 @@ class Network:
              save_path = saver.save(self.sess, file_name)
              print("Model saved in file: %s" % save_path)
         except:
-            print('cannot save')
+            print('cannot save - try again')
+            self.save_model(name)
 
 
     def restore(self,*args):

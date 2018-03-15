@@ -1,12 +1,13 @@
 import socket
 
 class Comm:
-    input_data_str = ""
-    output_data_str = ""
-    addr = 0
-    sock = 0
-    conn = 0
-    buffSize = 1000000 #1Mb
+    def __init__(self):
+        self.input_data_str = ""
+        self.output_data_str = ""
+        self.addr = 0
+        self.sock = 0
+        self.conn = 0
+        self.buffSize = 1000000 #1Mb
 
     def waitForClient(self):
         UDP_IP = "127.0.0.1"

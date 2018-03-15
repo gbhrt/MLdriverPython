@@ -6,6 +6,9 @@ class Plot():
     def __init__(self):
         self.fig = 0
         self.ax = 0
+        #plt.ion()
+        #plt.show()
+
     def plot_path_with_features(self,data,distance_between_points):
         #while True:
             #inp = input("insert index: ")
@@ -52,11 +55,15 @@ class Plot():
         #print("velocity: ",path.velocity)
         #plt.ion()
         #self.ax1.plot(datax1, datay)
-        self.ax.plot(datax, datay1)
-        self.ax.plot(datax, datay2)
+        self.ax.plot(datay2)
+        ##self.ax.plot(datax, datay1)
+        ##self.ax.plot(datax, datay2)
         plt.show(block = block)
         #plt.draw()
+        #plt.pause(0.001)
+        #plt.draw()
         return
+
     def close(self):
         plt.close("all")
     def start(self):

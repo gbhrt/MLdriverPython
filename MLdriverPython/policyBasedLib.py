@@ -3,6 +3,55 @@ import random
 import numpy as np
 import json
 
+class HyperParameters:
+    def __init__(self):
+        self.feature_points = 10 #
+        self.distance_between_points = 1.0 #meter
+        self.features_num = 1 + self.feature_points #vehicle state points on the path (distance)
+        self.epsilon_start = 1.0
+        self.epsilon = 0.1
+        self.gamma = 0.99
+        self.tau = 0.01 #how to update target network compared to Q network
+        self.num_of_runs = 5000
+        self.step_time = 0.2
+        self.alpha_actor = 0.001# for Pi 1e-5 #learning rate
+        self.alpha_critic = 0.001#for Q
+        self.max_deviation = 3 # [m] if more then maximum - end episode 
+        self.batch_size = 32
+        self.replay_memory_size = 10000
+        self.num_of_TD_steps = 15 #for TD(lambda)
+        self.visualized_points = 300 #how many points show on the map - just visualy
+        self.max_pitch = 0.3
+        self.max_roll = 0.3
+        self.acc = 1.5 # [m/s^2]  need to be more then maximum acceleration in real
+        self.res = 1
+        self.plot_flag = True
+        self.restore_flag = True
+        self.skip_run = False
+        self.random_paths_flag = True
+        self.reset_every = 3
+        self.save_every = 25
+        self.path_name = "paths\\path.txt"     #long random path: path3.txt  #long straight path: straight_path.txt
+        self.save_name = "model17" #model6.ckpt - constant velocity limit - good. model7.ckpt - relative velocity.
+        #model10.ckpt TD(5) dt = 0.2 alpha 0.001 model13.ckpt - 5 points 2.5 m 0.001 TD 15
+        #model8.ckpt - offline trained after 5 episode - very clear
+        self.restore_name = "model17" # model2.ckpt - MC estimation 
+        self.run_data_file_name = 'running_record1'
+
+class Replay:
+    def __init__(self,replay_memory_size):
+        self.memory_size = replay_memory_size
+        self.memory = []
+    def add(self,data):
+        if len(self.memory) > self.memory_size:
+            self.memory.pop(0)
+        self.memory.append(data)
+    def sample(self,batch_size):
+        samples = random.sample(self.memory,np.clip(batch_size,0,len(self.memory)))
+        return map(np.array, zip(*samples))
+        
+
+
 def choose_points(local_path,number,distance_between_points):#return points from the local path, choose a point every "skip" points
     index = 0
     last_index = 0
@@ -48,7 +97,7 @@ def get_state(pl = None,local_path = None,points = 1,distance_between = 1):
     #state = []
     velocity_limits = choose_points(local_path,points,distance_between)
     # print("vel limit: ", velocity_limit)
-    vel = pl.simulator.vehicle.velocity
+    vel = max(pl.simulator.vehicle.velocity,0)
     state = [vel] +  velocity_limits
     #for i in range(points):
     #    state.append(vel - velocity_limits[i])
@@ -72,7 +121,7 @@ def get_state(pl = None,local_path = None,points = 1,distance_between = 1):
 
     return state
 
-def get_reward(last_state,state,velocity_limit,velocity):   
+def get_reward(velocity_limit,velocity):   
     #if state[1] < 0.01: # finished the path
     #    reward =(max_velocity - state[0])
     #else:
@@ -99,8 +148,8 @@ def get_reward(last_state,state,velocity_limit,velocity):
     #    reward = -acc
     if velocity < velocity_limit: 
         reward = velocity
-        if velocity < 0.01:
-            reward = - 2
+        #if velocity < 1e-5:
+        #    reward = - 2
     else: 
         reward = -1.*(velocity - velocity_limit)
 
@@ -113,8 +162,7 @@ def get_reward(last_state,state,velocity_limit,velocity):
 
     return reward
 
-def choose_action(action_space,Pi,steps = None):
-    epsilon = 0.1
+def choose_action(action_space,Pi,steps = None,epsilon = 0.1):
     if random.random() < epsilon:
         a = random.randint(0,len(action_space) - 1)#random.randint(0,(len(action_space.data) - 1))
         print("random a: ",a)
@@ -145,12 +193,7 @@ def choose_action(action_space,Pi,steps = None):
     #always the highest probability:
     #a = np.argmax(Pi)
 
-
-    if a == 1:
-        one_hot_a = [0,1]
-    else:
-        one_hot_a = [1,0]
-    return a,one_hot_a
+    return a
 
 def comp_Pi(net):
     for v0 in range(-5,5):

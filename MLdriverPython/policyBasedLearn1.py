@@ -17,62 +17,37 @@ if __name__ == "__main__":
     #sim_2_1_17 -quit -batchmode -nographics
 
     #pre-defined parameters:
-    feature_points = 1 #
-    distance_between_points = 1.0 #meter
-    features_num = 1 + feature_points #vehicle state points on the path (distance)
-    #epsilon = 0.2
-    gamma = 0.99
-    num_of_runs = 5000
-    step_time = 0.2#0.02
-    alpha_actor = 0.0001# for Pi 1e-5 #learning rate
-    alpha_critic = 0.0001#for Q
-    #max_deviation = 3 # [m] if more then maximum - end episode 
-    batch_size = 1
-    num_of_TD_steps = 15 #for TD(lambda)
-    visualized_points = 300 #how many points show on the map - just visualy
-    max_pitch = 0.3
-    max_roll = 0.3
-    acc = 1.5 # [m/s^2]  need to be more then maximum acceleration in real
-    res = 1
-    plot_flag = False
-    restore_flag = True
-    skip_run = False
-    random_paths_flag = False
-    reset_every = 3
-    save_every = 25
-    path_name = "paths\\path.txt"     #long random path: path3.txt  #long straight path: straight_path.txt
-    save_name = "model15" #model6.ckpt - constant velocity limit - good. model7.ckpt - relative velocity.
-    #model10.ckpt TD(5) dt = 0.2 alpha 0.001 model13.ckpt - 5 points 2.5 m 0.001 TD 15
-    #model8.ckpt - offline trained after 5 episode - very clear
-    restore_name = "model14" # model2.ckpt - MC estimation 
-    run_data_file_name = 'running_record1'
-
+    HP = pLib.HyperParameters()
     ###################
+
+    Replay = pLib.Replay(HP.replay_memory_size)
     value_vec_tot = []
     state_vec_tot= []
     action_vec_tot= []
     steps = [0,0]#for random action selection of random number of steps
     stop = []
     wait_for(stop)#wait for "enter" in another thread - then stop = true
-    dv = acc * step_time / res
+    dv = HP.acc * HP.step_time / HP.res
     action_space =[-dv,dv]
-    net = Network(features_num,len(action_space),alpha_actor,alpha_critic)   
+    net = Network(HP.features_num,len(action_space),HP.alpha_actor,HP.alpha_critic,tau = HP.tau)   
     print("Network ready")
-    if restore_flag:
-        net.restore(restore_name)
-    if not skip_run:
+    if HP.restore_flag:
+        net.restore(HP.restore_name)
+    if not HP.skip_run:
         pl = Planner()
         pl.start_simple()
-        if(pl.load_path(path_name,random_paths_flag)):
-            stop = [1]
+        if not HP.random_paths_flag:
+            if pl.load_path(HP.path_name,HP.random_paths_flag) == -1:
+                stop = [1]
 
-        last_state = [0 for _ in range(batch_size)]
-        Q_ = [0 for _ in range(batch_size)]
-
+        
+        vec_state = []
+        vecQ_ = []
+      
         plot = Plot()
         dataManager = data_manager.DataManager()
 
-        for i in range(num_of_runs): #number of runs - run end at the end of the main path and if vehicle deviation error is to big
+        for i in range(HP.num_of_runs): #number of runs - run end at the end of the main path and if vehicle deviation error is to big
             if stop:
                 break
             # initialize every episode:
@@ -87,132 +62,119 @@ if __name__ == "__main__":
             reward_vec = [] #save lambda rewards
             #########################
             pl.simulator.get_vehicle_data()#read data after time step from last action
-            if random_paths_flag:
-                if(pl.load_path(path_name,random_paths_flag)):#if cannot load path
+            if HP.random_paths_flag:
+                path_num = pl.load_path(HP.path_name,HP.random_paths_flag)
+                if path_num == -1:#if cannot load path
                     break
                 
             pl.new_episode()#compute path in current vehicle position
-            #first step:
-            local_path = pl.get_local_path()#num_of_points = visualized_points
-            state = pLib.get_state(pl,local_path,feature_points,distance_between_points)
-            Q = net.get_Q(state)
-            Pi = net.get_Pi(state)
-            #make action: 
-            a,one_hot_a = pLib.choose_action(action_space,Q,steps)#choose action 
-            #a,one_hot_a = pLib..choose_action(action_space,Pi,steps)
-            pl.delta_velocity_command(action_space[a])#update velocity (and steering) and send to simulator. index - index on global path (pl.desired_path)
-            dataManager.update_real_path(pl = pl,velocity_limit = local_path.velocity_limit[0])
-        
-
+            #first state:
+            local_path = pl.get_local_path()#num_of_points = HP.visualized_points
+            state = pLib.get_state(pl,local_path,HP.feature_points,HP.distance_between_points)
+           
             while not stop:#while not stoped, the loop break if reached the end or the deviation is to big
-                if step_now(last_time,step_time):#check if make the next step (after step_time) 
-                    pl.simulator.get_vehicle_data()#read data after time step from last action
-                    #print("angle: ",pl.simulator.vehicle.angle)
-                    local_path = pl.get_local_path(send_path = False,num_of_points = visualized_points)#num_of_points = visualized_points
-                    last_state[batch_index] =copy.copy(state)#copy current state to list of last states
-                    state = pLib.get_state(pl,local_path,feature_points,distance_between_points)
+                #make action:
+                Q = net.get_Q([state])#from this state
+                Pi = net.get_Pi(state)
+                print("velocity1: ",state[0],"Q: ",Q,"PI: ",Pi)#"velocity2: ",state[1],
+                #a,one_hot_a = pLib.choose_action(action_space,Pi,steps)#choose action 
+                a = pLib.choose_action(action_space,Q[0],steps)
+                pl.delta_velocity_command(action_space[a])#update velocity (and steering) and send to simulator. index - index on global path (pl.desired_path)        
+                while (not step_now(last_time,HP.step_time)) and not stop: #wait for the next step (after step_time)
+                    time.sleep(0.00001)
+                    #print(time.time())
+                    #tmp = 0
+                #get next state:
+                pl.simulator.get_vehicle_data()#read data after time step from last action
+                local_path = pl.get_local_path(send_path = False,num_of_points = HP.visualized_points)#num_of_points = visualized_points
+                next_state = pLib.get_state(pl,local_path,HP.feature_points,HP.distance_between_points)
+                #get reward:
+                reward = pLib.get_reward(local_path.velocity_limit[0],pl.simulator.vehicle.velocity)
+                reward_vec.append(reward)
+                Replay.add((state,a,reward,next_state))
+              
+                rand_state, rand_a, rand_reward, rand_next_state = Replay.sample(HP.batch_size)
+                #rand_Q = net.get_Q(rand_state)
+                #rand_Q = net.get_targetQ(rand_state)
+                rand_next_Q = net.get_Q(rand_next_state)
+                rand_next_a = np.argmax(rand_next_Q,axis = 1)#best action from next state according to Q network
+                rand_next_targetQ = net.get_targetQ(rand_next_state)
+                #rand_Q_ = np.copy(rand_Q)
+                rand_targetQ = []
+                for i in range(len(rand_state)):
+                    #rand_targetQ.append(rand_reward[i] + HP.gamma*np.max(rand_next_Q[i]))
+                    rand_targetQ.append(rand_reward[i] + HP.gamma*rand_next_targetQ[i][rand_next_a[i]])
 
-                    reward = pLib.get_reward(last_state[batch_index],state,local_path.velocity_limit[0],pl.simulator.vehicle.velocity)
-                    Q_[batch_index] = np.copy(Q)#save Q from last state
-               
-                  #  print("__________________________________________")
-                #print("deviation: ",state[1]," steering: ",state[0],"x: ",state[2]," y: ",state[3]," reward: ",reward)#
-                    
-                    #print("velocity",state[0]," reward: ",reward)#,"distance: ",state[1],
-                    #W1,b1 = net.get_par()
-                    #print("W0 - before: ",W1)
-                    #print("b - before: ",b1)
-                   # print("Q - before: ",Q)
-
-                    #actor-critic:
-                    Q = net.get_Q(state)#from this state
-                    #print("correcting with action: ",a)
-                    Q_[batch_index][a] = reward +gamma*np.max(Q)#compute Q_: reward,a - from last to this state, Q - from this state
-                    net.Update_Q(last_state,Q_)
-
-                    Q_last = net.get_Q(last_state[0])#Q for last state for update policy on last state values
-                    Q_loss = net.get_Q_loss(last_state[0],Q_[batch_index])
-                    print("Q_loss: ",Q_loss[0][a])
-                    A = Q_last[a] - sum(Q_last)/len(Q_last)
-                    net.Update_policy(last_state,[one_hot_a],[[A]])
-
-                    #print("Q_: ",Q_[batch_index])
-                    #loss = net.get_value_loss(last_state[batch_index],Q_[batch_index])
-                    # print("loss: ",loss[0][a])    
-                    #W1,b1 = net.get_par()
-                    #print("W0 - after: ",W1)
-                    #print("b - after: ",b1)
+                #update nets:
                 
-                    #Q_last = net.get_Q(last_state)#temp
-                    #print ("last_state: ",last_state)
-                    #print("Q - after update (last step):",Q_last)
-                    #print("Q - after:",Q)
+                net.Update_Q(rand_state,rand_a,rand_targetQ)
+                print("Q:",net.get_Q([state]))
+                net.update_target()
+                print("targetQ:",net.get_targetQ([state]))
+                #Q_[batch_index] = np.copy(Q)#save Q from last state
+                ## print("Q - before: ",Q)
+                ##actor-critic:
+                #next_Q = net.get_Q(next_state)#from this state
+                ##print("correcting with action: ",a)
+                #Q_[batch_index][a] = reward +HP.gamma*np.max(next_Q)#compute Q_: reward,a - from last to this state, Q - from this state
+                #net.Update_Q([state],Q_)
+
+                #Q_last = net.get_Q(last_state[0])#Q for last state for update policy on last state values
+                #Q_loss = net.get_Q_loss(state,Q_[batch_index])
+                #print("Q_loss: ",Q_loss[0][a])
+                #A = Q[a] - sum(Q)/len(Q)
+                #net.Update_policy([state],[one_hot_a],[[A]])
+
+              
+          
                 
-
-                    batch_index += 1
-                    if batch_index >= batch_size:      
-                        ##A = Q[a] - sum(Q) / float(len(Q))
-                        #Pi = net.get_Pi(last_state[0])
-                        #print("PI before: ",Pi)
-                        #net.Update_policy(last_state,[one_hot_a],[[reward]])#Q[a])
-
-                        #net.Update_value(last_state,Q_)#update session on the mini-batch
-                        batch_index = 0
-
-                        #Pi = net.get_Pi(last_state[0])
-                        #print("PI after: ",Pi)
-                 
-                    #print ("state: ",state)
                     
-                    
-                    #TD(lambda):
-                    ##if(len(state_vec) > num_of_TD_steps):
-                    ##    future_reward = 0
-                    ##    for k in range(num_of_TD_steps):
-                    ##        future_reward += reward_vec[k]*gamma**k 
-                    ##    net.Update_policy([state_vec[-num_of_TD_steps]],[action_vec[-num_of_TD_steps]],[[future_reward]])
-                    ##    reward_vec.pop(0)#remove first
-                    ##    value_vec[-num_of_TD_steps] = [future_reward]#the reward is on the last state and action
-                    ##reward_vec.append(reward)
+                #TD(lambda):
+                ##if(len(state_vec) > HP.num_of_TD_steps):
+                ##    future_reward = 0
+                ##    for k in range(HP.num_of_TD_steps):
+                ##        future_reward += reward_vec[k]*HP.gamma**k 
+                ##    net.Update_policy([state_vec[-HP.num_of_TD_steps]],[action_vec[-HP.num_of_TD_steps]],[[future_reward]])
+                ##    reward_vec.pop(0)#remove first
+                ##    value_vec[-HP.num_of_TD_steps] = [future_reward]#the reward is on the last state and action
+                ##reward_vec.append(reward)
 
-                    ##state_vec.append(last_state[0])#for one batch only
-                    ##action_vec.append(one_hot_a)
-                    value_vec.append([reward])#the reward is on the last state and action
+                ##state_vec.append(last_state[0])#for one batch only
+                ##action_vec.append(one_hot_a)
+                value_vec.append([reward])#the reward is on the last state and action
 
-                
-                    #make action:
-                    Pi = net.get_Pi(state)
-                    print("velocity1: ",state[0],"Q: ",Q,"PI: ",Pi)#"velocity2: ",state[1],
-                    #a,one_hot_a = pLib.choose_action(action_space,Pi,steps)#choose action 
-                    a,one_hot_a = pLib.choose_action(action_space,Q,steps)
-                    pl.delta_velocity_command(action_space[a])#update velocity (and steering) and send to simulator. index - index on global path (pl.desired_path)        
-                    dataManager.update_real_path(pl = pl,velocity_limit = local_path.velocity_limit[0])#state[0]
-                    #dataManager.save_additional_data(pl,features = state,action = a)
-                    dev = dist(local_path.position[0][0],local_path.position[0][1],0,0)
-                    mode = pl.check_end(deviation = dev)#check if end of the episode 
-                    if mode != 'ok':
-                        break
+                dataManager.update_real_path(pl = pl,velocity_limit = local_path.velocity_limit[0])#state[0]
+                #dataManager.save_additional_data(pl,features = state,action = a)
+                state = next_state
+
+                dev = dist(local_path.position[0][0],local_path.position[0][1],0,0)
+                mode = pl.check_end(deviation = dev)#check if end of the episode 
+                if mode != 'ok':
+                    break
                 
                 #end if time
             #end while
+
             #after episode end:
             #net.save_model()
             #time.sleep(1)
             if mode != 'kipp':
                 pl.stop_vehicle()
 
-            if (i % reset_every == 0 and i > 0) or mode == 'kipp': 
+            if (i % HP.reset_every == 0 and i > 0) or mode == 'kipp': 
                 #pl.stop_vehicle()
                 pl.simulator.reset_position()
                 pl.stop_vehicle()
                 #net.save_model()
-            if (i % save_every == 0 and i > 0): 
-                net.save_model(save_name)
-            reward_sum = 0
-            for item in value_vec: reward_sum+=item[0]
-            if len(value_vec) > 0:
-                print("mean reward: ",reward_sum/len(value_vec))
-            if plot_flag:
+            if (i % HP.save_every == 0 and i > 0): 
+                net.save_model(HP.save_name)
+            #reward_sum = 0
+            #for item in value_vec: reward_sum+=item[0]
+            #if len(value_vec) > 0:
+            #    print("mean reward: ",reward_sum/len(value_vec))
+            dataManager.comp_rewards(path_num,reward_vec,HP.gamma)
+            dataManager.print_data()
+            if HP.plot_flag:
                 plot.close()
                 #plot.plot_path_with_features(dataManager,distance_between_points)
                 plot.plot_path(dataManager.real_path)
@@ -223,7 +185,7 @@ if __name__ == "__main__":
             #update policy at the end of the episode:
 
             #for i in range(len(value_vec)-2, -1, -1):
-            #    value_vec[i] += gamma * value_vec[i+1]
+            #    value_vec[i] += HP.gamma * value_vec[i+1]
             #value_vec = [[x] for x in value_vec]
 
             #value_vec_tot += value_vec
@@ -249,7 +211,7 @@ if __name__ == "__main__":
         pl.stop_vehicle()
 
 
-        #with open(run_data_file_name, 'w') as f:
+        #with open(HP.run_data_file_name, 'w') as f:
         #    json.dump([state_vec_tot,action_vec_tot,value_vec_tot], f)
 
 
@@ -274,5 +236,5 @@ if __name__ == "__main__":
     #        comp_Pi(net)
     #        print("loss: ",loss) 
             
-    net.save_model(save_name)#model4.ckpt - LINEAR, LINE. model5.ckpt - net, line - good, model6.ckpt - 3 points model7.ckpt -very good
+    net.save_model(HP.save_name)#model4.ckpt - LINEAR, LINE. model5.ckpt - net, line - good, model6.ckpt - 3 points model7.ckpt -very good
     

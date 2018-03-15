@@ -1,5 +1,6 @@
 import plot
 import classes
+import numpy as np
 class DataManager:
     def __init__(self):
         self.real_path = classes.Path()
@@ -7,7 +8,25 @@ class DataManager:
         self.ind = 0
         self.acc = []
         self.dec = []
+        self.data = []
+        
         #plt_lib = plot.Plot()
+    
+    def comp_rewards(self,path_num,episode_rewards,gamma):
+        total_reward = 0
+        for i,r in enumerate(episode_rewards):
+            total_reward+=r*gamma**i
+        mean_reward = sum(episode_rewards)/len(episode_rewards)
+        dat = np.array([total_reward,mean_reward])
+        if len(self.data) < path_num:
+            self.data.append(np.array([dat]))
+        else:
+            self.data[path_num].append(dat)
+    def print_data(self):
+        for path_num,dat in enumerate(self.data):
+            print(path_num)
+            print("total reward: ",dat[:,0])
+            print("mean reward: ",dat[:,1])
     def restart(self):
         self.real_path = classes.Path()
         self.features = []

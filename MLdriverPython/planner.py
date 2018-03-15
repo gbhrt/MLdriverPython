@@ -271,18 +271,18 @@ class Planner(PathManager):#planner - get and send data to simulator. input - mi
         if random == False:
             self.reference_free_path = self.read_path(path_file_name)#get a path at any location
             if self.reference_free_path == None:
-                return True
+                return 0
         else:
-            self.reference_free_path = self.get_next_random_path()
+            path_num,self.reference_free_path = self.get_next_random_path()
             if self.reference_free_path == None:
-                return True
+                return -1
         if random or compute_velocity_limit_flag:
             comp_velocity_limit(self.reference_free_path)
-            self.reference_free_path.velocity_limit[-1] = 0
+            #self.reference_free_path.velocity_limit[-1] = 0
             
         self.reference_free_path.comp_path_parameters()
         self.reference_free_path.comp_angle()
-        return False
+        return path_num
     def new_episode(self , points_num = 10):
         self.index = 0
         self.main_index = 0
