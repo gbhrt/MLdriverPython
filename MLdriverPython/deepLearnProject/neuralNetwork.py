@@ -63,7 +63,8 @@ class neuralNetwork():
 
     def train_network(self):
         stop = []
-        wait_for(stop)#wait for "enter" in annother thread - then stop = true
+        command =[]
+        wait_for(stop,command)#wait for "enter" in annother thread - then stop = true
 
         #data1.txt  # start_steering, end_pos_x end_pos_y, end_angle, end_steering - new data
         data = read_data("train_data2.txt") # x y steering - old data

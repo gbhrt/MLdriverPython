@@ -83,7 +83,7 @@ class SimVehicle:#simulator class - include communication to simulator, vehicle 
 
 
 class Planner(PathManager):#planner - get and send data to simulator. input - mission, output - simulator performance 
-    def __init__(self):
+    def __init__(self,mode = "simple"):
         super().__init__()
         self.desired_path = Path()
         self.reference_free_path = Path()#a path without reference system (start at (0,0) and angle 0)
@@ -93,6 +93,8 @@ class Planner(PathManager):#planner - get and send data to simulator. input - mi
         self.index = 0
         self.main_index = 0
         self.max_velocity = 30 #global speed limit
+        if mode == "simple":
+            self.start_simple()
     def init_timer(self):
         self.start_time = time.time()
     def get_time(self):
@@ -278,7 +280,7 @@ class Planner(PathManager):#planner - get and send data to simulator. input - mi
                 return -1
         if random or compute_velocity_limit_flag:
             comp_velocity_limit(self.reference_free_path)
-            #self.reference_free_path.velocity_limit[-1] = 0
+            self.reference_free_path.velocity_limit[-1] = 0
             
         self.reference_free_path.comp_path_parameters()
         self.reference_free_path.comp_angle()
@@ -301,7 +303,11 @@ class Planner(PathManager):#planner - get and send data to simulator. input - mi
         return local_path
     def check_end(self,deviation = None,max_deviation = 4,max_roll = 0.2,max_pitch = 0.2, state = None):
         #print("main index", self.main_index, "lenght: ",len(self.in_vehicle_reference_path.position))
-        if self.main_index >= len(self.in_vehicle_reference_path.position)-1:#end of the main path
+        end_tolerance = 0.3
+        dis_from_end = self.in_vehicle_reference_path.distance[-1] - self.in_vehicle_reference_path.distance[self.main_index]
+        if  (dis_from_end < end_tolerance and self.simulator.vehicle.velocity < 0.001)\
+            or dis_from_end <= 0: #end if reach the end or when close to end and velocity is 0
+        #if self.main_index >= len(self.in_vehicle_reference_path.position)-1:#end of the main path
             print("end episode - end of the path")
             return 'path end'
         if state != None and state[0] > 0:

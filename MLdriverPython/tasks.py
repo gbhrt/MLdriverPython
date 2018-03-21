@@ -12,7 +12,7 @@ import policyBasedLib as pLib
 
 def create_path_in_run(points,file_name):
     pl = Planner()
-    pl.start_simple()
+    
 
     j=0
     resolution  = 0.01 #time [sec]
@@ -79,9 +79,10 @@ def run_test(path_name, learned_velocity = False):
     dataManager = data_manager.DataManager()
     plot = Plot()
     pl = Planner()
-    pl.start_simple()
+
     stop = []
-    wait_for(stop)#wait for "enter" in another thread - then stop = true
+    command = []
+    wait_for(stop,command)#wait for "enter" in another thread - then stop = true
     pl.load_path(path_name,compute_velocity_limit_flag = True)
     pl.new_episode(points_num = 1000)
     pl.simulator.send_path(pl.desired_path)
@@ -103,7 +104,7 @@ def run_test(path_name, learned_velocity = False):
         net.restore(restore_name)
     max_index = len(pl.desired_path.position)
     index = pl.find_index_on_path(0)
-    while not stop:#while not reach the end
+    while  stop != [True]:#while not reach the end
         if step_now(last_time,step_time):#check if make the next step (after step_time)
             pl.simulator.get_vehicle_data()#read data (respose from simulator to commands)
             target_index = pl.select_target_index(index)
@@ -145,6 +146,22 @@ if __name__ == "__main__":
     #comp_velocity_limit(path)
     #pm.split_path("paths\\random_path2.txt",2000,"splited_files\\random2\\path_")
     #create_path_in_run(50000,"paths\\random_path2.txt")
-    run_test(path_name = 'splited_files\\random_paths4.txt', learned_velocity = True)
-   
+    #run_test(path_name = 'splited_files\\random_paths4.txt', learned_velocity = True)
+    #HP = pLib.HyperParameters()
+    #dataManager = data_manager.DataManager(file = HP.save_name+".txt")
+    #dataManager.load_data()
+    #dataManager.print_data()
+    pl = Planner()
+    stop = []
+    command = []
+    wait_for(stop,command)#wait for "enter" in another thread - then stop = true
+    #pl.simulator.send_drive_commands(10,0.427)#max
+    pl.simulator.send_drive_commands(10,0.2)#max
+    while stop != [True]:
+        pl.simulator.get_vehicle_data()
+        print("velocity: ",pl.simulator.vehicle.velocity)
+    pl.stop_vehicle()
+
+    pl.end()
+
 

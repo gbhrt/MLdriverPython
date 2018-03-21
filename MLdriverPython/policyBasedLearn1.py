@@ -5,61 +5,55 @@ from library import *  #temp
 from classes import Path
 import copy
 import random
-from policyBasedNet import Network
+#from policyBasedNet import Network
+from DQN_net import DQN_network
 from plot import Plot
 import json
 import policyBasedLib as pLib
 import data_manager
+import subprocess
 
 if __name__ == "__main__": 
-    #run simulator: cd C:\Users\student_2\Documents\ArielUnity - learning2\sim_2_1
-    # cd C:\Users\gavri\Desktop\sim_2_1
-    #sim_2_1_17 -quit -batchmode -nographics
+    
+    ##run simulator: cd C:\Users\student_2\Documents\ArielUnity - learning2\sim_2_1
+    #"""
+    #cd C:\Users\gavri\Desktop\sim_15_3_18
+    #sim15_3_18 -quit -batchmode -nographics
+    #"""
 
+    #subprocess.Popen('C:\\Users\\gavri\\Desktop\\sim_15_3_18\\sim15_3_18 -quit -batchmode -nographics')
+  
     #pre-defined parameters:
     HP = pLib.HyperParameters()
     ###################
 
-    Replay = pLib.Replay(HP.replay_memory_size)
-    value_vec_tot = []
-    state_vec_tot= []
-    action_vec_tot= []
     steps = [0,0]#for random action selection of random number of steps
     stop = []
-    wait_for(stop)#wait for "enter" in another thread - then stop = true
-    dv = HP.acc * HP.step_time / HP.res
+    command = []
+    wait_for(stop,command)#wait for "enter" in another thread - then stop = true
+    dv = HP.acc * HP.step_time
     action_space =[-dv,dv]
-    net = Network(HP.features_num,len(action_space),HP.alpha_actor,HP.alpha_critic,tau = HP.tau)   
+    net = DQN_network(HP.features_num,len(action_space),HP.alpha_actor,HP.alpha_critic,tau = HP.tau)   
     print("Network ready")
     if HP.restore_flag:
         net.restore(HP.restore_name)
     if not HP.skip_run:
         pl = Planner()
-        pl.start_simple()
+        plot = Plot()
+        dataManager = data_manager.DataManager(file = HP.save_name+".txt")
+        Replay = pLib.Replay(HP.replay_memory_size)
+
         if not HP.random_paths_flag:
             if pl.load_path(HP.path_name,HP.random_paths_flag) == -1:
                 stop = [1]
-
-        
-        vec_state = []
-        vecQ_ = []
       
-        plot = Plot()
-        dataManager = data_manager.DataManager()
+
 
         for i in range(HP.num_of_runs): #number of runs - run end at the end of the main path and if vehicle deviation error is to big
-            if stop:
+            if stop == [True]:
                 break
             # initialize every episode:
             last_time = [0]
-            batch_index= 0 #first time last Q and last state not exist,  add to batch just from next step
-            TD_index = 0
-            count = 0
-            total_reward = 0
-            state_vec = []
-            action_vec = []
-            value_vec = []
-            reward_vec = [] #save lambda rewards
             #########################
             pl.simulator.get_vehicle_data()#read data after time step from last action
             if HP.random_paths_flag:
@@ -72,47 +66,38 @@ if __name__ == "__main__":
             local_path = pl.get_local_path()#num_of_points = HP.visualized_points
             state = pLib.get_state(pl,local_path,HP.feature_points,HP.distance_between_points)
            
-            while not stop:#while not stoped, the loop break if reached the end or the deviation is to big
-                #make action:
-                Q = net.get_Q([state])#from this state
-                Pi = net.get_Pi(state)
-                print("velocity1: ",state[0],"Q: ",Q,"PI: ",Pi)#"velocity2: ",state[1],
-                #a,one_hot_a = pLib.choose_action(action_space,Pi,steps)#choose action 
+            while  stop != [True]:#while not stoped, the loop break if reached the end or the deviation is to big
+                #choose and make action:
+                Q = net.get_Q([state])
+                #Pi = net.get_Pi([state])
+                print("velocity1: ",state[0],"Q: ",Q)#,"PI: ",Pi)#"velocity2: ",state[1],
                 a = pLib.choose_action(action_space,Q[0],steps)
                 pl.delta_velocity_command(action_space[a])#update velocity (and steering) and send to simulator. index - index on global path (pl.desired_path)        
-                while (not step_now(last_time,HP.step_time)) and not stop: #wait for the next step (after step_time)
+                
+                #wait for step time:
+                while (not step_now(last_time,HP.step_time)) and stop != [True]: #wait for the next step (after step_time)
                     time.sleep(0.00001)
-                    #print(time.time())
-                    #tmp = 0
+
                 #get next state:
                 pl.simulator.get_vehicle_data()#read data after time step from last action
                 local_path = pl.get_local_path(send_path = False,num_of_points = HP.visualized_points)#num_of_points = visualized_points
                 next_state = pLib.get_state(pl,local_path,HP.feature_points,HP.distance_between_points)
+
                 #get reward:
                 reward = pLib.get_reward(local_path.velocity_limit[0],pl.simulator.vehicle.velocity)
-                reward_vec.append(reward)
-                Replay.add((state,a,reward,next_state))
-              
-                rand_state, rand_a, rand_reward, rand_next_state = Replay.sample(HP.batch_size)
-                #rand_Q = net.get_Q(rand_state)
-                #rand_Q = net.get_targetQ(rand_state)
-                rand_next_Q = net.get_Q(rand_next_state)
-                rand_next_a = np.argmax(rand_next_Q,axis = 1)#best action from next state according to Q network
-                rand_next_targetQ = net.get_targetQ(rand_next_state)
-                #rand_Q_ = np.copy(rand_Q)
-                rand_targetQ = []
-                for i in range(len(rand_state)):
-                    #rand_targetQ.append(rand_reward[i] + HP.gamma*np.max(rand_next_Q[i]))
-                    rand_targetQ.append(rand_reward[i] + HP.gamma*rand_next_targetQ[i][rand_next_a[i]])
 
-                #update nets:
+                #add data to replay buffer:
+                Replay.add((state,a,reward,next_state))
+
+                #sample from replay buffer:
+                rand_state, rand_a, rand_reward, rand_next_state = Replay.sample(HP.batch_size)
                 
-                net.Update_Q(rand_state,rand_a,rand_targetQ)
-                print("Q:",net.get_Q([state]))
-                net.update_target()
+                #update neural networs:
+                pLib.DDQN(rand_state, rand_a, rand_reward, rand_next_state,net,HP)
+                #pLib.DDPG(rand_state, rand_a, rand_reward, rand_next_state,net,HP)
                 print("targetQ:",net.get_targetQ([state]))
-                #Q_[batch_index] = np.copy(Q)#save Q from last state
-                ## print("Q - before: ",Q)
+                print("Q:",net.get_Q([state]))
+                
                 ##actor-critic:
                 #next_Q = net.get_Q(next_state)#from this state
                 ##print("correcting with action: ",a)
@@ -141,14 +126,15 @@ if __name__ == "__main__":
 
                 ##state_vec.append(last_state[0])#for one batch only
                 ##action_vec.append(one_hot_a)
-                value_vec.append([reward])#the reward is on the last state and action
-
-                dataManager.update_real_path(pl = pl,velocity_limit = local_path.velocity_limit[0])#state[0]
-                #dataManager.save_additional_data(pl,features = state,action = a)
+               
                 state = next_state
 
-                dev = dist(local_path.position[0][0],local_path.position[0][1],0,0)
-                mode = pl.check_end(deviation = dev)#check if end of the episode 
+                #save data 
+                dataManager.update_real_path(pl = pl,velocity_limit = local_path.velocity_limit[0])#state[0]
+                dataManager.save_additional_data(reward = reward)#pl,features = denormalize(state,0,30),action = a
+                
+
+                mode = pl.check_end(deviation = dist(local_path.position[0][0],local_path.position[0][1],0,0))#check if end of the episode 
                 if mode != 'ok':
                     break
                 
@@ -156,30 +142,30 @@ if __name__ == "__main__":
             #end while
 
             #after episode end:
-            #net.save_model()
-            #time.sleep(1)
+
             if mode != 'kipp':
                 pl.stop_vehicle()
-
             if (i % HP.reset_every == 0 and i > 0) or mode == 'kipp': 
                 #pl.stop_vehicle()
                 pl.simulator.reset_position()
                 pl.stop_vehicle()
-                #net.save_model()
             if (i % HP.save_every == 0 and i > 0): 
                 net.save_model(HP.save_name)
-            #reward_sum = 0
-            #for item in value_vec: reward_sum+=item[0]
-            #if len(value_vec) > 0:
-            #    print("mean reward: ",reward_sum/len(value_vec))
-            dataManager.comp_rewards(path_num,reward_vec,HP.gamma)
-            dataManager.print_data()
-            if HP.plot_flag:
+            try:
+                dataManager.comp_rewards(path_num-1,HP.gamma)
+                dataManager.print_data()
+            except:
+                print("cannot print data")
+            if HP.plot_flag and command == [b'1']:
                 plot.close()
-                #plot.plot_path_with_features(dataManager,distance_between_points)
-                plot.plot_path(dataManager.real_path)
+                plot.plot_path_with_features(dataManager,HP.distance_between_points,block = True)
+                #plot.plot_path(dataManager.real_path,block = True)
             pl.restart()#stop vehicle, and initalize real path
             dataManager.restart()
+
+        #end all:
+        pl.stop_vehicle()
+        pl.end()
            
             #comp_Pi(net)
             #update policy at the end of the episode:
@@ -208,14 +194,13 @@ if __name__ == "__main__":
     
            # net.update_sess(last_state,Q_corrected)#update session on the mini-batch
         #end for num_of_runs
-        pl.stop_vehicle()
-
+       
 
         #with open(HP.run_data_file_name, 'w') as f:
         #    json.dump([state_vec_tot,action_vec_tot,value_vec_tot], f)
 
 
-        pl.end()
+        
     #else:#run skiped
     #    with open(run_data_file_name, 'r') as f:
     #        [state_vec_tot,action_vec_tot,value_vec_tot] = json.load(f)

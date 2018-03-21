@@ -2,16 +2,17 @@ import copy
 import random
 import numpy as np
 import json
+import library as lib
 
 class HyperParameters:
     def __init__(self):
-        self.feature_points = 10 #
+        self.feature_points = 30 #
         self.distance_between_points = 1.0 #meter
         self.features_num = 1 + self.feature_points #vehicle state points on the path (distance)
         self.epsilon_start = 1.0
         self.epsilon = 0.1
         self.gamma = 0.99
-        self.tau = 0.01 #how to update target network compared to Q network
+        self.tau = 0.001 #how to update target network compared to Q network
         self.num_of_runs = 5000
         self.step_time = 0.2
         self.alpha_actor = 0.001# for Pi 1e-5 #learning rate
@@ -20,11 +21,13 @@ class HyperParameters:
         self.batch_size = 32
         self.replay_memory_size = 10000
         self.num_of_TD_steps = 15 #for TD(lambda)
-        self.visualized_points = 300 #how many points show on the map - just visualy
+        self.visualized_points = 300 #how many points show on the map and lenght of local path
         self.max_pitch = 0.3
         self.max_roll = 0.3
         self.acc = 1.5 # [m/s^2]  need to be more then maximum acceleration in real
-        self.res = 1
+        self.max_action = 1000 #temp, torque in Nm
+
+        #########################
         self.plot_flag = True
         self.restore_flag = True
         self.skip_run = False
@@ -32,10 +35,10 @@ class HyperParameters:
         self.reset_every = 3
         self.save_every = 25
         self.path_name = "paths\\path.txt"     #long random path: path3.txt  #long straight path: straight_path.txt
-        self.save_name = "model17" #model6.ckpt - constant velocity limit - good. model7.ckpt - relative velocity.
+        self.save_name = "model23" #model6.ckpt - constant velocity limit - good. model7.ckpt - relative velocity.
         #model10.ckpt TD(5) dt = 0.2 alpha 0.001 model13.ckpt - 5 points 2.5 m 0.001 TD 15
         #model8.ckpt - offline trained after 5 episode - very clear
-        self.restore_name = "model17" # model2.ckpt - MC estimation 
+        self.restore_name = "model23" # model2.ckpt - MC estimation 
         self.run_data_file_name = 'running_record1'
 
 class Replay:
@@ -50,7 +53,44 @@ class Replay:
         samples = random.sample(self.memory,np.clip(batch_size,0,len(self.memory)))
         return map(np.array, zip(*samples))
         
+def DDQN(rand_state, rand_a, rand_reward, rand_next_state,net,HP):
+    #compute target Q:
+    rand_next_Q = net.get_Q(rand_next_state)
+    rand_next_a = np.argmax(rand_next_Q,axis = 1)#best action from next state according to Q network
+    rand_next_targetQ = net.get_targetQ(rand_next_state)
+    rand_targetQ = []
+    for i in range(len(rand_state)):
+        #rand_targetQ.append(rand_reward[i] + HP.gamma*np.max(rand_next_Q[i])) #DQN
+        rand_targetQ.append(rand_reward[i] + HP.gamma*rand_next_targetQ[i][rand_next_a[i]])#DDQN
 
+    #update nets:
+    net.Update_Q(rand_state,rand_a,rand_targetQ)
+    net.update_target()
+    return
+def DDPG(rand_state, rand_a, rand_reward, rand_next_state,net,HP):
+    #compute target Q:
+    rand_next_Q = net.get_Q(rand_next_state)
+    rand_next_a = np.argmax(rand_next_Q,axis = 1)#best action from next state according to Q network
+    rand_next_targetQ = net.get_targetQ(rand_next_state)
+    rand_targetQ = []
+    for i in range(len(rand_state)):
+        #rand_targetQ.append(rand_reward[i] + HP.gamma*np.max(rand_next_Q[i])) #DQN
+        rand_targetQ.append(rand_reward[i] + HP.gamma*rand_next_targetQ[i][rand_next_a[i]])#DDQN
+
+    rand_Q = net.get_Q(rand_state)
+    rand_V = []
+    for i in range(len(rand_state)):
+        rand_V.append(rand_Q[i][rand_a[i]])
+
+    #update nets:
+    net.Update_Q(rand_state,rand_a,rand_targetQ)
+    print("Q:",net.get_Q([state]))
+    net.update_target()
+    print("targetQ:",net.get_targetQ([state]))
+
+    #A = Q[a] - sum(Q)/len(Q)
+                
+    net.Update_policy(rand_state,rand_a,rand_V)
 
 def choose_points(local_path,number,distance_between_points):#return points from the local path, choose a point every "skip" points
     index = 0
@@ -64,34 +104,7 @@ def choose_points(local_path,number,distance_between_points):#return points from
             index += 1
         points.append(local_path.velocity_limit[index])
         last_index = index
-
-
-    #n = 0
-    #points = []
-    #while n < len(local_path.position):
-    #    points.append(local_path.position[n][0])
-    #    points.append(local_path.position[n][1])
-    #    if len(points) == number * 2:
-    #        break
-    #    n+=skip
-    #dis = 2
-    #ang = local_path.angle[-1][1]
-    #while len(points) < number * 2:
-    #    points.append(local_path.position[-1][0] + dis* math.sin(ang))
-    #    points.append(local_path.position[-1][1] + dis* math.cos(ang))
     return points
-
- 
-def normalize(val,min,max):
-    nval = []
-    for item in val:
-        nval.append( (item - min)/(max - min))
-    return nval
-def denormalize(nval, min, max):
-    val = []
-    for item in nval:
-        val.append( item * (max - min) + min)
-    return val
 
 def get_state(pl = None,local_path = None,points = 1,distance_between = 1):
     #state = []
@@ -101,7 +114,7 @@ def get_state(pl = None,local_path = None,points = 1,distance_between = 1):
     state = [vel] +  velocity_limits
     #for i in range(points):
     #    state.append(vel - velocity_limits[i])
-    state = normalize(state,0,30)
+    state = lib.normalize(state,0,30)
     #i = find_low_vel(local_path)
     #dis = local_path.distance[i]
     #state.append(dis)
@@ -151,7 +164,7 @@ def get_reward(velocity_limit,velocity):
         #if velocity < 1e-5:
         #    reward = - 2
     else: 
-        reward = -1.*(velocity - velocity_limit)
+        reward = -10.*(velocity - velocity_limit)
 
     #if state[0] < 0: 
     #    reward = velocity_limit + state[0]
@@ -182,13 +195,18 @@ def choose_action(action_space,Pi,steps = None,epsilon = 0.1):
     #print("steps: ",steps[0])
 
     #choose action from propbilities of Pi:
-    #rand = random.random()
-    #prob = 0
-    #for i in range(len(action_space)):
-    #    prob += Pi[i]
-    #    if rand < prob:
-    #        a =  i
-    #        break
+    #if random.random() < epsilon:
+    #    a = random.randint(0,len(action_space) - 1)#random.randint(0,(len(action_space.data) - 1))
+    #    print("random a: ",a)
+    
+    #else:
+    #    rand = random.random()
+    #    prob = 0
+    #    for i in range(len(action_space)):
+    #        prob += Pi[i]
+    #        if rand < prob:
+    #            a =  i
+    #            break
 
     #always the highest probability:
     #a = np.argmax(Pi)

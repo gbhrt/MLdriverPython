@@ -126,7 +126,7 @@ if __name__ == "__main__":
     ###################
 
     pl = Planner()
-    pl.start_simple()
+
 
 
     main_path = pl.read_path_data(path_name)#get a path at any location
@@ -147,7 +147,8 @@ if __name__ == "__main__":
     main_path.comp_angle()
     max_index = len(main_path.position)
     stop = []
-    wait_for(stop)#wait for "enter" in another thread - then stop = true
+    command = []
+    wait_for(stop,command)#wait for "enter" in another thread - then stop = true
     for i in range(num_of_runs): #number of runs - run end at the end of the main path and if vehicle deviation error is to big
         if stop:
             break

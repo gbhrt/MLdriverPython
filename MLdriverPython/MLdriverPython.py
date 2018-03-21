@@ -3,17 +3,27 @@
 #import atexit
 #import numpy as np
 #import copy
-from library import *
+
+import sys
+#import  tkinter
+#tkinter._test()
+#sys.ps1 = 'SOMETHING'
+import matplotlib
+matplotlib.use('Qt5Agg')
+import matplotlib.pyplot as plt#.pyplot
+#from library import *
 from plot import Plot
 #import random
 #from communicationLib import Comm
 #import matplotlib.pyplot as plt
 import os
 from classes import *
-import matplotlib.pyplot as plt
+
 import numpy as np
-pm = PathManager()
-plot = Plot()
+#pm = PathManager()
+#plot = Plot()
+#plt.plot(np.arange(10))
+#plt.show()
 #path_name = "paths\\‏‏straight_path_limit2.txt" 
 #path = pm.read_path_data(path_name)
 #name = r'splits\straight_path_limit_splits1'
@@ -21,12 +31,15 @@ plot = Plot()
 #path = pm.read_path("paths\‏‏straight_path_limit2.txt")
 #pm.split_path("paths\\random_path.txt",1500,"splited_files\\random_paths")
 #pm.convert_to_json("paths\\‏‏straight_path_limit2.txt","paths\\‏‏straight_path_limit3.txt.txt")
-
-
-path = pm.read_path("paths\\path.txt")
-plot.plot_path(path)
-input()
-plt.show()
+print(matplotlib.is_interactive())
+plt.ion()
+print(matplotlib.is_interactive())
+plt.plot([1.6, 2.7])
+#plt.draw()
+#path = pm.read_path("paths\\path.txt")
+#plot.plot_path(path,block = False)
+input("enter to continue")
+#plt.show()
 #comp_velocity_limit(path)
 #pos = np.array(path.position)
 
