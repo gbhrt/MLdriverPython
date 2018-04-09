@@ -34,8 +34,7 @@ if __name__ == "__main__":
     wait_for(stop,command)#wait for "enter" in another thread - then stop = true
     dv = HP.acc * HP.step_time
     action_space =[-dv,dv]
-    action_space_n = 1
-    net = DDPG_network(HP.features_num,action_space_n,HP.max_action,HP.alpha_actor,HP.alpha_critic,tau = HP.tau)  
+    net = DDPG_network(HP.features_num,HP.action_space_n,HP.max_action,HP.alpha_actor,HP.alpha_critic,tau = HP.tau)  
     #net = DQN_network(HP.features_num,len(action_space),HP.alpha_actor,HP.alpha_critic,tau = HP.tau)  
     print("Network ready")
     if HP.restore_flag:
@@ -45,7 +44,7 @@ if __name__ == "__main__":
         plot = Plot()
         dataManager = data_manager.DataManager(file = HP.save_name+".txt")
         Replay = pLib.Replay(HP.replay_memory_size)
-        actionNoise = pLib.OrnsteinUhlenbeckActionNoise(mu=np.zeros(action_space_n),dt = HP.step_time)
+        actionNoise = pLib.OrnsteinUhlenbeckActionNoise(mu=np.zeros(HP.action_space_n),dt = HP.step_time)
         if not HP.random_paths_flag:
             if pl.load_path(HP.path_name,HP.random_paths_flag) == -1:
                 stop = [1]
@@ -98,14 +97,14 @@ if __name__ == "__main__":
                 reward = pLib.get_reward(local_path.velocity_limit[0],pl.simulator.vehicle.velocity)
 
                 #add data to replay buffer:
-                Replay.add((state,a,reward,next_state))
+                Replay.add((state,a,reward,next_state,False))
 
                 #sample from replay buffer:
-                rand_state, rand_a, rand_reward, rand_next_state = Replay.sample(HP.batch_size)
+                rand_state, rand_a, rand_reward, rand_next_state, rand_end = Replay.sample(HP.batch_size)
                 
                 #update neural networs:
                 #pLib.DDQN(rand_state, rand_a, rand_reward, rand_next_state,net,HP)
-                pLib.DDPG(rand_state, rand_a, rand_reward, rand_next_state,net,HP)
+                pLib.DDPG(rand_state, rand_a, rand_reward, rand_next_state,rand_end,net,HP)
                 #print("targetQ:",net.get_targetQ([state]))
                 #print("Q:",net.get_Q([state]))
                 

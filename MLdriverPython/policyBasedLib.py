@@ -9,11 +9,12 @@ class HyperParameters:
         self.feature_points = 3 #30
         self.distance_between_points = 1.0 #meter
         self.features_num = 1 + self.feature_points #vehicle state points on the path (distance)
+        self.action_space_n = 1
         self.epsilon_start = 1.0
         self.epsilon = 0.1
         self.gamma = 0.99
         self.tau = 0.001 #how to update target network compared to Q network
-        self.num_of_runs = 5000
+        self.num_of_runs = 5000000
         self.step_time = 0.2
         self.alpha_actor = 0.0001# for Pi 1e-5 #learning rate
         self.alpha_critic = 0.001#for Q
@@ -28,12 +29,13 @@ class HyperParameters:
         self.max_action = 1.0 # self.acc*self.step_time #temp, torque in Nm
 
         #########################
+        self.render_flag = False
         self.plot_flag = True
         self.restore_flag = True
         self.skip_run = False
         self.random_paths_flag = False
         self.reset_every = 3
-        self.save_every = 25
+        self.save_every = 1000
         self.path_name = "paths\\path.txt"     #long random path: path3.txt  #long straight path: straight_path.txt
         self.save_name = "model24" #model6.ckpt - constant velocity limit - good. model7.ckpt - relative velocity.
         #model10.ckpt TD(5) dt = 0.2 alpha 0.001 model13.ckpt - 5 points 2.5 m 0.001 TD 15
@@ -91,7 +93,7 @@ class OrnsteinUhlenbeckActionNoise:
     def __repr__(self):
         return 'OrnsteinUhlenbeckActionNoise(mu={}, sigma={})'.format(self.mu, self.sigma)
 
-def DDPG(rand_state, rand_a, rand_reward, rand_next_state,net,HP):
+def DDPG(rand_state, rand_a, rand_reward, rand_next_state,rand_end,net,HP):
     #compute target Q:
     rand_next_a = net.get_actions(rand_next_state)#action from next state
     ##vec0 = [[0] for _ in range(len(rand_next_state))]
@@ -105,7 +107,10 @@ def DDPG(rand_state, rand_a, rand_reward, rand_next_state,net,HP):
     rand_next_targetQa = net.get_targetQa(rand_next_state,rand_next_a)#like in DDQN
     rand_targetQa = []
     for i in range(len(rand_state)):
-        rand_targetQa.append(rand_reward[i] + HP.gamma*rand_next_targetQa[i])#DDQN
+        if rand_end[i] == False:
+            rand_targetQa.append(rand_reward[i] + HP.gamma*rand_next_targetQa[i])#DDQN
+        else:
+            rand_targetQa.append(rand_reward[i] + np.zeros(HP.action_space_n))
     #update critic:
     net.Update_critic(rand_state,rand_a,rand_targetQa)#compute Qa(state,a) and minimize loss (Qa - targetQa)^2
     #print("critic_loss: ",net.get_critic_loss(rand_state,rand_a,rand_targetQa))

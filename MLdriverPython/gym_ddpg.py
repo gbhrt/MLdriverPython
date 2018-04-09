@@ -26,21 +26,22 @@ if __name__ == "__main__":
     #pre-defined parameters:
     HP = pLib.HyperParameters()
     ###################
-
+    total_step_count = 0
     steps = [0,0]#for random action selection of random number of steps
     stop = []
     command = []
     wait_for(stop,command)#wait for "enter" in another thread - then stop = true
     dv = HP.acc * HP.step_time
     #action_space =[-dv,dv]
-    env  = gym.make("HalfCheetahBulletEnv-v0")#''  Pendulum-v0 MinitaurBulletEnv-v0 HalfCheetahBulletEnv-v0
-    #env.render()
+    env  = gym.make("Walker2DBulletEnv-v0")#''  Pendulum-v0 MinitaurBulletEnv-v0 HalfCheetahBulletEnv-v0
+    if HP.render_flag:
+        env.render()
     env.reset()
-    action_space_n = env.action_space.shape[0]
+    HP.action_space_n = env.action_space.shape[0]
     HP.features_num = env.observation_space.shape[0]
     HP.max_action = env.action_space.high[0]
 
-    net = DDPG_network(HP.features_num,action_space_n,HP.max_action,HP.alpha_actor,HP.alpha_critic,tau = HP.tau)  
+    net = DDPG_network(HP.features_num,HP.action_space_n,HP.max_action,HP.alpha_actor,HP.alpha_critic,tau = HP.tau)  
     #net = DQN_network(HP.features_num,len(action_space),HP.alpha_actor,HP.alpha_critic,tau = HP.tau)  
     print("Network ready")
     if HP.restore_flag:
@@ -50,7 +51,7 @@ if __name__ == "__main__":
         plot = Plot()
         dataManager = data_manager.DataManager(file = HP.save_name+".txt")
         Replay = pLib.Replay(HP.replay_memory_size)
-        actionNoise = pLib.OrnsteinUhlenbeckActionNoise(mu=np.zeros(action_space_n),dt = HP.step_time)
+        actionNoise = pLib.OrnsteinUhlenbeckActionNoise(mu=np.zeros(HP.action_space_n),dt = HP.step_time)
 
 
         for i in range(HP.num_of_runs): #number of runs - run end at the end of the main path and if vehicle deviation error is to big
@@ -67,7 +68,7 @@ if __name__ == "__main__":
             step_count = 0
             while  stop != [True]:#while not stoped, the loop break if reached the end or the deviation is to big
                
-                print("steps: ",step_count )
+                #print("steps: ",step_count )
                 step_count+=1
                 #choose and make action:
                 #Q = net.get_Q([state])
@@ -90,14 +91,14 @@ if __name__ == "__main__":
                 reward_vec.append(reward)
                 
                 #add data to replay buffer:
-                Replay.add((state,a,reward,next_state))
+                Replay.add((state,a,reward,next_state,done))
 
                 #sample from replay buffer:
-                rand_state, rand_a, rand_reward, rand_next_state = Replay.sample(HP.batch_size)
+                rand_state, rand_a, rand_reward, rand_next_state,rand_end = Replay.sample(HP.batch_size)
                 
                 #update neural networs:
                 #pLib.DDQN(rand_state, rand_a, rand_reward, rand_next_state,net,HP)
-                pLib.DDPG(rand_state, rand_a, rand_reward, rand_next_state,net,HP)
+                pLib.DDPG(rand_state, rand_a, rand_reward, rand_next_state,rand_end,net,HP)
                 #print("targetQ:",net.get_targetQ([state]))
                 #print("Q:",net.get_Q([state]))
                 
@@ -136,8 +137,8 @@ if __name__ == "__main__":
                 #dataManager.update_real_path(pl = pl,velocity_limit = local_path.velocity_limit[0])#state[0]
                 #dataManager.save_additional_data(reward = reward)#pl,features = denormalize(state,0,30),action = a
                 
-                #if done:
-                #    break
+                if done:
+                    break
                 
                 #end if time
             #end while
@@ -148,9 +149,13 @@ if __name__ == "__main__":
             for k,r in enumerate(reward_vec):
                 total_reward+=r*HP.gamma**k
             print("total reward: ", total_reward)
+            print("steps: ",step_count )
+            total_step_count += step_count
+            print("total steps: ",total_step_count )
             #input()
             if (i % HP.save_every == 0 and i > 0): 
                 net.save_model(HP.save_name)
+
 
 
         #end all:
