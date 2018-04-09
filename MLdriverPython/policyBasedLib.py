@@ -6,7 +6,7 @@ import library as lib
 
 class HyperParameters:
     def __init__(self):
-        self.feature_points = 30 #
+        self.feature_points = 3 #30
         self.distance_between_points = 1.0 #meter
         self.features_num = 1 + self.feature_points #vehicle state points on the path (distance)
         self.epsilon_start = 1.0
@@ -15,30 +15,30 @@ class HyperParameters:
         self.tau = 0.001 #how to update target network compared to Q network
         self.num_of_runs = 5000
         self.step_time = 0.2
-        self.alpha_actor = 0.001# for Pi 1e-5 #learning rate
+        self.alpha_actor = 0.0001# for Pi 1e-5 #learning rate
         self.alpha_critic = 0.001#for Q
         self.max_deviation = 3 # [m] if more then maximum - end episode 
-        self.batch_size = 32
+        self.batch_size = 64
         self.replay_memory_size = 10000
         self.num_of_TD_steps = 15 #for TD(lambda)
         self.visualized_points = 300 #how many points show on the map and lenght of local path
         self.max_pitch = 0.3
         self.max_roll = 0.3
         self.acc = 1.5 # [m/s^2]  need to be more then maximum acceleration in real
-        self.max_action = 1000 #temp, torque in Nm
+        self.max_action = 1.0 # self.acc*self.step_time #temp, torque in Nm
 
         #########################
         self.plot_flag = True
         self.restore_flag = True
         self.skip_run = False
-        self.random_paths_flag = True
+        self.random_paths_flag = False
         self.reset_every = 3
         self.save_every = 25
         self.path_name = "paths\\path.txt"     #long random path: path3.txt  #long straight path: straight_path.txt
-        self.save_name = "model23" #model6.ckpt - constant velocity limit - good. model7.ckpt - relative velocity.
+        self.save_name = "model24" #model6.ckpt - constant velocity limit - good. model7.ckpt - relative velocity.
         #model10.ckpt TD(5) dt = 0.2 alpha 0.001 model13.ckpt - 5 points 2.5 m 0.001 TD 15
         #model8.ckpt - offline trained after 5 episode - very clear
-        self.restore_name = "model23" # model2.ckpt - MC estimation 
+        self.restore_name = "model24" # model2.ckpt - MC estimation 
         self.run_data_file_name = 'running_record1'
 
 class Replay:
@@ -67,30 +67,60 @@ def DDQN(rand_state, rand_a, rand_reward, rand_next_state,net,HP):
     net.Update_Q(rand_state,rand_a,rand_targetQ)
     net.update_target()
     return
+
+# Taken from https://github.com/openai/baselines/blob/master/baselines/ddpg/noise.py, which is
+# based on http://math.stackexchange.com/questions/1287634/implementing-ornstein-uhlenbeck-in-matlab
+class OrnsteinUhlenbeckActionNoise:
+    def __init__(self, mu, sigma=0.3, theta=.15, dt=1e-2, x0=None):
+        self.theta = theta
+        self.mu = mu
+        self.sigma = sigma
+        self.dt = dt
+        self.x0 = x0
+        self.reset()
+
+    def __call__(self):
+        x = self.x_prev + self.theta * (self.mu - self.x_prev) * self.dt + \
+                self.sigma * np.sqrt(self.dt) * np.random.normal(size=self.mu.shape)
+        self.x_prev = x
+        return x
+
+    def reset(self):
+        self.x_prev = self.x0 if self.x0 is not None else np.zeros_like(self.mu)
+
+    def __repr__(self):
+        return 'OrnsteinUhlenbeckActionNoise(mu={}, sigma={})'.format(self.mu, self.sigma)
+
 def DDPG(rand_state, rand_a, rand_reward, rand_next_state,net,HP):
     #compute target Q:
-    rand_next_Q = net.get_Q(rand_next_state)
-    rand_next_a = np.argmax(rand_next_Q,axis = 1)#best action from next state according to Q network
-    rand_next_targetQ = net.get_targetQ(rand_next_state)
-    rand_targetQ = []
+    rand_next_a = net.get_actions(rand_next_state)#action from next state
+    ##vec0 = [[0] for _ in range(len(rand_next_state))]
+    ##vec1 = [[1] for _ in range(len(rand_next_state))]
+    ##Q0 = net.get_Qa(rand_next_state,vec0)
+    ##Q1 = net.get_Qa(rand_next_state,vec1)
+    ##rand_next_Q = [[Q0[i][0],Q1[i][0]] for i in range(len(Q0))]
+
+    ##rand_next_a = np.argmax(rand_next_Q,axis = 1)#best action from next state according to Q network
+    ##rand_next_a = [[item] for item in rand_next_a]
+    rand_next_targetQa = net.get_targetQa(rand_next_state,rand_next_a)#like in DDQN
+    rand_targetQa = []
     for i in range(len(rand_state)):
-        #rand_targetQ.append(rand_reward[i] + HP.gamma*np.max(rand_next_Q[i])) #DQN
-        rand_targetQ.append(rand_reward[i] + HP.gamma*rand_next_targetQ[i][rand_next_a[i]])#DDQN
+        rand_targetQa.append(rand_reward[i] + HP.gamma*rand_next_targetQa[i])#DDQN
+    #update critic:
+    net.Update_critic(rand_state,rand_a,rand_targetQa)#compute Qa(state,a) and minimize loss (Qa - targetQa)^2
+    #print("critic_loss: ",net.get_critic_loss(rand_state,rand_a,rand_targetQa))
+    
+    #update actor
+    pred_action = net.get_actions(rand_state)#predicted action from state
+    #print("actions: ",pred_action)
+    #print("params: ",net.get_actor_parms())
+    #print("grads: ",net.get_actor_grads(rand_state,pred_action))
+    #print("norm grads: ",net.get_norm_actor_grads(rand_state,pred_action))
+    #print("grads: ",net.get_neg_Q_grads(rand_state,pred_action))
+    
+    net.Update_actor(rand_state,pred_action)
 
-    rand_Q = net.get_Q(rand_state)
-    rand_V = []
-    for i in range(len(rand_state)):
-        rand_V.append(rand_Q[i][rand_a[i]])
-
-    #update nets:
-    net.Update_Q(rand_state,rand_a,rand_targetQ)
-    print("Q:",net.get_Q([state]))
-    net.update_target()
-    print("targetQ:",net.get_targetQ([state]))
-
-    #A = Q[a] - sum(Q)/len(Q)
-                
-    net.Update_policy(rand_state,rand_a,rand_V)
+    net.update_targets()
 
 def choose_points(local_path,number,distance_between_points):#return points from the local path, choose a point every "skip" points
     index = 0

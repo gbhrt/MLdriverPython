@@ -4,10 +4,13 @@ import numpy as np
 from classes import *
 import _thread
 import c_functions as c_func
+import os
 
 cf = c_func.cFunctions()
     
-    
+def clear_screen():
+    os.system('cls')
+
 def input_thread(stop,command):
     stop.append(False)
     command.append(None)

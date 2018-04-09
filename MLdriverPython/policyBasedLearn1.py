@@ -7,6 +7,7 @@ import copy
 import random
 #from policyBasedNet import Network
 from DQN_net import DQN_network
+from DDPG_net import DDPG_network
 from plot import Plot
 import json
 import policyBasedLib as pLib
@@ -33,7 +34,9 @@ if __name__ == "__main__":
     wait_for(stop,command)#wait for "enter" in another thread - then stop = true
     dv = HP.acc * HP.step_time
     action_space =[-dv,dv]
-    net = DQN_network(HP.features_num,len(action_space),HP.alpha_actor,HP.alpha_critic,tau = HP.tau)   
+    action_space_n = 1
+    net = DDPG_network(HP.features_num,action_space_n,HP.max_action,HP.alpha_actor,HP.alpha_critic,tau = HP.tau)  
+    #net = DQN_network(HP.features_num,len(action_space),HP.alpha_actor,HP.alpha_critic,tau = HP.tau)  
     print("Network ready")
     if HP.restore_flag:
         net.restore(HP.restore_name)
@@ -42,7 +45,7 @@ if __name__ == "__main__":
         plot = Plot()
         dataManager = data_manager.DataManager(file = HP.save_name+".txt")
         Replay = pLib.Replay(HP.replay_memory_size)
-
+        actionNoise = pLib.OrnsteinUhlenbeckActionNoise(mu=np.zeros(action_space_n),dt = HP.step_time)
         if not HP.random_paths_flag:
             if pl.load_path(HP.path_name,HP.random_paths_flag) == -1:
                 stop = [1]
@@ -68,12 +71,20 @@ if __name__ == "__main__":
            
             while  stop != [True]:#while not stoped, the loop break if reached the end or the deviation is to big
                 #choose and make action:
-                Q = net.get_Q([state])
+                #Q = net.get_Q([state])
                 #Pi = net.get_Pi([state])
-                print("velocity1: ",state[0],"Q: ",Q)#,"PI: ",Pi)#"velocity2: ",state[1],
-                a = pLib.choose_action(action_space,Q[0],steps)
-                pl.delta_velocity_command(action_space[a])#update velocity (and steering) and send to simulator. index - index on global path (pl.desired_path)        
-                
+                #print("velocity1: ",state[0])#,"Q: ",Q)#,"PI: ",Pi)#"velocity2: ",state[1],
+                noise = actionNoise() * HP.max_action
+                Q = [[net.get_Qa([state],[[0]]),net.get_Qa([state],[[1]])]]
+                print("Q: ",Q)
+                a = net.get_actions([state])[0] + noise#one action
+                print("action: ", a,"noise: ",noise)
+                #pl.torque_command(a[0],max = HP.max_action)
+                #a = pLib.choose_action(action_space,Q[0],epsilon = HP.epsilon)
+                #pl.delta_velocity_command(action_space[a])#update velocity (and steering) and send to simulator. index - index on global path (pl.desired_path)        
+                pl.delta_velocity_command(a[0])#
+                #a = [a]
+
                 #wait for step time:
                 while (not step_now(last_time,HP.step_time)) and stop != [True]: #wait for the next step (after step_time)
                     time.sleep(0.00001)
@@ -93,10 +104,10 @@ if __name__ == "__main__":
                 rand_state, rand_a, rand_reward, rand_next_state = Replay.sample(HP.batch_size)
                 
                 #update neural networs:
-                pLib.DDQN(rand_state, rand_a, rand_reward, rand_next_state,net,HP)
-                #pLib.DDPG(rand_state, rand_a, rand_reward, rand_next_state,net,HP)
-                print("targetQ:",net.get_targetQ([state]))
-                print("Q:",net.get_Q([state]))
+                #pLib.DDQN(rand_state, rand_a, rand_reward, rand_next_state,net,HP)
+                pLib.DDPG(rand_state, rand_a, rand_reward, rand_next_state,net,HP)
+                #print("targetQ:",net.get_targetQ([state]))
+                #print("Q:",net.get_Q([state]))
                 
                 ##actor-critic:
                 #next_Q = net.get_Q(next_state)#from this state
@@ -166,6 +177,7 @@ if __name__ == "__main__":
         #end all:
         pl.stop_vehicle()
         pl.end()
+        net.save_model(HP.save_name)
            
             #comp_Pi(net)
             #update policy at the end of the episode:
@@ -221,5 +233,5 @@ if __name__ == "__main__":
     #        comp_Pi(net)
     #        print("loss: ",loss) 
             
-    net.save_model(HP.save_name)#model4.ckpt - LINEAR, LINE. model5.ckpt - net, line - good, model6.ckpt - 3 points model7.ckpt -very good
+
     

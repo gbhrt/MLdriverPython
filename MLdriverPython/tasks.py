@@ -156,7 +156,7 @@ if __name__ == "__main__":
     command = []
     wait_for(stop,command)#wait for "enter" in another thread - then stop = true
     #pl.simulator.send_drive_commands(10,0.427)#max
-    pl.simulator.send_drive_commands(10,0.2)#max
+    pl.simulator.send_drive_commands(10,0.2)
     while stop != [True]:
         pl.simulator.get_vehicle_data()
         print("velocity: ",pl.simulator.vehicle.velocity)

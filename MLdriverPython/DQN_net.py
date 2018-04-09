@@ -26,9 +26,10 @@ def policy_estimator(action_space_n,state,features_num): #define a net - input: 
     #############################################################
     return pi
 def Q_estimator(action_space_n,state,features_num):#define a net - input: state (and dimentions) - output: Q - Value
-    hidden_layer_nodes1 = 100
-    hidden_layer_nodes2 = 50
-
+    #hidden_layer_nodes1 = 100
+    #hidden_layer_nodes2 = 50
+    hidden_layer_nodes1 = 300
+    hidden_layer_nodes2 = 200
     #linear regression:
     #W1 = tf.Variable(tf.truncated_normal([features_num,action_space_n], stddev=1e-5))
     #b1 = tf.Variable(tf.constant(0.0, shape=[action_space_n]))
@@ -49,7 +50,7 @@ def Q_estimator(action_space_n,state,features_num):#define a net - input: state 
     Value = tf.add(tf.matmul(V_z2,V_W3), V_b3)
     #############################################################
     #Advantage layers:
-    #hidden layer 1:
+    #hidden layer 1:    
     A_W1 = tf.Variable(tf.truncated_normal([features_num,hidden_layer_nodes1], stddev=0.1),name = "Q_W1")
     A_b1 = tf.Variable(tf.constant(0.1, shape=[hidden_layer_nodes1]),name = "Q_b1")
     A_z1 = tf.nn.relu(tf.add(tf.matmul(state,A_W1),A_b1))
@@ -72,13 +73,16 @@ class DQN_network(NetLib):
 
         self.Q = Q_estimator(action_space_n, self.state,features_num)
         self.targetQ = Q_estimator(action_space_n, self.state,features_num)
-
+        network_params = tf.trainable_variables()
+        params_num = len(network_params)
+        Q_params = network_params[:params_num//2]
+        target_Q_params = network_params[params_num//2:]
         if alpha_actor !=None and alpha_critic != None:#for training the network
             self.Qa = tf.reduce_sum(tf.multiply(self.Q, self.actions_one_hot),axis=1) #Q on action a at the feeded state
             
             self.Q_loss = tf.squared_difference(self.Qa,self.input_targetQa)
             self.update_Q = tf.train.AdamOptimizer(alpha_critic).minimize(self.Q_loss)
-            self.update_var_vec = self.update_target_init(tau,'Q_')
+            self.update_var_vec = self.update_target_init(tau,Q_params,target_Q_params)
         
         self.sess = tf.Session()
         self.sess.run(tf.global_variables_initializer())

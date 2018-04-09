@@ -92,7 +92,6 @@ class Planner(PathManager):#planner - get and send data to simulator. input - mi
         self.start_time = 0
         self.index = 0
         self.main_index = 0
-        self.max_velocity = 30 #global speed limit
         if mode == "simple":
             self.start_simple()
     def init_timer(self):
@@ -263,13 +262,20 @@ class Planner(PathManager):#planner - get and send data to simulator. input - mi
         self.desired_path.velocity[index] = vel_command
 
 
-    def delta_velocity_command(self, delta_vel):
-        des_vel = np.clip(self.simulator.vehicle.velocity + delta_vel,0,self.max_velocity)#assume velocity is updated
+    def delta_velocity_command(self, delta_vel,max_vel = 50):
+        des_vel = np.clip(self.simulator.vehicle.velocity + delta_vel,0,max_vel)#assume velocity is updated
         target_index = self.select_target_index(self.index)
         steer_ang1 = comp_steer(self.simulator.vehicle,self.desired_path.position[target_index])#target in global
         self.simulator.send_drive_commands(des_vel,steer_ang1) #send commands
         return
+    def torque_command(self, command, max = 5000):
+        command = np.clip(command,-max,max)
+        target_index = self.select_target_index(self.index)
+        steer_ang1 = comp_steer(self.simulator.vehicle,self.desired_path.position[target_index])#target in global
+        self.simulator.send_drive_commands(command,steer_ang1) #send commands
+        return
     def load_path(self,path_file_name,random = False, compute_velocity_limit_flag = False):
+        path_num = 0
         if random == False:
             self.reference_free_path = self.read_path(path_file_name)#get a path at any location
             if self.reference_free_path == None:

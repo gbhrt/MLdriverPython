@@ -5,7 +5,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>67d1be9f-78bf-410b-b3ad-9001facbb70e</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>policyBasedLearn1.py</StartupFile>
+    <StartupFile>gym_ddpg.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -36,6 +36,15 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="DQN_net.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="gym_ddpg.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="gym_test2.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="gym_tests.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="ion_test.py">
