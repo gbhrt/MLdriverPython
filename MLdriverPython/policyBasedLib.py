@@ -20,7 +20,7 @@ class HyperParameters:
         self.alpha_critic = 0.001#for Q
         self.max_deviation = 3 # [m] if more then maximum - end episode 
         self.batch_size = 64
-        self.replay_memory_size = 10000
+        self.replay_memory_size = 100000
         self.num_of_TD_steps = 15 #for TD(lambda)
         self.visualized_points = 300 #how many points show on the map and lenght of local path
         self.max_pitch = 0.3
@@ -29,7 +29,7 @@ class HyperParameters:
         self.max_action = 1.0 # self.acc*self.step_time #temp, torque in Nm
 
         #########################
-        self.render_flag = False
+        self.render_flag = True
         self.plot_flag = True
         self.restore_flag = True
         self.skip_run = False
@@ -37,10 +37,10 @@ class HyperParameters:
         self.reset_every = 3
         self.save_every = 1000
         self.path_name = "paths\\path.txt"     #long random path: path3.txt  #long straight path: straight_path.txt
-        self.save_name = "model24" #model6.ckpt - constant velocity limit - good. model7.ckpt - relative velocity.
+        self.save_name = "model25" #model6.ckpt - constant velocity limit - good. model7.ckpt - relative velocity.
         #model10.ckpt TD(5) dt = 0.2 alpha 0.001 model13.ckpt - 5 points 2.5 m 0.001 TD 15
         #model8.ckpt - offline trained after 5 episode - very clear
-        self.restore_name = "model24" # model2.ckpt - MC estimation 
+        self.restore_name = "model25" # model2.ckpt - MC estimation 
         self.run_data_file_name = 'running_record1'
 
 class Replay:
@@ -95,7 +95,7 @@ class OrnsteinUhlenbeckActionNoise:
 
 def DDPG(rand_state, rand_a, rand_reward, rand_next_state,rand_end,net,HP):
     #compute target Q:
-    rand_next_a = net.get_actions(rand_next_state)#action from next state
+    rand_next_a = net.get_target_actions(rand_next_state)#action from next state
     ##vec0 = [[0] for _ in range(len(rand_next_state))]
     ##vec1 = [[1] for _ in range(len(rand_next_state))]
     ##Q0 = net.get_Qa(rand_next_state,vec0)
@@ -105,10 +105,11 @@ def DDPG(rand_state, rand_a, rand_reward, rand_next_state,rand_end,net,HP):
     ##rand_next_a = np.argmax(rand_next_Q,axis = 1)#best action from next state according to Q network
     ##rand_next_a = [[item] for item in rand_next_a]
     rand_next_targetQa = net.get_targetQa(rand_next_state,rand_next_a)#like in DDQN
+   
     rand_targetQa = []
     for i in range(len(rand_state)):
         if rand_end[i] == False:
-            rand_targetQa.append(rand_reward[i] + HP.gamma*rand_next_targetQa[i])#DDQN
+            rand_targetQa.append(rand_reward[i] + HP.gamma*rand_next_targetQa[i])#DDQN  
         else:
             rand_targetQa.append(rand_reward[i] + np.zeros(HP.action_space_n))
     #update critic:

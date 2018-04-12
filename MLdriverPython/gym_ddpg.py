@@ -33,31 +33,37 @@ if __name__ == "__main__":
     wait_for(stop,command)#wait for "enter" in another thread - then stop = true
     dv = HP.acc * HP.step_time
     #action_space =[-dv,dv]
-    env  = gym.make("Walker2DBulletEnv-v0")#''  Pendulum-v0 MinitaurBulletEnv-v0 HalfCheetahBulletEnv-v0
+    env  = gym.make("HalfCheetahBulletEnv-v0")#''  Pendulum-v0 MinitaurBulletEnv-v0 HalfCheetahBulletEnv-v0
+    np.random.seed(1234)
+    random.seed(1234)
+    env.seed(1234)
     if HP.render_flag:
         env.render()
     env.reset()
     HP.action_space_n = env.action_space.shape[0]
     HP.features_num = env.observation_space.shape[0]
     HP.max_action = env.action_space.high[0]
-
-    net = DDPG_network(HP.features_num,HP.action_space_n,HP.max_action,HP.alpha_actor,HP.alpha_critic,tau = HP.tau)  
+    total_reward_vec = []
+    net = DDPG_network(HP.features_num,HP.action_space_n,HP.max_action,HP.alpha_actor,HP.alpha_critic,tau = HP.tau,seed = 1234) 
+    
     #net = DQN_network(HP.features_num,len(action_space),HP.alpha_actor,HP.alpha_critic,tau = HP.tau)  
     print("Network ready")
     if HP.restore_flag:
         net.restore(HP.restore_name)
     if not HP.skip_run:
         
-        plot = Plot()
+        #plot = Plot(total_reward_vec)
         dataManager = data_manager.DataManager(file = HP.save_name+".txt")
         Replay = pLib.Replay(HP.replay_memory_size)
-        actionNoise = pLib.OrnsteinUhlenbeckActionNoise(mu=np.zeros(HP.action_space_n),dt = HP.step_time)
+        actionNoise = pLib.OrnsteinUhlenbeckActionNoise(mu=np.zeros(HP.action_space_n))
 
 
         for i in range(HP.num_of_runs): #number of runs - run end at the end of the main path and if vehicle deviation error is to big
             if stop == [True]:
                 break
             # initialize every episode:
+            step_count = 0
+            ep_ave_max_q = 0
             reward_vec = []
             last_time = [0]
             #########################
@@ -65,7 +71,7 @@ if __name__ == "__main__":
             #first state:
             
             #state = pLib.get_state(pl,local_path,HP.feature_points,HP.distance_between_points)
-            step_count = 0
+          
             while  stop != [True]:#while not stoped, the loop break if reached the end or the deviation is to big
                
                 #print("steps: ",step_count )
@@ -74,31 +80,31 @@ if __name__ == "__main__":
                 #Q = net.get_Q([state])
                 #Pi = net.get_Pi([state])
                 #print("velocity1: ",state[0])#,"Q: ",Q)#,"PI: ",Pi)#"velocity2: ",state[1],
-                #if command == [b'1']:
-                #    env.render()
-                noise = actionNoise() * HP.max_action
+              
+                noise = actionNoise()# * HP.max_action
                 #Q = [[net.get_Qa([state],[[0]]),net.get_Qa([state],[[1]])]]
                 #print("Q: ",Q)
-                a = net.get_actions([state])
+                a = net.get_actions(np.reshape(state, (1, HP.features_num)))#reshape from array([]) to array([[]])
                 a = a[0]
                 a +=  noise#one action
                 a = np.clip(a,-HP.max_action,HP.max_action)
                 #print("action: ", a,"noise: ",noise)
 
                 #get reward:#get next state:
-                next_state,reward,done,_ = env.step(np.array(a))
+                next_state,reward,done,_ = env.step(a)
                 #print("reward: ",reward)
                 reward_vec.append(reward)
                 
                 #add data to replay buffer:
                 Replay.add((state,a,reward,next_state,done))
 
-                #sample from replay buffer:
-                rand_state, rand_a, rand_reward, rand_next_state,rand_end = Replay.sample(HP.batch_size)
+                if len(Replay.memory) > HP.batch_size:
+                    #sample from replay buffer:
+                    rand_state, rand_a, rand_reward, rand_next_state,rand_end = Replay.sample(HP.batch_size)
                 
-                #update neural networs:
-                #pLib.DDQN(rand_state, rand_a, rand_reward, rand_next_state,net,HP)
-                pLib.DDPG(rand_state, rand_a, rand_reward, rand_next_state,rand_end,net,HP)
+                    #update neural networs:
+                    #pLib.DDQN(rand_state, rand_a, rand_reward, rand_next_state,net,HP)
+                    pLib.DDPG(rand_state, rand_a, rand_reward, rand_next_state,rand_end,net,HP)
                 #print("targetQ:",net.get_targetQ([state]))
                 #print("Q:",net.get_Q([state]))
                 
@@ -144,14 +150,18 @@ if __name__ == "__main__":
             #end while
 
             #after episode end:
-            print("mean reward: ",sum(reward_vec)/len(reward_vec))
+            #print("mean reward: ",sum(reward_vec)/len(reward_vec))
             total_reward = 0
-            for k,r in enumerate(reward_vec):
-                total_reward+=r*HP.gamma**k
-            print("total reward: ", total_reward)
-            print("steps: ",step_count )
+            #for k,r in enumerate(reward_vec):
+            #    total_reward+=r*HP.gamma**k
+            total_reward = sum(reward_vec)
+            total_reward_vec.append(total_reward)
+            #plot.update(total_reward_vec)
+            print("episode: ", i, " total reward: ", total_reward)
+            #print("steps: ",step_count )
             total_step_count += step_count
-            print("total steps: ",total_step_count )
+            net.update_summaries(total_reward)
+            #print("total steps: ",total_step_count )
             #input()
             if (i % HP.save_every == 0 and i > 0): 
                 net.save_model(HP.save_name)

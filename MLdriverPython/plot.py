@@ -5,11 +5,15 @@ import numpy as np
 
 
 class Plot():
-    def __init__(self):
-        self.fig = 0
-        self.ax = 0
+    def __init__(self,y):
+        self.fig = plt.figure()
+        self.ax = self.fig.add_subplot(111)#211
+        self.ax.plot(np.array(y))
+        #plt.show()
         #plt.ion()
         #plt.show()
+   
+
 
     def plot_path_with_features(self,data,distance_between_points,block = False):
         #while True:
@@ -84,9 +88,11 @@ class Plot():
         self.ax = self.fig.add_subplot(111)
         plt.ion()
 
-    def update(self,path):
-        self.ax.scatter(path.time[-1], path.velocity[-1])
-        plt.pause(0.05)
+    def update(self,y):
+        #self.ax.scatter(path.time[-1], path.velocity[-1])
+        #plt.pause(0.05)
+        self.ax.plot(np.array(y))
+        plt.show()
     def end(self):
         plt.ioff()
         self.fig.show()
