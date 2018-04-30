@@ -92,8 +92,12 @@ class Planner(PathManager):#planner - get and send data to simulator. input - mi
         self.start_time = 0
         self.index = 0
         self.main_index = 0
+        self.connected = False
         if mode == "simple":
-            self.start_simple()
+            if self.start_simple():         
+                self.connected = True
+        return
+
     def init_timer(self):
         self.start_time = time.time()
     def get_time(self):
@@ -132,15 +136,20 @@ class Planner(PathManager):#planner - get and send data to simulator. input - mi
         
 
     def start_simple(self):
-        self.simulator.connect()
-        print("connected")
+        try:
+            self.simulator.connect()
+            print("connected")
+        except:
+            print("cannot connect to simulator")
+            return False
+        
         self.restart()
         print("started simple scene in simulator")
-        return
+        return True
    
     def end(self):
         self.simulator.comm.end_connection()
-        return
+        return 
 
     def dist_from_target(self):
         return dist(self.simulator.vehicle.position[0],self.simulator.vehicle.position[1],self.target[0],self.target[1])
@@ -262,34 +271,50 @@ class Planner(PathManager):#planner - get and send data to simulator. input - mi
         self.desired_path.velocity[index] = vel_command
 
 
-    def delta_velocity_command(self, delta_vel,max_vel = 50):
+    def delta_velocity_command(self, delta_vel,max_delta_vel,max_vel = 50):
+        delta_vel = delta_vel*max_delta_vel
         des_vel = np.clip(self.simulator.vehicle.velocity + delta_vel,0,max_vel)#assume velocity is updated
         target_index = self.select_target_index(self.index)
         steer_ang1 = comp_steer(self.simulator.vehicle,self.desired_path.position[target_index])#target in global
         self.simulator.send_drive_commands(des_vel,steer_ang1) #send commands
         return
-    def torque_command(self, command, max = 5000):
-        command = np.clip(command,-max,max)
+    def torque_command(self, command, max = 5000):#command from -1 to 1
+        command = command*max
+        #command = np.clip(command,-max,max)
         target_index = self.select_target_index(self.index)
         steer_ang1 = comp_steer(self.simulator.vehicle,self.desired_path.position[target_index])#target in global
         self.simulator.send_drive_commands(command,steer_ang1) #send commands
         return
-    def load_path(self,path_file_name,random = False, compute_velocity_limit_flag = False):
+    def load_path(self,lenght,path_file_name,source = "regular", compute_velocity_limit_flag = False):
         path_num = 0
-        if random == False:
+        if source == "regular":
             self.reference_free_path = self.read_path(path_file_name)#get a path at any location
             if self.reference_free_path == None:
-                return 0
-        else:
+                return -1
+        elif source == "create_random":
+            
+            self.reference_free_path.position = create_random_path(2000,0.05)
+
+        elif source == "saved_random":
             path_num,self.reference_free_path = self.get_next_random_path()
             if self.reference_free_path == None:
                 return -1
-        if random or compute_velocity_limit_flag:
-            comp_velocity_limit(self.reference_free_path)
-            self.reference_free_path.velocity_limit[-1] = 0
+        else:
+            print("error - no path source")
+
+
+            
             
         self.reference_free_path.comp_path_parameters()
         self.reference_free_path.comp_angle()
+
+        if source == "saved_random" or source == "create_random" or compute_velocity_limit_flag:
+            comp_velocity_limit(self.reference_free_path)
+            #for i in range(len(self.reference_free_path.distance)):
+            #    if self.reference_free_path.distance[i] > lenght:
+            #        self.reference_free_path.velocity_limit[i] = 30
+            self.reference_free_path.velocity_limit[-1] = 0
+
         return path_num
     def new_episode(self , points_num = 10):
         self.index = 0
@@ -307,13 +332,15 @@ class Planner(PathManager):#planner - get and send data to simulator. input - mi
         self.desired_path.comp_path_parameters()
         local_path.distance = copy.copy(self.desired_path.distance)
         return local_path
-    def check_end(self,deviation = None,max_deviation = 4,max_roll = 0.2,max_pitch = 0.2, state = None):
+    def check_end(self,lenght,deviation = None,max_deviation = 4,max_roll = 0.2,max_pitch = 0.2, state = None,):
         #print("main index", self.main_index, "lenght: ",len(self.in_vehicle_reference_path.position))
         end_tolerance = 0.3
         dis_from_end = self.in_vehicle_reference_path.distance[-1] - self.in_vehicle_reference_path.distance[self.main_index]
-        if  (dis_from_end < end_tolerance and self.simulator.vehicle.velocity < 0.001)\
-            or dis_from_end <= 0: #end if reach the end or when close to end and velocity is 0
-        #if self.main_index >= len(self.in_vehicle_reference_path.position)-1:#end of the main path
+        
+        #if  (dis_from_end < end_tolerance and self.simulator.vehicle.velocity < 0.001)\
+        #    or dis_from_end <= 0: #end if reach the end or when close to end and velocity is 0
+        if self.main_index >= len(self.in_vehicle_reference_path.position)-1:#end of the main path
+        #if self.in_vehicle_reference_path.distance[self.main_index] > lenght:
             print("end episode - end of the path")
             return 'path end'
         if state != None and state[0] > 0:

@@ -7,11 +7,12 @@ from net_lib import NetLib
 
 class DDPG_network(NetLib):
     def __init__(self,state_n,action_space_n,action_limit,alpha_actor = None,alpha_critic = None, tau = 1.0,seed = None):
+        tf.reset_default_graph()
         if seed != None:
             tf.set_random_seed(seed)
         self.state = tf.placeholder(tf.float32, [None,state_n] )
         self.action_in = tf.placeholder( dtype=tf.float32, shape=[None,action_space_n] )
-        self.targetQa_in = tf.placeholder(tf.float32, shape=[None,action_space_n])
+        self.targetQa_in = tf.placeholder(tf.float32, shape=[None,1])
 
         self.action_out = self.continues_actor(action_space_n,action_limit,self.state,state_n)
         network_params = tf.trainable_variables()
@@ -147,7 +148,7 @@ class DDPG_network(NetLib):
         # Weights are init to Uniform[-3e-3, 3e-3]
         init = tflearn.initializations.uniform(minval=-0.003, maxval=0.003)
 
-        Qa = tflearn.fully_connected(net, action_n, weights_init=init,bias_init = init, regularizer='L2', weight_decay=0.01)
+        Qa = tflearn.fully_connected(net, 1, weights_init=init,bias_init = init, regularizer='L2', weight_decay=0.01)
        
         return Qa
 
@@ -199,6 +200,9 @@ class DDPG_network(NetLib):
         return 
     def update_summaries(self,reward):
         self.sess.run(self.merged, feed_dict={self.summaries_list[0]: reward})
+
+    #def __del__(self):
+    #    self.sess.close()
 
 
         

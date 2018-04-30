@@ -5,7 +5,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>67d1be9f-78bf-410b-b3ad-9001facbb70e</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>gym_ddpg.py</StartupFile>
+    <StartupFile>main.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -35,7 +35,13 @@
     <Compile Include="data_manager.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="DDPG_algorithm.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="DQN_net.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="enviroment1.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="gym_ddpg.py">
@@ -47,10 +53,16 @@
     <Compile Include="gym_tests.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="hyper_parameters.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="ion_test.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="DDPG_net.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="main.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="net_lib.py">
@@ -86,6 +98,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="policyBasedNet.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="tests.py">
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>

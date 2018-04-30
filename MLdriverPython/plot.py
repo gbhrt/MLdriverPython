@@ -5,15 +5,33 @@ import numpy as np
 
 
 class Plot():
-    def __init__(self,y):
+    def __init__(self,episode_data,total_data,special = None):
         self.fig = plt.figure()
         self.ax = self.fig.add_subplot(111)#211
-        self.ax.plot(np.array(y))
+        self.episode_data = episode_data
+        self.total_data = total_data
         #plt.show()
         #plt.ion()
         #plt.show()
    
-
+    def plot(self,*names):
+        plt.close("all")
+        for name in names:
+            if name in self.episode_data:
+                data = np.array(self.episode_data[name])
+            elif name in self.total_data: 
+                data = np.array(self.total_data[name])
+            else:
+                 print("error - cannot plot data, key not found")
+            if len (data) > 0:
+                if isinstance(data[0], list):#if not a list:
+                    if data[0] >1:
+                       # x = data[:,1]
+                        y = data[:,0]
+                        plt.plot((x,y))
+                else:
+                    plt.plot(data)
+            plt.show()
 
     def plot_path_with_features(self,data,distance_between_points,block = False):
         #while True:
@@ -21,7 +39,7 @@ class Plot():
             #if inp == 'e':
             #    break
             #index = int(inp)
-            index = 50
+            index = 0
             if index < len(data.real_path.distance):
                 plt.plot(np.array(data.real_path.distance),np.array(data.real_path.velocity))
                 plt.plot(np.array(data.real_path.distance),np.array(data.real_path.velocity_limit))
@@ -32,8 +50,13 @@ class Plot():
                     x = [0]
                 
                     for _ in range(len(data.features[index])-1):
+                        if i >= len(data.real_path.distance):
+                            break
                         while data.real_path.distance[i] - data.real_path.distance[last_index] < distance_between_points: #search the next point 
                             i += 1
+                            if i >= len(data.real_path.distance):
+                                i-=1
+                                break
                         x.append(data.real_path.distance[index] + data.real_path.distance[i])
                         last_index = i
                    # x = [x*distance_between_points+data.real_path.distance[index] for x in range(len(data.features[index]))]

@@ -4,44 +4,7 @@ import numpy as np
 import json
 import library as lib
 
-class HyperParameters:
-    def __init__(self):
-        self.feature_points = 3 #30
-        self.distance_between_points = 1.0 #meter
-        self.features_num = 1 + self.feature_points #vehicle state points on the path (distance)
-        self.action_space_n = 1
-        self.epsilon_start = 1.0
-        self.epsilon = 0.1
-        self.gamma = 0.99
-        self.tau = 0.001 #how to update target network compared to Q network
-        self.num_of_runs = 5000000
-        self.step_time = 0.2
-        self.alpha_actor = 0.0001# for Pi 1e-5 #learning rate
-        self.alpha_critic = 0.001#for Q
-        self.max_deviation = 3 # [m] if more then maximum - end episode 
-        self.batch_size = 64
-        self.replay_memory_size = 100000
-        self.num_of_TD_steps = 15 #for TD(lambda)
-        self.visualized_points = 300 #how many points show on the map and lenght of local path
-        self.max_pitch = 0.3
-        self.max_roll = 0.3
-        self.acc = 1.5 # [m/s^2]  need to be more then maximum acceleration in real
-        self.max_action = 1.0 # self.acc*self.step_time #temp, torque in Nm
 
-        #########################
-        self.render_flag = True
-        self.plot_flag = True
-        self.restore_flag = True
-        self.skip_run = False
-        self.random_paths_flag = False
-        self.reset_every = 3
-        self.save_every = 1000
-        self.path_name = "paths\\path.txt"     #long random path: path3.txt  #long straight path: straight_path.txt
-        self.save_name = "model25" #model6.ckpt - constant velocity limit - good. model7.ckpt - relative velocity.
-        #model10.ckpt TD(5) dt = 0.2 alpha 0.001 model13.ckpt - 5 points 2.5 m 0.001 TD 15
-        #model8.ckpt - offline trained after 5 episode - very clear
-        self.restore_name = "model25" # model2.ckpt - MC estimation 
-        self.run_data_file_name = 'running_record1'
 
 class Replay:
     def __init__(self,replay_memory_size):
@@ -104,14 +67,14 @@ def DDPG(rand_state, rand_a, rand_reward, rand_next_state,rand_end,net,HP):
 
     ##rand_next_a = np.argmax(rand_next_Q,axis = 1)#best action from next state according to Q network
     ##rand_next_a = [[item] for item in rand_next_a]
-    rand_next_targetQa = net.get_targetQa(rand_next_state,rand_next_a)#like in DDQN
+    rand_next_targetQa = net.get_targetQa(rand_next_state,rand_next_a)#like in DQN
    
     rand_targetQa = []
     for i in range(len(rand_state)):
         if rand_end[i] == False:
-            rand_targetQa.append(rand_reward[i] + HP.gamma*rand_next_targetQa[i])#DDQN  
+            rand_targetQa.append(rand_reward[i] + HP.gamma*rand_next_targetQa[i])#DQN  
         else:
-            rand_targetQa.append(rand_reward[i] + np.zeros(HP.action_space_n))
+            rand_targetQa.append([rand_reward[i]])
     #update critic:
     net.Update_critic(rand_state,rand_a,rand_targetQa)#compute Qa(state,a) and minimize loss (Qa - targetQa)^2
     #print("critic_loss: ",net.get_critic_loss(rand_state,rand_a,rand_targetQa))
@@ -127,89 +90,6 @@ def DDPG(rand_state, rand_a, rand_reward, rand_next_state,rand_end,net,HP):
     net.Update_actor(rand_state,pred_action)
 
     net.update_targets()
-
-def choose_points(local_path,number,distance_between_points):#return points from the local path, choose a point every "skip" points
-    index = 0
-    last_index = 0
-    points = []
-    points.append(local_path.velocity_limit[index])
-    for _ in range(number-1):
-        while local_path.distance[index] - local_path.distance[last_index] < distance_between_points: #search the next point 
-            if index >= len(local_path.distance)-1:#at the end of the path - break, cause doublication of the last velocity limit
-                break
-            index += 1
-        points.append(local_path.velocity_limit[index])
-        last_index = index
-    return points
-
-def get_state(pl = None,local_path = None,points = 1,distance_between = 1):
-    #state = []
-    velocity_limits = choose_points(local_path,points,distance_between)
-    # print("vel limit: ", velocity_limit)
-    vel = max(pl.simulator.vehicle.velocity,0)
-    state = [vel] +  velocity_limits
-    #for i in range(points):
-    #    state.append(vel - velocity_limits[i])
-    state = lib.normalize(state,0,30)
-    #i = find_low_vel(local_path)
-    #dis = local_path.distance[i]
-    #state.append(dis)
-
-    #state += choose_points(local_path,points,30)
-
-    #path_ang = local_path.angle[0][1]
-    #state.append(path_ang)
-    #point1 = math.copysign(dist(local_path.position[0][0],local_path.position[0][1],0,0),local_path.position[0][0])#distance from path
-    #state.append(point1)
-
-    #for i in range (points):
-    #    state.append(local_path.position[i][0])#x
-    #    state.append(local_path.position[i][1])#y
-    #state.append(local_path.position[target_index][0])#x
-    #state.append(local_path.position[target_index][1])#y
-
-    return state
-
-def get_reward(velocity_limit,velocity):   
-    #if state[1] < 0.01: # finished the path
-    #    reward =(max_velocity - state[0])
-    #else:
-    #    reward =  0#state[0]*0.01
-
-
-    #velocity_limit = state[1]
-    #acc = state[0] - last_state[0]#acceleration
-    #if state[0] < velocity_limit:
-    #    if last_state[0] > velocity_limit:
-    #        reward = -acc 
-    #    else:
-    #        reward = acc 
-    #else:
-
-    #    reward = -acc
-    #acc = state[0] - last_state[0]#acceleration
-    #if state[0] < 0:
-    #    if last_state[0] > velocity_limit:
-    #        reward = -acc 
-    #    else:
-    #        reward = acc 
-    #else:
-    #    reward = -acc
-    if velocity < velocity_limit: 
-        reward = velocity
-        #if velocity < 1e-5:
-        #    reward = - 2
-    else: 
-        reward = -10.*(velocity - velocity_limit)
-
-    #if state[0] < 0: 
-    #    reward = velocity_limit + state[0]
-    #    if reward < 0.01:
-    #        reward = - 2
-    #else: 
-    #    reward = -10*state[0]
-
-    return reward
 
 def choose_action(action_space,Pi,steps = None,epsilon = 0.1):
     if random.random() < epsilon:
@@ -268,4 +148,5 @@ def comp_value(net,max_vel):
             print(Pi,'\t', end='')
 
         print()
+
 

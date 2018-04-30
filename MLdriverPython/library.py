@@ -5,6 +5,7 @@ from classes import *
 import _thread
 import c_functions as c_func
 import os
+import random
 
 cf = c_func.cFunctions()
     
@@ -234,6 +235,10 @@ def createPath(type,size,startX,startY,startAng):
             path.position.append(point)    
     return path
 
+def create_path():
+
+    return
+
 def split_to_paths(path,lenght_max):
     paths = []
     
@@ -301,6 +306,42 @@ def comp_velocity_limit(path):
 
   
     return False
+def create_random_path(number,resolution):
+
+    max_rand_num = 200
+    pos = np.array([0.0,0.0,0.0])
+    ang = 0
+    curvature = 0 
+    delta_curvature = 0.005
+    path = []
+    i=0
+    while i < number:
+        rand_num = random.randint(0,max_rand_num)
+        des_curvature = random.uniform(-0.1,0.1)
+        #print("num: ",rand_num,"curv: ",des_curvature)
+        for j in range(rand_num):
+            if curvature < des_curvature:
+                curvature += delta_curvature
+            if curvature > des_curvature:
+                curvature -= delta_curvature
+            #print("curv: ", curvature,"des_curvature:",des_curvature)
+            ang+= curvature*resolution
+            #print(np.array([math.cos(ang),math.sin(ang)]))
+            #print(resolution*np.array([math.cos(ang),math.sin(ang)]))
+            pos+= resolution*np.array([math.cos(ang),math.sin(ang),0.0])
+            path.append(np.copy(pos))
+        i+=j
+
+
+    #pathx = []
+    #pathy = []
+    #for item in path:
+    #    pathx.append(item[0])
+    #    pathy.append(item[1])
+
+    #plt.plot(pathx,pathy)
+    #plt.show()
+    return path
 ###########################################################
 
 
