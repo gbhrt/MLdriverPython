@@ -20,13 +20,9 @@ class NetLib:
         return update_var_vec
 
 
-    def save_model(self,*args):
+    def save_model(self,path,name = "tf_model"):
         try:
-                name = "model3" #.ckpt
-                #path = "C:\MachineLearning\MLdriverPython\MLdriverPython\models\ "
-                if len(args) > 0:
-                    name = args[0]
-                path = os.getcwd()+ "\\models\\policy\\"+name+"\\"
+                path = path +name+"\\"
                 pathlib.Path(path).mkdir(parents=True, exist_ok=True) 
                 file_name =  path+name+".ckpt " #/media/windows-share/MLdriverPython/MLdriverPython/
                 saver = tf.train.Saver()
@@ -34,20 +30,20 @@ class NetLib:
                 print("Model saved in file: %s" % save_path)
         except:
             print('cannot save - try again')
-            self.save_model(name)
+            self.save_model(path,name)
 
 
-    def restore(self,*args):
+    def restore(self,path,name = "tf_model"):
         try:
-            name = "model3" #.ckpt
-            if len(args) > 0:
-                name = args[0]
-            path = os.getcwd()+ "\\models\\policy\\"+name+"\\"#
-              
+            #name = "model3" #.ckpt
+            #if len(args) > 0:
+            #    name = args[0]
+            #path = os.getcwd()+ "\\models\\policy\\"+name+"\\"#
+            path = path +name+"\\"
             file_name =  path+name+".ckpt " #/media/windows-share/MLdriverPython/MLdriverPython/
             # Restore variables from disk.
             saver = tf.train.Saver()
             saver.restore(self.sess, file_name)
             print("Model restored.")
         except:
-            print('cannot restore')
+            print('cannot restore net')

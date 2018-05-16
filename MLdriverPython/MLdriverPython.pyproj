@@ -28,11 +28,11 @@
     <Compile Include="communicationLib.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="create_train_data.py">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="c_functions.py" />
     <Compile Include="data_manager.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="data_manager1.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="DDPG_algorithm.py">
@@ -44,22 +44,19 @@
     <Compile Include="enviroment1.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="gym_ddpg.py">
+    <Compile Include="enviroment_lib.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="gym_test2.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="gym_tests.py">
+    <Compile Include="gym\gym_tests.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="hyper_parameters.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="ion_test.py">
+    <Compile Include="DDPG_net.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="DDPG_net.py">
+    <Compile Include="init_nets.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="main.py">
@@ -68,14 +65,14 @@
     <Compile Include="net_lib.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="policyBasedLib.py">
+    <Compile Include="aggent_lib.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="ReinforceLearn.py" />
-    <Compile Include="ReinforceNet.py">
+    <Compile Include="deepLearnProject\ReinforceLearn.py" />
+    <Compile Include="deepLearnProject\ReinforceNet.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="policyBasedLearn1.py">
+    <Compile Include="plot_lib.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="tasks.py">
@@ -87,7 +84,6 @@
     <Compile Include="deepLearnProject\linear_regression.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="MLdriverPython.py" />
     <Compile Include="deepLearnProject\neuralNetwork.py">
       <SubType>Code</SubType>
     </Compile>
@@ -97,7 +93,7 @@
     <Compile Include="plot.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="policyBasedNet.py">
+    <Compile Include="test1.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="tests.py">
@@ -106,6 +102,7 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="deepLearnProject\" />
+    <Folder Include="gym\" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in

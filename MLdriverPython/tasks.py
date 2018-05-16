@@ -8,7 +8,7 @@ import classes
 import data_manager
 from plot import Plot
 import policyBasedNet
-import policyBasedLib as pLib
+import aggent_lib as pLib
 
 def create_path_in_run(points,file_name):
     pl = Planner()

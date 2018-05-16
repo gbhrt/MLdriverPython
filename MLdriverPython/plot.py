@@ -19,6 +19,7 @@ class Plot():
         for name in names:
             if name in self.episode_data:
                 data = np.array(self.episode_data[name])
+
             elif name in self.total_data: 
                 data = np.array(self.total_data[name])
             else:
@@ -30,7 +31,10 @@ class Plot():
                         y = data[:,0]
                         plt.plot((x,y))
                 else:
+                    N = 5
+                    mean_data = np.convolve(data, np.ones((N,))/N, mode='valid')
                     plt.plot(data)
+                    plt.plot(mean_data)
             plt.show()
 
     def plot_path_with_features(self,data,distance_between_points,block = False):
@@ -87,17 +91,23 @@ class Plot():
         #datay = [x for x in range(5)]
         #datax = np.arange(0, 10, 0.2)
         #datay = np.sin(datax)
-        #datax1 = np.array(path.distance)
-        datax = np.array(path.time)
+        datax = np.array(path.distance)
+        #datax = np.array(path.time)
         datay1 = np.array(path.velocity)
         datay2 = np.array(path.velocity_limit)
+        datay3 = np.array(path.analytic_velocity)
+        datay4 = np.array(path.curvature)
+
         #print("time: ",path.time)
         #print("velocity: ",path.velocity)
         #plt.ion()
         #self.ax1.plot(datax1, datay)
 
-        self.ax.plot(datax, datay1)
-        self.ax.plot(datax, datay2)
+        real_vel, = self.ax.plot(datax, datay1,label = "vehicle velocity")
+        vel_lim, = self.ax.plot(datax, datay2,label = "velocity limit")
+        vel, = self.ax.plot(datax, datay3, label = "analytic velocity")
+        curv, = self.ax.plot(datax, datay4, label = "curvature")
+        plt.legend(handles=[real_vel, vel_lim,vel,curv])
         plt.show(block = block)
         #plt.draw()
         #plt.pause(0.001)

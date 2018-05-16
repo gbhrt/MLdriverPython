@@ -39,6 +39,7 @@ class DataManager:
         for (name,data) in args:
             if name in self.episode_data:
                 self.episode_data[name].append(data)
+                #self.episode_data[name] = data
             elif name in self.total_data:                
                 self.total_data[name].append(data)
             else:
@@ -50,7 +51,7 @@ class DataManager:
     
 
 
-            
+         
     
             
 
@@ -102,7 +103,7 @@ class DataManager:
                 self.dec.append([self.ind,dist])
             self.ind += 1
         return
-    def update_real_path(self,pl, velocity_limit = None):
+    def update_real_path(self,pl, velocity_limit = None, analytic_vel = None,curvature = None):
 
         dist = pl.in_vehicle_reference_path.distance[pl.main_index]
         self.real_path.distance.append(dist)
@@ -110,5 +111,6 @@ class DataManager:
         self.real_path.velocity.append(pl.simulator.vehicle.velocity)
         self.real_path.time.append(pl.get_time())
         if velocity_limit != None: self.real_path.velocity_limit.append(velocity_limit)
- 
+        if analytic_vel != None: self.real_path.analytic_velocity.append(analytic_vel)
+        if curvature != None: self.real_path.curvature.append(curvature*20.0)
         return

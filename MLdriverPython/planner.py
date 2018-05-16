@@ -7,10 +7,6 @@ import time
 class SimVehicle:#simulator class - include communication to simulator, vehicle state and world state (recived states).
                  #
                  #also additional objects there like drawed path
-    #UDP_IP = None
-    #UDP_PORT = None
-    #comm = None
-    #vehicle = Vehicle()
 
     def __init__(self):
         self.UDP_IP = "127.0.0.1"
@@ -27,6 +23,7 @@ class SimVehicle:#simulator class - include communication to simulator, vehicle 
 
     def send_drive_commands(self,velocity,steering):#send drive commands to simulator
         dataType = 1
+        #print("vel",velocity)
         self.comm.serialize(dataType)
         self.comm.serialize(velocity)
         self.comm.serialize(steering)
@@ -83,7 +80,7 @@ class SimVehicle:#simulator class - include communication to simulator, vehicle 
 
 
 class Planner(PathManager):#planner - get and send data to simulator. input - mission, output - simulator performance 
-    def __init__(self,mode = "simple"):
+    def __init__(self,mode = "velocity"):#modes: velocity control - "velocity", torque command - "torque"
         super().__init__()
         self.desired_path = Path()
         self.reference_free_path = Path()#a path without reference system (start at (0,0) and angle 0)
@@ -92,10 +89,12 @@ class Planner(PathManager):#planner - get and send data to simulator. input - mi
         self.start_time = 0
         self.index = 0
         self.main_index = 0
+        self.mode = mode
         self.connected = False
-        if mode == "simple":
-            if self.start_simple():         
-                self.connected = True
+        #if mode == "simple":
+        if mode != "dont_connect":
+            self.connected = self.start_simple()         
+                 
         return
 
     def init_timer(self):
@@ -108,22 +107,30 @@ class Planner(PathManager):#planner - get and send data to simulator. input - mi
         self.target = self.to_global(self.target)
         res_dist = 100.# resolution (1/m)
         self.create_path("line",10,1./res_dist)
-        self.desired_path.comp_path_parameters()
+        self.desired_path.comp_distance()
         self.desired_path.set_velocity(0)
         self.simulator.send_path(self.desired_path)
         print("path sended")
 
+    def external_update_vehicle(self,position, angle,velocity):
+        self.simulator.vehicle.position = position
+        self.simulator.vehicle.angle = angle
+        self.simulator.vehicle.velocity = velocity
+
     def stop_vehicle(self):
-        self.simulator.send_drive_commands(0,0)
+        if self.mode == "torque":
+            self.simulator.send_drive_commands(-1,0)
+        else:
+            self.simulator.send_drive_commands(0,0)
         self.wait_for_stop()
     def wait_for_stop(self):
         self.simulator.get_vehicle_data()
         for _ in range(100):
             self.simulator.get_vehicle_data()
-            if abs(self.simulator.vehicle.velocity) < 0.01:
+            if abs(self.simulator.vehicle.velocity) < 0.03:
                 break
             time.sleep(0.1)
-        if abs(self.simulator.vehicle.velocity) > 0.01:
+        if abs(self.simulator.vehicle.velocity) > 0.03:#temp from 0.01
             self.simulator.reset_position()
             self.wait_for_stop()
 
@@ -165,7 +172,9 @@ class Planner(PathManager):#planner - get and send data to simulator. input - mi
         trans_path = Path()
         trans_path.distance = copy.copy(path.distance)
         trans_path.velocity_limit = copy.copy(path.velocity_limit)
+        trans_path.analytic_velocity = copy.copy(path.analytic_velocity)
         trans_path.velocity = copy.copy(path.velocity)
+        trans_path.curvature = copy.copy(path.curvature)
         path_start = path.position[0]
         path_ang = path.angle[0][1] #- math.pi/2
         for i in range(len(path.position)):#path in reference of the start of the path
@@ -190,7 +199,9 @@ class Planner(PathManager):#planner - get and send data to simulator. input - mi
     def path_to_global(self,path):
         global_path = Path()
         global_path.distance = copy.copy(path.distance)
+        global_path.curvature = copy.copy(path.curvature)
         global_path.velocity_limit = copy.copy(path.velocity_limit)
+        global_path.analytic_velocity = copy.copy(path.analytic_velocity)
         global_path.velocity = copy.copy(path.velocity)
         for i in range(len(path.position)):
             global_pos = self.to_global(path.position[i])
@@ -199,39 +210,17 @@ class Planner(PathManager):#planner - get and send data to simulator. input - mi
         return global_path
     def path_to_local(self,path):
         local_path = Path()
+        local_path.distance = copy.copy(path.distance)#added 7.5.18
+        local_path.curvature = copy.copy(path.curvature)
         local_path.velocity = copy.copy(path.velocity)
         local_path.velocity_limit = copy.copy(path.velocity_limit)
+        local_path.analytic_velocity = copy.copy(path.analytic_velocity)
         for i in range(len(path.position)):
             local_pos = self.to_local(path.position[i])
             local_path.position.append(local_pos) 
             local_path.angle.append([0.,self.simulator.vehicle.angle[1] - path.angle[i][1],0.])
         return local_path
 
-    def create_path(self,type,size,resolution):
-        self.desired_path = Path()#initialize the path
-        if type == "circle":
-            lenght = math.pi
-            R = size;
-            start = np.asarray([startX,startY, 0])
-            toCenter = np.asarray([0.,R, 0])
-            toCenter = rotateVec(toCenter,startAng)
-            cen = start+toCenter
-        
-            #path.position[0].x = start[0]
-            #path.position[0].y = start[1]
-            for th in range(int(lenght*100)):
-                point = vector3D()
-                point.x = cen[0] + R*math.cos(th/100 - startAng)
-                point.y = cen[1] + R*math.sin(th/100 - startAng)
-                path.position.append(point)
-
-        if type == "line":
-            y= 0
-            while y < size - resolution:
-                self.desired_path.position.append([0,y,0])
-                y+=resolution
-            self.desired_path = self.path_to_global(self.desired_path)
-        return
 
     def find_index_on_path(self,start_index):#return closest index to vehicle
         distances = [10000. for _ in range(len(self.desired_path.position))]
@@ -239,9 +228,6 @@ class Planner(PathManager):#planner - get and send data to simulator. input - mi
              distances[i] = (self.desired_path.position[i][0] - self.simulator.vehicle.position[0])**2 + (self.desired_path.position[i][1] - self.simulator.vehicle.position[1])**2
         index_min = np.argmin(distances)
         return index_min
-    def get_state_space_index(self):
-        start_index = 0
-        return self.find_index_on_path(start_index)
 
     def paths_to_local(self,paths):
         for path in paths:
@@ -272,20 +258,20 @@ class Planner(PathManager):#planner - get and send data to simulator. input - mi
 
 
     def delta_velocity_command(self, delta_vel,max_delta_vel,max_vel = 50):
-        delta_vel = delta_vel*max_delta_vel
-        des_vel = np.clip(self.simulator.vehicle.velocity + delta_vel,0,max_vel)#assume velocity is updated
+        delta_vel_norm = delta_vel*max_delta_vel
+        des_vel = np.clip(self.simulator.vehicle.velocity + delta_vel_norm,0,max_vel)#assume velocity is updated
         target_index = self.select_target_index(self.index)
         steer_ang1 = comp_steer(self.simulator.vehicle,self.desired_path.position[target_index])#target in global
         self.simulator.send_drive_commands(des_vel,steer_ang1) #send commands
         return
-    def torque_command(self, command, max = 5000):#command from -1 to 1
-        command = command*max
-        #command = np.clip(command,-max,max)
+    def torque_command(self, command,reduce  = 1.0):#command from -1 to 1
+        
+        command = np.clip(command*reduce,-1,1)
         target_index = self.select_target_index(self.index)
         steer_ang1 = comp_steer(self.simulator.vehicle,self.desired_path.position[target_index])#target in global
         self.simulator.send_drive_commands(command,steer_ang1) #send commands
         return
-    def load_path(self,lenght,path_file_name,source = "regular", compute_velocity_limit_flag = False):
+    def load_path(self,lenght,path_file_name = None,source = "regular", compute_velocity_limit_flag = False):
         path_num = 0
         if source == "regular":
             self.reference_free_path = self.read_path(path_file_name)#get a path at any location
@@ -293,7 +279,7 @@ class Planner(PathManager):#planner - get and send data to simulator. input - mi
                 return -1
         elif source == "create_random":
             
-            self.reference_free_path.position = create_random_path(2000,0.05)
+            self.reference_free_path.position = create_random_path(lenght,0.05)
 
         elif source == "saved_random":
             path_num,self.reference_free_path = self.get_next_random_path()
@@ -305,11 +291,12 @@ class Planner(PathManager):#planner - get and send data to simulator. input - mi
 
             
             
-        self.reference_free_path.comp_path_parameters()
+        self.reference_free_path.comp_distance()
         self.reference_free_path.comp_angle()
+        self.reference_free_path.comp_curvature()
 
         if source == "saved_random" or source == "create_random" or compute_velocity_limit_flag:
-            comp_velocity_limit(self.reference_free_path)
+            comp_velocity_limit_and_velocity(self.reference_free_path)
             #for i in range(len(self.reference_free_path.distance)):
             #    if self.reference_free_path.distance[i] > lenght:
             #        self.reference_free_path.velocity_limit[i] = 30
@@ -329,10 +316,10 @@ class Planner(PathManager):#planner - get and send data to simulator. input - mi
         if send_path:
             self.simulator.send_path(self.desired_path)
         local_path = self.path_to_local(self.desired_path)#translate path in vehicle reference system
-        self.desired_path.comp_path_parameters()
+        self.desired_path.comp_distance()
         local_path.distance = copy.copy(self.desired_path.distance)
         return local_path
-    def check_end(self,lenght,deviation = None,max_deviation = 4,max_roll = 0.2,max_pitch = 0.2, state = None,):
+    def check_end(self,deviation = None,max_deviation = 4,max_roll = 0.2,max_pitch = 0.2, state = None,):
         #print("main index", self.main_index, "lenght: ",len(self.in_vehicle_reference_path.position))
         end_tolerance = 0.3
         dis_from_end = self.in_vehicle_reference_path.distance[-1] - self.in_vehicle_reference_path.distance[self.main_index]

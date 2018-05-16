@@ -6,8 +6,11 @@ from net_lib import NetLib
 
 
 class DDPG_network(NetLib):
-    def __init__(self,state_n,action_space_n,action_limit,alpha_actor = None,alpha_critic = None, tau = 1.0,seed = None):
-        tf.reset_default_graph()
+    def __init__(self,state_n,action_space_n,action_limit,\
+        alpha_actor = None,alpha_critic = None,alpha_analytic_actor = None,alpha_analytic_critic = None,  tau = 1.0,seed = None):
+        
+
+        tf.reset_default_graph()                                                                 
         if seed != None:
             tf.set_random_seed(seed)
         self.state = tf.placeholder(tf.float32, [None,state_n] )
@@ -54,6 +57,14 @@ class DDPG_network(NetLib):
 
             self.update_actor_target_vec = self.update_target_init(tau,self.actor_params,self.target_actor_params)
             self.update_critic_target_vec = self.update_target_init(tau,self.critic_params,self.target_critic_params)
+
+            #############################################################
+            #for analytic initialize:
+            self.analytic_action = tf.placeholder( dtype=tf.float32, shape=[None,action_space_n] )
+            self.analytic_actor_loss = tf.reduce_mean( tf.squared_difference(self.action_out,self.analytic_action))#
+            self.update_analytic_actor = tf.train.AdamOptimizer(alpha_analytic_actor).minimize(self.analytic_actor_loss)
+
+            #############################################################
             #self.Pia = tf.reduce_sum(tf.multiply(self.Pi, self.actions_one_hot),axis=1)#Pi on action a at the feeded state
 
             #self.policy_loss = - tf.log(self.Pia+1e-8)*self.V_
@@ -68,10 +79,11 @@ class DDPG_network(NetLib):
             #model = tflearn.DNN(self.action_out, tensorboard_verbose=3)
             file_writer = tf.summary.FileWriter(r'C:\Users\gavri\Desktop\MLdriverPython\MLdriverPython\MLdriverPython\my_graph', self.sess.graph)
             #print("size: ",self.sess.run(batch_size, feed_dict = {self.state: [[0 for _ in range(31)] for _ in range(40)]}))
+            print("Network ready")
         return
     def continues_actor(self,action_n,action_limit,state,state_n): #define a net - input: state (and dimentions) - output: a continues action ,
-        hidden_layer_nodes1 = 400
-        hidden_layer_nodes2 = 300
+        hidden_layer_nodes1 = 400#400
+        hidden_layer_nodes2 = 300#300
 
         ##hidden layer 1:
         #theta1 = tf.Variable(tf.truncated_normal([state_n,hidden_layer_nodes1], stddev=0.02),name = "P_th1")
@@ -87,12 +99,19 @@ class DDPG_network(NetLib):
         #action = tf.multiply(tf.nn.tanh(tf.add(tf.matmul(theta_z2,theta3), theta_b3)),action_limit)
 
         #input = tflearn.input_data(shape=[None, state_n])
+        #batch_size = tf.cast((tf.size(self.state)/state_n),tf.int32)
+        #state = tf.reshape(state, [batch_size, state_n, 1])
+        #net = tflearn.layers.conv.conv_1d(state,5,6,activation = 'relu')
+        
+
         net = tflearn.fully_connected(state, hidden_layer_nodes1,regularizer='L2', weight_decay=0.01)
         net = tflearn.layers.normalization.batch_normalization(net)
         net = tflearn.activations.relu(net)
+        #net = tflearn.activations.tanh(net)
         net = tflearn.fully_connected(net, hidden_layer_nodes2,regularizer='L2', weight_decay=0.01)
         net = tflearn.layers.normalization.batch_normalization(net)
         net = tflearn.activations.relu(net)
+        #net = tflearn.activations.tanh(net)
         # Final layer weights are init to Uniform[-3e-3, 3e-3]
         init = tflearn.initializations.uniform(minval=-0.003, maxval=0.003)
         action = tflearn.fully_connected(net, action_n, activation='tanh', weights_init=init,bias_init = init,regularizer='L2', weight_decay=0.01)
@@ -132,6 +151,9 @@ class DDPG_network(NetLib):
 
         #inputs = tflearn.input_data(shape=[None, self.s_dim])
         #action = tflearn.input_data(shape=[None, self.a_dim])
+        #batch_size = tf.cast((tf.size(self.state)/state_n),tf.int32)
+        #state = tf.reshape(state, [batch_size, state_n, 1])
+        #net = tflearn.layers.conv.conv_1d(state,5,6,activation = 'relu')
         net = tflearn.fully_connected(state, hidden_layer_nodes1,regularizer='L2', weight_decay=0.01)
         #net = tflearn.layers.normalization.batch_normalization(net)
         net = tflearn.activations.relu(net)
@@ -193,6 +215,20 @@ class DDPG_network(NetLib):
         for var in self.update_critic_target_vec:
             self.sess.run(var)
 
+
+    ###########################
+    #analytic:
+    def Update_analytic_actor(self,s,analytic_action):
+        self.sess.run(self.update_analytic_actor, feed_dict={self.state: s ,self.analytic_action: analytic_action})# 
+        return 
+    def get_analytic_actor_loss(self,s,analytic_action):
+        return self.sess.run(self.analytic_actor_loss, feed_dict={self.state: s ,self.analytic_action: analytic_action})# 
+         
+
+   
+
+
+    ###########################
     def init_summaries(self):
         reward = tf.Variable(0.)
         tf.summary.scalar("Reward", reward)

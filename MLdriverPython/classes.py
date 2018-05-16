@@ -2,20 +2,7 @@ import math
 import json
 import numpy as np
 import os
-class SteerData:
-    def __init__(self):
-        self.start_vel = 0
-        self.start_steering = 0
-        self.end_pos = 0
-        self.end_angle = 0
-        self.end_steering = 0
-        self.lenght = 0
-    start_vel = 0
-    start_steering = 0
-    end_pos = 0
-    end_angle = 0
-    end_steering = 0
-    lenght = 0
+import library as lib
 
 class Vehicle:
     def __init__(self):
@@ -26,12 +13,14 @@ class Vehicle:
         self.velocity = 0
 class Path:
     def __init__(self):
-        self.position = []#vector3D()
+        self.position = []#
         self.backPosition = []
         self.angle = []
         self.curvature = []
         self.velocity = [] #real velocity for a real path and planed velocity for a planned path
         self.velocity_limit = []#velocity limit at each point
+        self.analytic_velocity = []
+        self.dtime_vec = []
         self.steering = []
         self.distance = []
         self.time = []
@@ -42,7 +31,18 @@ class Path:
             return math.sqrt(tmp)
         else:
             return 0.
-    def comp_path_parameters(self):
+    def comp_curvature(self):
+       
+        for i in range ( len(self.position)-2):#start from 0 up to end - 2
+            pnt1 = np.array([self.position[i][0],self.position[i][1],self.position[i][2]])
+            pnt2 = np.array([self.position[i+1][0],self.position[i+1][1],self.position[i+1][2]])
+            pnt3 = np.array([self.position[i+2][0],self.position[i+2][1],self.position[i+2][2]])
+            self.curvature.append(lib.comp_curvature(pnt1,pnt2,pnt3))
+        self.curvature.append(self.curvature[-1])
+        self.curvature.append(self.curvature[-1])
+        self.curvature = [abs(curv) for curv in self.curvature]
+
+    def comp_distance(self):
         self.distance = []
         
         self.distance.append(0.)
@@ -59,14 +59,7 @@ class Path:
         for i in range (len(self.position)):
             self.velocity.append(vel)
         return
-    #def compute_path_derivatives(self):
-    #    for i in range (2,len(self.position)):#start from 2
-    #        self.angle[i] = 
 
-#class Saver:
-#    def save(self,file_name,data):
-#        with open(file_name, 'w') as f:
-#            f.write(
 
 class PathManager:#
     def __init__(self):
@@ -126,7 +119,9 @@ class PathManager:#
             end = np.clip(start + num_of_points,0,len(path.position))
         if len(path.position) >= end: cpath.position =  path.position[start:end]
         if len(path.angle) >= end: cpath.angle =  path.angle[start:end]
+        if len(path.curvature) >= end: cpath.curvature =  path.curvature[start:end]
         if len(path.velocity_limit) >= end: cpath.velocity_limit =  path.velocity_limit[start:end]
+        if len(path.analytic_velocity) >= end: cpath.analytic_velocity =  path.analytic_velocity[start:end]
         #for i in range(start,end):
         #    cpath.position.append(path.position[i])
         #    cpath.angle.append(path.angle[i])

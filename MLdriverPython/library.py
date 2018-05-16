@@ -47,14 +47,18 @@ def dist(x1,y1,x2,y2):
 
 
 
-def compCurvature(A, B, C):
+def comp_curvature(A, B, C):
     tmp = np.cross((B - A), (C - A))
    # print(tmp)
+    epsilon = 1e-12
     if abs(tmp[2])<epsilon:#vector in x-y cross vector in z direction
         return 0.0
     diameter = dist_vec(B,C)*dist_vec(A,B)*dist_vec(A,C) / tmp[2]  #R=BC/2sin(A)=BC⋅AB⋅AC/2∥AB×AC∥
     curv = 2./diameter
     return curv
+
+def running_average(data,N):
+    return np.convolve(data, np.ones((N,))/N, mode='valid')
 
  
 
@@ -303,21 +307,44 @@ def comp_velocity_limit(path):
     #plt.plot(real_x, path.velocity_limit, '-x')
 
     #plt.show()
+    return False
+def comp_velocity_limit_and_velocity(path):
+    skip = 10
+    reduce_factor = 1.0
+    if len(path.position)<skip*2:
+        velocity_limit = [30 for _ in range(len(path.position))]
+        return False
+    #to close points cause error in the velocity limit computation (due to diffrention without filtering)
+    pos = path.position[0::skip]
 
-  
+    x = [row[0] for row in pos]
+    y = [row[1] for row in pos]
+    z = [row[2] for row in pos]
+    velocity_limit,velocity,dtime_vec = cf.comp_limit_curve_and_velocity(x,y,z)
+
+    skiped_x = range(0,len(path.position),skip)
+    real_x = range(len(path.position))
+    path.velocity_limit = np.interp(np.array(real_x), np.array(skiped_x), np.array(velocity_limit))*reduce_factor
+    path.analytic_velocity = np.interp(np.array(real_x), np.array(skiped_x), np.array(velocity))*reduce_factor
+    path.dtime_vec = np.interp(np.array(real_x), np.array(skiped_x), np.array(dtime_vec))*reduce_factor
+    #plt.plot(np.array(skiped_x), np.array(velocity_limit), 'o')
+    #plt.plot(real_x, path.velocity_limit, '-x')
+
+    #plt.show()
     return False
 def create_random_path(number,resolution):
 
-    max_rand_num = 200
+    max_rand_num = 500
     pos = np.array([0.0,0.0,0.0])
     ang = 0
     curvature = 0 
-    delta_curvature = 0.005
+    delta_curvature = 0.007
     path = []
     i=0
+    j = 0
     while i < number:
         rand_num = random.randint(0,max_rand_num)
-        des_curvature = random.uniform(-0.1,0.1)
+        des_curvature = random.uniform(-0.12,0.12)
         #print("num: ",rand_num,"curv: ",des_curvature)
         for j in range(rand_num):
             if curvature < des_curvature:
