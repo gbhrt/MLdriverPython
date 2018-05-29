@@ -110,7 +110,7 @@ class DataManager:
         self.real_path.position.append(pl.simulator.vehicle.position)
         self.real_path.velocity.append(pl.simulator.vehicle.velocity)
         self.real_path.time.append(pl.get_time())
-        if velocity_limit != None: self.real_path.velocity_limit.append(velocity_limit)
+        if velocity_limit != None: self.real_path.analytic_velocity_limit.append(velocity_limit)
         if analytic_vel != None: self.real_path.analytic_velocity.append(analytic_vel)
         if curvature != None: self.real_path.curvature.append(curvature*20.0)
         return

@@ -1,15 +1,17 @@
-
-def choose_points(local_path,number,distance_between_points):#return points from the local path, choose a point every "skip" points
+import library as lib
+import numpy as np
+import math
+def choose_velocity_limit_points(local_path,number,distance_between_points):#return points from the local path, choose a point every "skip" points
     index = 0
     last_index = 0
     points = []
-    points.append(local_path.velocity_limit[index])
+    points.append(local_path.analytic_velocity_limit[index])
     for _ in range(number-1):
         while local_path.distance[index] - local_path.distance[last_index] < distance_between_points: #search the next point 
             if index >= len(local_path.distance)-1:#at the end of the path - break, cause doublication of the last velocity limit
                 break
             index += 1
-        points.append(local_path.velocity_limit[index])
+        points.append(local_path.analytic_velocity_limit[index])
         last_index = index
     return points
 def choose_curvature_points(local_path,number,distance_between_points):#return points from the local path, choose a point every "skip" points
@@ -25,7 +27,7 @@ def choose_curvature_points(local_path,number,distance_between_points):#return p
         points.append(local_path.curvature[index])
         last_index = index
     return points
-def choose_points2(local_path,number,distance_between_points):#return points from the local path, choose a point every "skip" points
+def choose_position_points(local_path,number,distance_between_points):#return points from the local path, choose a point every "skip" points
     index = 0
     last_index = 0
     end_flag = False
@@ -34,7 +36,7 @@ def choose_points2(local_path,number,distance_between_points):#return points fro
     points.append(local_path.position[index][1])
     while len(points) < number*2 and end_flag == False:
         while local_path.distance[index] - local_path.distance[last_index] < distance_between_points: #search the next point 
-            if index >= len(local_path.distance)-1:#at the end of the path - break, cause doublication of the last velocity limit
+            if index >= len(local_path.distance)-1:#
                 end_flag = True
                 break
             
@@ -42,14 +44,14 @@ def choose_points2(local_path,number,distance_between_points):#return points fro
         points.append(local_path.position[index][0])
         points.append(local_path.position[index][1])
         last_index = index
-    if len(local_path.position) >=2:
-        dis = lib.dist(local_path.position[-1][0],local_path.position[-1][1],local_path.position[-2][0],local_path.position[-2][1])
-    else:
-        dis = 0.05
+    
     ang = local_path.angle[-1][1]
     while len(points) < number * 2:
-        points.append(local_path.position[-1][0] + dis* np.sin(ang))
-        points.append(local_path.position[-1][1] + dis* np.cos(ang))
+        #print(points)
+        x = points[-2]
+        y = points[-1]
+        points.append(x + distance_between_points* math.sin(ang))#x
+        points.append(y + distance_between_points* math.cos(ang))#y
 
     return points
 
@@ -58,11 +60,16 @@ def get_state(pl = None,local_path = None,num_points = 1,distance_between = 1.0,
     #points = choose_points(local_path,points,distance_between)
 
     #path state:
-    #points = choose_points2(local_path,points,distance_between)
+    points = choose_position_points(local_path,num_points,distance_between)
+    max_lenght = distance_between*num_points
+    points = [pnt/max_lenght for pnt in points]
 
     #curvature state:
-    points = choose_curvature_points(local_path,num_points,distance_between)
-    points = [pnt/max_curvature for pnt in points]
+    #points = choose_curvature_points(local_path,num_points,distance_between)
+    #points = [pnt/max_curvature for pnt in points]
+
+    
+    
     vel = max(pl.simulator.vehicle.velocity/max_velocity,0)
     state = [vel] +  points
     #state = lib.normalize(state,0,30)
@@ -89,6 +96,8 @@ def get_reward(velocity,max_vel,mode):
         reward = -1.0
     if mode == 'kipp':
         reward = -5.0
+    #elif mode == 'path_end':#problem - agent dont know that he is at the end
+    #    reward = 10
 
     
     #if state[1] < 0.01: # finished the path

@@ -1,7 +1,7 @@
 import time
 import math
 import numpy as np
-from classes import *
+import classes
 import _thread
 import c_functions as c_func
 import os
@@ -12,12 +12,13 @@ cf = c_func.cFunctions()
 def clear_screen():
     os.system('cls')
 
+
 def input_thread(stop,command):
     stop.append(False)
     command.append(None)
     while True:
         
-        inp = getch()
+        inp = classes.getch()
         
         if inp == b'\r':
             stop[0] = True
@@ -58,8 +59,10 @@ def comp_curvature(A, B, C):
     return curv
 
 def running_average(data,N):
-    return np.convolve(data, np.ones((N,))/N, mode='valid')
-
+    if len(data) > 0:
+        return np.convolve(data, np.ones((N,))/N, mode='valid')#'valid'
+    else:
+        return []
  
 
 def changeZtoY(aList):
@@ -169,7 +172,7 @@ def read_data(file_name):#, x,y,steer_ang
 
 
 def compare_to_compute():
-    vh = Vehicle()
+    vh = classes.Vehicle()
     vh.position = [0,0,0]
     vh.angle = [0,0,0]
     file_name = "train_data2.txt"
@@ -208,7 +211,7 @@ def step_now(last_time,step_time):
 
 
 def path_to_global(path,vh):
-    global_path = Path()
+    global_path = classes.Path()
     for i in range(len(path.position)):
         #local_rot = rotateVec(np.array(path.position[i].toList()), math.radians(vh.angle[1]))
         #global_pos = np.array(vh.position) + local_rot
@@ -220,7 +223,7 @@ def path_to_global(path,vh):
     return global_path
 
 def createPath(type,size,startX,startY,startAng):
-    path = Path()
+    path = classes.Path()
     startAng = startAng
     if type == "circle":
         lenght = math.pi
@@ -239,16 +242,13 @@ def createPath(type,size,startX,startY,startAng):
             path.position.append(point)    
     return path
 
-def create_path():
-
-    return
 
 def split_to_paths(path,lenght_max):
     paths = []
     
     for i in range(len(path.position)-lenght_max):
         for j in range(i+1,lenght_max+i):
-            tmp_path = Path()
+            tmp_path = classes.Path()
             tmp_path.position = path.position[i:j].copy()
             tmp_path.angle = path.angle[i:j].copy()
             tmp_path.velocity = path.velocity[i:j].copy()
@@ -301,16 +301,15 @@ def comp_velocity_limit(path):
 
     skiped_x = range(0,len(path.position),skip)
     real_x = range(len(path.position))
-    path.velocity_limit = np.interp(np.array(real_x), np.array(skiped_x), np.array(velocity_limit))*reduce_factor
+    path.analytic_velocity_limit = np.interp(np.array(real_x), np.array(skiped_x), np.array(velocity_limit))*reduce_factor
 
     #plt.plot(np.array(skiped_x), np.array(velocity_limit), 'o')
-    #plt.plot(real_x, path.velocity_limit, '-x')
+    #plt.plot(real_x, path.analytic_velocity_limit, '-x')
 
     #plt.show()
     return False
-def comp_velocity_limit_and_velocity(path):
-    skip = 10
-    reduce_factor = 1.0
+def comp_velocity_limit_and_velocity(path,skip = 1,reduce_factor = 1.0,init_vel = 0, final_vel = 0):
+
     if len(path.position)<skip*2:
         velocity_limit = [30 for _ in range(len(path.position))]
         return False
@@ -320,20 +319,39 @@ def comp_velocity_limit_and_velocity(path):
     x = [row[0] for row in pos]
     y = [row[1] for row in pos]
     z = [row[2] for row in pos]
-    velocity_limit,velocity,dtime_vec = cf.comp_limit_curve_and_velocity(x,y,z)
+    velocity_limit,velocity,dtime_vec,acc_vec = cf.comp_limit_curve_and_velocity(x,y,z,init_vel = init_vel, final_vel = final_vel)
 
     skiped_x = range(0,len(path.position),skip)
     real_x = range(len(path.position))
-    path.velocity_limit = np.interp(np.array(real_x), np.array(skiped_x), np.array(velocity_limit))*reduce_factor
+    path.analytic_velocity_limit = np.interp(np.array(real_x), np.array(skiped_x), np.array(velocity_limit))*reduce_factor
     path.analytic_velocity = np.interp(np.array(real_x), np.array(skiped_x), np.array(velocity))*reduce_factor
-    path.dtime_vec = np.interp(np.array(real_x), np.array(skiped_x), np.array(dtime_vec))*reduce_factor
+    dtime_vec = np.interp(np.array(real_x), np.array(skiped_x), np.array(dtime_vec))*reduce_factor
+    t = 0
+    for dt in dtime_vec:
+        path.analytic_time.append(t)
+        t+=dt
+    #path.analytic_acceleration = np.interp(np.array(real_x), np.array(skiped_x), np.array(acc_vec))*reduce_factor
+    path.comp_distance()
+    for j in range(0,len(path.analytic_velocity)-1): 
+        v1 = path.analytic_velocity[j]
+        v2 = path.analytic_velocity[j+1]
+        d = path.distance[j+1] - path.distance[j]
+        if d < 0.01:
+            print("_____________________________________________________________________________")
+        acc = (v2**2 - v1**2 )/(2*d)#acceleration [m/s^2]
+        path.analytic_acceleration.append(acc)
+    path.analytic_acceleration.append(path.analytic_acceleration[-1])
     #plt.plot(np.array(skiped_x), np.array(velocity_limit), 'o')
-    #plt.plot(real_x, path.velocity_limit, '-x')
+    #plt.plot(real_x, path.analytic_velocity_limit, '-x')
 
     #plt.show()
     return False
-def create_random_path(number,resolution):
 
+
+def create_random_path(number,resolution,seed = None):
+
+    if seed != None:
+        random.seed(seed)
     max_rand_num = 500
     pos = np.array([0.0,0.0,0.0])
     ang = 0
@@ -369,175 +387,71 @@ def create_random_path(number,resolution):
     #plt.plot(pathx,pathy)
     #plt.show()
     return path
+
+class _Getch:
+#"""Gets a single character from standard input.  Does not echo to the
+#screen."""
+    def __init__(self):
+        try:
+            self.impl = _GetchWindows()
+        except ImportError:
+            self.impl = _GetchUnix()
+
+    def __call__(self): return self.impl()
+
+
+class _GetchUnix:
+    def __init__(self):
+        import tty, sys
+
+    def __call__(self):
+        import sys, tty, termios
+        fd = sys.stdin.fileno()
+        old_settings = termios.tcgetattr(fd)
+        try:
+            tty.setraw(sys.stdin.fileno())
+            ch = sys.stdin.read(1)
+        finally:
+            termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+        return ch
+
+class _GetchWindows:
+    def __init__(self):
+        import msvcrt
+
+    def __call__(self):
+        import msvcrt
+        return msvcrt.getch()
+
+
+getch = _Getch()
+
+
+
+class waitFor:
+    def __init__(self):
+        self.stop = []
+        self.command = []
+        self.wait_for()
+    def input_thread(self,stop,command):
+        stop.append(False)
+        command.append(None)
+        while True:
+            #print("wait___________________________________")
+            inp = getch()
+            if inp ==  b'\x00':
+                continue
+            #print("input:",inp)
+            if inp == b'\r':
+                stop[0] = True
+            else:
+                command[0] = inp
+        return
+    def wait_for(self):
+        _thread.start_new_thread(self.input_thread, (self.stop,self.command,))
+        return
+
 ###########################################################
-
-
-
-#def readVehicleData(comm):
-#    vh = Vehicle()
-#    comm.readData()
-#    dataType = comm.deserialize(1,int)        
-#    vh.position = changeZtoY(comm.deserialize(3,float))
-#    vh.position[2] = 0.
-#    vh.angle = change_to_rad(comm.deserialize(3,float))
-#    vh.backPosition = changeZtoY(comm.deserialize(3,float))
-#    vh.steering = comm.deserialize(1,float)
-#    return vh
-
-#def getVehicleData(comm):
-#    dataType = 0
-#    comm.serialize(dataType)
-#    comm.sendData()
-#    return readVehicleData(comm)
-
-#def sendPath(comm,path_des):
-#    dataType = 2
-#    comm.serialize(dataType)
-#    comm.serialize(len(path_des.position))
-#    for i in range(len(path_des.position)):
-#        comm.serialize(path_des.position[i].x)
-#    for i in range(len(path_des.position)):
-#        comm.serialize(path_des.position[i].y)
-#        #comm.serialize(path_des.position[i].z)
-#    comm.sendData()
-#    return
-
-#def sendDriveCommands(comm,velocity,steering):#send drive commands to simulator
-#    dataType = 1
-#    comm.serialize(dataType)
-#    comm.serialize(velocity)
-#    comm.serialize(steering)
-#    comm.sendData()
-#    return
-
-
-
-
-#def create_path_in_run(comm):
-#    resolution  = 0.1
-#    v = 0
-#    steerAng = 0
-#    sendDriveCommands(comm,v,steerAng)#send commands
-#    initState = readVehicleData(comm)#read data (respose from simulator to commands)
-#    time.sleep(1.)
-#    path_real = Path()
-#    def run_const():
-#        vh = getVehicleData(comm)#request data from simulator
-#        vh.position = to_local(np.asarray(vh.position),np.asarray(initState.position),initState.angle[1])
-#        point = vector3D()
-#        point.x =vh.position[0]
-#        point.y =vh.position[1]
-#        point.z =vh.position[2]
-#        path_real.position.append(point)
-#        time.sleep(resolution)
-
-#    vel = 5
-#    steerAng  = 0
-#    sendDriveCommands(comm,vel,steerAng)#send commands
-#    for i in range(50):
-#        run_const()
-#    steerAng  = 0.5
-#    sendDriveCommands(comm,vel,steerAng)#send commands
-#    for i in range(50):
-#        run_const()
-#    steerAng  = -0.5
-#    sendDriveCommands(comm,vel,steerAng)#send commands
-#    for i in range(50):
-#        run_const()
-#    stop_vehicle(comm,steerAng)
-#    file_name = "path1.txt"
-#    with open(file_name, 'w') as f:#append data to the file
-#        for i in range (1,len(path_real.position)):
-#            f.write("%s\t %s\n" % (path_real.position[i].x,path_real.position[i].y))
-#    return path_real
-
-
-#def stop_vehicle(comm,steerAng):
-#    vel = 0 # stop vehicle
-#    sendDriveCommands(comm,vel,steerAng)#send commands
-#    vh = readVehicleData(comm)#read data (respose from commands)
-#    time.sleep(1.)#wait for stop
-
-
-#def test_point(comm,vel,steerAng,data_radius,x,y):
-#    resolution = 0.1
-#    v = 0
-#    sendDriveCommands(comm,v,steerAng)#send commands
-#    initState = readVehicleData(comm)#read data (respose from simulator to commands)
-#    time.sleep(1.)
-
-#    path_real = Path()
-#    run_constant_ang(comm,path_real,vel,steerAng,data_radius,resolution)
-#    distances = []
-#    for item in path_real.position:
-#        distances.append((item.x - x)**2 + (item.y - y)**2) 
-#    min_dist = min(distances)
-#    print("Minimum distances: ",min_dist)
-#    return min_dist
-
-#def create_data_set(comm,data_radius,angStep,resolution):
-
-#    file_name = "train_data.txt"
-   
-#    runTime = 2.
-#    vel = 2 # m/s constant speed - start speed
-#    steerAng = 0.
-#    max_vel = 25.
-#    vel_step = 5.
-
-#    with open(file_name, 'w') as f:#write data to the file - clear the file
-#        f.write("pos list: \n")
-
-#    while vel < max_vel:
-#        while steerAng < math.pi/4:#check all steering angles from 0 (straight) to 90 deg (not possible - stop at maximum steering angle)
-#            path_real = Path()
-#            run_constant_ang(comm,path_real,vel,steerAng,data_radius,resolution)
-
-#            print("end path")
-#            steerAng += angStep
-#            #print("pos list------------------------------------------------------------------------: \n")
-#            #for item in path_real.position:
-#            #    print(item.toList(),'\n')
-
-#            with open(file_name, 'a') as f:#append data to the file
-#                for i in range (1,len(path_real.position)):
-#                    f.write("%s %s %s \n" % (path_real.position[i].x,path_real.position[i].y,path_real.steering[i]))
-#        vel+=vel_step
-#    return
-
-
-
-
-    
-
-
-#def run_on_path(comm, path, vehicle):
-#    path.comp_path_parameters()
-#    vel = 2
-#    path.set_velocity(vel)
-#    max_index = len(path.position)
-#    index = find_index_on_path(path, vehicle,0)
-#    while index < max_index-1:#while not reach the end
-#        target_index = select_target_index(path,vehicle,index)
-#        steer_ang = comp_steer_learn(vehicle,[path.position[target_index].x,path.position[target_index].y,0])
-
-#        print("index: ",index," target_index: ",target_index, " steer_ang: ", steer_ang)
-#        sendDriveCommands(comm,vel,steer_ang)#send commands
-#        vehicle = readVehicleData(comm)#read data (respose from simulator to commands)
-
-#        index = find_index_on_path(path, vehicle,index)#asume index increase
-
-#    stop_vehicle(comm,0)
-#    return
-
-
-
-
-
-
-
-
-
 
 
 

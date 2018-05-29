@@ -46,7 +46,7 @@ class Plot():
             index = 0
             if index < len(data.real_path.distance):
                 plt.plot(np.array(data.real_path.distance),np.array(data.real_path.velocity))
-                plt.plot(np.array(data.real_path.distance),np.array(data.real_path.velocity_limit))
+                plt.plot(np.array(data.real_path.distance),np.array(data.real_path.analytic_velocity_limit))
 
                 if data.features != []:
                     i = 0
@@ -94,7 +94,7 @@ class Plot():
         datax = np.array(path.distance)
         #datax = np.array(path.time)
         datay1 = np.array(path.velocity)
-        datay2 = np.array(path.velocity_limit)
+        datay2 = np.array(path.analytic_velocity_limit)
         datay3 = np.array(path.analytic_velocity)
         datay4 = np.array(path.curvature)
 

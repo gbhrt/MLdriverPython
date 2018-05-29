@@ -18,13 +18,17 @@ class NetLib:
         for i in range(len(vars)):
             update_var_vec.append(tar_vars[i].assign((vars[i].value()*tau) + ((1-tau) * tar_vars[i])))
         return update_var_vec
-
+    def copy_target_init(self,tau,vars, tar_vars):
+        update_var_vec = []
+        for i in range(len(vars)):
+            update_var_vec.append(tar_vars[i].assign(vars[i].value()))
+        return update_var_vec
 
     def save_model(self,path,name = "tf_model"):
         try:
-                path = path +name+"\\"
-                pathlib.Path(path).mkdir(parents=True, exist_ok=True) 
-                file_name =  path+name+".ckpt " #/media/windows-share/MLdriverPython/MLdriverPython/
+                path1 = path +name+"\\"
+                pathlib.Path(path1).mkdir(parents=True, exist_ok=True) 
+                file_name =  path1+name+".ckpt " #/media/windows-share/MLdriverPython/MLdriverPython/
                 saver = tf.train.Saver()
                 save_path = saver.save(self.sess, file_name)
                 print("Model saved in file: %s" % save_path)

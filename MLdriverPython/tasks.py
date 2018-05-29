@@ -119,7 +119,7 @@ def run_test(path_name, learned_velocity = False):
                 pl.simulator.send_drive_commands(vel,steer_ang) #send commands
        
             #index = pl.find_index_on_path(index)#asume index always increase
-            dataManager.update_real_path(pl = pl,velocity_limit = local_path.velocity_limit[0])
+            dataManager.update_real_path(pl = pl,velocity_limit = local_path.analytic_velocity_limit[0])
             dataManager.save_additional_data(pl,features = state,action = a)
             dev = dist(local_path.position[0][0],local_path.position[0][1],0,0)
             mode = pl.check_end(deviation = dev)#check if end of the episode 
@@ -152,12 +152,11 @@ if __name__ == "__main__":
     #dataManager.load_data()
     #dataManager.print_data()
     pl = Planner()
-    stop = []
-    command = []
-    wait_for(stop,command)#wait for "enter" in another thread - then stop = true
+    waitFor = lib.waitFor()#wait for "enter" in another thread - then stop = true
+
     #pl.simulator.send_drive_commands(10,0.427)#max
     pl.simulator.send_drive_commands(10,0.2)
-    while stop != [True]:
+    while waitFor.stop != [True]:
         pl.simulator.get_vehicle_data()
         print("velocity: ",pl.simulator.vehicle.velocity)
     pl.stop_vehicle()

@@ -1,7 +1,7 @@
 
-
+import time
 import numpy as np
-from library import *  #temp
+import library as lib
 from classes import Path
 import copy
 import random
@@ -33,9 +33,7 @@ def train(env,HP,net,dataManager,seed = None):
     random.seed(HP.seed)
     env.seed(HP.seed)
     steps = [0,0]#for random action selection of random number of steps
-    stop = []
-    command = []
-    wait_for(stop,command)#wait for "enter" in another thread - then stop = true
+    waitFor = lib.waitFor()#wait for "enter" in another thread - then stop = true
     if HP.render_flag:
         env.render()
     #env.reset()
@@ -58,16 +56,20 @@ def train(env,HP,net,dataManager,seed = None):
 
 
     for i in range(HP.num_of_runs): #number of runs - run end at the end of the main path and if vehicle deviation error is to big
-        if stop == [True]:
+        if waitFor.stop == [True]:
             break
         # initialize every episode:
         step_count = 0
         reward_vec = []
         last_time = [0]
         #########################
-        state = env.reset()
-           
-        while  stop != [True]:#while not stoped, the loop break if reached the end or the deviation is to big
+        #if waitFor.command == [b'3']:
+        #    print("repeat last path")
+        #    #state = env.reset(path_num = len(dataManager.path_seed) - 1)
+        #    state = env.reset(path_num = 1)
+        #state = env.reset(path_num = 1234)####################################################################
+        state = env.reset()   
+        while  waitFor.stop != [True]:#while not stoped, the loop break if reached the end or the deviation is to big
             step_count+=1
                
             #choose and make action:
@@ -77,29 +79,35 @@ def train(env,HP,net,dataManager,seed = None):
             noise = actionNoise() * env.action_space.high[0]
             
             a = net.get_actions(np.reshape(state, (1, env.observation_space.shape[0])))#[[action]] batch, action list
-            Qa = net.get_Qa(np.reshape(state, (1, env.observation_space.shape[0])),a)[0][0]
-            Q0 = net.get_Qa(np.reshape(state, (1, env.observation_space.shape[0])),[[0]])[0][0]
-            Q1 = net.get_Qa(np.reshape(state, (1, env.observation_space.shape[0])),[[1.0]])[0][0]
-            Qneg1 = net.get_Qa(np.reshape(state, (1, env.observation_space.shape[0])),[[-1.0]])[0][0]
-            print("Qa:",Qa,"Q0:",Q0,"Q1",Q1,"Qneg1",Qneg1)
-            dataManager.Qa.append(Qa)
-            dataManager.Q0.append(Q0)
-            dataManager.Q1.append(Q1)
-            dataManager.Qneg1.append(Qneg1)
+            #Qa = net.get_Qa(np.reshape(state, (1, env.observation_space.shape[0])),a)[0][0]
+            #Q0 = net.get_Qa(np.reshape(state, (1, env.observation_space.shape[0])),[[0]])[0][0]
+            #Q1 = net.get_Qa(np.reshape(state, (1, env.observation_space.shape[0])),[[1.0]])[0][0]
+            #Qneg1 = net.get_Qa(np.reshape(state, (1, env.observation_space.shape[0])),[[-1.0]])[0][0]
+            #print("Qa:",Qa,"Q0:",Q0,"Q1",Q1,"Qneg1",Qneg1)
+            #dataManager.Qa.append(Qa)
+            #dataManager.Q0.append(Q0)
+            #dataManager.Q1.append(Q1)
+            #dataManager.Qneg1.append(Qneg1)
             a = a[0]
-            a +=  noise#np vectors
+            if HP.noise_flag:
+                a +=  noise#np vectors##########################################################
+                dataManager.noise.append(noise)
+                print("noise")
             a = list(np.clip(a,-env.action_space.high[0],env.action_space.high[0]))  
             
             a = [float(a[k]) for k in range(len(a))]   
             #a = [1.0]
-            #a = [env.get_analytic_action()]
-
-            #print("action: ", a,"noise: ",noise)
-
+            
+            #a = [state[0]]# 
+            #a = [env.comp_analytic_acceleration(state)]
+           # print("state:", state)
+            #a = env.get_analytic_action()
+            print("action: ", a)#,"noise: ",noise)
+            dataManager.acc.append(a)
             if not HP.gym_flag:
                 env.command(a)
 
-            if len(Replay.memory) > HP.batch_size:
+            if len(Replay.memory) > HP.batch_size and HP.train_flag:############
                 if not HP.gym_flag:
                     last_time = time.time()
                     train_count = 0
@@ -126,14 +134,13 @@ def train(env,HP,net,dataManager,seed = None):
             next_state, reward, done, info = env.step(a)
             reward_vec.append(reward)
             #add data to replay buffer:
-            Replay.add((state,a,reward,next_state,done))#
-               
+            #if info == 'kipp':
+            #    fail = True
+            #else:
+            #    fail = False
+            #Replay.add((state,a,reward,next_state,fail))#done
+            Replay.add((state,a,reward,next_state,done))#  
             state = next_state
-
-            #save data 
-            #dataManager.update_real_path(pl = pl,velocity_limit = local_path.velocity_limit[0])#state[0]
-            #dataManager.save_additional_data(reward = reward)#pl,features = denormalize(state,0,30),action = a
-                
 
             if done:
                 break
@@ -146,26 +153,35 @@ def train(env,HP,net,dataManager,seed = None):
         #for k,r in enumerate(reward_vec):
         #    total_reward+=r*HP.gamma**k
         total_reward = sum(reward_vec)
-        if not HP.gym_flag:
+        if not HP.gym_flag and HP.noise_flag == False:
+
             dist = sum(dataManager.real_path.velocity)*env.step_time#integral on velocities
             analytic_dist = sum(dataManager.real_path.analytic_velocity)*env.step_time
-            relative_dist = dist - analytic_dist
-            
+            if len(dataManager.real_path.velocity) > 0:
+                relative_dist = (dist - analytic_dist)/len(dataManager.real_path.velocity)
+            else:
+                relative_dist = 0.0
             dataManager.relative_reward.append(relative_dist)
-            dataManager.episode_end_mode = info
-        dataManager.rewards.append(total_reward)
-        dataManager.lenght.append(step_count)
-        print("episode: ", i, " total reward: ", total_reward, "episode steps: ",step_count)
+            dataManager.episode_end_mode.append(info)
+            dataManager.rewards.append(total_reward)
+            dataManager.lenght.append(step_count)
+            dataManager.run_num.append(i)
+            HP.noise_flag =True
 
+        print("episode: ", i, " total reward: ", total_reward, "episode steps: ",step_count)
+        if (i % HP.zero_noise_every == 0 and i > 0) or HP.always_no_noise_flag:
+            HP.noise_flag = False
         if (i % HP.save_every == 0 and i > 0): 
             net.save_model(HP.save_file_path)
             Replay.save(HP.save_file_path)
-        if HP.plot_flag and command == [b'1']:
+            dataManager.save_data()
+        if HP.plot_flag and waitFor.command == [b'1']:
             dataManager.plot_all()
             #dataManager.plot.plot('total_reward')#,'curvature'
             #dataManager.plot.plot('curvature')
             #dataManager.plot.plot_path_with_features(dataManager,env.distance_between_points,block = True)
             #dataManager.plot.plot_path(dataManager.real_path,block = True)
+        dataManager.save_readeable_data()
         dataManager.restart()
         #try:
         #    dataManager.comp_rewards(path_num-1,HP.gamma)

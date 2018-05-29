@@ -3,6 +3,7 @@ import json
 import numpy as np
 import os
 import library as lib
+import _thread
 
 class Vehicle:
     def __init__(self):
@@ -18,12 +19,14 @@ class Path:
         self.angle = []
         self.curvature = []
         self.velocity = [] #real velocity for a real path and planed velocity for a planned path
-        self.velocity_limit = []#velocity limit at each point
-        self.analytic_velocity = []
-        self.dtime_vec = []
         self.steering = []
         self.distance = []
         self.time = []
+        self.max_velocity = []#maximum velocity at each time - maximum allowed velocity
+        self.analytic_velocity_limit = []#velocity limit at each point (from analitic compute)
+        self.analytic_velocity = []
+        self.analytic_acceleration = []
+        self.analytic_time = []
   
     def dist(self,x1,y1,x2,y2):
         tmp = (x2-x1)**2 + (y2- y1)**2
@@ -40,7 +43,7 @@ class Path:
             self.curvature.append(lib.comp_curvature(pnt1,pnt2,pnt3))
         self.curvature.append(self.curvature[-1])
         self.curvature.append(self.curvature[-1])
-        self.curvature = [abs(curv) for curv in self.curvature]
+        #self.curvature = [abs(curv) for curv in self.curvature]
 
     def comp_distance(self):
         self.distance = []
@@ -80,7 +83,7 @@ class PathManager:#
                     path.position.append(pos)
                     ang = [0,float(x[3]),0]
                     path.angle.append(ang)
-                    path.velocity_limit.append(float(x[4]))
+                    path.analytic_velocity_limit.append(float(x[4]))
                     path.steering.append(float(x[5]))
                 #self.desired_path = path
         except ValueError:
@@ -92,7 +95,7 @@ class PathManager:#
             #for i in range (len(path.position)):
             #    f.write("%s \t %s\t %s\t %s\t %s\n" % (path.position[i][0],path.position[i][1],path.angle[i][1],path.velocity[i],path.steering[i]))
             #f.write("\n")
-            json.dump([path.position,path.angle,path.distance,path.velocity,path.velocity_limit],f)
+            json.dump([path.position,path.angle,path.distance,path.velocity,path.analytic_velocity_limit],f)
         return
     def read_path(self,file_name):
         path = Path()
@@ -101,7 +104,7 @@ class PathManager:#
                 #for i in range (len(path.position)):
                 #    f.write("%s \t %s\t %s\t %s\t %s\n" % (path.position[i][0],path.position[i][1],path.angle[i][1],path.velocity[i],path.steering[i]))
                 #f.write("\n")
-                [path.position,path.angle,path.distance,path.velocity,path.velocity_limit] = json.load(f)
+                [path.position,path.angle,path.distance,path.velocity,path.analytic_velocity_limit] = json.load(f)
         except:
             print("cannot read file: ",file_name)
             return None
@@ -120,12 +123,13 @@ class PathManager:#
         if len(path.position) >= end: cpath.position =  path.position[start:end]
         if len(path.angle) >= end: cpath.angle =  path.angle[start:end]
         if len(path.curvature) >= end: cpath.curvature =  path.curvature[start:end]
-        if len(path.velocity_limit) >= end: cpath.velocity_limit =  path.velocity_limit[start:end]
+        if len(path.analytic_velocity_limit) >= end: cpath.analytic_velocity_limit =  path.analytic_velocity_limit[start:end]
         if len(path.analytic_velocity) >= end: cpath.analytic_velocity =  path.analytic_velocity[start:end]
+
         #for i in range(start,end):
         #    cpath.position.append(path.position[i])
         #    cpath.angle.append(path.angle[i])
-        #    cpath.velocity_limit.append(path.velocity_limit[i])
+        #    cpath.analytic_velocity_limit.append(path.analytic_velocity_limit[i])
         return cpath
 
     def split_path(self,input_path_name,num_points,output_name):#input file name of a path, split to paths in num_points lenght. save to output_name_i
@@ -153,46 +157,5 @@ class PathManager:#
             if path == None:
                 return self.random_count,None
         return self.random_count,path
-
-class _Getch:
-#"""Gets a single character from standard input.  Does not echo to the
-#screen."""
-    def __init__(self):
-        try:
-            self.impl = _GetchWindows()
-        except ImportError:
-            self.impl = _GetchUnix()
-
-    def __call__(self): return self.impl()
-
-
-class _GetchUnix:
-    def __init__(self):
-        import tty, sys
-
-    def __call__(self):
-        import sys, tty, termios
-        fd = sys.stdin.fileno()
-        old_settings = termios.tcgetattr(fd)
-        try:
-            tty.setraw(sys.stdin.fileno())
-            ch = sys.stdin.read(1)
-        finally:
-            termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
-        return ch
-
-
-class _GetchWindows:
-    def __init__(self):
-        import msvcrt
-
-    def __call__(self):
-        import msvcrt
-        return msvcrt.getch()
-
-
-getch = _Getch()
-
-
 
 

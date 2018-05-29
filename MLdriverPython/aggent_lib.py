@@ -19,7 +19,7 @@ class Replay:
         samples = random.sample(self.memory,np.clip(batch_size,0,len(self.memory)))
         return map(np.array, zip(*samples))
     def save(self,path,name = "replay_memory"):
-        print("save replay buffer...",end = "")
+        print("save replay buffer...")
         try:
             path += "replay_memory\\"
             pathlib.Path(path).mkdir(parents=True, exist_ok=True) 
@@ -35,7 +35,7 @@ class Replay:
 
 
     def restore(self,path,name = "replay_memory"):
-        print("restore replay buffer...",end = "")
+        print("restore replay buffer...")
         try:
             path += "replay_memory\\"
             pathlib.Path(path).mkdir(parents=True, exist_ok=True) 

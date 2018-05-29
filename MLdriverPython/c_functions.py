@@ -11,7 +11,7 @@ class cFunctions:
         #self.c_lib.compute_limit_curve.restype = c_int
         self.c_lib.compute_limit_curve_and_velocity.argtypes = (c_int, POINTER(c_float),POINTER(c_float),POINTER(c_float),c_float,c_float,\
             c_float,c_float,c_float,c_float,c_float,c_float,\
-            POINTER(c_float),POINTER(c_float),POINTER(c_float))
+            POINTER(c_float),POINTER(c_float),POINTER(c_float),POINTER(c_float))
         self.c_lib.compute_limit_curve_and_velocity.restype = c_int
 
     def comp_limit_curve(self,x,y,z):
@@ -41,19 +41,21 @@ class cFunctions:
         limit_curve = [0 for _ in range(num)]
         velocity = [0 for _ in range(num)]
         time_vec = [0 for _ in range(num)]
+        acc_vec = [0 for _ in range(num)]
         data_type = (c_float * num)
         c_limit_curve =  data_type(*limit_curve)
         c_velocity =  data_type(*velocity)
         c_time =  data_type(*time_vec)
+        c_acc_vec = data_type(*acc_vec)
         c_x = data_type(*x)
         c_y = data_type(*y)  
         c_z = data_type(*z)
         result = self.c_lib.compute_limit_curve_and_velocity(c_int(num),c_x,c_y,c_z,c_float(init_vel),c_float(final_vel),\
             c_float(f_max),c_float(mass),c_float(vel_max),c_float(fc),c_float(height),c_float(width),\
-            c_limit_curve,c_velocity,c_time)#c_int(num), array_type(*limit_curve)
+            c_limit_curve,c_velocity,c_time,c_acc_vec)#c_int(num), array_type(*limit_curve)
         #if result == 1:
         #    return 1
-        return c_limit_curve[:], c_velocity[:],c_time[:]
+        return c_limit_curve[:], c_velocity[:],c_time[:],c_acc_vec[:]
 
     #x = [0]*100
     #y = [x/10 for x in range(100)]
