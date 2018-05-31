@@ -5,7 +5,7 @@ import json
 import library as lib
 import pathlib
 
-
+import time
 
 class Replay:
     def __init__(self,replay_memory_size):
@@ -88,7 +88,9 @@ class OrnsteinUhlenbeckActionNoise:
 
 def DDPG(rand_state, rand_a, rand_reward, rand_next_state,rand_end,net,HP):
     #compute target Q:
+    
     rand_next_a = net.get_target_actions(rand_next_state)#action from next state
+    
     ##vec0 = [[0] for _ in range(len(rand_next_state))]
     ##vec1 = [[1] for _ in range(len(rand_next_state))]
     ##Q0 = net.get_Qa(rand_next_state,vec0)
@@ -98,7 +100,6 @@ def DDPG(rand_state, rand_a, rand_reward, rand_next_state,rand_end,net,HP):
     ##rand_next_a = np.argmax(rand_next_Q,axis = 1)#best action from next state according to Q network
     ##rand_next_a = [[item] for item in rand_next_a]
     rand_next_targetQa = net.get_targetQa(rand_next_state,rand_next_a)#like in DQN
-   
     rand_targetQa = []
     for i in range(len(rand_state)):
         if rand_end[i] == False:
@@ -118,7 +119,6 @@ def DDPG(rand_state, rand_a, rand_reward, rand_next_state,rand_end,net,HP):
     #print("grads: ",net.get_neg_Q_grads(rand_state,pred_action))
     
     net.Update_actor(rand_state,pred_action)
-
     net.update_targets()
 
 def choose_action(action_space,Pi,steps = None,epsilon = 0.1):

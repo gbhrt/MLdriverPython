@@ -313,7 +313,7 @@ class Planner(PathManager):#planner - get and send data to simulator. input - mi
         self.reference_free_path.comp_curvature()
 
         #if source == "saved_random" or source == "create_random" or compute_velocity_limit_flag:
-        comp_velocity_limit_and_velocity(self.reference_free_path,skip = 10)
+        comp_velocity_limit_and_velocity(self.reference_free_path,skip = 10,reduce_factor = 1.0)
         #for i in range(len(self.reference_free_path.distance)):
         #    if self.reference_free_path.distance[i] > lenght:
         #        self.reference_free_path.analytic_velocity_limit[i] = 30

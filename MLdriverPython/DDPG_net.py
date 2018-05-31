@@ -7,8 +7,8 @@ from net_lib import NetLib
 
 class DDPG_network(NetLib):
     def __init__(self,state_n,action_space_n,action_limit,\
-        alpha_actor = None,alpha_critic = None,alpha_analytic_actor = None,alpha_analytic_critic = None,  tau = 1.0,seed = None,conv_flag = True):
-        
+        alpha_actor = None,alpha_critic = None,alpha_analytic_actor = None,alpha_analytic_critic = None,  tau = 1.0,seed = None,conv_flag = True,feature_data_n = 1):
+       
 
         tf.reset_default_graph()                                                                 
         if seed != None:
@@ -16,17 +16,16 @@ class DDPG_network(NetLib):
         self.state = tf.placeholder(tf.float32, [None,state_n] )
         self.action_in = tf.placeholder( dtype=tf.float32, shape=[None,action_space_n] )
         self.targetQa_in = tf.placeholder(tf.float32, shape=[None,1])
-
-        self.action_out = self.continues_actor(action_space_n,action_limit,self.state,state_n,conv_flag = conv_flag)
+        self.action_out = self.continues_actor(action_space_n,action_limit,self.state,state_n,feature_data_n = feature_data_n, conv_flag = conv_flag)
         network_params = tf.trainable_variables()
-        self.target_action_out = self.continues_actor(action_space_n,action_limit,self.state,state_n,conv_flag = conv_flag)
+        self.target_action_out = self.continues_actor(action_space_n,action_limit,self.state,state_n,feature_data_n = feature_data_n,conv_flag = conv_flag)
         network_params = tf.trainable_variables()
         params_num = len(network_params)
         self.actor_params = network_params[:params_num//2]
         self.target_actor_params = network_params[params_num//2:]
         
-        self.Qa = self.continues_critic(self.action_in,action_space_n, self.state,state_n,conv_flag = conv_flag)
-        self.target_Qa = self.continues_critic(self.action_in,action_space_n, self.state,state_n,conv_flag = conv_flag)
+        self.Qa = self.continues_critic(self.action_in,action_space_n, self.state,state_n,feature_data_n = feature_data_n,conv_flag = conv_flag)
+        self.target_Qa = self.continues_critic(self.action_in,action_space_n, self.state,state_n,feature_data_n = feature_data_n,conv_flag = conv_flag)
         network_params = tf.trainable_variables()[params_num:]
         params_num = len(network_params)
         self.critic_params = network_params[:params_num//2]
@@ -47,11 +46,13 @@ class DDPG_network(NetLib):
             self.actor_gradients = tf.gradients(self.action_out, self.actor_params, self.Q_grads_neg)#self.Q_grads_neg)
 
             batch_size = tf.cast((tf.size(self.state)/state_n),tf.float32)
+   
             #batch_size = 10
-            self.norm_actor_gradients = list(map(lambda x: tf.div(x,batch_size), self.actor_gradients))#normalize
-            #self.norm_actor_gradients = []
-            #for x in actor_gradients:
-            #    self.norm_actor_gradients.append(tf.div(x,batch_size))
+            #self.norm_actor_gradients = list(map(lambda x: tf.div(x,batch_size), self.actor_gradients))#normalize
+            #self.actor_gradients.shape()
+            self.norm_actor_gradients = []
+            for x in self.actor_gradients:
+                self.norm_actor_gradients.append(tf.div(x,batch_size))
 
             self.update_actor = tf.train.AdamOptimizer(alpha_actor).apply_gradients(zip(self.actor_gradients, self.actor_params))
 
@@ -74,16 +75,16 @@ class DDPG_network(NetLib):
             #self.losssum = tf.summary.scalar('loss', self.Q_loss)
             self.init_summaries()
             #tf.summary.histogram('grads',self.Q_grads)
-            self.merged = tf.summary.merge_all()
+            #self.merged = tf.summary.merge_all()
 
             self.sess = tf.Session()
             self.sess.run(tf.global_variables_initializer())
             #model = tflearn.DNN(self.action_out, tensorboard_verbose=3)
-            file_writer = tf.summary.FileWriter(r'C:\Users\gavri\Desktop\MLdriverPython\MLdriverPython\MLdriverPython\my_graph', self.sess.graph)
+            #file_writer = tf.summary.FileWriter(r'C:\Users\gavri\Desktop\MLdriverPython\MLdriverPython\MLdriverPython\my_graph', self.sess.graph)
             #print("size: ",self.sess.run(batch_size, feed_dict = {self.state: [[0 for _ in range(31)] for _ in range(40)]}))
             print("Network ready")
         return
-    def continues_actor(self,action_n,action_limit,state,state_n,conv_flag = True): #define a net - input: state (and dimentions) - output: a continues action ,
+    def continues_actor(self,action_n,action_limit,state,state_n,feature_data_n = 1,conv_flag = True): #define a net - input: state (and dimentions) - output: a continues action ,
         hidden_layer_nodes1 = 400#400
         hidden_layer_nodes2 = 300#300
 
@@ -101,31 +102,42 @@ class DDPG_network(NetLib):
         #action = tf.multiply(tf.nn.tanh(tf.add(tf.matmul(theta_z2,theta3), theta_b3)),action_limit)
 
         #input = tflearn.input_data(shape=[None, state_n])
-        if conv_flag:
-            batch_size = tf.cast((tf.size(self.state)/state_n),tf.int32)
-            state = tf.reshape(state, [batch_size, state_n, 1])
-            net = tflearn.layers.conv.conv_1d(state,5,6,activation = 'relu')
-        
 
-            net = tflearn.fully_connected(net, hidden_layer_nodes1,regularizer='L2', weight_decay=0.01)
 
+        if conv_flag:#if add convolution layers - split state to data and path (or picture)
+            #if the first item in each state is the analytical action:
+            s = state[...,feature_data_n:]
+            data_s = state[...,0:feature_data_n]
+            s_n = state_n - feature_data_n#data items removed
+
+
+            s = tf.reshape(s, [-1, s_n, 1])#
+            conv = tflearn.layers.conv.conv_1d(s,32,6,activation = 'relu')
+            #net = tf.reshape(net, [-1,net.W.get_shape().as_list()[0]])
+            #net = net[...,0:-2]
+            #batch_size.shape()
+            # Flatten the data to a 1-D vector for the fully connected layer
+            conv = tf.contrib.layers.flatten(conv)
+            fc1_1 = tflearn.fully_connected(conv, hidden_layer_nodes1,regularizer='L2', weight_decay=0.01)#from state
+            fc1_2 = tflearn.fully_connected(data_s, hidden_layer_nodes1,regularizer='L2', weight_decay=0.01)#from analytic action
+            fc1 = tflearn.activation(tf.matmul(conv, fc1_1.W) + tf.matmul(data_s, fc1_2.W) + fc1_1.b + fc1_2.b, activation='relu')
+            #state[...,1:].shape()
         else:
-            net = tflearn.fully_connected(state, hidden_layer_nodes1,regularizer='L2', weight_decay=0.01)
-        net = tflearn.layers.normalization.batch_normalization(net)
-        net = tflearn.activations.relu(net)
-        #net = tflearn.activations.tanh(net)
-        net = tflearn.fully_connected(net, hidden_layer_nodes2,regularizer='L2', weight_decay=0.01)
-        net = tflearn.layers.normalization.batch_normalization(net)
-        net = tflearn.activations.relu(net)
-        #net = tflearn.activations.tanh(net)
-        # Final layer weights are init to Uniform[-3e-3, 3e-3]
-        init = tflearn.initializations.uniform(minval=-0.003, maxval=0.003)
-        action = tflearn.fully_connected(net, action_n, activation='tanh', weights_init=init,bias_init = init,regularizer='L2', weight_decay=0.01)
+            fc1 = tflearn.fully_connected(state, hidden_layer_nodes1,regularizer='L2', weight_decay=0.01)#from state
+            #fc1 = tflearn.layers.normalization.batch_normalization(fc1)
+            fc1 = tflearn.activations.relu(net)
+
+        fc2 = tflearn.fully_connected(fc1, hidden_layer_nodes2,regularizer='L2', weight_decay=0.01)
+        #net = tflearn.layers.normalization.batch_normalization(net)
+        fc2 = tflearn.activations.relu(fc2)
+        
+        init = tflearn.initializations.uniform(minval=-0.003, maxval=0.003)# Final layer weights are init to Uniform[-3e-3, 3e-3]
+        action = tflearn.fully_connected(fc2, action_n, activation='tanh', weights_init=init,bias_init = init,regularizer='L2', weight_decay=0.01)
         # Scale output to -action_bound to action_bound
         action = tf.multiply(action, action_limit)
 
         return action
-    def continues_critic(self,action,action_n,state,state_n,conv_flag = True):#define a net - input: state (and dimentions) - output: Q - Value
+    def continues_critic(self,action,action_n,state,state_n,feature_data_n = 1,conv_flag = True):#define a net - input: state (and dimentions) - output: Q - Value
         hidden_layer_nodes1 = 400
         hidden_layer_nodes2 = 300
 
@@ -157,30 +169,52 @@ class DDPG_network(NetLib):
 
         #inputs = tflearn.input_data(shape=[None, self.s_dim])
         #action = tflearn.input_data(shape=[None, self.a_dim])
-        if conv_flag:
-            batch_size = tf.cast((tf.size(self.state)/state_n),tf.int32)
-            state = tf.reshape(state, [batch_size, state_n, 1])
-            net = tflearn.layers.conv.conv_1d(state,5,6,activation = 'relu')
-            net = tflearn.fully_connected(net, hidden_layer_nodes1,regularizer='L2', weight_decay=0.01)
+        #if conv_flag:
+        #    batch_size = tf.cast((tf.size(state)/state_n),tf.int32)
+        #    state = tf.reshape(state, [batch_size, state_n, 1])
+        #    #net = tflearn.layers.conv.conv_1d(state,5,6,activation = 'relu')
+        #    net = tflearn.layers.conv.conv_1d(state,32,6,activation = 'relu')
+        #    net = tflearn.fully_connected(net, hidden_layer_nodes1,regularizer='L2', weight_decay=0.01)
+        #else:
+        #    net = tflearn.fully_connected(state, hidden_layer_nodes1,regularizer='L2', weight_decay=0.01)
+        ##net = tflearn.layers.normalization.batch_normalization(net)
+        #net = tflearn.activations.relu(net)
+        if conv_flag:#if add convolution layers - split state to data and path (or picture)
+            #if the first item in each state is the analytical action:
+            s = state[...,feature_data_n:]
+            data_s = state[...,0:feature_data_n]
+            s_n = state_n - feature_data_n#data items removed
+
+
+            s = tf.reshape(s, [-1, s_n, 1])#
+            conv = tflearn.layers.conv.conv_1d(s,32,6,activation = 'relu')
+            #net = tf.reshape(net, [-1,net.W.get_shape().as_list()[0]])
+            #net = net[...,0:-2]
+            #batch_size.shape()
+            # Flatten the data to a 1-D vector for the fully connected layer
+            conv = tf.contrib.layers.flatten(conv)
+            fc1_1 = tflearn.fully_connected(conv, hidden_layer_nodes1,regularizer='L2', weight_decay=0.01)#from state
+            fc1_2 = tflearn.fully_connected(data_s, hidden_layer_nodes1,regularizer='L2', weight_decay=0.01)#from analytic action
+            fc1 = tflearn.activation(tf.matmul(conv, fc1_1.W) + tf.matmul(data_s, fc1_2.W) + fc1_1.b + fc1_2.b, activation='relu')
+            #state[...,1:].shape()
         else:
-            net = tflearn.fully_connected(state, hidden_layer_nodes1,regularizer='L2', weight_decay=0.01)
-        #net = tflearn.layers.normalization.batch_normalization(net)
-        net = tflearn.activations.relu(net)
+            fc1 = tflearn.fully_connected(state, hidden_layer_nodes1,regularizer='L2', weight_decay=0.01)#from state
+            #fc1 = tflearn.layers.normalization.batch_normalization(fc1)
+            fc1 = tflearn.activations.relu(net)
 
         # Add the action tensor in the 2nd hidden layer
         # Use two temp layers to get the corresponding weights and biases
-        t1 = tflearn.fully_connected(net, hidden_layer_nodes2,regularizer='L2', weight_decay=0.01)
-        t2 = tflearn.fully_connected(action, hidden_layer_nodes2,regularizer='L2', weight_decay=0.01)
+        fc2_1 = tflearn.fully_connected(fc1, hidden_layer_nodes2,regularizer='L2', weight_decay=0.01)
+        fc2_2 = tflearn.fully_connected(action, hidden_layer_nodes2,regularizer='L2', weight_decay=0.01)
 
-        net = tflearn.activation(tf.matmul(net, t1.W) + tf.matmul(action, t2.W) + t2.b, activation='relu')
+        fc2 = tflearn.activation(tf.matmul(fc1, fc2_1.W) + tf.matmul(action, fc2_2.W) + fc2_1.b + fc2_2.b, activation='relu')
           
 
         # linear layer connected to 1 output representing Q(s,a)
         # Weights are init to Uniform[-3e-3, 3e-3]
         init = tflearn.initializations.uniform(minval=-0.003, maxval=0.003)
 
-        Qa = tflearn.fully_connected(net, 1, weights_init=init,bias_init = init, regularizer='L2', weight_decay=0.01)
-       
+        Qa = tflearn.fully_connected(fc2, 1, weights_init=init,bias_init = init, regularizer='L2', weight_decay=0.01)
         return Qa
 
 

@@ -69,6 +69,8 @@ def train(env,HP,net,dataManager,seed = None):
         #    state = env.reset(path_num = 1)
         #state = env.reset(path_num = 1234)####################################################################
         state = env.reset()   
+        print("update nets first time")
+        pLib.DDPG([state], [[0]], [0], [state],[False],net,HP)
         while  waitFor.stop != [True]:#while not stoped, the loop break if reached the end or the deviation is to big
             step_count+=1
                
@@ -165,7 +167,7 @@ def train(env,HP,net,dataManager,seed = None):
             dataManager.episode_end_mode.append(info)
             dataManager.rewards.append(total_reward)
             dataManager.lenght.append(step_count)
-            dataManager.run_num.append(i)
+            dataManager.add_run_num(i)
             HP.noise_flag =True
 
         print("episode: ", i, " total reward: ", total_reward, "episode steps: ",step_count)

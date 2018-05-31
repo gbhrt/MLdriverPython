@@ -11,10 +11,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 import data_manager1
 from hyper_parameters import HyperParameters
+import copy
 
-HP = HyperParameters()
-dm = data_manager1.DataManager(HP.save_file_path,HP.restore_file_path,HP.restore_flag)
-dm.plot_all()
+#HP = HyperParameters()
+#dm = data_manager1.DataManager(HP.save_file_path,HP.restore_file_path,HP.restore_flag)
+#dm.plot_all()
 
 
 #pl = Planner(mode = "torque")
@@ -54,10 +55,13 @@ dm.plot_all()
 ##pm.convert_to_json('paths//straight_path_limit.txt','paths//straight_path_limit_json.txt')
 
 #path = pm.read_path("paths//straight_path_limit_json.txt")
+#random.seed(1234)
+path = classes.Path()
+path.position = lib.create_random_path(500,0.05,seed = 1234)
 
-#path = classes.Path()
-#path.position = lib.create_random_path(1000,0.05)
-#lib.comp_velocity_limit_and_velocity(path)
+path1 = copy.copy(path)
+lib.comp_velocity_limit_and_velocity(path,skip = 20,init_vel = 25)
+#lib.comp_velocity_limit_and_velocity(path1,skip = 10)
 #path.comp_curvature()
 #path.comp_angle()
 #ang = path.angle
@@ -68,9 +72,12 @@ dm.plot_all()
 
 #plt.show()
 #plt.figure(2)
-##plt.plot(np.array(path.curvature)*50,'o')
-#plt.plot(path.analytic_velocity_limit,'o')
-#plt.plot(path.analytic_velocity,'o')
+#plt.plot(np.array(path.curvature)*50,'o')
+plt.plot(path.analytic_velocity_limit,'o')
+plt.plot(path.analytic_velocity,'o')
+
+#plt.plot(path1.analytic_velocity_limit,'x')
+#plt.plot(path1.analytic_velocity,'x')
 #plt.plot(path.analytic_acceleration,'o')
-##plt.plot(dang)
-#plt.show()
+#plt.plot(dang)
+plt.show()

@@ -19,19 +19,19 @@ class HyperParameters:
         self.noise_flag = True
         self.always_no_noise_flag = False
         self.zero_noise_every = 5
-        self.conv_flag = False
+        self.conv_flag = True
         self.gym_flag = False
         self.render_flag = True
         self.plot_flag = True
-        self.restore_flag = True
+        self.restore_flag = False
         self.skip_run = False
         self.reset_every = 3
         self.save_every = 100
         self.seed = 1234
-        self.save_name ="analytic_feature1_continued" 
+        self.save_name ="new_analytuc"#"conv_test" 
         self.save_file_path = os.getcwd()+ "\\files\\models\\DDPG\\"+self.save_name+"\\"
 
-        self.restore_name = "analytic_feature1"# m
+        self.restore_name = "new_analytuc"# m
         self.restore_file_path = os.getcwd()+ "\\files\\models\\DDPG\\"+self.restore_name+"\\"
 
         if self.always_no_noise_flag:

@@ -55,7 +55,7 @@ class cFunctions:
             c_limit_curve,c_velocity,c_time,c_acc_vec)#c_int(num), array_type(*limit_curve)
         #if result == 1:
         #    return 1
-        return c_limit_curve[:], c_velocity[:],c_time[:],c_acc_vec[:]
+        return c_limit_curve[:], c_velocity[:],c_time[:],c_acc_vec[:],result
 
     #x = [0]*100
     #y = [x/10 for x in range(100)]

@@ -31,19 +31,26 @@ class DataManager():
         self.episode_end_mode = []
         self.path_seed = []
         self.run_num = []
-        self.noise = []
-        self.acc = []
+        self.init_run_num = 0
+        
+        
 
         #reset every episode:
         self.Qa = []
         self.Q0 = []
         self.Q1 = []
         self.Qneg1 = []
-
+        self.roll = []
+        self.noise = []
+        self.acc = []
         ###############################
         
         if restore_flag:
             self.load_data()
+        if len(self.run_num) > 0:
+            self.init_run_num = self.run_num[-1]
+    def add_run_num(self,i):
+        self.run_num.append(i+self.init_run_num)
 
     def plot_all(self):
        # try:
@@ -53,7 +60,8 @@ class DataManager():
             plot_lib.plot_path(self.real_path)
             #plt.plot(self.real_path.distance,np.array(self.acc)*10)
             #plt.plot(self.real_path.distance,np.array(self.noise)*10)
-            #plt.subplot(222)  
+            plt.subplot(222)  
+            plt.plot(self.roll)
             #x = np.array(self.real_path.distance)
             #Qa, = plt.plot(x,self.Qa,label = "Qa")
             #Q0, = plt.plot(x,self.Q0,label = "Q0")
@@ -126,6 +134,7 @@ class DataManager():
         self.Q0 = []
         self.Q1 = []
         self.Qneg1 = []
+        self.roll = []
         self.noise = []
         self.acc = []
         

@@ -319,33 +319,34 @@ def comp_velocity_limit_and_velocity(path,skip = 1,reduce_factor = 1.0,init_vel 
     x = [row[0] for row in pos]
     y = [row[1] for row in pos]
     z = [row[2] for row in pos]
-    velocity_limit,velocity,dtime_vec,acc_vec = cf.comp_limit_curve_and_velocity(x,y,z,init_vel = init_vel, final_vel = final_vel)
+    velocity_limit,velocity,dtime_vec,acc_vec,result = cf.comp_limit_curve_and_velocity(x,y,z,init_vel = init_vel/reduce_factor, final_vel = final_vel/reduce_factor)
 
     skiped_x = range(0,len(path.position),skip)
     real_x = range(len(path.position))
     path.analytic_velocity_limit = np.interp(np.array(real_x), np.array(skiped_x), np.array(velocity_limit))*reduce_factor
-    path.analytic_velocity = np.interp(np.array(real_x), np.array(skiped_x), np.array(velocity))*reduce_factor
-    dtime_vec = np.interp(np.array(real_x), np.array(skiped_x), np.array(dtime_vec))*reduce_factor
-    t = 0
-    for dt in dtime_vec:
-        path.analytic_time.append(t)
-        t+=dt
+    if result == 1:
+        path.analytic_velocity = np.interp(np.array(real_x), np.array(skiped_x), np.array(velocity))*reduce_factor
+        dtime_vec = np.interp(np.array(real_x), np.array(skiped_x), np.array(dtime_vec))#*reduce_factor
+        t = 0
+        for dt in dtime_vec:
+            path.analytic_time.append(t)
+            t+=dt
     #path.analytic_acceleration = np.interp(np.array(real_x), np.array(skiped_x), np.array(acc_vec))*reduce_factor
-    path.comp_distance()
-    for j in range(0,len(path.analytic_velocity)-1): 
-        v1 = path.analytic_velocity[j]
-        v2 = path.analytic_velocity[j+1]
-        d = path.distance[j+1] - path.distance[j]
-        if d < 0.01:
-            print("_____________________________________________________________________________")
-        acc = (v2**2 - v1**2 )/(2*d)#acceleration [m/s^2]
-        path.analytic_acceleration.append(acc)
-    path.analytic_acceleration.append(path.analytic_acceleration[-1])
+        path.comp_distance()
+        for j in range(0,len(path.analytic_velocity)-1): 
+            v1 = path.analytic_velocity[j]
+            v2 = path.analytic_velocity[j+1]
+            d = path.distance[j+1] - path.distance[j]
+            if d < 0.01:
+                print("_____________________________________________________________________________")
+            acc = (v2**2 - v1**2 )/(2*d)#acceleration [m/s^2]
+            path.analytic_acceleration.append(acc)
+        path.analytic_acceleration.append(path.analytic_acceleration[-1])
     #plt.plot(np.array(skiped_x), np.array(velocity_limit), 'o')
     #plt.plot(real_x, path.analytic_velocity_limit, '-x')
 
     #plt.show()
-    return False
+    return result
 
 
 def create_random_path(number,resolution,seed = None):
@@ -386,7 +387,7 @@ def create_random_path(number,resolution,seed = None):
 
     #plt.plot(pathx,pathy)
     #plt.show()
-    return path
+    return path[:number]#create longer path - return only needed points
 
 class _Getch:
 #"""Gets a single character from standard input.  Does not echo to the
