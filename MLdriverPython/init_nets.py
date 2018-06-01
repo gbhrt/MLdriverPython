@@ -134,11 +134,11 @@ def init_net_analytic(envData,net,save_file_path,restore_file_path,gamma,create_
     #        plt.plot(state_batch[i],'o')
     #        plt.plot(action_batch[i],'o')
     #        plt.show()
-    actor_loss_vec = []
-    critic_loss_vec = []
-    for i in range(num_train):
-       train_actor(net,train_buffer,10000,batch_size,actor_loss_vec,waitFor)
-       train_critic(net,train_buffer,10000,batch_size,critic_loss_vec,waitFor)
+    ##actor_loss_vec = []
+    ##critic_loss_vec = []
+    ##for i in range(num_train):
+    ##   train_actor(net,train_buffer,10000,batch_size,actor_loss_vec,waitFor)
+    ##   train_critic(net,train_buffer,10000,batch_size,critic_loss_vec,waitFor)
    # train_actor(net,train_buffer,10000000,batch_size,actor_loss_vec,waitFor)
 
     #"1e4.txt"
@@ -147,8 +147,8 @@ def init_net_analytic(envData,net,save_file_path,restore_file_path,gamma,create_
     #    json.dump(loss_vec,f)
     print("actor test loss:",test_actor_loss(net,test_buffer))
     print("test critic loss:",test_critic_loss(net,test_buffer))
-    #test_action_diff(net,test_buffer)
-    #test_Q_diff(net,test_buffer)
+    test_action_diff(net,test_buffer)
+    test_Q_diff(net,test_buffer)
 
     net.copy_targets()#copy critic and actor networks to the target networks
     net.save_model(save_file_path)

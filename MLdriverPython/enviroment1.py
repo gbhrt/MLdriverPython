@@ -18,7 +18,7 @@ class ObservationSpace:
 
 class OptimalVelocityPlannerData:
     def __init__(self):
-        self.analytic_feature_flag = True
+        self.analytic_feature_flag = False
 
         self.max_episode_steps = 100#200#
         self.feature_points = 25 # number of points on the path in the state

@@ -32,6 +32,8 @@ class DataManager():
         self.path_seed = []
         self.run_num = []
         self.init_run_num = 0
+        self.train_num = []
+        self.init_train_num = 0
         
         
 
@@ -49,8 +51,12 @@ class DataManager():
             self.load_data()
         if len(self.run_num) > 0:
             self.init_run_num = self.run_num[-1]
+        if len(self.train_num) > 0:
+            self.init_train_num = self.train_num[-1]
     def add_run_num(self,i):
         self.run_num.append(i+self.init_run_num)
+    def add_train_num(self,i):
+        self.train_num.append(i+self.init_train_num)
 
     def plot_all(self):
        # try:
@@ -70,15 +76,28 @@ class DataManager():
             #plt.legend(handles=[Qa, Q0,Q1,Qneg1])
 
             plt.subplot(223)  
-            plt.title("episodes reward")
-            plt.plot(self.run_num,self.rewards,'o')
+            
+            plt.title("train num - relative reward")
+            col = []
+            for mode in self.episode_end_mode:
+                if mode == 'kipp' or mode == 'deviate':
+                    col.append('r')
+                else:
+                    col.append('g')
+            relative_reward_zero = list(self.relative_reward)
+            for i in range(len(self.episode_end_mode)):
+                if self.episode_end_mode[i] == 'kipp' or self.episode_end_mode[i] == 'deviate':
+                    relative_reward_zero[i] = -2.0
+            plt.scatter(self.train_num,relative_reward_zero,c = col)
+            #plt.title("episodes reward")
+            #plt.plot(self.run_num,self.rewards,'o')
             #if len(self.run_num) >= 15:
             #    ave = lib.running_average(self.rewards,15)
             #    plt.plot(self.run_num[:len(ave)],ave)
             #plt.plot(self.run_num,lib.running_average(self.rewards,100))
         
             plt.subplot(224)  
-            plt.title("relative reward")
+            plt.title("episodes - relative reward")
             col = []
             for mode in self.episode_end_mode:
                 if mode == 'kipp' or mode == 'deviate':

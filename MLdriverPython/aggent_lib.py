@@ -93,8 +93,9 @@ def DDPG(rand_state, rand_a, rand_reward, rand_next_state,rand_end,net,HP):
     
     ##vec0 = [[0] for _ in range(len(rand_next_state))]
     ##vec1 = [[1] for _ in range(len(rand_next_state))]
-    ##Q0 = net.get_Qa(rand_next_state,vec0)
-    ##Q1 = net.get_Qa(rand_next_state,vec1)
+    #Q0 = net.get_Qa(rand_next_state,vec0)
+    #3Q1 = net.get_Qa(rand_next_state,vec1)
+    
     ##rand_next_Q = [[Q0[i][0],Q1[i][0]] for i in range(len(Q0))]
 
     ##rand_next_a = np.argmax(rand_next_Q,axis = 1)#best action from next state according to Q network
@@ -108,7 +109,9 @@ def DDPG(rand_state, rand_a, rand_reward, rand_next_state,rand_end,net,HP):
             rand_targetQa.append([rand_reward[i]])
     #update critic:
     net.Update_critic(rand_state,rand_a,rand_targetQa)#compute Qa(state,a) and minimize loss (Qa - targetQa)^2
-    #print("critic_loss: ",net.get_critic_loss(rand_state,rand_a,rand_targetQa))
+    Qa = net.get_Qa(rand_state,rand_a)
+    critic_loss = net.get_critic_loss(rand_state,rand_a,rand_targetQa)
+    
     
     #update actor
     pred_action = net.get_actions(rand_state)#predicted action from state
@@ -120,6 +123,7 @@ def DDPG(rand_state, rand_a, rand_reward, rand_next_state,rand_end,net,HP):
     
     net.Update_actor(rand_state,pred_action)
     net.update_targets()
+    return critic_loss, Qa#temp
 
 def choose_action(action_space,Pi,steps = None,epsilon = 0.1):
     if random.random() < epsilon:

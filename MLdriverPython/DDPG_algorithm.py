@@ -54,7 +54,7 @@ def train(env,HP,net,dataManager,seed = None):
     #        stop = [1]
       
 
-
+    global_train_count = 0
     for i in range(HP.num_of_runs): #number of runs - run end at the end of the main path and if vehicle deviation error is to big
         if waitFor.stop == [True]:
             break
@@ -69,8 +69,9 @@ def train(env,HP,net,dataManager,seed = None):
         #    state = env.reset(path_num = 1)
         #state = env.reset(path_num = 1234)####################################################################
         state = env.reset()   
-        print("update nets first time")
-        pLib.DDPG([state], [[0]], [0], [state],[False],net,HP)
+        if i == 0:
+            print("update nets first time")
+            pLib.DDPG([state], [[0]], [0], [state],[False],net,HP)
         while  waitFor.stop != [True]:#while not stoped, the loop break if reached the end or the deviation is to big
             step_count+=1
                
@@ -111,17 +112,26 @@ def train(env,HP,net,dataManager,seed = None):
 
             if len(Replay.memory) > HP.batch_size and HP.train_flag:############
                 if not HP.gym_flag:
-                    last_time = time.time()
+                    start_time = time.time()
+                    t = start_time
+                    last_time = start_time
                     train_count = 0
                     #for _ in range(HP.train_num):
-                    while(time.time() - last_time) < env.step_time*0.7:  
+                    while (t - start_time) < env.step_time - (t - last_time)+0.05:  
+                        print(t - start_time, t - last_time)
+                        last_time = t
                         train_count += 1
                         #sample from replay buffer:
                         rand_state, rand_a, rand_reward, rand_next_state, rand_end = Replay.sample(HP.batch_size)
                         #update neural networs:
                         #pLib.DDQN(rand_state, rand_a, rand_reward, rand_next_state,net,HP)
                         pLib.DDPG(rand_state, rand_a, rand_reward, rand_next_state,rand_end,net,HP)
+                        t = time.time()
+                        
+
                     print ("train_count: ", train_count)
+                    global_train_count+=train_count
+                    
                 else:
                     #sample from replay buffer:
                     rand_state, rand_a, rand_reward, rand_next_state, rand_end = Replay.sample(HP.batch_size)
@@ -168,6 +178,7 @@ def train(env,HP,net,dataManager,seed = None):
             dataManager.rewards.append(total_reward)
             dataManager.lenght.append(step_count)
             dataManager.add_run_num(i)
+            dataManager.add_train_num(global_train_count)
             HP.noise_flag =True
 
         print("episode: ", i, " total reward: ", total_reward, "episode steps: ",step_count)

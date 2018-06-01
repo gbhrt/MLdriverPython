@@ -11,8 +11,8 @@ class HyperParameters:
         self.alpha_analytic_actor = 1e-5#1e3 - too high, loss stop at 0.1
         self.alpha_analytic_critic = 1e-4
         self.batch_size = 64
-        self.replay_memory_size = 100000
-        self.train_num = 5# how many times to train in every step
+        self.replay_memory_size = 10000
+        #self.train_num = 5# how many times to train in every step
 
         #########################
         self.train_flag = True
@@ -28,10 +28,10 @@ class HyperParameters:
         self.reset_every = 3
         self.save_every = 100
         self.seed = 1234
-        self.save_name ="new_analytuc"#"conv_test" 
+        self.save_name ="conv32_6_10000"#"conv_test" 
         self.save_file_path = os.getcwd()+ "\\files\\models\\DDPG\\"+self.save_name+"\\"
 
-        self.restore_name = "new_analytuc"# m
+        self.restore_name = "conv32_6_10000"# m
         self.restore_file_path = os.getcwd()+ "\\files\\models\\DDPG\\"+self.restore_name+"\\"
 
         if self.always_no_noise_flag:

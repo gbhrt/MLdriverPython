@@ -8,6 +8,7 @@ import data_manager1
 from hyper_parameters import HyperParameters
 from DDPG_net import DDPG_network
 import init_nets
+import threading
 
 if __name__ == "__main__": 
     #cd C:\Users\gavri\Desktop\sim_15_3_18
@@ -27,7 +28,7 @@ if __name__ == "__main__":
     env = enviroment1.OptimalVelocityPlanner(dataManager)
     if env.opened:     
         DDPG_algorithm.train(env,HP,net,dataManager)
-
+        
     #total_rewards_vec = []
     #for i in range(5):
     #    total_rewards_vec.append(DDPG_algorithm.train(env,i))

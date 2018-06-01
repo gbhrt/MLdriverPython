@@ -100,6 +100,9 @@
     <Compile Include="tests.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="train_without_sim.py">
+      <SubType>Code</SubType>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <Folder Include="deepLearnProject\" />
