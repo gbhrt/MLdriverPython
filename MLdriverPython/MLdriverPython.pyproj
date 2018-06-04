@@ -73,6 +73,9 @@
     <Compile Include="deepLearnProject\ReinforceNet.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="plot_data.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="plot_lib.py">
       <SubType>Code</SubType>
     </Compile>

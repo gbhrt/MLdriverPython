@@ -60,7 +60,7 @@ def comp_curvature(A, B, C):
 
 def running_average(data,N):
     if len(data) > 0:
-        return np.convolve(data, np.ones((N,))/N, mode='valid')#'valid'
+        return np.convolve(data, np.ones((N,))/N, mode='same')#'valid'
     else:
         return []
  

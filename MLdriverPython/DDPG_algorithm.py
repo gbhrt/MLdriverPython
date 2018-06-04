@@ -82,27 +82,28 @@ def train(env,HP,net,dataManager,seed = None):
             noise = actionNoise() * env.action_space.high[0]
             
             a = net.get_actions(np.reshape(state, (1, env.observation_space.shape[0])))#[[action]] batch, action list
-            #Qa = net.get_Qa(np.reshape(state, (1, env.observation_space.shape[0])),a)[0][0]
-            #Q0 = net.get_Qa(np.reshape(state, (1, env.observation_space.shape[0])),[[0]])[0][0]
-            #Q1 = net.get_Qa(np.reshape(state, (1, env.observation_space.shape[0])),[[1.0]])[0][0]
-            #Qneg1 = net.get_Qa(np.reshape(state, (1, env.observation_space.shape[0])),[[-1.0]])[0][0]
+            Qa = net.get_Qa(np.reshape(state, (1, env.observation_space.shape[0])),a)[0][0]
+            Q0 = net.get_Qa(np.reshape(state, (1, env.observation_space.shape[0])),[[0]])[0][0]
+            Q1 = net.get_Qa(np.reshape(state, (1, env.observation_space.shape[0])),[[1.0]])[0][0]
+            Qneg1 = net.get_Qa(np.reshape(state, (1, env.observation_space.shape[0])),[[-1.0]])[0][0]
             #print("Qa:",Qa,"Q0:",Q0,"Q1",Q1,"Qneg1",Qneg1)
-            #dataManager.Qa.append(Qa)
-            #dataManager.Q0.append(Q0)
-            #dataManager.Q1.append(Q1)
-            #dataManager.Qneg1.append(Qneg1)
+            dataManager.Qa.append(Qa)
+            dataManager.Q0.append(Q0)
+            dataManager.Q1.append(Q1)
+            dataManager.Qneg1.append(Qneg1)
             a = a[0]
-            if HP.noise_flag:
-                a +=  noise#np vectors##########################################################
-                dataManager.noise.append(noise)
-                print("noise")
+            #if HP.noise_flag:
+            #    a +=  noise#np vectors##########################################################
+            #    dataManager.noise.append(noise)
+            #    print("noise")
             a = list(np.clip(a,-env.action_space.high[0],env.action_space.high[0]))  
             
             a = [float(a[k]) for k in range(len(a))]   
             #a = [1.0]
             
             #a = [state[0]]# 
-            #a = [env.comp_analytic_acceleration(state)]
+            if HP.noise_flag:
+                a = [env.comp_analytic_acceleration(state)]
            # print("state:", state)
             #a = env.get_analytic_action()
             print("action: ", a)#,"noise: ",noise)
@@ -117,7 +118,7 @@ def train(env,HP,net,dataManager,seed = None):
                     last_time = start_time
                     train_count = 0
                     #for _ in range(HP.train_num):
-                    while (t - start_time) < env.step_time - (t - last_time)+0.05:  
+                    while (t - start_time) < env.step_time - (t - last_time)+0.05 and train_count < HP.train_num:  
                         print(t - start_time, t - last_time)
                         last_time = t
                         train_count += 1
@@ -194,7 +195,7 @@ def train(env,HP,net,dataManager,seed = None):
             #dataManager.plot.plot('curvature')
             #dataManager.plot.plot_path_with_features(dataManager,env.distance_between_points,block = True)
             #dataManager.plot.plot_path(dataManager.real_path,block = True)
-        dataManager.save_readeable_data()
+        #dataManager.save_readeable_data()
         dataManager.restart()
         #try:
         #    dataManager.comp_rewards(path_num-1,HP.gamma)

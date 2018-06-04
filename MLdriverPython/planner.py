@@ -135,7 +135,7 @@ class Planner(PathManager):#planner - get and send data to simulator. input - mi
             self.wait_for_stop()
 
     def restart(self):
-        self.stop_vehicle()
+        #self.stop_vehicle()#canceled 3.6.18
         self.init_timer()
         print("restart\n")
         v = Vehicle()
@@ -349,7 +349,7 @@ class Planner(PathManager):#planner - get and send data to simulator. input - mi
         self.desired_path.comp_distance()
         local_path.distance = copy.copy(self.desired_path.distance)
         return local_path
-    def check_end(self,deviation = None,max_deviation = 4,max_roll = 0.2,max_pitch = 0.2, state = None,):
+    def check_end(self,deviation = None,max_deviation = 4,max_roll = 0.2,max_pitch = 0.2, state = None,end_distance = None):
         #print("main index", self.main_index, "lenght: ",len(self.in_vehicle_reference_path.position))
         end_tolerance = 0.3
         dis_from_end = self.in_vehicle_reference_path.distance[-1] - self.in_vehicle_reference_path.distance[self.main_index]
@@ -360,6 +360,13 @@ class Planner(PathManager):#planner - get and send data to simulator. input - mi
         #if self.in_vehicle_reference_path.distance[self.main_index] > lenght:
             print("end episode - end of the path")
             return 'path_end'
+        print("distance: ",self.in_vehicle_reference_path.distance[self.main_index],"end_distance:",end_distance)
+        
+        if end_distance != None:
+            if self.in_vehicle_reference_path.distance[self.main_index] >= end_distance:
+                print("end episode - end of the path - seen path")
+                print("________________________________________________________________________")
+                return 'seen_path_end'
         if state != None and state[0] > 0:
             print("end episode - cross limit curve")
             return 'cross'

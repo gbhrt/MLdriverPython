@@ -54,7 +54,8 @@ class DDPG_network(NetLib):
             for x in self.actor_gradients:
                 self.norm_actor_gradients.append(tf.div(x,batch_size))
 
-            self.update_actor = tf.train.AdamOptimizer(alpha_actor).apply_gradients(zip(self.actor_gradients, self.actor_params))
+            #self.update_actor = tf.train.AdamOptimizer(alpha_actor).apply_gradients(zip(self.actor_gradients, self.actor_params))
+            self.update_actor = tf.train.AdamOptimizer(alpha_actor).apply_gradients(zip(self.norm_actor_gradients, self.actor_params))
 
             self.update_actor_target_vec = self.update_target_init(tau,self.actor_params,self.target_actor_params)#update targrt networks slowly (tau)
             self.update_critic_target_vec = self.update_target_init(tau,self.critic_params,self.target_critic_params)
@@ -112,7 +113,7 @@ class DDPG_network(NetLib):
 
 
             s = tf.reshape(s, [-1, s_n, 1])#
-            conv = tflearn.layers.conv.conv_1d(s,32,6,activation = 'relu')
+            conv = tflearn.layers.conv.conv_1d(s,16,6,activation = 'relu')
             #net = tf.reshape(net, [-1,net.W.get_shape().as_list()[0]])
             #net = net[...,0:-2]
             #batch_size.shape()
@@ -125,7 +126,7 @@ class DDPG_network(NetLib):
         else:
             fc1 = tflearn.fully_connected(state, hidden_layer_nodes1,regularizer='L2', weight_decay=0.01)#from state
             #fc1 = tflearn.layers.normalization.batch_normalization(fc1)
-            fc1 = tflearn.activations.relu(net)
+            fc1 = tflearn.activations.relu(fc1)
 
         fc2 = tflearn.fully_connected(fc1, hidden_layer_nodes2,regularizer='L2', weight_decay=0.01)
         #net = tflearn.layers.normalization.batch_normalization(net)
@@ -187,7 +188,7 @@ class DDPG_network(NetLib):
 
 
             s = tf.reshape(s, [-1, s_n, 1])#
-            conv = tflearn.layers.conv.conv_1d(s,32,6,activation = 'relu')
+            conv = tflearn.layers.conv.conv_1d(s,16,6,activation = 'relu')
             #net = tf.reshape(net, [-1,net.W.get_shape().as_list()[0]])
             #net = net[...,0:-2]
             #batch_size.shape()
@@ -200,14 +201,14 @@ class DDPG_network(NetLib):
         else:
             fc1 = tflearn.fully_connected(state, hidden_layer_nodes1,regularizer='L2', weight_decay=0.01)#from state
             #fc1 = tflearn.layers.normalization.batch_normalization(fc1)
-            fc1 = tflearn.activations.relu(net)
+            fc1 = tflearn.activations.relu(fc1)
 
         # Add the action tensor in the 2nd hidden layer
         # Use two temp layers to get the corresponding weights and biases
         fc2_1 = tflearn.fully_connected(fc1, hidden_layer_nodes2,regularizer='L2', weight_decay=0.01)
         fc2_2 = tflearn.fully_connected(action, hidden_layer_nodes2,regularizer='L2', weight_decay=0.01)
 
-        fc2 = tflearn.activation(tf.matmul(fc1, fc2_1.W) + tf.matmul(action, fc2_2.W) + fc2_1.b + fc2_2.b, activation='relu')
+        fc2 = tflearn.activation(tf.matmul(fc1, fc2_1.W) + tf.matmul(action, fc2_2.W)  + fc2_2.b + fc2_1.b, activation='relu')#
           
 
         # linear layer connected to 1 output representing Q(s,a)

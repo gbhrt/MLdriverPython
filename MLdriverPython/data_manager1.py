@@ -67,17 +67,19 @@ class DataManager():
             #plt.plot(self.real_path.distance,np.array(self.acc)*10)
             #plt.plot(self.real_path.distance,np.array(self.noise)*10)
             plt.subplot(222)  
-            plt.plot(self.roll)
-            #x = np.array(self.real_path.distance)
-            #Qa, = plt.plot(x,self.Qa,label = "Qa")
-            #Q0, = plt.plot(x,self.Q0,label = "Q0")
-            #Q1, = plt.plot(x,self.Q1,label = "Q1")
-            #Qneg1, = plt.plot(x,self.Qneg1,label = "Qneg1")
-            #plt.legend(handles=[Qa, Q0,Q1,Qneg1])
+            #plt.plot(self.roll)
+            x = np.array(self.real_path.distance)
+            Qa, = plt.plot(x,self.Qa,label = "Qa")
+            Q0, = plt.plot(x,self.Q0,label = "Q0")
+            Q1, = plt.plot(x,self.Q1,label = "Q1")
+            Qneg1, = plt.plot(x,self.Qneg1,label = "Qneg1")
+            plt.legend(handles=[Qa, Q0,Q1,Qneg1])
+
 
             plt.subplot(223)  
             
             plt.title("train num - relative reward")
+            
             col = []
             for mode in self.episode_end_mode:
                 if mode == 'kipp' or mode == 'deviate':
@@ -85,10 +87,32 @@ class DataManager():
                 else:
                     col.append('g')
             relative_reward_zero = list(self.relative_reward)
+            relative_reward_success = []
+            relative_reward_success_ind = []
+            fails = 0
+            fails_range = 50
+            fails_num = []
+            fail_num_ind = []
             for i in range(len(self.episode_end_mode)):
                 if self.episode_end_mode[i] == 'kipp' or self.episode_end_mode[i] == 'deviate':
                     relative_reward_zero[i] = -2.0
-            plt.scatter(self.train_num,relative_reward_zero,c = col)
+                    fails+=1
+                else:
+                    relative_reward_success.append(self.relative_reward[i])
+                    relative_reward_success_ind.append(self.train_num[i])
+                if i % fails_range == 0 and i != 0:
+                    fails_num.append(fails/fails_range)
+                    fail_num_ind.append(self.train_num[i])
+                    fails = 0
+            
+            #plt.scatter(relative_reward_success_ind[:len(fails_num)],fails_num)
+            #plt.scatter(self.train_num,relative_reward_zero,c = col)
+            plt.scatter(relative_reward_success_ind,relative_reward_success,c = 'r')
+            ave = lib.running_average(relative_reward_success,50)
+            #plt.plot(relative_reward_success_ind[:len(ave)],ave,c = 'b')
+
+
+            plt.scatter(fail_num_ind,fails_num,c = 'g')
             #plt.title("episodes reward")
             #plt.plot(self.run_num,self.rewards,'o')
             #if len(self.run_num) >= 15:
@@ -167,7 +191,7 @@ class DataManager():
     def save_data(self):
         try: 
             with open(self.save_name, 'w') as f:
-                json.dump((self.run_num,self.rewards,self.lenght,self.relative_reward, self.episode_end_mode,self.path_seed ),f)
+                json.dump((self.run_num,self.train_num,self.rewards,self.lenght,self.relative_reward, self.episode_end_mode,self.path_seed ),f)
             print("data manager saved")            
         except:
             print("cannot save data manager")
@@ -175,7 +199,7 @@ class DataManager():
     def load_data(self):
         try:
             with open(self.restore_name, 'r') as f:
-                self.run_num,self.rewards,self.lenght,self.relative_reward, self.episode_end_mode,self.path_seed  = json.load(f)#
+                self.run_num,self.train_num,self.rewards,self.lenght,self.relative_reward, self.episode_end_mode,self.path_seed  = json.load(f)#
             print("data manager restored")
         except:
             print("cannot restore data manager")

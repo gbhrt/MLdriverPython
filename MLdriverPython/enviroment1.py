@@ -18,11 +18,11 @@ class ObservationSpace:
 
 class OptimalVelocityPlannerData:
     def __init__(self):
-        self.analytic_feature_flag = False
-
+        self.analytic_feature_flag = True
+        self.end_indication_flag = False
         self.max_episode_steps = 100#200#
-        self.feature_points = 25 # number of points on the path in the state
-        self.feature_data_num = 1 + (1*self.analytic_feature_flag) # number of data in state (vehicle velocity, analytic data...)
+        self.feature_points = 25 # number of points on the path in the state +(1*self.end_indication_flag)
+        self.feature_data_num = 1  + (1*self.analytic_feature_flag) # number of data in state (vehicle velocity, analytic data...)
         self.features_num = self.feature_data_num +  2*self.feature_points #vehicle state points on the path (distance)
         self.distance_between_points = 1.0 #meter 1.0
         self.path_lenght = 9000#self.feature_points*self.distance_between_points
@@ -55,7 +55,7 @@ class OptimalVelocityPlanner(OptimalVelocityPlannerData):
         self.path_source = "create_random" #  "regular" #"create_random" #saved_random"
       
         self.reset_count = 0
-        self.reset_every = 1
+        self.reset_every = 5
    
         self.pl = Planner("torque")
         self.opened = self.pl.connected
@@ -97,6 +97,8 @@ class OptimalVelocityPlanner(OptimalVelocityPlannerData):
         if self.analytic_feature_flag:
             analytic_a = [self.comp_analytic_acceleration(state)]
             state = analytic_a + state
+        #if self.end_indication_flag:
+        #    dis_from_end = self.features_num*self.feature_points - self.pl.in_vehicle_reference_path.distance[self.pl.main_index]
             #self.dataManager.add(('curvature',(self.pl.desired_path.curvature)))
  
         self.reset_count+=1
@@ -144,7 +146,12 @@ class OptimalVelocityPlanner(OptimalVelocityPlannerData):
         
         self.dataManager.update_real_path(pl = self.pl,velocity_limit = local_path.analytic_velocity_limit[0],analytic_vel = local_path.analytic_velocity[0],curvature = local_path.curvature[0])
         #self.dataManager.save_additional_data(features = lib.denormalize(next_state,0,30))#pl,features = denormalize(state,0,30),action = a
-        mode = self.pl.check_end(deviation = lib.dist(local_path.position[0][0],local_path.position[0][1],0,0),max_roll = self.max_roll,max_pitch = self.max_pitch)#check if end of the episode 
+        if self.end_indication_flag == True:
+            end_distance = self.distance_between_points*self.feature_points
+        else:
+            end_distance = None
+        mode = self.pl.check_end(deviation = lib.dist(local_path.position[0][0],local_path.position[0][1],0,0)\
+            ,max_roll = self.max_roll,max_pitch = self.max_pitch,end_distance = end_distance)#check if end of the episode 
         #print("roll:",self.pl.simulator.vehicle.angle)
         self.dataManager.roll.append(self.pl.simulator.vehicle.angle[2])
         #get reward:
@@ -159,7 +166,8 @@ class OptimalVelocityPlanner(OptimalVelocityPlannerData):
             #    reward = -5
             
             done = True
-            if mode != 'kipp':
+
+            if mode != 'kipp' and mode != 'seen_path_end':
                 self.pl.stop_vehicle()
             if  mode == 'kipp': #(i % HP.reset_every == 0 and i > 0) or
                 #self.pl.stop_vehicle()
