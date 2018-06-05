@@ -18,7 +18,7 @@ class ObservationSpace:
 
 class OptimalVelocityPlannerData:
     def __init__(self):
-        self.analytic_feature_flag = True
+        self.analytic_feature_flag = False
         self.end_indication_flag = False
         self.max_episode_steps = 100#200#
         self.feature_points = 25 # number of points on the path in the state +(1*self.end_indication_flag)
@@ -90,7 +90,7 @@ class OptimalVelocityPlanner(OptimalVelocityPlannerData):
             return "error"
         
         self.pl.new_episode()#compute path in current vehicle position
-        self.dataManager.update_planned_path(self.pl.in_vehicle_reference_path)
+        #self.dataManager.update_planned_path(self.pl.in_vehicle_reference_path)
         #first state:
         local_path = self.pl.get_local_path()#num_of_points = self.visualized_points
         state = get_state(self.pl,local_path,self.feature_points,self.distance_between_points,self.max_velocity,self.max_curvature)
@@ -166,7 +166,7 @@ class OptimalVelocityPlanner(OptimalVelocityPlannerData):
             #    reward = -5
             
             done = True
-
+            #print("done___________________________________")
             if mode != 'kipp' and mode != 'seen_path_end':
                 self.pl.stop_vehicle()
             if  mode == 'kipp': #(i % HP.reset_every == 0 and i > 0) or

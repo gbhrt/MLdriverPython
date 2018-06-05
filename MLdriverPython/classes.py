@@ -114,7 +114,7 @@ class PathManager:#
         self.save_path(path,out_file_name)
         print("done")
         return
-    def copy_path(self,path,start, num_of_points = None):#return path from start to end
+    def   copy_path(self,path,start, num_of_points = None):#return path from start to end
         cpath = Path()
         if num_of_points == None:
             end = len(path.position)

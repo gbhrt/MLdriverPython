@@ -5,9 +5,6 @@ from DDPG_net import DDPG_network
 import numpy as np
 import tensorflow as tf
 
-sess = tf.Session()
-t = tf.constant([[0.9,1.,1.,1.],[0.8,2.,2.,2.]])
-print(t[1:-2].eval(session = sess))
 #HP = HyperParameters()
 #dataManager = data_manager1.DataManager(HP.save_file_path,HP.restore_file_path,HP.restore_flag)
 #env = enviroment1.OptimalVelocityPlanner(dataManager)

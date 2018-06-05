@@ -34,6 +34,7 @@ class DataManager():
         self.init_run_num = 0
         self.train_num = []
         self.init_train_num = 0
+        self.paths = []
         
         
 
@@ -59,7 +60,7 @@ class DataManager():
         self.train_num.append(i+self.init_train_num)
 
     def plot_all(self):
-       # try:
+        try:
             plt.figure(1,figsize = (10,5))
             plt.subplot(221) 
             #print("plot all")
@@ -67,13 +68,35 @@ class DataManager():
             #plt.plot(self.real_path.distance,np.array(self.acc)*10)
             #plt.plot(self.real_path.distance,np.array(self.noise)*10)
             plt.subplot(222)  
+            if len(self.real_path.time) > 0:
+
+                for i in range(1,len(self.real_path.time)):
+                    self.real_path.time[i] -= self.real_path.time[0]
+                self.real_path.time[0] = 0.0
+                path = classes.Path()
+                path.position = lib.create_random_path(9000,0.05,seed = self.path_seed[-1])
+                lib.comp_velocity_limit_and_velocity(path,skip = 10,reduce_factor = 1.0)
+                max_time_ind = 0
+                for i,tim in enumerate (path.analytic_time):
+                    max_time_ind = i
+                    if tim > self.real_path.time[-1]:
+                        break
+                
+                print("self.real_path.time[-1] in plot",self.real_path.time[-1])
+                print("analytic_dist in plot:",path.distance[max_time_ind])
+            
+                plt.plot(np.array(path.analytic_time)[:max_time_ind],np.array(path.analytic_velocity_limit)[:max_time_ind])
+                plt.plot(np.array(path.analytic_time)[:max_time_ind],np.array(path.analytic_velocity)[:max_time_ind])
+          
+
+                plt.plot(self.real_path.time,self.real_path.velocity)
             #plt.plot(self.roll)
-            x = np.array(self.real_path.distance)
-            Qa, = plt.plot(x,self.Qa,label = "Qa")
-            Q0, = plt.plot(x,self.Q0,label = "Q0")
-            Q1, = plt.plot(x,self.Q1,label = "Q1")
-            Qneg1, = plt.plot(x,self.Qneg1,label = "Qneg1")
-            plt.legend(handles=[Qa, Q0,Q1,Qneg1])
+            #x = np.array(self.real_path.distance)
+            #Qa, = plt.plot(x,self.Qa,label = "Qa")
+            #Q0, = plt.plot(x,self.Q0,label = "Q0")
+            #Q1, = plt.plot(x,self.Q1,label = "Q1")
+            #Qneg1, = plt.plot(x,self.Qneg1,label = "Qneg1")
+            #plt.legend(handles=[Qa, Q0,Q1,Qneg1])
 
 
             plt.subplot(223)  
@@ -95,7 +118,7 @@ class DataManager():
             fail_num_ind = []
             for i in range(len(self.episode_end_mode)):
                 if self.episode_end_mode[i] == 'kipp' or self.episode_end_mode[i] == 'deviate':
-                    relative_reward_zero[i] = -2.0
+                    relative_reward_zero[i] = 0.0
                     fails+=1
                 else:
                     relative_reward_success.append(self.relative_reward[i])
@@ -108,7 +131,7 @@ class DataManager():
             #plt.scatter(relative_reward_success_ind[:len(fails_num)],fails_num)
             #plt.scatter(self.train_num,relative_reward_zero,c = col)
             plt.scatter(relative_reward_success_ind,relative_reward_success,c = 'r')
-            ave = lib.running_average(relative_reward_success,50)
+            #ave = lib.running_average(relative_reward_success,50)
             #plt.plot(relative_reward_success_ind[:len(ave)],ave,c = 'b')
 
 
@@ -131,7 +154,7 @@ class DataManager():
             relative_reward_zero = list(self.relative_reward)
             for i in range(len(self.episode_end_mode)):
                 if self.episode_end_mode[i] == 'kipp' or self.episode_end_mode[i] == 'deviate':
-                    relative_reward_zero[i] = -2.0
+                    relative_reward_zero[i] = -0.0
             plt.scatter(self.run_num,relative_reward_zero,c = col)
             #if len(self.run_num) >= 50:
             #    ave = lib.running_average(relative_reward_zero,50)
@@ -147,9 +170,9 @@ class DataManager():
             #    plt.plot(np.array(self.real_path.position)[:,0],np.array(self.real_path.position)[:,1])
 
             plt.show()
-        #except:
-        #    print ("error in plot data:", sys.exc_info()[0])
-        #    raise
+        except:
+            print ("error in plot data:", sys.exc_info()[0])
+            raise
             return
 
     def update_planned_path(self,path):
@@ -170,7 +193,30 @@ class DataManager():
         if analytic_vel != None: self.real_path.analytic_velocity.append(analytic_vel)
         if curvature != None: self.real_path.curvature.append(curvature*50.0)
         return
+    def comp_relative_reward(self):
+        if self.episode_end_mode[-1] == 'kipp' or self.episode_end_mode[-1] == 'deviate' or len(self.real_path.distance) == 0:
+            return None
+        #dist = sum(self.real_path.velocity)*0.2
+        dist = self.real_path.distance[-1]
+        print("dist",dist)
+        path = classes.Path()
+        path.position = lib.create_random_path(9000,0.05,seed = self.path_seed[-1])
+        lib.comp_velocity_limit_and_velocity(path,skip = 10,reduce_factor = 1.0)
+        max_time_ind = 0
+        for i,tim in enumerate (path.analytic_time):
+            max_time_ind = i
+            if tim > self.real_path.time[-1] - self.real_path.time[0]:
+                break
+        analytic_dist = path.distance[max_time_ind]
+       
+        print("self.real_path.time[-1]",self.real_path.time[-1])
+        print("analytic_dist",analytic_dist)
+        print(dist/analytic_dist)
+        return dist/analytic_dist
 
+    def update_relative_rewards_and_paths(self):
+        self.relative_reward.append(self.comp_relative_reward())
+        self.paths.append(self.real_path.velocity)
     def restart(self):
         self.real_path = classes.Path()
         self.Qa = []
@@ -191,7 +237,7 @@ class DataManager():
     def save_data(self):
         try: 
             with open(self.save_name, 'w') as f:
-                json.dump((self.run_num,self.train_num,self.rewards,self.lenght,self.relative_reward, self.episode_end_mode,self.path_seed ),f)
+                json.dump((self.run_num,self.train_num,self.rewards,self.lenght,self.relative_reward, self.episode_end_mode,self.path_seed,self.paths ),f)
             print("data manager saved")            
         except:
             print("cannot save data manager")
@@ -199,7 +245,9 @@ class DataManager():
     def load_data(self):
         try:
             with open(self.restore_name, 'r') as f:
-                self.run_num,self.train_num,self.rewards,self.lenght,self.relative_reward, self.episode_end_mode,self.path_seed  = json.load(f)#
+                self.run_num,self.train_num,self.rewards,self.lenght,self.relative_reward, self.episode_end_mode,self.path_seed,self.paths = json.load(f)#,self.paths
             print("data manager restored")
         except:
-            print("cannot restore data manager")
+            print ("cannot restore data manager:", sys.exc_info()[0])
+            raise
+    

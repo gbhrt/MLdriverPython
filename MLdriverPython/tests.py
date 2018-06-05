@@ -13,9 +13,6 @@ import data_manager1
 from hyper_parameters import HyperParameters
 import copy
 
-#HP = HyperParameters()
-#dm = data_manager1.DataManager(HP.save_file_path,HP.restore_file_path,HP.restore_flag)
-#dm.plot_all()
 
 
 #pl = Planner(mode = "torque")
@@ -57,10 +54,10 @@ import copy
 #path = pm.read_path("paths//straight_path_limit_json.txt")
 #random.seed(1234)
 path = classes.Path()
-path.position = lib.create_random_path(500,0.05,seed = 1234)
+path.position = lib.create_random_path(1000,0.5,seed = 1234)
 
 path1 = copy.copy(path)
-lib.comp_velocity_limit_and_velocity(path,skip = 20,init_vel = 25)
+lib.comp_velocity_limit_and_velocity(path,skip = 1)
 #lib.comp_velocity_limit_and_velocity(path1,skip = 10)
 #path.comp_curvature()
 #path.comp_angle()
@@ -73,8 +70,8 @@ lib.comp_velocity_limit_and_velocity(path,skip = 20,init_vel = 25)
 #plt.show()
 #plt.figure(2)
 #plt.plot(np.array(path.curvature)*50,'o')
-plt.plot(path.analytic_velocity_limit,'o')
-plt.plot(path.analytic_velocity,'o')
+plt.plot(path.analytic_time,path.analytic_velocity_limit,'o')
+plt.plot(path.analytic_time,path.analytic_velocity,'o')
 
 #plt.plot(path1.analytic_velocity_limit,'x')
 #plt.plot(path1.analytic_velocity,'x')

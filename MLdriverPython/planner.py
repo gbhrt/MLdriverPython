@@ -296,7 +296,7 @@ class Planner(PathManager):#planner - get and send data to simulator. input - mi
                 return -1
         elif source == "create_random":
             
-            self.reference_free_path.position = create_random_path(lenght,0.05,seed = seed)
+            self.reference_free_path.position = lib.create_random_path(lenght,0.05,seed = seed)
 
         elif source == "saved_random":
             path_num,self.reference_free_path = self.get_next_random_path()
@@ -326,6 +326,7 @@ class Planner(PathManager):#planner - get and send data to simulator. input - mi
         self.main_index = 0
         self.in_vehicle_reference_path = self.path_tranformation_to_local(self.reference_free_path)# transform to vehicle position and angle
         self.desired_path = self.copy_path(self.in_vehicle_reference_path,self.main_index,points_num)#just for the first time
+
     def get_local_path(self,send_path = True, num_of_points = None):
         #local_path = comp_path(pl,main_path_trans,main_index,num_of_points)#compute local path and global path(inside the planner)
         self.index = self.find_index_on_path(0)

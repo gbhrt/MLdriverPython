@@ -203,7 +203,7 @@ def step_now(last_time,step_time):
     t = time.time()
     if t - last_time[0] > step_time:
         if t - last_time[0] > step_time+0.002:
-            print("step time too short!")
+            print("step time too short! deviation:",t - last_time[0] - step_time)
         last_time[0] = t
         return True
     return False
@@ -326,11 +326,14 @@ def comp_velocity_limit_and_velocity(path,skip = 1,reduce_factor = 1.0,init_vel 
     path.analytic_velocity_limit = np.interp(np.array(real_x), np.array(skiped_x), np.array(velocity_limit))*reduce_factor
     if result == 1:
         path.analytic_velocity = np.interp(np.array(real_x), np.array(skiped_x), np.array(velocity))*reduce_factor
-        dtime_vec = np.interp(np.array(real_x), np.array(skiped_x), np.array(dtime_vec))#*reduce_factor
+        dtime_vec[-1] = dtime_vec[-2]#temp bug fix - last dt is 0
+        
         t = 0
+        analytic_time = []
         for dt in dtime_vec:
-            path.analytic_time.append(t)
             t+=dt
+            analytic_time.append(t)
+        path.analytic_time = np.interp(np.array(real_x), np.array(skiped_x), np.array(analytic_time))#*reduce_factor 
     #path.analytic_acceleration = np.interp(np.array(real_x), np.array(skiped_x), np.array(acc_vec))*reduce_factor
         path.comp_distance()
         for j in range(0,len(path.analytic_velocity)-1): 

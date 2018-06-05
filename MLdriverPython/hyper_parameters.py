@@ -17,7 +17,7 @@ class HyperParameters:
         #########################
         self.train_flag = True
         self.noise_flag = True
-        self.always_no_noise_flag = False
+        self.always_no_noise_flag = True
         self.zero_noise_every = 5
         self.conv_flag = True
         self.gym_flag = False
@@ -28,10 +28,10 @@ class HyperParameters:
         self.reset_every = 3
         self.save_every = 100
         self.seed = 1234
-        self.save_name ="final_conv_analytic_1"#"conv_test" 
+        self.save_name ="final_conv_3"#"conv_test" 
         self.save_file_path = os.getcwd()+ "\\files\\models\\DDPG\\"+self.save_name+"\\"
 
-        self.restore_name = "final_conv_analytic_1"# m
+        self.restore_name = "final_conv_3"# m
         self.restore_file_path = os.getcwd()+ "\\files\\models\\DDPG\\"+self.restore_name+"\\"
 
         if self.always_no_noise_flag:

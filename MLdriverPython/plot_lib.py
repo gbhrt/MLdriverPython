@@ -22,7 +22,5 @@ def plot_path(path):
     #plt.show()
 
     return
-def plot_reward(reward):
-    plt.plot(reward)
-    plt.show()
+
 
