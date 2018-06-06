@@ -55,6 +55,7 @@ def train(env,HP,net,dataManager,seed = None):
       
 
     global_train_count = 0
+    seed = None
     for i in range(HP.num_of_runs): #number of runs - run end at the end of the main path and if vehicle deviation error is to big
         if waitFor.stop == [True]:
             break
@@ -69,7 +70,9 @@ def train(env,HP,net,dataManager,seed = None):
         #    #state = env.reset(path_num = len(dataManager.path_seed) - 1)
         #    state = env.reset(path_num = 1)
         #state = env.reset(path_num = 1234)####################################################################
-        state = env.reset()   
+        if not HP.check_same_path:
+            seed = None
+        state = env.reset(path_num = seed)   
         if i == 0:
             print("update nets first time")
             pLib.DDPG([state], [[0]], [0], [state],[False],net,HP)
@@ -184,11 +187,13 @@ def train(env,HP,net,dataManager,seed = None):
             dataManager.add_run_num(i)
             dataManager.add_train_num(global_train_count)
             dataManager.update_relative_rewards_and_paths()
+            seed = None
             HP.noise_flag =True
         #print("episode time:",time.time()-episode_start_time)
         print("episode: ", i, " total reward: ", total_reward, "episode steps: ",step_count)
         if (i % HP.zero_noise_every == 0 and i > 0) or HP.always_no_noise_flag:
             HP.noise_flag = False
+            seed = 1111
         if (i % HP.save_every == 0 and i > 0): 
             net.save_model(HP.save_file_path)
             Replay.save(HP.save_file_path)
@@ -227,6 +232,6 @@ def train(env,HP,net,dataManager,seed = None):
     #del Replay
     #del actionNoise
 
-    return dataManager.rewards
+    return 
            
        

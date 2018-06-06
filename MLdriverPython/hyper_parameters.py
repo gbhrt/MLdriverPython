@@ -17,9 +17,10 @@ class HyperParameters:
         #########################
         self.train_flag = True
         self.noise_flag = True
-        self.always_no_noise_flag = True
+        self.always_no_noise_flag = False
         self.zero_noise_every = 5
-        self.conv_flag = True
+        self.check_same_path = True
+        self.conv_flag = False
         self.gym_flag = False
         self.render_flag = True
         self.plot_flag = True
@@ -27,11 +28,11 @@ class HyperParameters:
         self.skip_run = False
         self.reset_every = 3
         self.save_every = 100
-        self.seed = 1234
-        self.save_name ="final_conv_3"#"conv_test" 
+        self.seed = 1236
+        self.save_name ="test"
         self.save_file_path = os.getcwd()+ "\\files\\models\\DDPG\\"+self.save_name+"\\"
 
-        self.restore_name = "final_conv_3"# m
+        self.restore_name = "test"
         self.restore_file_path = os.getcwd()+ "\\files\\models\\DDPG\\"+self.restore_name+"\\"
 
         if self.always_no_noise_flag:

@@ -392,6 +392,12 @@ def create_random_path(number,resolution,seed = None):
     #plt.show()
     return path[:number]#create longer path - return only needed points
 
+def compute_analytic_path(seed):
+    path = classes.Path()
+    path.position = create_random_path(9000,0.05,seed = seed)
+    comp_velocity_limit_and_velocity(path,skip = 10,reduce_factor = 1.0)
+    return path
+
 class _Getch:
 #"""Gets a single character from standard input.  Does not echo to the
 #screen."""

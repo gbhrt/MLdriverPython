@@ -8,6 +8,9 @@ import numpy as np
 import pathlib
 import library as lib
 import sys
+
+
+
 class DataManager():
     def __init__(self,save_path = None, restore_path = None,restore_flag = False):
         if save_path != None:
@@ -61,30 +64,36 @@ class DataManager():
 
     def plot_all(self):
         try:
-            plt.figure(1,figsize = (10,5))
-            plt.subplot(221) 
-            #print("plot all")
-            plot_lib.plot_path(self.real_path)
-            #plt.plot(self.real_path.distance,np.array(self.acc)*10)
-            #plt.plot(self.real_path.distance,np.array(self.noise)*10)
-            plt.subplot(222)  
+            #comp analytic path:
             if len(self.real_path.time) > 0:
-
                 for i in range(1,len(self.real_path.time)):
                     self.real_path.time[i] -= self.real_path.time[0]
                 self.real_path.time[0] = 0.0
-                path = classes.Path()
-                path.position = lib.create_random_path(9000,0.05,seed = self.path_seed[-1])
-                lib.comp_velocity_limit_and_velocity(path,skip = 10,reduce_factor = 1.0)
+                path = lib.compute_analytic_path(self.path_seed[-1])
                 max_time_ind = 0
                 for i,tim in enumerate (path.analytic_time):
                     max_time_ind = i
                     if tim > self.real_path.time[-1]:
                         break
+            ###########################
+
+            plt.figure(1,figsize = (10,5))
+            plt.subplot(221) 
+            #print("plot all")
+            #self.plot_path(self.real_path)
+            #plt.plot(self.real_path.distance,np.array(self.acc)*10)
+            #plt.plot(self.real_path.distance,np.array(self.noise)*10)
+            if len(self.real_path.time) > 0:
+                real_vel, = plt.plot(np.array(path.distance)[:max_time_ind],np.array(path.analytic_velocity_limit)[:max_time_ind],label = "velocity limit")
+                vel_lim,  = plt.plot(np.array(path.distance)[:max_time_ind],np.array(path.analytic_velocity)[:max_time_ind],label = "vehicle velocity")
+                vel, =      plt.plot(self.real_path.distance,self.real_path.velocity, label = "analytic velocity")
+                plt.legend(handles=[real_vel, vel_lim,vel])
+            plt.subplot(222)  
+         
                 
-                print("self.real_path.time[-1] in plot",self.real_path.time[-1])
-                print("analytic_dist in plot:",path.distance[max_time_ind])
-            
+            #print("self.real_path.time[-1] in plot",self.real_path.time[-1])
+            #print("analytic_dist in plot:",path.distance[max_time_ind])
+            if len(self.real_path.time) > 0:
                 plt.plot(np.array(path.analytic_time)[:max_time_ind],np.array(path.analytic_velocity_limit)[:max_time_ind])
                 plt.plot(np.array(path.analytic_time)[:max_time_ind],np.array(path.analytic_velocity)[:max_time_ind])
           
@@ -174,6 +183,24 @@ class DataManager():
             print ("error in plot data:", sys.exc_info()[0])
             raise
             return
+    def plot_path(self,path):
+    
+
+        datax = np.array(path.distance)
+        #datax = np.array(path.time)
+        datay1 = np.array(path.velocity)
+        datay2 = np.array(path.analytic_velocity_limit)
+        datay3 = np.array(path.analytic_velocity)
+        datay4 = np.array(path.curvature)
+
+        real_vel, = plt.plot(datax, datay1,label = "vehicle velocity")
+        vel_lim, = plt.plot(datax, datay2,label = "velocity limit")
+        vel, =   plt.plot(datax, datay3, label = "analytic velocity")
+        #curv, = plt.plot(datax, datay4, label = "curvature")
+        plt.legend(handles=[real_vel, vel_lim,vel])#,curv
+        #plt.show()
+
+        return
 
     def update_planned_path(self,path):
         self.planned_path = path
@@ -216,7 +243,7 @@ class DataManager():
 
     def update_relative_rewards_and_paths(self):
         self.relative_reward.append(self.comp_relative_reward())
-        self.paths.append(self.real_path.velocity)
+        self.paths.append([self.real_path.velocity,self.real_path.distance])
     def restart(self):
         self.real_path = classes.Path()
         self.Qa = []
