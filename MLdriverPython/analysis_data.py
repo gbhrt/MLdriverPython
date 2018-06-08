@@ -16,8 +16,8 @@ def correct_rewards(name):
     envData = enviroment1.OptimalVelocityPlannerData()
     HP.restore_name = name
     HP.save_name = name
-    save_path = os.getcwd()+ "\\files\\models\\DDPG\\"+HP.save_name+"\\"
-    restore_path = os.getcwd()+ "\\files\\models\\DDPG\\"+HP.restore_name+"\\"
+    save_path = os.getcwd()+ "\\files\\models\\final\\"+HP.save_name+"\\"
+    restore_path = os.getcwd()+ "\\files\\models\\final\\"+HP.restore_name+"\\"
     dataManager = (data_manager1.DataManager(save_path,restore_path,True))
 
     #for i in range(len(dataManager.paths)):

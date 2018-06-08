@@ -30,10 +30,10 @@ class HyperParameters:
         self.save_every = 100
         self.seed = 1236
         self.save_name ="test"
-        self.save_file_path = os.getcwd()+ "\\files\\models\\DDPG\\"+self.save_name+"\\"
+        self.save_file_path = os.getcwd()+ "\\files\\models\\final\\"+self.save_name+"\\"
 
         self.restore_name = "test"
-        self.restore_file_path = os.getcwd()+ "\\files\\models\\DDPG\\"+self.restore_name+"\\"
+        self.restore_file_path = os.getcwd()+ "\\files\\models\\final\\"+self.restore_name+"\\"
 
         if self.always_no_noise_flag:
             self.noise_flag = False

@@ -49,12 +49,12 @@ def plot_rewards(names,shape):
     for i in range(len(names)):
         HP.restore_name = names[i]
         HP.save_name = names[i]
-        save_path = os.getcwd()+ "\\files\\models\\DDPG\\"+HP.save_name+"\\"
-        restore_path = os.getcwd()+ "\\files\\models\\DDPG\\"+HP.restore_name+"\\"
+        save_path = os.getcwd()+ "\\files\\models\\final\\"+HP.save_name+"\\"
+        restore_path = os.getcwd()+ "\\files\\models\\final\\"+HP.restore_name+"\\"
         dataManager_vec.append(data_manager1.DataManager(save_path,restore_path,True))
         relative_rewards_changed_vec.append(np.array(change_failes_value(dataManager_vec[-1].relative_reward,dataManager_vec[-1].episode_end_mode)))#[:episodes_num]
 
-        
+
     #mean_relative_reward_vec = []
     #mean_relative_reward_ind = []
     #for i in range(episodes_num):
@@ -90,17 +90,50 @@ def plot_rewards(names,shape):
     plt.figure(1)
     for j in range(len(relative_rewards_changed_vec)):
         plt.scatter(np.array(dataManager_vec[j].train_num),relative_rewards_changed_vec[j],marker = shape,alpha = 0.5)
-    plt.plot(combined_rewards[:,0],lib.running_average(combined_rewards[:,1],5))
+        ave = lib.running_average(combined_rewards[:,1],20)
+    plt.plot((combined_rewards[:,0])[:len(ave)],ave)
     plt.figure(2)
     for j in range(len(relative_rewards_changed_vec)):
         abs_rewards = [sum(dataManager_vec[j].paths[k][0])*0.2 for k in range(len(dataManager_vec[j].paths))]
         plt.scatter(np.array(dataManager_vec[j].train_num),abs_rewards,marker = shape,alpha = 0.5)
-    plt.plot(combined_abs_rewards[:,0],lib.running_average(combined_abs_rewards[:,1],20))
+    ave = lib.running_average(combined_abs_rewards[:,1],20)
+    plt.plot((combined_abs_rewards[:,0])[:len(ave)],ave)
 
-#names = ["final_conv_new_reward_1","final_conv_new_reward_2","final_conv_new_reward_3","final_conv_new_reward_4"]
-names = ["final_conv_new_reward_same_1"]
-plot_rewards(names,'o')
-#names = ["final_conv_analytic_new_reward_same_1"]#,"final_conv_analytic_new_reward_same_3","final_conv_analytic_new_reward_same_5"]
-names = ["final_conv_analytic_new_reward_2","final_conv_analytic_new_reward_4","final_conv_analytic_new_reward_6","final_conv_analytic_new_reward_8"]#,"
-plot_rewards(names,'x')
-plt.show()
+    analytic_path = lib.compute_analytic_path(1111)
+    max_tim_ind = 0
+    for j,tim in enumerate (analytic_path.analytic_time):
+        max_tim_ind = j
+        if tim > 20:
+            break
+    max_len_ind = 0
+    max_len = 0
+    for i in range(len(dataManager_vec)):
+        if dataManager_vec[i].train_num[-1] > max_len:
+            max_len = dataManager_vec[i].train_num[-1]
+            max_len_ind = i
+    analytic_dist_vec = [analytic_path.distance[max_tim_ind] for _ in range(len(dataManager_vec[0].train_num))]
+    plt.plot(dataManager_vec[max_len_ind].train_num,analytic_dist_vec,linewidth = 2.0)
+
+if __name__ == "__main__":
+    #convolution:
+    #names1 = ["final_conv_analytic_new_reward_2","final_conv_analytic_new_reward_4","final_conv_analytic_new_reward_6","final_conv_analytic_new_reward_8"]#,"
+    #names2 = ["final_conv_new_reward_1","final_conv_new_reward_2","final_conv_new_reward_3","final_conv_new_reward_4"]
+    #names1 = ["final_conv_new_reward_same_1"]
+    #names2 = ["final_conv_analytic_new_reward_same_1"]#,"final_conv_analytic_new_reward_same_3","final_conv_analytic_new_reward_same_5"]
+
+    #same path for testing. 2 trains per step time:
+    #names1 = ["final_analytic_2","final_analytic_4","final_analytic_6","final_analytic_8","final_analytic_10"]
+    names1 = ["‏‏final_analytic_1_1"]
+    names2 = ["final_1","final_3","final_5","final_7","final_9"]
+
+
+    #same path (seed = 1111) for testing. different training steps per step time:
+    #names1 = ["final_analytic_1_4","final_analytic_3_4"]
+    #names2 = ["final_11_4","final_13_4_short","final_15_4","final_17_4","final_19_4"]
+
+    #random path for testing: different training steps per step time:
+    #names1 = ["final_analytic_2_10","final_analytic_4_10","final_analytic_6_10","final_analytic_8_10","final_analytic_10_10"]#,
+    #names2 = ["final_4_10","final_6_10"]#,"final_1
+    plot_rewards(names1,'o')
+    plot_rewards(names2,'x')
+    plt.show()

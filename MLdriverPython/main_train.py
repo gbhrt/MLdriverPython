@@ -17,13 +17,13 @@ if __name__ == "__main__":
 
     #env  = gym.make("HalfCheetahBulletEnv-v0")
     HP = HyperParameters()
-    names = ["final_1","final_3","final_5","final_7","final_9"]
+    names = ["final_analytic_1","final_analytic_3","final_analytic_4","final_analytic_5"]#"final_1","final_3"
     HP.num_of_runs = 500
     for name in names:
         HP.restore_name = name
         HP.save_name = name
-        HP.save_file_path = os.getcwd()+ "\\files\\models\\DDPG\\"+HP.save_name+"\\"
-        HP.restore_file_path = os.getcwd()+ "\\files\\models\\DDPG\\"+HP.restore_name+"\\"
+        HP.save_file_path = os.getcwd()+ "\\files\\models\\final\\"+HP.save_name+"\\"
+        HP.restore_file_path = os.getcwd()+ "\\files\\models\\final\\"+HP.restore_name+"\\"
 
         #dataManager = data_manager.DataManager(total_data_names = ['total_reward'], special = 1, file = HP.save_name+".txt")#episode_data_names = ['limit_curve','velocity']
         dataManager = data_manager1.DataManager(HP.save_file_path,HP.restore_file_path,HP.restore_flag)

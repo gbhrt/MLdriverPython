@@ -8,8 +8,9 @@ import random
 
 from plot import Plot
 import aggent_lib as pLib
-import subprocess
+#import subprocess
 import math
+import os
 
 
 def train(env,HP,net,dataManager,seed = None):
@@ -55,7 +56,7 @@ def train(env,HP,net,dataManager,seed = None):
       
 
     global_train_count = 0
-    seed = None
+    seed = HP.seed
     for i in range(HP.num_of_runs): #number of runs - run end at the end of the main path and if vehicle deviation error is to big
         if waitFor.stop == [True]:
             break
@@ -70,8 +71,7 @@ def train(env,HP,net,dataManager,seed = None):
         #    #state = env.reset(path_num = len(dataManager.path_seed) - 1)
         #    state = env.reset(path_num = 1)
         #state = env.reset(path_num = 1234)####################################################################
-        if not HP.check_same_path:
-            seed = None
+
         state = env.reset(path_num = seed)   
         if i == 0:
             print("update nets first time")
@@ -123,7 +123,7 @@ def train(env,HP,net,dataManager,seed = None):
                     last_time = start_time
                     train_count = 0
                     #for _ in range(HP.train_num):
-                    while (t - start_time) < env.step_time - (t - last_time)+0.05 and train_count < HP.train_num:  
+                    while (t - start_time) < env.step_time - (t - last_time)-0.05 and train_count < HP.train_num:  
                         print(t - start_time, t - last_time)
                         last_time = t
                         train_count += 1
@@ -187,13 +187,14 @@ def train(env,HP,net,dataManager,seed = None):
             dataManager.add_run_num(i)
             dataManager.add_train_num(global_train_count)
             dataManager.update_relative_rewards_and_paths()
-            seed = None
+            dataManager.path_seed.append(seed)
+            if not HP.check_same_path:
+                seed = int.from_bytes(os.urandom(8), byteorder="big")
             HP.noise_flag =True
         #print("episode time:",time.time()-episode_start_time)
         print("episode: ", i, " total reward: ", total_reward, "episode steps: ",step_count)
         if (i % HP.zero_noise_every == 0 and i > 0) or HP.always_no_noise_flag:
             HP.noise_flag = False
-            seed = 1111
         if (i % HP.save_every == 0 and i > 0): 
             net.save_model(HP.save_file_path)
             Replay.save(HP.save_file_path)

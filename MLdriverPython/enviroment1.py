@@ -18,7 +18,7 @@ class ObservationSpace:
 
 class OptimalVelocityPlannerData:
     def __init__(self):
-        self.analytic_feature_flag = False
+        self.analytic_feature_flag = True
         self.end_indication_flag = False
         self.max_episode_steps = 100#200#
         self.feature_points = 25 # number of points on the path in the state +(1*self.end_indication_flag)
@@ -207,7 +207,7 @@ class OptimalVelocityPlanner(OptimalVelocityPlannerData):
         for i in range(len(state_path.distance)-1):
             if state_path.distance[i+1] - state_path.distance[i]  < 0.01:
                 print("dis<0----------------------------------------")
-                break
+                return -0.7
         #print(state_path.position)
         #with open("state_path", 'w') as f:
         #    for pos in state_path.position:

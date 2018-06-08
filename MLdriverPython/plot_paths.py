@@ -12,8 +12,8 @@ def show_path(name):
     envData = enviroment1.OptimalVelocityPlannerData()
     HP.restore_name = name
     HP.save_name = name
-    save_path = os.getcwd()+ "\\files\\models\\DDPG\\"+HP.save_name+"\\"
-    restore_path = os.getcwd()+ "\\files\\models\\DDPG\\"+HP.restore_name+"\\"
+    save_path = os.getcwd()+ "\\files\\models\\final\\"+HP.save_name+"\\"
+    restore_path = os.getcwd()+ "\\files\\models\\final\\"+HP.restore_name+"\\"
     dataManager = (data_manager1.DataManager(save_path,restore_path,True))
 
     #if len(self.real_path.time) > 0:
@@ -37,6 +37,6 @@ def show_path(name):
     plt.show()
 
 if __name__ == "__main__": 
-    name = "final_conv_analytic_new_reward_same_5"
+    name = "final_19_4"#"final_analytic_2"
     show_path(name)
 
