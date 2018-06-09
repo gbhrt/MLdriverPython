@@ -72,7 +72,7 @@ def train(env,HP,net,dataManager,seed = None):
         #    state = env.reset(path_num = 1)
         #state = env.reset(path_num = 1234)####################################################################
 
-        state = env.reset(path_num = seed)   
+        state = env.reset(seed = seed)   
         if i == 0:
             print("update nets first time")
             pLib.DDPG([state], [[0]], [0], [state],[False],net,HP)
@@ -108,7 +108,8 @@ def train(env,HP,net,dataManager,seed = None):
             
             #a = [state[0]]# 
             #if HP.noise_flag:
-            #a = [env.comp_analytic_acceleration(state)]
+            a = [env.comp_analytic_acceleration(state)]#env.analytic_feature_flag must be false
+
            # print("state:", state)
             #a = env.get_analytic_action()
             print("action: ", a)#,"noise: ",noise)
@@ -171,7 +172,7 @@ def train(env,HP,net,dataManager,seed = None):
         #for k,r in enumerate(reward_vec):
         #    total_reward+=r*HP.gamma**k
         total_reward = sum(reward_vec)
-        if not HP.gym_flag and HP.noise_flag == False:
+        if not HP.gym_flag and not HP.noise_flag:
 
             #dist = sum(dataManager.real_path.velocity)*env.step_time#integral on velocities
             #analytic_dist = sum(dataManager.real_path.analytic_velocity)*env.step_time
@@ -186,15 +187,20 @@ def train(env,HP,net,dataManager,seed = None):
             dataManager.lenght.append(step_count)
             dataManager.add_run_num(i)
             dataManager.add_train_num(global_train_count)
+            dataManager.path_seed.append(env.path_seed)#current used seed (for paths)
             dataManager.update_relative_rewards_and_paths()
-            dataManager.path_seed.append(seed)
-            if not HP.check_same_path:
-                seed = int.from_bytes(os.urandom(8), byteorder="big")
+            
             HP.noise_flag =True
         #print("episode time:",time.time()-episode_start_time)
         print("episode: ", i, " total reward: ", total_reward, "episode steps: ",step_count)
         if (i % HP.zero_noise_every == 0 and i > 0) or HP.always_no_noise_flag:
             HP.noise_flag = False
+        if not HP.check_same_path:
+            seed = int.from_bytes(os.urandom(8), byteorder="big")
+        else:
+            seed = HP.seed
+
+
         if (i % HP.save_every == 0 and i > 0): 
             net.save_model(HP.save_file_path)
             Replay.save(HP.save_file_path)

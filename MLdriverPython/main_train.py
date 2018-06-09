@@ -17,8 +17,8 @@ if __name__ == "__main__":
 
     #env  = gym.make("HalfCheetahBulletEnv-v0")
     HP = HyperParameters()
-    names = ["final_analytic_1","final_analytic_3","final_analytic_4","final_analytic_5"]#"final_1","final_3"
-    HP.num_of_runs = 500
+    names = ["final_analytic_action_1_0"]
+    HP.num_of_runs = 100
     for name in names:
         HP.restore_name = name
         HP.save_name = name

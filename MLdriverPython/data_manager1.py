@@ -69,7 +69,7 @@ class DataManager():
                 for i in range(1,len(self.real_path.time)):
                     self.real_path.time[i] -= self.real_path.time[0]
                 self.real_path.time[0] = 0.0
-                path = lib.compute_analytic_path(self.path_seed[-1])
+                path = lib.compute_analytic_path(self.real_path.seed)
                 max_time_ind = 0
                 for i,tim in enumerate (path.analytic_time):
                     max_time_ind = i
@@ -206,7 +206,7 @@ class DataManager():
         self.planned_path = path
         return
 
-    def update_real_path(self,pl, velocity_limit = None, analytic_vel = None,curvature = None):
+    def update_real_path(self,pl, velocity_limit = None, analytic_vel = None,curvature = None,seed = None):
         #if len(self.real_path.position) > 0:
         #    dist = lib.dist(pl.simulator.vehicle.position[0],pl.simulator.vehicle.position[1],self.real_path.position[-1][0],self.real_path.position[-1][1])
         #else:
@@ -219,6 +219,7 @@ class DataManager():
         if velocity_limit != None: self.real_path.analytic_velocity_limit.append(velocity_limit)
         if analytic_vel != None: self.real_path.analytic_velocity.append(analytic_vel)
         if curvature != None: self.real_path.curvature.append(curvature*50.0)
+        if seed != None: self.real_path.seed = seed
         return
     def comp_relative_reward(self):
         if self.episode_end_mode[-1] == 'kipp' or self.episode_end_mode[-1] == 'deviate' or len(self.real_path.distance) == 0:

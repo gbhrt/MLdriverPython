@@ -122,10 +122,11 @@ if __name__ == "__main__":
     #names2 = ["final_conv_analytic_new_reward_same_1"]#,"final_conv_analytic_new_reward_same_3","final_conv_analytic_new_reward_same_5"]
 
     #same path for testing. 2 trains per step time:
-    #names1 = ["final_analytic_2","final_analytic_4","final_analytic_6","final_analytic_8","final_analytic_10"]
-    names1 = ["‏‏final_analytic_1_1"]
-    names2 = ["final_1","final_3","final_5","final_7","final_9"]
-
+    #names1 = ["final_analytic_2"]#,"final_analytic_4","final_analytic_6","final_analytic_8","final_analytic_10"]#seed = 1111
+    #names2 = ["final_2"]
+    names1 = ["final_analytic_1","final_analytic_3","final_analytic_5","final_analytic_7"]#seed  = 1236
+    names2 = ["final_1","final_3","final_5","final_7","final_9"]#seed = 1111
+    
 
     #same path (seed = 1111) for testing. different training steps per step time:
     #names1 = ["final_analytic_1_4","final_analytic_3_4"]

@@ -27,6 +27,7 @@ class Path:
         self.analytic_velocity = []
         self.analytic_acceleration = []
         self.analytic_time = []
+        self.seed = None
   
     def dist(self,x1,y1,x2,y2):
         tmp = (x2-x1)**2 + (y2- y1)**2

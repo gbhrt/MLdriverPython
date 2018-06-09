@@ -18,7 +18,7 @@ class ObservationSpace:
 
 class OptimalVelocityPlannerData:
     def __init__(self):
-        self.analytic_feature_flag = True
+        self.analytic_feature_flag = False
         self.end_indication_flag = False
         self.max_episode_steps = 100#200#
         self.feature_points = 25 # number of points on the path in the state +(1*self.end_indication_flag)
@@ -60,12 +60,14 @@ class OptimalVelocityPlanner(OptimalVelocityPlannerData):
         self.pl = Planner("torque")
         self.opened = self.pl.connected
 
+        self.path_seed = None
+
         return
 
         
              
 
-    def reset(self,path_num = None):
+    def reset(self,seed = None):
         
         if (self.reset_count % self.reset_every == 0 and self.reset_count > 0): 
             self.pl.simulator.reset_position()
@@ -75,18 +77,18 @@ class OptimalVelocityPlanner(OptimalVelocityPlannerData):
         self.pl.restart()#not sure
         self.pl.simulator.get_vehicle_data()#read data after time step from last action
         #if self.path_source == "saved_random" or self.path_source == "create_random":
-        if path_num == None:
+        if seed == None:
             seed = int.from_bytes(os.urandom(8), byteorder="big")
             self.dataManager.path_seed.append(seed)
-        else:
+   #     else:
             #if len(self.dataManager.path_seed) > path_num:
             #    seed = self.dataManager.path_seed[path_num]
             #else:
             #    print("error - path id not exist")
-            seed = path_num
-        path_num = self.pl.load_path(self.path_lenght, self.path_name,self.path_source,seed = seed)#,seed = 1236
-        
-        if path_num == -1:#if cannot load path
+
+        path_error = self.pl.load_path(self.path_lenght, self.path_name,self.path_source,seed = seed)#,seed = 1236
+        self.path_seed = seed
+        if path_error == -1:#if cannot load path
             return "error"
         
         self.pl.new_episode()#compute path in current vehicle position
@@ -144,7 +146,8 @@ class OptimalVelocityPlanner(OptimalVelocityPlannerData):
             analytic_a = [self.comp_analytic_acceleration(next_state)]
             next_state = analytic_a + next_state
         
-        self.dataManager.update_real_path(pl = self.pl,velocity_limit = local_path.analytic_velocity_limit[0],analytic_vel = local_path.analytic_velocity[0],curvature = local_path.curvature[0])
+        self.dataManager.update_real_path(pl = self.pl,velocity_limit = local_path.analytic_velocity_limit[0],analytic_vel = local_path.analytic_velocity[0]\
+            ,curvature = local_path.curvature[0],seed = self.path_seed)
         #self.dataManager.save_additional_data(features = lib.denormalize(next_state,0,30))#pl,features = denormalize(state,0,30),action = a
         if self.end_indication_flag == True:
             end_distance = self.distance_between_points*self.feature_points
