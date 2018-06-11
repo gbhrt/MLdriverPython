@@ -228,7 +228,7 @@ class DataManager():
         dist = self.real_path.distance[-1]
         print("dist",dist)
         path = classes.Path()
-        path.position = lib.create_random_path(9000,0.05,seed = self.path_seed[-1])
+        path.position = lib.create_random_path(9000,0.05,seed = self.real_path.seed)
         lib.comp_velocity_limit_and_velocity(path,skip = 10,reduce_factor = 1.0)
         max_time_ind = 0
         for i,tim in enumerate (path.analytic_time):

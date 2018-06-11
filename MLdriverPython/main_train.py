@@ -17,7 +17,7 @@ if __name__ == "__main__":
 
     #env  = gym.make("HalfCheetahBulletEnv-v0")
     HP = HyperParameters()
-    names = ["final_analytic_action_1_0"]
+    names = ["final_analytic1111_2","final_analytic1111_6","final_analytic1111_8","final_analytic1111_10"]
     HP.num_of_runs = 100
     for name in names:
         HP.restore_name = name
@@ -36,7 +36,8 @@ if __name__ == "__main__":
         env = enviroment1.OptimalVelocityPlanner(dataManager)
         if env.opened:     
             DDPG_algorithm.train(env,HP,net,dataManager)
-        
+
+
     #total_rewards_vec = []
     #for i in range(5):
     #    total_rewards_vec.append(DDPG_algorithm.train(env,i))

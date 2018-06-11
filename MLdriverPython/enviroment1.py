@@ -18,7 +18,7 @@ class ObservationSpace:
 
 class OptimalVelocityPlannerData:
     def __init__(self):
-        self.analytic_feature_flag = False
+        self.analytic_feature_flag = True
         self.end_indication_flag = False
         self.max_episode_steps = 100#200#
         self.feature_points = 25 # number of points on the path in the state +(1*self.end_indication_flag)
@@ -34,6 +34,7 @@ class OptimalVelocityPlannerData:
         self.max_roll = 0.07#0.05#0.3
         self.acc = 1.38# 0-100 kmh in 20 sec. 1.5 # [m/s^2]  need to be more then maximum acceleration in real
         self.torque_reduce = 1.0 # 0.2
+        self.reduce_factor = 1.0
         self.max_episode_length = 500
         self.action_space = ActionSpace()
         self.action_space.shape = [self.action_space_n]
@@ -215,7 +216,7 @@ class OptimalVelocityPlanner(OptimalVelocityPlannerData):
         #with open("state_path", 'w') as f:
         #    for pos in state_path.position:
         #        f.write("%s \t %s\t %s \n" % (pos[0],pos[1],pos[2]))
-        result = lib.comp_velocity_limit_and_velocity(state_path,init_vel = pos_state[0]*self.max_velocity, final_vel = 0,reduce_factor = 1.0)
+        result = lib.comp_velocity_limit_and_velocity(state_path,init_vel = pos_state[0]*self.max_velocity, final_vel = 0,reduce_factor = self.reduce_factor)
         if result == 1:#computed analytic velocity
             acc = state_path.analytic_acceleration[0]
             return np.clip(acc/8,-1,1)
