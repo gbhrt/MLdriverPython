@@ -90,9 +90,10 @@ def get_state(pl = None,local_path = None,num_points = 1,distance_between = 1.0,
 
     return state
 
-def get_reward(velocity,max_vel,mode):  
+def get_reward(velocity,max_vel,mode,lower_bound = 0.0):  
     reward = velocity/max_vel 
-    if velocity <= 0.0:
+    #if velocity <= 0.0:
+    if velocity <= lower_bound:
         reward = -1.0
     if mode == 'kipp':
         reward = -5.0

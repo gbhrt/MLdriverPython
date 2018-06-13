@@ -15,16 +15,18 @@ class HyperParameters:
         self.train_num = 2# how many times to train in every step
 
         #########################
+        self.add_feature_to_action = True
         self.train_flag = True
         self.noise_flag = True
         self.always_no_noise_flag = False
         self.zero_noise_every = 5
-        self.check_same_path = False
+        self.test_same_path = True
+        self.run_same_path = True
         self.conv_flag = False
         self.gym_flag = False
         self.render_flag = True
         self.plot_flag = True
-        self.restore_flag = False
+        self.restore_flag = True
         self.skip_run = False
         self.reset_every = 3
         self.save_every = 100

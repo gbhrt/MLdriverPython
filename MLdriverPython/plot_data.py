@@ -67,6 +67,7 @@ def plot_rewards(names,shape):
         if tim > 20:
             break
 
+
     #mean_relative_reward_vec = []
     #mean_relative_reward_ind = []
     #for i in range(episodes_num):
@@ -93,29 +94,31 @@ def plot_rewards(names,shape):
                 combined_rewards.append([dataManager_vec[i].train_num[j],relative_rewards_changed_vec[i][j]])
     combined_rewards = np.array(sorted(combined_rewards, key=lambda x: x[0]))
 
-
+    fails_vec = []
     for i in range(len(dataManager_vec)):
-                           #fails:
-        success = []
-        success_ind = []
-        fails = 0
-        fails_range = 50
-        fails_num = []
-        fail_num_ind = []
+        episode_fails = []
         for j in range(len(dataManager_vec[i].episode_end_mode)):
             if dataManager_vec[i].episode_end_mode[j] == 'kipp' or dataManager_vec[i].episode_end_mode[j] == 'deviate':
-                fails+=1
-            #else:
-                #success.append(dataManager_vec[i].relative_reward[j])
-                #success_ind.append(self.train_num[i])
-            #if i % fails_range == 0 and i != 0:
-            #    fails_num.append(fails/fails_range)
-            #    fail_num_ind.append(self.train_num[i])
-            #    fails = 0
+                episode_fails.append(1)
+            else:
+                episode_fails.append(0)
+        fails_vec.append(episode_fails)
+
+    for i in range(len(dataManager_vec)):
+        fails = 1 in fails_vec[i]
         print("fail:",  fails/len(dataManager_vec[i].episode_end_mode)*100,"[%]")
-    #plt.scatter(relative_reward_success_ind[:len(fails_num)],fails_num)
-    #plt.scatter(self.train_num,relative_reward_zero,c = col)
-    #plt.scatter(relative_reward_success_ind,relative_reward_success,c = 'r')
+
+    fails_density_vec = []
+    N = 20
+    for i in range(len(fails_vec)):
+        fails_density = lib.running_average(fails_vec[i],N)
+        fails_density_vec.append(fails_density)
+
+    combined_fails_density = []
+    for i in range(len(dataManager_vec)):
+        for j in range(len(fails_density_vec[i])):
+            combined_fails_density.append([dataManager_vec[i].train_num[j],fails_density_vec[i][j]])
+    combined_fails_density = np.array(sorted(combined_fails_density, key=lambda x: x[0]))
 
 
     combined_abs_rewards = []
@@ -127,23 +130,27 @@ def plot_rewards(names,shape):
     plt.figure(1)
     #for j in range(len(relative_rewards_changed_vec)):
     #    plt.scatter(np.array(dataManager_vec[j].train_num),relative_rewards_changed_vec[j],marker = shape,alpha = 0.5)
-    ave = lib.running_average(combined_rewards[:,1],20)
-    plt.plot((combined_rewards[:,0])[:len(ave)],ave)
+    #ave = lib.running_average(combined_rewards[:,1],20)
+    #plt.plot((combined_rewards[:,0])[:len(ave)],ave)
 
-    ones = np.ones([len(dataManager_vec[0].train_num)])
+    ones = np.ones([len(dataManager_vec[max_len_ind].train_num)])
     plt.plot(dataManager_vec[max_len_ind].train_num,ones,linewidth = 2.0,c = 'r')
 
     plt.figure(2)
-    #for j in range(len(relative_rewards_changed_vec)):
-    #    abs_rewards = [sum(dataManager_vec[j].paths[k][0])*0.2 for k in range(len(dataManager_vec[j].paths))]
-    #    plt.scatter(np.array(dataManager_vec[j].train_num),abs_rewards,marker = shape,alpha = 0.5)
+    for j in range(len(relative_rewards_changed_vec)):
+        abs_rewards = [sum(dataManager_vec[j].paths[k][0])*0.2 for k in range(len(dataManager_vec[j].paths))]
+        plt.scatter(np.array(dataManager_vec[j].train_num),abs_rewards,marker = shape,alpha = 0.5)
     ave = lib.running_average(combined_abs_rewards[:,1],20)
     plt.plot((combined_abs_rewards[:,0])[:len(ave)],ave)
 
-
-
-    analytic_dist_vec = [analytic_path.distance[max_tim_ind] for _ in range(len(dataManager_vec[0].train_num))]
+    analytic_dist_vec = [analytic_path.distance[max_tim_ind] for _ in range(len(dataManager_vec[max_len_ind].train_num))]
     plt.plot(dataManager_vec[max_len_ind].train_num,analytic_dist_vec,linewidth = 2.0,c = 'r')
+
+    plt.figure(3)
+    #for i in range(len(fails_density_vec)):
+    #    plt.plot(np.array(dataManager_vec[i].train_num)[:len(fails_density_vec[i])],(fails_density_vec[i]))
+    #ave = lib.running_average(combined_fails_density[:,1],20)
+    #plt.plot((combined_fails_density[:,0])[:len(ave)],ave*100)
 
 if __name__ == "__main__":
     #convolution:
@@ -154,12 +161,17 @@ if __name__ == "__main__":
 
     #same path for testing. 2 trains per step time:
     names1 = ["final_analytic_2","final_analytic_6","final_analytic_8","final_analytic_10"]#seed = 1111
+    #names3 = ["final2_1","final2_3"]
+    names2 = ["final_1","final_3"]#,"final_5","final_7","final_9"]#seed = 1111
+    names3 = ["test_add_analytic"]
+    #final_3 - short
     #names2 = ["final_analytic1111_2","final_analytic1111_6","final_analytic1111_8","final_analytic1111_10"]
-    names2 = ["final_1","final_3","final_5","final_7","final_9"]#seed = 1111
     #names2 = ["final_2"]
-    #names1 = ["final_analytic_1","final_analytic_3","final_analytic_5","final_analytic_7"]#seed  = 1236
+    #names3 = ["final_analytic_1","final_analytic_3","final_analytic_5","final_analytic_7"]#seed  = 1236
 
-    
+    #test on random paths - a very little different between names1 and names2 
+    #names1 = ["final_2_random","final_4_random","final_6_random","final_8_random","final_10_random"]
+    #names2 = ["final_analytic_2_random","final_analytic_4_random","final_analytic_6_random","final_analytic_8_random","final_analytic_10_random"]
 
     #same path (seed = 1111) for testing. different training steps per step time:
     #names1 = ["final_analytic_1_4","final_analytic_3_4"]
@@ -168,15 +180,19 @@ if __name__ == "__main__":
     #random path for testing: different training steps per step time:
     #names1 = ["final_analytic_2_10","final_analytic_4_10","final_analytic_6_10","final_analytic_8_10","final_analytic_10_10"]#,
     #names2 = ["final_4_10","final_6_10"]#,"final_1
-
+    
 
     #names1 = ["final1_analytic_action_1_0","final_analytic_action_1_1","final_analytic_action_1_2"]
     plot_rewards(names1,'o')
     plot_rewards(names2,'x')
+    plot_rewards(names3,'.')
     plt.figure(2)
     plt.xlabel('train iterations number')
     plt.ylabel('progress on the path [m]')
     plt.figure(1)
     plt.xlabel('train iterations number')
     plt.ylabel('relative reward')
+    plt.figure(3)
+    plt.xlabel('train iterations number')
+    plt.ylabel('fails [%]')
     plt.show()

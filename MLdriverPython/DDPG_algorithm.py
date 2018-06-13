@@ -84,9 +84,15 @@ def train(env,HP,net,dataManager,seed = None):
             #Q = net.get_Q([state])
             #Pi = net.get_Pi([state])
             #print("velocity1: ",state[0])#,"Q: ",Q)#,"PI: ",Pi)#"velocity2: ",state[1],
-            noise = actionNoise() * env.action_space.high[0]
+            if HP.add_feature_to_action:
+                analytic_action = env.comp_analytic_acceleration(state)
+                noise_range = env.action_space.high[0] - abs(analytic_action)
+            else:
+                noise_range = env.action_space.high[0]
             
             a = net.get_actions(np.reshape(state, (1, env.observation_space.shape[0])))#[[action]] batch, action list
+            print("action:",a,"analytic_action:",analytic_action)
+            noise = actionNoise() * noise_range
             #Qa = net.get_Qa(np.reshape(state, (1, env.observation_space.shape[0])),a)[0][0]
             #Q0 = net.get_Qa(np.reshape(state, (1, env.observation_space.shape[0])),[[0]])[0][0]
             #Q1 = net.get_Qa(np.reshape(state, (1, env.observation_space.shape[0])),[[1.0]])[0][0]
@@ -100,7 +106,7 @@ def train(env,HP,net,dataManager,seed = None):
             if HP.noise_flag:
                 a +=  noise#np vectors##########################################################
                 dataManager.noise.append(noise)
-                print("noise")
+                print("noise:",noise)
             a = list(np.clip(a,-env.action_space.high[0],env.action_space.high[0]))  
             
             a = [float(a[k]) for k in range(len(a))]   
@@ -109,7 +115,10 @@ def train(env,HP,net,dataManager,seed = None):
             #a = [state[0]]# 
             #if HP.noise_flag:
             #a = [env.comp_analytic_acceleration(state)]#env.analytic_feature_flag must be false
+            
 
+            if HP.add_feature_to_action:
+                a[0] += analytic_action
            # print("state:", state)
             #a = env.get_analytic_action()
             print("action: ", a)#,"noise: ",noise)
@@ -125,7 +134,7 @@ def train(env,HP,net,dataManager,seed = None):
                     train_count = 0
                     #for _ in range(HP.train_num):
                     while (t - start_time) < env.step_time - (t - last_time)-0.05 and train_count < HP.train_num:  
-                        print(t - start_time, t - last_time)
+                        #print(t - start_time, t - last_time)
                         last_time = t
                         train_count += 1
                         #sample from replay buffer:
@@ -158,6 +167,9 @@ def train(env,HP,net,dataManager,seed = None):
             #else:
             #    fail = False
             #Replay.add((state,a,reward,next_state,fail))#done
+            if HP.add_feature_to_action:
+                a[0] -= analytic_action
+
             Replay.add((state,a,reward,next_state,done))#  
             state = next_state
 
@@ -193,13 +205,16 @@ def train(env,HP,net,dataManager,seed = None):
             HP.noise_flag =True
         #print("episode time:",time.time()-episode_start_time)
         print("episode: ", i, " total reward: ", total_reward, "episode steps: ",step_count)
-        if (i % HP.zero_noise_every == 0 and i > 0) or HP.always_no_noise_flag:
-            HP.noise_flag = False
-        if not HP.check_same_path:
+        
+        if not HP.run_same_path:
             seed = int.from_bytes(os.urandom(8), byteorder="big")
-        else:
+        else:#not needed 
             seed = HP.seed
 
+        if (i % HP.zero_noise_every == 0 and i > 0) or HP.always_no_noise_flag:
+            HP.noise_flag = False
+            if HP.test_same_path:
+                seed = HP.seed
 
         if (i % HP.save_every == 0 and i > 0): 
             net.save_model(HP.save_file_path)

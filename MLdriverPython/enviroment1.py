@@ -18,8 +18,9 @@ class ObservationSpace:
 
 class OptimalVelocityPlannerData:
     def __init__(self):
-        self.analytic_feature_flag = True
+        self.analytic_feature_flag = False
         self.end_indication_flag = False
+        self.lower_bound_flag = False
         self.max_episode_steps = 100#200#
         self.feature_points = 25 # number of points on the path in the state +(1*self.end_indication_flag)
         self.feature_data_num = 1  + (1*self.analytic_feature_flag) # number of data in state (vehicle velocity, analytic data...)
@@ -43,6 +44,7 @@ class OptimalVelocityPlannerData:
         self.observation_space.shape = [self.features_num]
         self.max_velocity = 30
         self.max_curvature = 0.12
+        
 
         
 
@@ -159,6 +161,9 @@ class OptimalVelocityPlanner(OptimalVelocityPlannerData):
         #print("roll:",self.pl.simulator.vehicle.angle)
         self.dataManager.roll.append(self.pl.simulator.vehicle.angle[2])
         #get reward:
+        if self.lower_bound_flag:
+            analytic_vel = self.comp_analytic_velocity(next_state)
+            reward = get_reward(self.pl.simulator.vehicle.velocity,self.max_velocity,mode,lower_bound = analytic_vel)
         reward = get_reward(self.pl.simulator.vehicle.velocity,self.max_velocity,mode)
         #reward = self.pl.simulator.vehicle.velocity / 30 
         if self.episode_steps > self.max_episode_steps:
@@ -231,7 +236,30 @@ class OptimalVelocityPlanner(OptimalVelocityPlannerData):
         #error =  3.0 - pos_state[0]*self.max_velocity 
         #return np.clip(error*0.5,-1,1)
 
-        
+    def comp_analytic_velocity(self,pos_state):
+        max_distance = self.distance_between_points*self.feature_points
+        state_path = classes.Path()
+        for j in range(1,len(pos_state)-1,2):
+            state_path.position.append([pos_state[j]*max_distance,pos_state[j+1]*max_distance,0.0])
+        state_path.comp_distance()
+        for i in range(len(state_path.distance)-1):
+            if state_path.distance[i+1] - state_path.distance[i]  < 0.01:
+                print("dis<0----------------------------------------")
+                return -0.7
+        #print(state_path.position)
+        #with open("state_path", 'w') as f:
+        #    for pos in state_path.position:
+        #        f.write("%s \t %s\t %s \n" % (pos[0],pos[1],pos[2]))
+        result = lib.comp_velocity_limit_and_velocity(state_path,init_vel = pos_state[0]*self.max_velocity, final_vel = 0,reduce_factor = 0.8)
+        if result == 1:#computed analytic velocity
+            vel = state_path.analytic_velocity[0]
+            return vel
+        else:
+            print("vels",pos_state[0]*self.max_velocity,state_path.analytic_velocity_limit[0])
+            if pos_state[0]*self.max_velocity > state_path.analytic_velocity_limit[0]:
+                print("crossed limit")
+            print("cannot compute analytic velocity")
+            return 0.0
 
     def close(self):
         #end all:
