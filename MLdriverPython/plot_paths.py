@@ -57,6 +57,6 @@ def show_path(name):
     plt.show()
 
 if __name__ == "__main__": 
-    name = "final_analytic_2"#"final_1"
+    name = "final_analytic_random_1"#"final_1"
     show_path(name)
 

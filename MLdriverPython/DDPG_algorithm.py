@@ -85,13 +85,17 @@ def train(env,HP,net,dataManager,seed = None):
             #Pi = net.get_Pi([state])
             #print("velocity1: ",state[0])#,"Q: ",Q)#,"PI: ",Pi)#"velocity2: ",state[1],
             if HP.add_feature_to_action:
-                analytic_action = env.comp_analytic_acceleration(state)
+                if env.analytic_feature_flag:
+                    path_state = state[1:]
+                else:
+                    path_state = state[:]
+                analytic_action = env.comp_analytic_acceleration(path_state)
                 noise_range = env.action_space.high[0] - abs(analytic_action)
             else:
                 noise_range = env.action_space.high[0]
             
             a = net.get_actions(np.reshape(state, (1, env.observation_space.shape[0])))#[[action]] batch, action list
-            print("action:",a,"analytic_action:",analytic_action)
+           # print("action:",a,"analytic_action:",analytic_action)
             noise = actionNoise() * noise_range
             #Qa = net.get_Qa(np.reshape(state, (1, env.observation_space.shape[0])),a)[0][0]
             #Q0 = net.get_Qa(np.reshape(state, (1, env.observation_space.shape[0])),[[0]])[0][0]
