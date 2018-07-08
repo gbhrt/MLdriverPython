@@ -18,9 +18,14 @@ if __name__ == "__main__":
     #env  = gym.make("HalfCheetahBulletEnv-v0")
     HP = HyperParameters()
     #names = ["final_analytic_random_1","final_analytic_random_3","final_analytic_random_5","final_analytic_random_7"] #["final_9"]#finish 9
-    #names = ["final_random_1","final_random_3","final_random_5","final_random_7"]
-    names = ["add_analytic_random_3"]
-    HP.num_of_runs = 500
+    #names = ["compare_same_run_path//final_analytic_2","compare_same_run_path//final_analytic_6",\
+    #    "compare_same_run_path//final_analytic_8","compare_same_run_path//final_analytic_10"]#["add_analytic_random_1","add_analytic_random_2","add_analytic_random_3","add_analytic_random_4"]#["add_analytic_random_5"]#"add_analytic_random_5" - today
+   #run 1 2 3 4 add action no feature from 400
+   #run in second computer: 0 10
+   #                        12 14 from zero
+   #also random 2 4 6 from zero
+    names = ["test"]
+    HP.num_of_runs = 200
     for name in names:
         HP.restore_name = name
         HP.save_name = name
@@ -29,7 +34,7 @@ if __name__ == "__main__":
 
         #dataManager = data_manager.DataManager(total_data_names = ['total_reward'], special = 1, file = HP.save_name+".txt")#episode_data_names = ['limit_curve','velocity']
         dataManager = data_manager1.DataManager(HP.save_file_path,HP.restore_file_path,HP.restore_flag)
-        envData = enviroment1.OptimalVelocityPlannerData()
+        envData = enviroment1.OptimalVelocityPlannerData()#mode = 'DDPG'
         net = DDPG_network(envData.observation_space.shape[0],envData.action_space.shape[0],envData.action_space.high[0],\
             HP.alpha_actor,HP.alpha_critic,HP.alpha_analytic_actor,HP.alpha_analytic_critic,tau = HP.tau,seed = HP.seed,feature_data_n = envData.feature_data_num, conv_flag = HP.conv_flag)  
         if HP.restore_flag:

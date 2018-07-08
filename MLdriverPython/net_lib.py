@@ -1,7 +1,7 @@
 import tensorflow as tf
 import os
 import pathlib
-
+import sys
 class NetLib:
 
     #def update_target_init(self,tau,name):
@@ -33,7 +33,8 @@ class NetLib:
                 save_path = saver.save(self.sess, file_name)
                 print("Model saved in file: %s" % save_path)
         except:
-            print('cannot save - try again')
+            print('cannot save - try again',sys.exc_info()[0])
+            raise
             self.save_model(path,name)
 
 
@@ -50,4 +51,5 @@ class NetLib:
             saver.restore(self.sess, file_name)
             print("Model restored.")
         except:
-            print('cannot restore net')
+            print('cannot restore net',sys.exc_info()[0])
+            raise

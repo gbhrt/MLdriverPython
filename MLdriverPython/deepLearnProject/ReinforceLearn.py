@@ -200,7 +200,7 @@ if __name__ == "__main__":
                 #print("main index: ", main_index, " index: ",index)
                 #temp - for comparation
                 target_index = pl.select_target_index(index)
-                steer_ang1 = comp_steer(pl.simulator.vehicle,pl.desired_path.position[target_index])#target in global
+                steer_ang1 = comp_steer(pl.simulator.vehicle.position,pl.simulator.vehicle.angle[1],pl.desired_path.position[target_index])#target in global
                 #end temp
                 if not first_time:
                     last_state[batch_index] =copy.copy(state)#copy current state to list of last states

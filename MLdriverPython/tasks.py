@@ -8,7 +8,7 @@ import classes
 import data_manager
 from plot import Plot
 import policyBasedNet
-import aggent_lib as pLib
+import agent_lib as pLib
 
 def create_path_in_run(points,file_name):
     pl = Planner()
@@ -108,7 +108,7 @@ def run_test(path_name, learned_velocity = False):
         if step_now(last_time,step_time):#check if make the next step (after step_time)
             pl.simulator.get_vehicle_data()#read data (respose from simulator to commands)
             target_index = pl.select_target_index(index)
-            steer_ang = comp_steer(pl.simulator.vehicle,pl.desired_path.position[target_index])#target in global
+            steer_ang = comp_steer(pl.simulator.vehicle.position,pl.simulator.vehicle.angle[1],pl.desired_path.position[target_index])#target in global
             if learned_velocity:
                 local_path = pl.get_local_path(send_path = True,num_of_points = visualized_points)#num_of_points = visualized_points
                 state = pLib.get_state(pl,local_path,features_num,distance_between_points)

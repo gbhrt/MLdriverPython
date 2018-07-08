@@ -1,7 +1,7 @@
 from hyper_parameters import HyperParameters
 from DDPG_net import DDPG_network
 import enviroment1
-import aggent_lib as pLib
+import agent_lib as pLib
 import time
 import library as lib
 import numpy as np

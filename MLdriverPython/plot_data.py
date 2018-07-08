@@ -43,6 +43,7 @@ final_conv_analytic_new_reward_4 - new relative reward >200
 """
 
 def plot_rewards(names,shape,color):
+    max_train_num = 1000
     episodes_num = 50
     dataManager_vec = []
     relative_rewards_changed_vec = []
@@ -129,27 +130,29 @@ def plot_rewards(names,shape,color):
 
     plt.figure(1)
     for j in range(len(relative_rewards_changed_vec)):
-        plt.scatter(np.array(dataManager_vec[j].train_num),relative_rewards_changed_vec[j],marker = shape,alpha = 0.5)
-    ave = lib.running_average(combined_rewards[:,1],20)
+        plt.scatter(np.array(dataManager_vec[j].train_num)[:max_train_num],(relative_rewards_changed_vec[j])[:max_train_num],marker = shape,alpha = 0.2)
+    ave = lib.running_average(combined_rewards[:,1],20)[:max_train_num]
     plt.plot((combined_rewards[:,0])[:len(ave)],ave,c = color)
 
-    ones = np.ones([len(dataManager_vec[max_len_ind].train_num)])
-    plt.plot(dataManager_vec[max_len_ind].train_num,ones,linewidth = 2.0,c = 'r')
+    ones = np.ones([len(dataManager_vec[max_len_ind].train_num)])[:max_train_num]
+    plt.plot(dataManager_vec[max_len_ind].train_num[:max_train_num],ones,linewidth = 2.0,c = 'r')
 
     plt.figure(2)
     for j in range(len(relative_rewards_changed_vec)):
         abs_rewards = [sum(dataManager_vec[j].paths[k][0])*0.2 for k in range(len(dataManager_vec[j].paths))]
-        plt.scatter(np.array(dataManager_vec[j].train_num),abs_rewards,marker = shape,alpha = 0.5)
-    ave = lib.running_average(combined_abs_rewards[:,1],20)
+        abs_rewards = abs_rewards[:max_train_num]
+        plt.scatter(np.array(dataManager_vec[j].train_num)[:max_train_num],abs_rewards,marker = shape,alpha = 0.2)
+    ave = lib.running_average(combined_abs_rewards[:,1],20)[:max_train_num]
     plt.plot((combined_abs_rewards[:,0])[:len(ave)],ave,c = color)
 
     analytic_dist_vec = [analytic_path.distance[max_tim_ind] for _ in range(len(dataManager_vec[max_len_ind].train_num))]
-    plt.plot(dataManager_vec[max_len_ind].train_num,analytic_dist_vec,linewidth = 2.0,c = 'r')
+    analytic_dist_vec = analytic_dist_vec[:max_train_num]
+    plt.plot(dataManager_vec[max_len_ind].train_num[:max_train_num],analytic_dist_vec,linewidth = 2.0,c = 'r')
 
     plt.figure(3)
     #for i in range(len(fails_density_vec)):
     #    plt.plot(np.array(dataManager_vec[i].train_num)[:len(fails_density_vec[i])],(fails_density_vec[i]))
-    ave = lib.running_average(combined_fails_density[:,1],20)
+    ave = lib.running_average(combined_fails_density[:,1],20)[:max_train_num]
     plt.plot((combined_fails_density[:,0])[:len(ave)],ave*100,c = color)
 
 if __name__ == "__main__":
@@ -162,24 +165,39 @@ if __name__ == "__main__":
 
     #same path for testing and training. 2 trains per step time:
     #analytic feature:
-    names1 = ["compare_same_run_path//final_analytic_2","compare_same_run_path//final_analytic_6",\
-        "compare_same_run_path//final_analytic_8","compare_same_run_path//final_analytic_10"]#seed = 1111
-    #without analytic feature:
-    names2 = ["compare_same_run_path//final_1","compare_same_run_path//final_3","compare_same_run_path//final_5",\
-        "compare_same_run_path//final_7","compare_same_run_path//final_9"]#seed = 1111
+    #names1 = ["compare_same_run_path//final_analytic_2","compare_same_run_path//final_analytic_6",\
+    #    "compare_same_run_path//final_analytic_8","compare_same_run_path//final_analytic_10"]#seed = 1111
+    ##without analytic feature:
+    #names2 = ["compare_same_run_path//final_1","compare_same_run_path//final_3","compare_same_run_path//final_5",\
+    #    "compare_same_run_path//final_7","compare_same_run_path//final_9"]#seed = 1111
     ##################################################
 
-    #same path for testing. random for training. 2 trains per step time:  - a very little different between names1 and names2 
+    #random path for testing. random for training. 2 trains per step time:  - a very little different between names1 and names2 
     #analytic feature:
     #names1 = ["final_2_random","final_4_random","final_6_random","final_8_random","final_10_random"]
     #without analytic feature:
     #names2 = ["final_analytic_2_random","final_analytic_4_random","final_analytic_6_random","final_analytic_8_random","final_analytic_10_random"]
     #########################################################################################
+
+    #same path for testing. random for training. 2 trains per step time:  - a very little different between names1 and names2 
+    #analytic feature:
+    #names1 = ["final_analytic_random_1","final_analytic_random_3"] #5 short 7 empty
+    #without analytic feature:
+    #names2 = ["final_random_1","final_random_3","final_random_5"] 
+    #names1 = ["final_random_2","final_random_4","final_random_6"] 
+    #########################################################################################
+
+    
     #add analytic action to action. random paths, test same path (1111) 2 trains per step time:
     #analytic feature:
-    names1 = ["add_analytic_random_1","add_analytic_random_3"]
-    # no analytic feature:
-    #names2 = ["add_analytic_random_1","add_analytic_random_3"]
+    names1 = ["add_analytic_feature_random_2","add_analytic_feature_random_4","add_analytic_feature_random_6","add_analytic_feature_random_8","add_analytic_feature_random_0"]
+    ## 900 630 592 496
+    ## no analytic feature:
+    names2 = ["add_analytic_random_1","add_analytic_random_2","add_analytic_random_3","add_analytic_random_4","add_analytic_random_5"]\
+        #,"add_analytic_random_5","add_analytic_random_7","add_analytic_random_6","add_analytic_random_8"]#not a big difference
+
+   # names1 = ["add_analytic_random_5"]#,"add_analytic_random_7","add_analytic_random_6","add_analytic_random_8"]
+    #417 496 417 496
     ###########################################################################################
 
 
@@ -191,9 +209,6 @@ if __name__ == "__main__":
     #names2 = ["final_2"]
     #names3 = ["final_analytic_1","final_analytic_3","final_analytic_5","final_analytic_7"]#seed  = 1236
 
-    #test on random paths - a very little different between names1 and names2 
-    #names1 = ["final_2_random","final_4_random","final_6_random","final_8_random","final_10_random"]
-    #names2 = ["final_analytic_2_random","final_analytic_4_random","final_analytic_6_random","final_analytic_8_random","final_analytic_10_random"]
 
     #same path (seed = 1111) for testing. different training steps per step time:
     #names1 = ["final_analytic_1_4","final_analytic_3_4"]
@@ -205,16 +220,17 @@ if __name__ == "__main__":
     
 
     #names1 = ["final1_analytic_action_1_0","final_analytic_action_1_1","final_analytic_action_1_2"]
-    plot_rewards(names1,'o','b')
+    plot_rewards(names1,'o',(0.0,0.0,0.0))#'b' 'tab:purple'
     plot_rewards(names2,'x','g')
     #plot_rewards(names3,'.')
+    size = 15
     plt.figure(2)
-    plt.xlabel('train iterations number')
-    plt.ylabel('progress on the path [m]')
+    plt.xlabel('Train iterations number',fontsize = size)
+    plt.ylabel('Progress on the path [m]',fontsize = size)
     plt.figure(1)
-    plt.xlabel('train iterations number')
-    plt.ylabel('relative reward')
+    plt.xlabel('Train iterations number',fontsize = size)
+    plt.ylabel('Relative mean velocity',fontsize = size)
     plt.figure(3)
-    plt.xlabel('train iterations number')
-    plt.ylabel('fails [%]')
+    plt.xlabel('Train iterations number',fontsize = size)
+    plt.ylabel('Fails [%]',fontsize = size)
     plt.show()

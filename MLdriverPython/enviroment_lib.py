@@ -55,7 +55,7 @@ def choose_position_points(local_path,number,distance_between_points):#return po
 
     return points
 
-def get_state(pl = None,local_path = None,num_points = 1,distance_between = 1.0,max_velocity = 30.0,max_curvature = 0.12):
+def get_ddpg_state(pl = None,local_path = None,num_points = 1,distance_between = 1.0,max_velocity = 30.0,max_curvature = 0.12):
     #velocity limit state:
     #points = choose_points(local_path,points,distance_between)
 
@@ -88,6 +88,29 @@ def get_state(pl = None,local_path = None,num_points = 1,distance_between = 1.0,
     #state.append(local_path.position[target_index][0])#x
     #state.append(local_path.position[target_index][1])#y
 
+    return state
+
+def get_model_based_state(pl,last_abs_pos,last_abs_ang,local_path):
+    rel_pos = lib.to_local(pl.simulator.vehicle.position,last_abs_pos,last_abs_ang[1])
+    rel_ang = pl.simulator.vehicle.angle[1] - last_abs_ang[1]
+    if rel_ang  > math.pi: rel_ang  -= 2*math.pi
+    if rel_ang  < -math.pi: rel_ang  += 2*math.pi
+    vel = pl.simulator.vehicle.velocity
+    steer = pl.simulator.vehicle.steering
+    roll = rel_ang = pl.simulator.vehicle.angle[2]
+
+    state = {'rel_pos':rel_pos,
+             'rel_ang':rel_ang,
+             'vel':vel,
+             'steer':steer,
+             'roll':roll,
+             'path':local_path
+             }
+    
+    last_abs_pos[0] = pl.simulator.vehicle.position[0]
+    last_abs_pos[1] = pl.simulator.vehicle.position[1]
+    last_abs_pos[2] = pl.simulator.vehicle.position[2]
+    last_abs_ang[1] = pl.simulator.vehicle.angle[1]
     return state
 
 def get_reward(velocity,max_vel,mode,lower_bound = 0.0):  

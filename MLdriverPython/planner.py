@@ -1,4 +1,4 @@
-from library import *
+import library as lib
 from classes import *
 from communicationLib import Comm
 import copy
@@ -47,16 +47,16 @@ class SimVehicle:#simulator class - include communication to simulator, vehicle 
     def read_vehicle_data(self):
         self.comm.readData()
         dataType = self.comm.deserialize(1,int)        
-        self.vehicle.position = changeZtoY(self.comm.deserialize(3,float))
+        self.vehicle.position = lib.changeZtoY(self.comm.deserialize(3,float))
         self.vehicle.position[2] = 0.
-        self.vehicle.angle = change_to_rad(self.comm.deserialize(3,float))
+        self.vehicle.angle = lib.change_to_rad(self.comm.deserialize(3,float))
         if self.vehicle.angle[1] > math.pi:#angle form 0 to 2 pi, convert from -pi to pi
             self.vehicle.angle[1] = -(2*math.pi - self.vehicle.angle[1])
         if self.vehicle.angle[0] > math.pi:#angle form 0 to 2 pi, convert from -pi to pi
             self.vehicle.angle[0] = -(2*math.pi - self.vehicle.angle[0])
         if self.vehicle.angle[2] > math.pi:#angle form 0 to 2 pi, convert from -pi to pi
             self.vehicle.angle[2] = -(2*math.pi - self.vehicle.angle[2])
-        self.vehicle.backPosition = changeZtoY(self.comm.deserialize(3,float))
+        self.vehicle.backPosition = lib.changeZtoY(self.comm.deserialize(3,float))
         self.vehicle.velocity = self.comm.deserialize(1,float)
         self.vehicle.steering = self.comm.deserialize(1,float)
         return 
@@ -163,11 +163,11 @@ class Planner(PathManager):#planner - get and send data to simulator. input - mi
        
     def to_local(self, position):#pos given in global reference system, convert it to local reference system (located at init_pos in init_ang)
         #return to_local(position,self.init_state.position,self.init_state.angle[1])#to init
-        return to_local(position,self.simulator.vehicle.position,self.simulator.vehicle.angle[1]) #to vehicle
+        return lib.to_local(position,self.simulator.vehicle.position,self.simulator.vehicle.angle[1]) #to vehicle
 
     def to_global(self, position):#pos given in local reference system (located at init_pos in init_ang), convert it to global reference system 
         #return to_global(position,self.init_state.position,self.init_state.angle[1])
-        return to_global(position,self.simulator.vehicle.position,self.simulator.vehicle.angle[1])
+        return lib.to_global(position,self.simulator.vehicle.position,self.simulator.vehicle.angle[1])
     def path_tranformation_to_local(self,path):#get a path at any location, transform to vehicle position and angle
         trans_path = Path()
         trans_path.distance = copy.copy(path.distance)
@@ -179,7 +179,7 @@ class Planner(PathManager):#planner - get and send data to simulator. input - mi
         path_start = path.position[0]
         path_ang = path.angle[0][1] #- math.pi/2
         for i in range(len(path.position)):#path in reference of the start of the path
-            trans_path.position.append(to_local(path.position[i],path_start,path_ang )) 
+            trans_path.position.append(lib.to_local(path.position[i],path_start,path_ang )) 
             trans_path.angle.append([0,path.angle[i][1] - path_ang,0])
 
         trans_path = self.path_to_global(trans_path)
@@ -278,16 +278,21 @@ class Planner(PathManager):#planner - get and send data to simulator. input - mi
         delta_vel_norm = delta_vel*max_delta_vel
         des_vel = np.clip(self.simulator.vehicle.velocity + delta_vel_norm,0,max_vel)#assume velocity is updated
         target_index = self.select_target_index(self.index)
-        steer_ang1 = comp_steer(self.simulator.vehicle,self.desired_path.position[target_index])#target in global
+        steer_ang1 = lib.comp_steer(self.simulator.vehicle.position,self.simulator.vehicle.angle[1],self.desired_path.position[target_index])#target in global
         self.simulator.send_drive_commands(des_vel,steer_ang1) #send commands
         return
-    def torque_command(self, command,reduce  = 1.0):#command from -1 to 1
+    def torque_command(self, command,steer = None,reduce  = 1.0):#command from -1 to 1
         
         command = np.clip(command*reduce,-1,1)
-        target_index = self.select_target_index(self.index)
-        steer_ang1 = comp_steer(self.simulator.vehicle,self.desired_path.position[target_index])#target in global
+        if steer == None:
+            target_index = self.select_target_index(self.index)
+            steer_ang1 = lib.comp_steer(self.simulator.vehicle.position,self.simulator.vehicle.angle[1],self.desired_path.position[target_index])#target in global
+            #print("self.simulator.vehicle.angle[1]:",self.simulator.vehicle.angle[1])
+        else:
+            steer_ang1 = steer
         self.simulator.send_drive_commands(command,steer_ang1) #send commands
-        return
+        return steer_ang1
+    
     def load_path(self,lenght,path_file_name = None,source = "regular", compute_velocity_limit_flag = False,seed = None):
         path_num = 0
         if source == "regular":
@@ -313,7 +318,7 @@ class Planner(PathManager):#planner - get and send data to simulator. input - mi
         self.reference_free_path.comp_curvature()
 
         #if source == "saved_random" or source == "create_random" or compute_velocity_limit_flag:
-        comp_velocity_limit_and_velocity(self.reference_free_path,skip = 10,reduce_factor = 1.0)
+        lib.comp_velocity_limit_and_velocity(self.reference_free_path,skip = 10,reduce_factor = 1.0)
         #for i in range(len(self.reference_free_path.distance)):
         #    if self.reference_free_path.distance[i] > lenght:
         #        self.reference_free_path.analytic_velocity_limit[i] = 30
@@ -361,7 +366,7 @@ class Planner(PathManager):#planner - get and send data to simulator. input - mi
         #if self.in_vehicle_reference_path.distance[self.main_index] > lenght:
             print("end episode - end of the path")
             return 'path_end'
-        print("distance: ",self.in_vehicle_reference_path.distance[self.main_index],"end_distance:",end_distance)
+        #print("distance: ",self.in_vehicle_reference_path.distance[self.main_index],"end_distance:",end_distance)
         
         if end_distance != None:
             if self.in_vehicle_reference_path.distance[self.main_index] >= end_distance:

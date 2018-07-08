@@ -29,12 +29,38 @@ def wait_for(stop,command):
     _thread.start_new_thread(input_thread, (stop,command,))
     return
 
-def normalize(val,min,max):
-    nval = [(item - min)/(max - min) for item in val]
-    return nval
-def denormalize(nval, min, max):
-    val = [item * (max - min) + min for item in nval]
-    return val
+def normalize(data,norm_vec):
+    n_data = copy.deepcopy(data)
+
+    for i in range(len(data[0])):
+        dat = np.array(data)[:,i]
+
+        min_data = norm_vec[i][0]
+        max_data = norm_vec[i][1]
+        if abs((max_data - min_data)) > 0.000001:
+            for j in range(len(data)):
+                n_data[j][i] = -1+(data[j][i]-min_data)*2/(max_data - min_data)
+    return n_data
+def comp_norm_vec(data):
+     norm_vec = []
+     for i in range(len(data[0])):
+         dat = np.array(data)[:,i]
+         min_data = min(dat)
+         max_data = max(dat)
+         norm_vec.append([min_data,max_data])
+     return norm_vec
+#
+def denormalize(n_data,range_vec):
+    data = copy.deepcopy(n_data)
+    for i in range(len(data[0])):
+        dat = np.array(data)[:,i]
+
+        min_data = range_vec[i][0]
+        max_data = range_vec[i][1]
+        if abs((max_data - min_data)) > 0.000001:
+            for j in range(len(data)):
+                data[j][i] = 0.5*((max_data - min_data)*data[j][i] + max_data + min_data)
+    return data
 
 def dist_vec(A,B):
     return np.linalg.norm(A-B)
@@ -84,18 +110,28 @@ def rotateVec(vec,ang):
         rvec[2] = vec[2]
     return rvec
 
-def to_local(pos, initPos, initAng):#pos given in global reference system, convert it to local reference system (located at init_pos in init_ang)
+def to_local(pos, init_pos, init_ang):#pos given in global reference system, convert it to local reference system (located at init_pos in init_ang)
     if len(pos) == 2:
-        pos.append(0)
-    localPos = np.array(pos) -  np.array(initPos)
-    localPos = rotateVec(localPos, initAng)
-    return localPos.tolist()
+        #pos.append(0)
+        pos = np.append(pos,[0])
+    if len(init_pos) == 2:
+        #pos.append(0)
+        init_pos = np.append(init_pos,[0])
+    local_pos = np.array(pos) -  np.array(init_pos)
+    local_pos = rotateVec(local_pos, init_ang)
+    return local_pos.tolist()
 
-def to_global(pos, initPos, initAng):#pos given in local reference system (located at init_pos in init_ang), convert it to global reference system 
+def to_global(pos, init_pos, init_ang):#pos given in local reference system (located at init_pos in init_ang), convert it to global reference system 
     if len(pos) == 2:
-        pos.append(0)
-    local_rot = rotateVec(pos, -initAng)
-    global_pos = np.array(initPos) + np.array(local_rot)
+        #pos.append(0)
+        pos = np.append(pos,[0])
+
+    if len(init_pos) == 2:
+        #pos.append(0)
+        init_pos = np.append(init_pos,[0])
+        
+    local_rot = rotateVec(pos, -init_ang)
+    global_pos = np.array(init_pos) + np.array(local_rot)
     return global_pos.tolist()
 
 
@@ -125,15 +161,59 @@ def comp_steer_local(local_target):
     steer_ang = -math.atan(curv*vehicle_lenght)
     return steer_ang
 
-def comp_steer(vehicle,target):
+def comp_steer(vehicle_position,vehicle_angle,target):
     vehicle_lenght = 3.6
-    local_target = to_local(np.asarray(target),np.asarray(vehicle.position),vehicle.angle[1])#compute target in vehicle reference system
-    ld2 = local_target[0]**2 + local_target[1]**2
-    if ld2 == 0:
-        return 0
-    curv = 2*local_target[0]/ld2
-    steer_ang = -math.atan(curv*vehicle_lenght)
-    return steer_ang
+    local_target = to_local(np.asarray(target),np.asarray(vehicle_position),vehicle_angle)#compute target in vehicle reference system
+    #ld2 = local_target[0]**2 + local_target[1]**2
+    #if ld2 == 0:
+    #    return 0
+    #curv = 2*local_target[0]/ld2
+    #steer_ang = -math.atan(curv*vehicle_lenght)
+    return comp_steer_local(local_target)
+
+def comp_steer_target(path,vel, index = 0):
+        k = 1.
+        min = 2
+        max = 6
+
+        if index > len(path.distance)-1:
+            index = len(path.distance) - 1
+        forward_distance = k*vel#self.desired_path.velocity[index]
+        forward_distance = np.clip(forward_distance,min,max)
+        target_index = index
+        while (path.distance[target_index] - path.distance[index]) < forward_distance:
+            if target_index >= len(path.distance) - 1:
+                break
+            target_index += 1
+
+        #dis_min = path.distance[target_index]
+        #if len(path.distance) > target_index+1:
+        #    dis_max = path.distance[target_index+1] 
+        #    ratio = (forward_distance - dis_min)/(dis_max - dis_min)
+        #    print("ratio:",ratio)
+        #    x = ratio * path.position[target_index][0] + (1-ratio)*path.position[target_index+1][0]
+        #    y = ratio * path.position[target_index][1] + (1-ratio)*path.position[target_index+1][1]
+        #else:
+            
+        x = path.position[target_index][0]
+        y = path.position[target_index][1]
+
+
+        return [x,y]
+def find_index_on_path(path,pos,start_index = 0):#return closest index to vehicle
+    distances = [10000. for _ in range(len(path.position))]
+    for i in range(start_index, len(path.position)):
+            distances[i] = (path.position[i][0] - pos[0])**2 + (path.position[i][1] - pos[1])**2
+    index_min = np.argmin(distances)
+    return index_min
+def comp_steer_general(path,pos,ang,vel):
+    index = find_index_on_path(path,pos)
+    target = comp_steer_target(path,vel,index = index)
+    local_target = to_local(np.asarray(target),np.asarray(pos),ang)#compute target in vehicle reference system
+    steer = comp_steer(pos,ang,target)
+    print("target:",target,"local_target:",local_target,"pos:",pos,"pos_on_path:",path.position[index],"ang:",ang,"steer:",steer)
+    return steer
+
 
 def comp_steer_learn_local(local_target):
     local_target = local_target[0:2]

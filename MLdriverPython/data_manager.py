@@ -32,7 +32,8 @@ class DataManager:
         if file != None:
             self.file_name = file
         self.plot = plot.Plot(self.episode_data,self.total_data,special = special)
-    def print(self):
+
+    def print1(self):
         for k,val in self.total_data.items():
             print(k,':',val)
     def add(self,*args):

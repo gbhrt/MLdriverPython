@@ -4,6 +4,7 @@ import numpy as np
 import json
 import library as lib
 import pathlib
+import sys
 
 import time
 
@@ -18,18 +19,23 @@ class Replay:
     def sample(self,batch_size):
         samples = random.sample(self.memory,np.clip(batch_size,0,len(self.memory)))
         return map(np.array, zip(*samples))
+    def change_path(self):
+        for i in range(len(self.memory)):
+            path = self.memory[i][0]
+            self.memory[i][0] = path.position
+
     def save(self,path,name = "replay_memory"):
         print("save replay buffer...")
         try:
             path += "replay_memory\\"
             pathlib.Path(path).mkdir(parents=True, exist_ok=True) 
             file_name = path + name + ".txt"
-            with open(file_name, 'w') as f:
-                json.dump(self.memory,f)
+            #with open(file_name, 'w') as f:
+            #    json.dump(self.memory,f)
             print("done.")
 
         except:
-            print("cannot save replay buffer")
+            print("cannot save replay buffer:", sys.exc_info()[0])
             return
 
 
@@ -124,7 +130,50 @@ def DDPG(rand_state, rand_a, rand_reward, rand_next_state,rand_end,net,HP):
     net.Update_actor(rand_state,pred_action)
     net.update_targets()
     return critic_loss, Qa#temp
+def model_based_update(rand_state, rand_a, rand_next_state,rand_end,net,HP):
+    X = []
+    Y_ = []
+    for i in range(len(rand_state)):
+        X.append([rand_state[i]['vel'], rand_state[i]['steer'],rand_a[i][1],rand_a[i][0]])#action steer, action acc
+        Y_.append([rand_next_state[i]['rel_pos'][0],rand_next_state[i]['rel_pos'][1],rand_next_state[i]['rel_ang'],rand_next_state[i]['vel'],rand_next_state[i]['steer']])
+    net.update_network(X,Y_)
+    #print("loss:",net.get_loss(X,Y_))
+    return
 
+def comp_abs_pos_ang(rel_pos,rel_ang,abs_pos,abs_ang):
+    next_abs_pos = lib.to_global(rel_pos,abs_pos,abs_ang)
+    next_rel_ang = abs_ang + rel_ang
+    #if next_rel_ang  > math.pi: rel_ang  -= 2*math.pi
+    #if next_rel_ang  < -math.pi: rel_ang  += 2*math.pi
+    return next_abs_pos,next_rel_ang
+def predict_n_next(n,net,init_state):
+    
+    abs_pos = [0,0]#relative to the local path
+    abs_ang = 0
+    steer_command = lib.comp_steer_general(init_state['path'],abs_pos,abs_ang,init_state['vel'])
+    acc_command = 0.0
+    pred_vec = [[abs_pos,abs_ang,init_state['vel'],init_state['steer']]]
+    X = [init_state['vel'],init_state['steer'],steer_command,acc_command]
+    #X = [5.0,0.1,steer_command,acc_command]
+    for i in range(1,n):#n times 
+        Y = net.get_Y([X])[0]#predict_next(features_num,train_data, sample, k, p)
+        #print("X:",X,"Y:",Y)
+        #pred_vec.append(Y)#x,y,ang,vel, steer - all relative 
+        X[0] = Y[3]#vel
+        X[1] = Y[4]#steer
+        abs_pos,abs_ang = comp_abs_pos_ang(Y[0:2],Y[2],abs_pos,abs_ang)#rel_pos = Y[0:2] rel_ang = Y[2]
+        #print("abs_pos",abs_pos,"abs_ang",abs_ang)
+        steer_command =  lib.comp_steer_general(init_state['path'],abs_pos,abs_ang,init_state['vel'])#action steer
+        #print("steer_command:",steer_command)
+        X[2] =  steer_command
+        acc_command = 0.0
+        X[3] = acc_command #action acceleration
+        pred_vec.append([abs_pos,abs_ang,Y[3],Y[4]])
+    print("end--------------------------")
+    return pred_vec
+def predict_n_next_abs(n,net,init_state):
+    predict_n_next(n,net,init_state)
+    return
 def choose_action(action_space,Pi,steps = None,epsilon = 0.1):
     if random.random() < epsilon:
         a = random.randint(0,len(action_space) - 1)#random.randint(0,(len(action_space.data) - 1))

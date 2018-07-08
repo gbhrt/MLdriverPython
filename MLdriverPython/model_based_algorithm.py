@@ -13,7 +13,7 @@ import math
 import os
 
 
-def train(env,HP,net,dataManager,seed = None):
+def train(env,HP,net,dataManager,shared,seed = None):
     
 
     #"""
@@ -28,6 +28,7 @@ def train(env,HP,net,dataManager,seed = None):
         HP.seed = seed
     ###################
     total_step_count = 0
+    random_action_flag = True
     #env = enviroment1.OptimalVelocityPlanner(HP)
     #env  = gym.make("HalfCheetahBulletEnv-v0")
     np.random.seed(HP.seed)
@@ -45,8 +46,10 @@ def train(env,HP,net,dataManager,seed = None):
     #plot = Plot()
     #dataManager = data_manager.DataManager(total_data_names = ['total_reward'],  file = HP.save_name+".txt")
     Replay = pLib.Replay(HP.replay_memory_size)
+    #Replay1 = pLib.Replay(HP.replay_memory_size)
     if HP.restore_flag:
         Replay.restore(HP.restore_file_path)
+        #Replay1.restore(HP.restore_file_path)
         
 
     actionNoise = pLib.OrnsteinUhlenbeckActionNoise(mu=np.zeros(env.action_space.shape[0]),dt = 0.2)#env.step_time
@@ -61,6 +64,9 @@ def train(env,HP,net,dataManager,seed = None):
         if waitFor.stop == [True]:
             break
         # initialize every episode:
+        if HP.run_random_num != 'inf':
+            if i > HP.run_random_num:
+                random_action_flag = False
         step_count = 0
         reward_vec = []
         last_time = [0]
@@ -75,60 +81,44 @@ def train(env,HP,net,dataManager,seed = None):
         state = env.reset(seed = seed)   
         if i == 0:
             print("update nets first time")
-            pLib.DDPG([state], [[0]], [0], [state],[False],net,HP)
+            pLib.model_based_update([state], [[0,0]], [state],[False],net,HP)
+
         #episode_start_time = time.time()
         while  waitFor.stop != [True]:#while not stoped, the loop break if reached the end or the deviation is to big
             step_count+=1
                
             #choose and make action:
-            #Q = net.get_Q([state])
-            #Pi = net.get_Pi([state])
-            #print("velocity1: ",state[0])#,"Q: ",Q)#,"PI: ",Pi)#"velocity2: ",state[1],
-            if HP.add_feature_to_action:
-                if env.analytic_feature_flag:
-                    path_state = state[1:]
-                else:
-                    path_state = state[:]
-                analytic_action = env.comp_analytic_acceleration(path_state)
-                noise_range = env.action_space.high[0] - abs(analytic_action)
-            else:
-                noise_range = env.action_space.high[0]
-            
-            a = net.get_actions(np.reshape(state, (1, env.observation_space.shape[0])))#[[action]] batch, action list
-           # print("action:",a,"analytic_action:",analytic_action)
+
+            noise_range = env.action_space.high[0]
             noise = actionNoise() * noise_range
-            #Qa = net.get_Qa(np.reshape(state, (1, env.observation_space.shape[0])),a)[0][0]
-            #Q0 = net.get_Qa(np.reshape(state, (1, env.observation_space.shape[0])),[[0]])[0][0]
-            #Q1 = net.get_Qa(np.reshape(state, (1, env.observation_space.shape[0])),[[1.0]])[0][0]
-            #Qneg1 = net.get_Qa(np.reshape(state, (1, env.observation_space.shape[0])),[[-1.0]])[0][0]
-            ##print("Qa:",Qa,"Q0:",Q0,"Q1",Q1,"Qneg1",Qneg1)
-            #dataManager.Qa.append(Qa)
-            #dataManager.Q0.append(Q0)
-            #dataManager.Q1.append(Q1)
-            #dataManager.Qneg1.append(Qneg1)
-            a = a[0]
+            if random_action_flag:
+                a = noise
+            else:
+                a = pLib.comp_model_based_action(state)
+
+
+
             if HP.noise_flag:
                 a +=  noise#np vectors##########################################################
                 dataManager.noise.append(noise)
-                print("noise:",noise)
-            a = list(np.clip(a,-env.action_space.high[0],env.action_space.high[0]))  
+                #print("noise:",noise)
+            a = list(np.clip(a,-env.action_space.high[0],env.action_space.high[0]))
             
-            a = [float(a[k]) for k in range(len(a))]   
-            #a = [1.0]
-            
-            #a = [state[0]]# 
-            #if HP.noise_flag:
-            a = [env.comp_analytic_acceleration(state)]#env.analytic_feature_flag must be false
-            
-
-            if HP.add_feature_to_action:
-                a[0] += analytic_action
+            #a = [env.comp_analytic_acceleration(state)]#env.analytic_feature_flag must be false
+            a = env.get_analytic_action()#+noise
+            a = [float(a[k]) for k in range(len(a))]  
            # print("state:", state)
-            #a = env.get_analytic_action()
-            print("action: ", a)#,"noise: ",noise)
+
+            #print("action: ", a)#,"noise: ",noise)
             dataManager.acc.append(a)
             if not HP.gym_flag:
-                env.command(a)
+               # steer = env.comp_steer()
+                n = 10
+                predicted_values = pLib.predict_n_next(n,net,state)
+                shared.predicded_path = [pred[0] for pred in predicted_values]
+                steer = lib.comp_steer_general(state['path'],[0,0],0,state['vel'])
+                shared.state = state
+                steer_command = env.command(a)#steer
 
             if len(Replay.memory) > HP.batch_size and HP.train_flag:############
                 if not HP.gym_flag:
@@ -142,28 +132,30 @@ def train(env,HP,net,dataManager,seed = None):
                         last_time = t
                         train_count += 1
                         #sample from replay buffer:
-                        rand_state, rand_a, rand_reward, rand_next_state, rand_end = Replay.sample(HP.batch_size)
+                        rand_state, rand_a, rand_next_state, rand_end = Replay.sample(HP.batch_size)
                         #update neural networs:
                         #pLib.DDQN(rand_state, rand_a, rand_reward, rand_next_state,net,HP)
-                        pLib.DDPG(rand_state, rand_a, rand_reward, rand_next_state,rand_end,net,HP)
+                        pLib.model_based_update(rand_state, rand_a, rand_next_state,rand_end,net,HP)
+                        
                         t = time.time()
                         
 
-                    print ("train_count: ", train_count)
-                    global_train_count+=train_count
+                    #print ("train_count: ", train_count)
+                    global_train_count+=train_count 
                     
                 else:
                     #sample from replay buffer:
-                    rand_state, rand_a, rand_reward, rand_next_state, rand_end = Replay.sample(HP.batch_size)
+                    rand_state, rand_a,rand_next_state, rand_end = Replay.sample(HP.batch_size)
                     #update neural networs:
                     #pLib.DDQN(rand_state, rand_a, rand_reward, rand_next_state,net,HP)
-                    pLib.DDPG(rand_state, rand_a, rand_reward, rand_next_state,rand_end,net,HP)
+                    pLib.model_based_update(rand_state, rand_a, rand_next_state,rand_end,net,HP)
 
 
                     
-                
+            
 
             next_state, reward, done, info = env.step(a)
+            print ("rel_pos",next_state['rel_pos'])
             reward_vec.append(reward)
             #add data to replay buffer:
             #if info == 'kipp':
@@ -171,10 +163,12 @@ def train(env,HP,net,dataManager,seed = None):
             #else:
             #    fail = False
             #Replay.add((state,a,reward,next_state,fail))#done
-            if HP.add_feature_to_action:
-                a[0] -= analytic_action
-
-            Replay.add((state,a,reward,next_state,done))#  
+            replay_state,replay_next_state = copy.deepcopy(state),copy.deepcopy(next_state)
+            replay_state['path'] = []
+            replay_next_state['path'] = []
+            Replay.add((replay_state,[a[0],steer_command],replay_next_state,done))#  
+            #Replay1.add((state['vel'],state['steer'],a[0],steer_command,
+            #            next_state['rel_pos'][0],next_state['rel_pos'][1],next_state['rel_ang'],next_state['vel'],next_state['steer']))#  
             state = next_state
 
             if done:
@@ -223,6 +217,7 @@ def train(env,HP,net,dataManager,seed = None):
         if (i % HP.save_every == 0 and i > 0): 
             net.save_model(HP.save_file_path)
             Replay.save(HP.save_file_path)
+            #Replay1.save(HP.save_file_path)
             dataManager.save_data()
         if HP.plot_flag and waitFor.command == [b'1']:
             dataManager.plot_all()
@@ -249,6 +244,7 @@ def train(env,HP,net,dataManager,seed = None):
     env.close()
     net.save_model(HP.save_file_path)
     Replay.save(HP.save_file_path)
+    #Replay1.save(HP.save_file_path)
     dataManager.save_data()
         
     

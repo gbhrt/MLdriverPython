@@ -15,13 +15,13 @@ class HyperParameters:
         self.train_num = 2# how many times to train in every step
 
         #########################
-        self.add_feature_to_action = True
-        self.train_flag = True
+        self.add_feature_to_action  = False
+        self.train_flag = False
         self.noise_flag = True
         self.always_no_noise_flag = False
         self.zero_noise_every = 5
         self.test_same_path = True
-        self.run_same_path = False
+        self.run_same_path = True
         self.conv_flag = False
         self.gym_flag = False
         self.render_flag = True
@@ -36,6 +36,39 @@ class HyperParameters:
 
         self.restore_name = "test"
         self.restore_file_path = os.getcwd()+ "\\files\\models\\final\\"+self.restore_name+"\\"
+
+        if self.always_no_noise_flag:
+            self.noise_flag = False
+
+class ModelBasedHyperParameters:
+    def __init__(self):
+        self.num_of_runs = 100000
+        self.alpha = 0.001# #learning rate
+        self.batch_size = 64
+        self.replay_memory_size = 100000
+        self.train_num = 100# how many times to train in every step
+        self.run_random_num = 'inf'
+        #########################
+        self.train_flag = True
+        self.noise_flag = True
+        self.always_no_noise_flag = False
+        self.zero_noise_every = 5
+        self.test_same_path = False
+        self.run_same_path = False
+        self.conv_flag = False
+        self.gym_flag = False
+        self.render_flag = True
+        self.plot_flag = True
+        self.restore_flag = True
+        self.skip_run = False
+        self.reset_every = 3
+        self.save_every = 100
+        self.seed = 1111
+        self.save_name ="test2"
+        self.save_file_path = os.getcwd()+ "\\files\\models\\model_based\\"+self.save_name+"\\"
+
+        self.restore_name = "test1"
+        self.restore_file_path = os.getcwd()+ "\\files\\models\\model_based\\"+self.restore_name+"\\"
 
         if self.always_no_noise_flag:
             self.noise_flag = False
