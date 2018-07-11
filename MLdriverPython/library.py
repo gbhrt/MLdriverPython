@@ -211,7 +211,7 @@ def comp_steer_general(path,pos,ang,vel):
     target = comp_steer_target(path,vel,index = index)
     local_target = to_local(np.asarray(target),np.asarray(pos),ang)#compute target in vehicle reference system
     steer = comp_steer(pos,ang,target)
-    print("target:",target,"local_target:",local_target,"pos:",pos,"pos_on_path:",path.position[index],"ang:",ang,"steer:",steer)
+    #print("target:",target,"local_target:",local_target,"pos:",pos,"pos_on_path:",path.position[index],"ang:",ang,"steer:",steer)
     return steer
 
 

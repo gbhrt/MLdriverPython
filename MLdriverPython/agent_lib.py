@@ -30,8 +30,8 @@ class Replay:
             path += "replay_memory\\"
             pathlib.Path(path).mkdir(parents=True, exist_ok=True) 
             file_name = path + name + ".txt"
-            #with open(file_name, 'w') as f:
-            #    json.dump(self.memory,f)
+            with open(file_name, 'w') as f:
+                json.dump(self.memory,f)
             print("done.")
 
         except:
@@ -135,7 +135,7 @@ def model_based_update(rand_state, rand_a, rand_next_state,rand_end,net,HP):
     Y_ = []
     for i in range(len(rand_state)):
         X.append([rand_state[i]['vel'], rand_state[i]['steer'],rand_a[i][1],rand_a[i][0]])#action steer, action acc
-        Y_.append([rand_next_state[i]['rel_pos'][0],rand_next_state[i]['rel_pos'][1],rand_next_state[i]['rel_ang'],rand_next_state[i]['vel'],rand_next_state[i]['steer']])
+        Y_.append([rand_next_state[i]['rel_pos'][0],rand_next_state[i]['rel_pos'][1],rand_next_state[i]['rel_ang'],rand_next_state[i]['vel'],rand_next_state[i]['steer'],rand_next_state[i]['roll']])
     net.update_network(X,Y_)
     #print("loss:",net.get_loss(X,Y_))
     return
@@ -146,31 +146,42 @@ def comp_abs_pos_ang(rel_pos,rel_ang,abs_pos,abs_ang):
     #if next_rel_ang  > math.pi: rel_ang  -= 2*math.pi
     #if next_rel_ang  < -math.pi: rel_ang  += 2*math.pi
     return next_abs_pos,next_rel_ang
-def predict_n_next(n,net,init_state):
+def predict_n_next(n,net,init_state,max_roll):
     
     abs_pos = [0,0]#relative to the local path
     abs_ang = 0
+    
     steer_command = lib.comp_steer_general(init_state['path'],abs_pos,abs_ang,init_state['vel'])
-    acc_command = 0.0
-    pred_vec = [[abs_pos,abs_ang,init_state['vel'],init_state['steer']]]
+    acc_command = 0.7
+    pred_vec = [[abs_pos,abs_ang,init_state['vel'],init_state['steer'],init_state['roll']]]
     X = [init_state['vel'],init_state['steer'],steer_command,acc_command]
     #X = [5.0,0.1,steer_command,acc_command]
+    roll_flag = False
     for i in range(1,n):#n times 
         Y = net.get_Y([X])[0]#predict_next(features_num,train_data, sample, k, p)
         #print("X:",X,"Y:",Y)
         #pred_vec.append(Y)#x,y,ang,vel, steer - all relative 
+
+
         X[0] = Y[3]#vel
         X[1] = Y[4]#steer
-        abs_pos,abs_ang = comp_abs_pos_ang(Y[0:2],Y[2],abs_pos,abs_ang)#rel_pos = Y[0:2] rel_ang = Y[2]
+        abs_pos,abs_ang = comp_abs_pos_ang(Y[0:2],Y[2],abs_pos,abs_ang)#rel_pos = Y[0:2] rel_ang = Y[2] roll Y[5]
         #print("abs_pos",abs_pos,"abs_ang",abs_ang)
         steer_command =  lib.comp_steer_general(init_state['path'],abs_pos,abs_ang,init_state['vel'])#action steer
         #print("steer_command:",steer_command)
         X[2] =  steer_command
-        acc_command = 0.0
+        acc_command = -0.7
         X[3] = acc_command #action acceleration
-        pred_vec.append([abs_pos,abs_ang,Y[3],Y[4]])
-    print("end--------------------------")
-    return pred_vec
+        pred_vec.append([abs_pos,abs_ang,Y[3],Y[4],Y[5]])
+        if Y[3] < 0:#reach velocity 0
+            break
+        if abs(Y[5]) > max_roll:# roll
+            roll_flag = True
+            break
+    
+    print("roll:", np.array(pred_vec)[:,4])
+    #print("end--------------------------")
+    return pred_vec,roll_flag
 def predict_n_next_abs(n,net,init_state):
     predict_n_next(n,net,init_state)
     return

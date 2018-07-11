@@ -67,7 +67,7 @@ class ModelBasedHyperParameters:
         self.save_name ="test2"
         self.save_file_path = os.getcwd()+ "\\files\\models\\model_based\\"+self.save_name+"\\"
 
-        self.restore_name = "test1"
+        self.restore_name = "test2"
         self.restore_file_path = os.getcwd()+ "\\files\\models\\model_based\\"+self.restore_name+"\\"
 
         if self.always_no_noise_flag:

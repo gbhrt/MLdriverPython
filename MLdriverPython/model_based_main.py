@@ -2,7 +2,7 @@ import gui
 import threading
 import time
 import main_program
-import main_model_based
+import model_based_run
 import gui_shared
 
 class programThread (threading.Thread):
@@ -12,7 +12,7 @@ class programThread (threading.Thread):
       
    def run(self):
         print ("Starting " + self.name)
-        main_model_based.run(shared)
+        model_based_run.run(shared)
         #main_program.run(shared)
         print ("Exiting " + self.name)
 

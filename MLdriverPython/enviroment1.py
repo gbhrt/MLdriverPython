@@ -83,7 +83,7 @@ class OptimalVelocityPlanner(OptimalVelocityPlannerData):
              
 
     def reset(self,seed = None):
-        
+  #     self.lt = 0 #tmp
         if (self.reset_count % self.reset_every == 0 and self.reset_count > 0): 
             self.pl.simulator.reset_position()
             self.pl.stop_vehicle()
@@ -159,6 +159,9 @@ class OptimalVelocityPlanner(OptimalVelocityPlannerData):
         #print("after wait: ",time.time() - temp_last_time)
         #get next state:
         self.pl.simulator.get_vehicle_data()#read data after time step from last action
+        #t = time.time()
+        #print (t - self.lt)
+        #self.lt = t
        # print("after get data: ",time.time() - temp_last_time)
         local_path = self.pl.get_local_path(send_path = False,num_of_points = self.visualized_points)#num_of_points = visualized_points
 
@@ -173,7 +176,8 @@ class OptimalVelocityPlanner(OptimalVelocityPlannerData):
                     ,curvature = local_path.curvature[0],seed = self.path_seed)
         if self.mode == 'model_based':
             next_state = get_model_based_state(self.pl,self.last_pos,self.last_ang,local_path)
-
+        self.dataManager.update_real_path(pl = self.pl,velocity_limit = local_path.analytic_velocity_limit[0],analytic_vel = local_path.analytic_velocity[0]\
+            ,curvature = local_path.curvature[0],seed = self.path_seed)
         #self.dataManager.save_additional_data(features = lib.denormalize(next_state,0,30))#pl,features = denormalize(state,0,30),action = a
         if self.end_indication_flag == True:
             end_distance = self.distance_between_points*self.feature_points
@@ -221,7 +225,7 @@ class OptimalVelocityPlanner(OptimalVelocityPlannerData):
         #v1 = self.pl.in_vehicle_reference_path.analytic_velocity[self.pl.main_index]
         #v2 = self.pl.in_vehicle_reference_path.analytic_velocity[self.pl.main_index+1]
         #d = self.pl.in_vehicle_reference_path.distance[self.pl.main_index+1] - self.pl.in_vehicle_reference_path.distance[self.pl.main_index]
-        self.pl.simulator.get_vehicle_data()#read data after time step from last action
+        #self.pl.simulator.get_vehicle_data()#read data after time step from last action
        # print("after get data: ",time.time() - temp_last_time)
         local_path = self.pl.get_local_path(send_path = False,num_of_points = self.visualized_points)#num_of_points = visualized_points
         v1 = local_path.analytic_velocity[0]
@@ -260,6 +264,16 @@ class OptimalVelocityPlanner(OptimalVelocityPlannerData):
 
         #error =  3.0 - pos_state[0]*self.max_velocity 
         #return np.clip(error*0.5,-1,1)
+    def comp_analytic_acc_compare(self):
+        if self.pl.main_index+10 < len(self.pl.in_vehicle_reference_path.analytic_velocity):
+            vel = self.pl.in_vehicle_reference_path.analytic_velocity[self.pl.main_index+10]
+        else:
+            vel = self.pl.in_vehicle_reference_path.analytic_velocity[-1]
+        kp = 100
+            #constant velocity:
+        error =  (vel - self.pl.simulator.vehicle.velocity)*kp
+        acc = np.clip(error*0.5,-1,1)
+        return acc
 
     def comp_analytic_velocity(self,pos_state):
         max_distance = self.distance_between_points*self.feature_points

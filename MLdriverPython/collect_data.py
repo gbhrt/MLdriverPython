@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 import copy
 
 def collect_random_data(buffer_size,path,name):
-
+    lt = 0#tmp
     buffer = a_lib.Replay(buffer_size)
     pl = Planner(mode = "torque")
     waitFor = lib.waitFor()
@@ -71,6 +71,9 @@ def collect_random_data(buffer_size,path,name):
             # vel,steer,acc,des_steer,     pos, ang
             #state, action, next_state. 
             # 
+            t = time.time()
+            print (t - lt)
+            lt = t
             buffer.add((state['vel'],state['steer'],action['steer'],action['acc'],
                         next_state['rel_pos'][0],next_state['rel_pos'][1],next_state['rel_ang'],next_state['vel'],next_state['steer']))
             #print ("rel_pos",next_state['rel_pos'])
@@ -90,7 +93,7 @@ def collect_random_data(buffer_size,path,name):
                     pl.stop_vehicle()
                 break
 
-            state = copy.copy(next_state)
+            state = copy.deepcopy(next_state)
      
         pl.stop_vehicle()
 
