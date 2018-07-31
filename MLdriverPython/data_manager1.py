@@ -65,16 +65,18 @@ class DataManager():
     def plot_all(self):
         try:
             #comp analytic path:
-            if len(self.real_path.time) > 0:
-                for i in range(1,len(self.real_path.time)):
-                    self.real_path.time[i] -= self.real_path.time[0]
-                self.real_path.time[0] = 0.0
-                path = lib.compute_analytic_path(self.real_path.seed)
-                max_time_ind = 0
-                for i,tim in enumerate (path.analytic_time):
-                    max_time_ind = i
-                    if tim > self.real_path.time[-1]:
-                        break
+            ##if len(self.real_path.time) > 0:
+            ##    for i in range(1,len(self.real_path.time)):
+            ##        self.real_path.time[i] -= self.real_path.time[0]
+            ##    self.real_path.time[0] = 0.0
+            ##    path = lib.compute_analytic_path(self.real_path.seed)
+            ##    max_time_ind = 0
+            ##    for i,tim in enumerate (path.analytic_time):
+            ##        max_time_ind = i
+            ##        if tim > self.real_path.time[-1]:
+            ##            break
+            max_time_ind = len(self.real_path.time)
+            path = self.real_path
             ###########################
 
             plt.figure(1,figsize = (10,5))
@@ -85,21 +87,21 @@ class DataManager():
             #plt.plot(self.real_path.distance,np.array(self.noise)*10)
             if len(self.real_path.time) > 0:
                 real_vel, = plt.plot(np.array(path.distance)[:max_time_ind],np.array(path.analytic_velocity_limit)[:max_time_ind],label = "velocity limit")
-                vel_lim,  = plt.plot(np.array(path.distance)[:max_time_ind],np.array(path.analytic_velocity)[:max_time_ind],label = "vehicle velocity")
-                vel, =      plt.plot(self.real_path.distance,self.real_path.velocity, label = "analytic velocity")
+                vel_lim,  = plt.plot(np.array(path.distance)[:max_time_ind],np.array(path.analytic_velocity)[:max_time_ind],label = "analytic velocity")
+                vel, =      plt.plot(self.real_path.distance,self.real_path.velocity,'o', label = "vehicle velocity")
                 plt.legend(handles=[real_vel, vel_lim,vel])
             plt.subplot(222)  
          
                 
             #print("self.real_path.time[-1] in plot",self.real_path.time[-1])
             #print("analytic_dist in plot:",path.distance[max_time_ind])
-            if len(self.real_path.time) > 0:
-                plt.plot(np.array(path.analytic_time)[:max_time_ind],np.array(path.analytic_velocity_limit)[:max_time_ind])
-                plt.plot(np.array(path.analytic_time)[:max_time_ind],np.array(path.analytic_velocity)[:max_time_ind])
+            ##if len(self.real_path.time) > 0:
+            ##    plt.plot(np.array(path.analytic_time)[:max_time_ind],np.array(path.analytic_velocity_limit)[:max_time_ind])
+            ##    plt.plot(np.array(path.analytic_time)[:max_time_ind],np.array(path.analytic_velocity)[:max_time_ind])
           
 
-                plt.plot(self.real_path.time,self.real_path.velocity)
-            #plt.plot(self.roll)
+            ##    plt.plot(self.real_path.time,self.real_path.velocity)
+            
             #x = np.array(self.real_path.distance)
             #Qa, = plt.plot(x,self.Qa,label = "Qa")
             #Q0, = plt.plot(x,self.Q0,label = "Q0")
@@ -109,42 +111,43 @@ class DataManager():
 
 
             plt.subplot(223)  
+            if len(self.real_path.time) > 0:
+                plt.plot(path.distance[:max_time_ind],self.roll[:max_time_ind])
+            #plt.title("train num - relative reward")
             
-            plt.title("train num - relative reward")
+            #col = []
+            #for mode in self.episode_end_mode:
+            #    if mode == 'kipp' or mode == 'deviate':
+            #        col.append('r')
+            #    else:
+            #        col.append('g')
+            #relative_reward_zero = list(self.relative_reward)
+            #relative_reward_success = []
+            #relative_reward_success_ind = []
+            #fails = 0
+            #fails_range = 50
+            #fails_num = []
+            #fail_num_ind = []
+            #for i in range(len(self.episode_end_mode)):
+            #    if self.episode_end_mode[i] == 'kipp' or self.episode_end_mode[i] == 'deviate':
+            #        relative_reward_zero[i] = 0.0
+            #        fails+=1
+            #    else:
+            #        relative_reward_success.append(self.relative_reward[i])
+            #        relative_reward_success_ind.append(self.train_num[i])
+            #    if i % fails_range == 0 and i != 0:
+            #        fails_num.append(fails/fails_range)
+            #        fail_num_ind.append(self.train_num[i])
+            #        fails = 0
             
-            col = []
-            for mode in self.episode_end_mode:
-                if mode == 'kipp' or mode == 'deviate':
-                    col.append('r')
-                else:
-                    col.append('g')
-            relative_reward_zero = list(self.relative_reward)
-            relative_reward_success = []
-            relative_reward_success_ind = []
-            fails = 0
-            fails_range = 50
-            fails_num = []
-            fail_num_ind = []
-            for i in range(len(self.episode_end_mode)):
-                if self.episode_end_mode[i] == 'kipp' or self.episode_end_mode[i] == 'deviate':
-                    relative_reward_zero[i] = 0.0
-                    fails+=1
-                else:
-                    relative_reward_success.append(self.relative_reward[i])
-                    relative_reward_success_ind.append(self.train_num[i])
-                if i % fails_range == 0 and i != 0:
-                    fails_num.append(fails/fails_range)
-                    fail_num_ind.append(self.train_num[i])
-                    fails = 0
-            
-            #plt.scatter(relative_reward_success_ind[:len(fails_num)],fails_num)
-            #plt.scatter(self.train_num,relative_reward_zero,c = col)
-            plt.scatter(relative_reward_success_ind,relative_reward_success,c = 'r')
-            #ave = lib.running_average(relative_reward_success,50)
-            #plt.plot(relative_reward_success_ind[:len(ave)],ave,c = 'b')
+            ##plt.scatter(relative_reward_success_ind[:len(fails_num)],fails_num)
+            ##plt.scatter(self.train_num,relative_reward_zero,c = col)
+            #plt.scatter(relative_reward_success_ind,relative_reward_success,c = 'r')
+            ##ave = lib.running_average(relative_reward_success,50)
+            ##plt.plot(relative_reward_success_ind[:len(ave)],ave,c = 'b')
 
 
-            plt.scatter(fail_num_ind,fails_num,c = 'g')
+            #plt.scatter(fail_num_ind,fails_num,c = 'g')
             #plt.title("episodes reward")
             #plt.plot(self.run_num,self.rewards,'o')
             #if len(self.run_num) >= 15:

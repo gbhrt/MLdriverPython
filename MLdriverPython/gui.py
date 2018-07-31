@@ -4,16 +4,12 @@ import numpy as np
 from pyglet.gl import *
 import threading
 import time
+import ion_graph
+import copy
 
-
-
-# get all the points in a circle centered at 0.
 def PointsInCircum(r, n=25, pi=3.14):
     return [(math.cos(2*pi/n*x)*r,math.sin(2*pi/n*x)*r) for x in range(0,n+1)]
 pts = np.array(PointsInCircum(20))
-
-# function that increments to the next
-# point along a circle
 frame = 0
 def update_frame(x, y):
     global frame
@@ -35,6 +31,15 @@ def draw_path(position):
         glVertex3f(pos[0],pos[1],0)
     glEnd()
 
+def draw_wheel():
+    w = 0.5
+    l = 1
+    glBegin(GL_QUADS)
+    glVertex3f(-w/2,l/2,0)
+    glVertex3f(w/2,l/2,0)
+    glVertex3f(w/2,-l/2,0)
+    glVertex3f(-w/2,-l/2,0)
+    glEnd()
 
 def draw_vehicle(steer):
     width = 2.08
@@ -45,9 +50,33 @@ def draw_vehicle(steer):
     glVertex3f(width/2,-length/2,0)
     glVertex3f(-width/2,-length/2,0)
     glEnd()
+    #draw_wheel()
+    glPushMatrix()
+    glTranslatef(2.08/2+0.27,-length/2,0)
+    draw_wheel()
+    glPopMatrix()
+
+    glPushMatrix()
+    glTranslatef(-(2.08/2+0.27),-length/2,0)
+    draw_wheel()
+    glPopMatrix()
+
+    steer_deg = steer*180/3.141
+    glPushMatrix()
+    glTranslatef((2.08/2+0.27),length/2,0)
+    glRotatef(steer_deg,0,0,1)
+    draw_wheel()
+    glPopMatrix()
+
+    glPushMatrix()
+    glTranslatef(-(2.08/2+0.27),length/2,0)
+    glRotatef(steer_deg,0,0,1)
+    draw_wheel()
+    glPopMatrix()
+
     return
 
-def draw_win(win,shared):
+def draw_win(win,guiShared):
     glMatrixMode(GL_PROJECTION)
     glLoadIdentity()
     gluOrtho2D(-20,20,-10,30)
@@ -57,22 +86,25 @@ def draw_win(win,shared):
 
     #glPushMatrix()
     glColor3f(0,0,1)
-    draw_vehicle(shared.steer)
+    if guiShared.steer is not None:
+        draw_vehicle(guiShared.steer)
     glColor3f(0,1,0)
-    if shared.state is not None:
-        draw_path(shared.state['path'].position)
+    if guiShared.state is not None:
+        draw_path(guiShared.state['path'].position)
     glColor3f(1,0,0)
-    if shared.predicded_path is not None:
-        draw_path(shared.predicded_path)
+    if guiShared.predicded_path is not None:
+        draw_path(guiShared.predicded_path)
     #glPopMatrix()
 
 #if time.time() - start_time > 5:
-#    shared.exit_program = True
+#    guiShared.exit_program = True
 
 def update():
     return
 
-def start_gui(shared):
+def start_gui(guiShared):
+    #ionGraph = ion_graph.ionGraph()
+
     win = pyglet.window.Window()
     start_time = time.time()
 
@@ -94,8 +126,9 @@ def start_gui(shared):
         #glVertex3f(0,0,0)
         #glVertex3f(pts[frame][1],pts[frame][0],0)
         #glEnd()
-        draw_win(win,shared)
-
+        with guiShared.Lock: 
+            draw_win(win,guiShared)
+        #ionGraph.update(guiShared)
         #test(win)
         
 

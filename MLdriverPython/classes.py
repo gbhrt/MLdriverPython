@@ -158,5 +158,20 @@ class PathManager:#
             if path == None:
                 return self.random_count,None
         return self.random_count,path
+    def create_const_curve_path(self):
+        dis = 0.05
+        R = 8.0
+        num_pnts = int(2*math.pi*R/dis * 10)
+        
+        path = Path()
+        
+        dang = dis/R
+        ang=0
+        for i in range(num_pnts):
+            ang += dang
+            x = R*math.cos(ang)
+            y = R*math.sin(ang)
+            path.position.append([x,y,0])    
+        return path
 
 

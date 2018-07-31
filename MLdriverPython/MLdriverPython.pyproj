@@ -5,7 +5,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>67d1be9f-78bf-410b-b3ad-9001facbb70e</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>model_based_main.py</StartupFile>
+    <StartupFile>main_train.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -44,16 +44,19 @@
     <Compile Include="gui.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="gui_shared.py">
+    <Compile Include="ion_graph.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="shared.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="model_based_main.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="model_based_run.py" />
     <Compile Include="main_program.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="model_based_run.py" />
     <Compile Include="train_offline.py">
       <SubType>Code</SubType>
     </Compile>
@@ -130,6 +133,9 @@
     <Compile Include="tests.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="train_thread.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="train_without_sim.py">
       <SubType>Code</SubType>
     </Compile>
@@ -137,6 +143,7 @@
   <ItemGroup>
     <Folder Include="deepLearnProject\" />
     <Folder Include="gym\" />
+    <Folder Include="MB\" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in

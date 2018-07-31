@@ -6,6 +6,7 @@ import _thread
 import c_functions as c_func
 import os
 import random
+import copy
 
 cf = c_func.cFunctions()
     
@@ -282,7 +283,7 @@ def read_data(file_name):#, x,y,steer_ang
 def step_now(last_time,step_time):
     t = time.time()
     if t - last_time[0] > step_time:
-        if t - last_time[0] > step_time+0.002:
+        if t - last_time[0] > step_time+0.005:
             print("step time too short! deviation:",t - last_time[0] - step_time)
         last_time[0] = t
         return True
@@ -536,6 +537,7 @@ class waitFor:
                 stop[0] = True
             else:
                 command[0] = inp
+            time.sleep(0.02)
         return
     def wait_for(self):
         _thread.start_new_thread(self.input_thread, (self.stop,self.command,))

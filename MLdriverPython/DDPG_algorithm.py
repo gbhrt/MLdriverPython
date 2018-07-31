@@ -118,7 +118,7 @@ def train(env,HP,net,dataManager,seed = None):
             
             #a = [state[0]]# 
             #if HP.noise_flag:
-            a = [env.comp_analytic_acceleration(state)]#env.analytic_feature_flag must be false
+            #a = [env.comp_analytic_acceleration(state)]#env.analytic_feature_flag must be false
             
 
             if HP.add_feature_to_action:

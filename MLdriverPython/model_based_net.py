@@ -4,12 +4,12 @@ import pathlib
 import numpy as np
 import library as lib
 import random
-
 from net_lib import NetLib
 
 
 class model_based_network(NetLib):
-    def __init__(self,X_n,Y_n,alpha):
+    def __init__(self,X_n,Y_n,alpha,norm_vec):
+        self.norm_vec = norm_vec
         tf.reset_default_graph()   
         self.hidden_layer_nodes1 = 200
         self.hidden_layer_nodes2 = 100
@@ -78,9 +78,9 @@ class model_based_network(NetLib):
         
 
     def update_network(self,X,Y_):
-        self.sess.run(self.update, feed_dict={self.X: X ,self.Y_: Y_})# 
+        self.sess.run(self.update, feed_dict={self.X: lib.normalize(X,self.norm_vec) ,self.Y_: Y_})# 
         return 
     def get_loss(self,X,Y_):
-        return self.sess.run(self.loss, feed_dict= {self.X: X ,self.Y_: Y_})# 
+        return self.sess.run(self.loss, feed_dict= {self.X: lib.normalize(X,self.norm_vec) ,self.Y_: Y_})# 
     def get_Y(self,X):
-        return self.sess.run(self.Y, feed_dict= {self.X: X})
+        return self.sess.run(self.Y, feed_dict= {self.X: lib.normalize(X,self.norm_vec)})

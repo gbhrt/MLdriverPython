@@ -307,6 +307,8 @@ class Planner(PathManager):#planner - get and send data to simulator. input - mi
             path_num,self.reference_free_path = self.get_next_random_path()
             if self.reference_free_path == None:
                 return -1
+        elif source == "create":
+            self.reference_free_path =self.create_const_curve_path()
         else:
             print("error - no path source")
 

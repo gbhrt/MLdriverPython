@@ -160,7 +160,7 @@ def predict_n_next(n,net,init_state,max_roll):
     for i in range(1,n):#n times 
         Y = net.get_Y([X])[0]#predict_next(features_num,train_data, sample, k, p)
         #print("X:",X,"Y:",Y)
-        #pred_vec.append(Y)#x,y,ang,vel, steer - all relative 
+        #pred_vec.append(Y)#x,y,ang,vel, steer roll - all relative 
 
 
         X[0] = Y[3]#vel
@@ -180,6 +180,7 @@ def predict_n_next(n,net,init_state,max_roll):
             break
     
     print("roll:", np.array(pred_vec)[:,4])
+    print("vel:", np.array(pred_vec)[:,2])
     #print("end--------------------------")
     return pred_vec,roll_flag
 def predict_n_next_abs(n,net,init_state):

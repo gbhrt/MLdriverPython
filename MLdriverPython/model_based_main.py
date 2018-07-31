@@ -3,17 +3,16 @@ import threading
 import time
 import main_program
 import model_based_run
-import gui_shared
+import shared
 
 class programThread (threading.Thread):
-   def __init__(self,shared):
+   def __init__(self,guiShared):
         threading.Thread.__init__(self)
-        self.shared = shared
+        self.guiShared = guiShared
       
    def run(self):
         print ("Starting " + self.name)
-        model_based_run.run(shared)
-        #main_program.run(shared)
+        model_based_run.run(guiShared)
         print ("Exiting " + self.name)
 
 #def print_time(threadName, counter, delay):
@@ -26,14 +25,15 @@ class programThread (threading.Thread):
 
 if __name__ == "__main__": 
 
-    shared = gui_shared.shared()
+    guiShared = shared.guiShared()
+
     # Create new threads
-    programThread = programThread(shared)
+    programThread = programThread(guiShared)
     # Start new Threads
     programThread.start()
 
     #start the gui:
-    gui.start_gui(shared)
+    gui.start_gui(guiShared)
 
     print ("Exiting Main Thread")
 
