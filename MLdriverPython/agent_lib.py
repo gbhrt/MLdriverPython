@@ -92,9 +92,9 @@ class OrnsteinUhlenbeckActionNoise:
     def __repr__(self):
         return 'OrnsteinUhlenbeckActionNoise(mu={}, sigma={})'.format(self.mu, self.sigma)
 
-def DDPG(rand_state, rand_a, rand_reward, rand_next_state,rand_end,net,HP):
+def DDPG(rand_state, rand_a, rand_reward, rand_next_state,rand_end,net,HP,comp_analytic_acceleration = None):
     #compute target Q:
-    
+
     rand_next_a = net.get_target_actions(rand_next_state)#action from next state
     
     ##vec0 = [[0] for _ in range(len(rand_next_state))]
@@ -117,7 +117,7 @@ def DDPG(rand_state, rand_a, rand_reward, rand_next_state,rand_end,net,HP):
     net.Update_critic(rand_state,rand_a,rand_targetQa)#compute Qa(state,a) and minimize loss (Qa - targetQa)^2
     Qa = net.get_Qa(rand_state,rand_a)
     critic_loss = net.get_critic_loss(rand_state,rand_a,rand_targetQa)
-    
+    print("critic_loss:",critic_loss)
     
     #update actor
     pred_action = net.get_actions(rand_state)#predicted action from state

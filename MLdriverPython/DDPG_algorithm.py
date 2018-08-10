@@ -95,13 +95,14 @@ def train(env,HP,net,dataManager,seed = None):
                 noise_range = env.action_space.high[0]
             
             a = net.get_actions(np.reshape(state, (1, env.observation_space.shape[0])))#[[action]] batch, action list
-           # print("action:",a,"analytic_action:",analytic_action)
+            print("action:",a)#,"analytic_action:",analytic_action)
             noise = actionNoise() * noise_range
+            #noise = random.uniform(-1, 1)* noise_range
             #Qa = net.get_Qa(np.reshape(state, (1, env.observation_space.shape[0])),a)[0][0]
             #Q0 = net.get_Qa(np.reshape(state, (1, env.observation_space.shape[0])),[[0]])[0][0]
             #Q1 = net.get_Qa(np.reshape(state, (1, env.observation_space.shape[0])),[[1.0]])[0][0]
             #Qneg1 = net.get_Qa(np.reshape(state, (1, env.observation_space.shape[0])),[[-1.0]])[0][0]
-            ##print("Qa:",Qa,"Q0:",Q0,"Q1",Q1,"Qneg1",Qneg1)
+            #print("Qa:",Qa,"Q0:",Q0,"Q1",Q1,"Qneg1",Qneg1)
             #dataManager.Qa.append(Qa)
             #dataManager.Q0.append(Q0)
             #dataManager.Q1.append(Q1)
@@ -118,14 +119,17 @@ def train(env,HP,net,dataManager,seed = None):
             
             #a = [state[0]]# 
             #if HP.noise_flag:
-            #a = [env.comp_analytic_acceleration(state)]#env.analytic_feature_flag must be false
-            
+
 
             if HP.add_feature_to_action:
                 a[0] += analytic_action
+
+            if HP.analytic_action and HP.noise_flag:
+                a = [env.comp_analytic_acceleration(state)]#env.analytic_feature_flag must be false
+            
            # print("state:", state)
             #a = env.get_analytic_action()
-            print("action: ", a)#,"noise: ",noise)
+            #print("action: ", a)#,"noise: ",noise)
             dataManager.acc.append(a)
             if not HP.gym_flag:
                 env.command(a)
@@ -145,6 +149,9 @@ def train(env,HP,net,dataManager,seed = None):
                         rand_state, rand_a, rand_reward, rand_next_state, rand_end = Replay.sample(HP.batch_size)
                         #update neural networs:
                         #pLib.DDQN(rand_state, rand_a, rand_reward, rand_next_state,net,HP)
+                        #if HP.add_feature_to_action:
+                        #    pLib.DDPG(rand_state, rand_a, rand_reward, rand_next_state,rand_end,net,HP,comp_analytic_acceleration = env.comp_analytic_acceleration)
+                        #else:
                         pLib.DDPG(rand_state, rand_a, rand_reward, rand_next_state,rand_end,net,HP)
                         t = time.time()
                         

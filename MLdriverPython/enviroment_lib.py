@@ -113,12 +113,20 @@ def get_model_based_state(pl,last_abs_pos,last_abs_ang,local_path):
     last_abs_ang[1] = pl.simulator.vehicle.angle[1]
     return state
 
-def get_reward(velocity,max_vel,mode,lower_bound = 0.0):  
-    reward = velocity/max_vel 
-    #if velocity <= 0.0:
+def get_reward(velocity,max_vel,mode,lower_bound = 0.0,analytic_velocity = None): 
+    if analytic_velocity is not None:
+        #reward = -abs((velocity - analytic_velocity)/max_vel)
+        if velocity < analytic_velocity:
+            reward = (velocity - analytic_velocity)/max_vel #negative reward
+        else:
+            reward = (velocity - analytic_velocity)/max_vel #positive reward
+        print("velocity:",velocity,"analytic_velocity:",analytic_velocity,"reward:",reward)
+    else:
+        reward = velocity/max_vel 
+        #if velocity <= 0.0:
     if velocity <= lower_bound:
         reward = -1.0
-    if mode == 'kipp':
+    if mode == 'kipp'or mode == 'deviate':
         reward = -5.0
     #elif mode == 'path_end':#problem - agent dont know that he is at the end
     #    reward = 10

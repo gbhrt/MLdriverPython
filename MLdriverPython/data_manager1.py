@@ -259,12 +259,12 @@ class DataManager():
         self.acc = []
         
     def save_readeable_data(self):
-      #  try: 
+        try: 
             with open(self.save_readable_data_name, 'w') as f:
                 for i in range(len(self.rewards)):
                     f.write("%s \t %s\t %s \t %s \n" % (i,self.rewards[i],self.relative_reward[i],self.episode_end_mode[i]))
-        #except:
-        #    print("cannot save data")
+        except:
+            print("cannot save data")
     def save_data(self):
         try: 
             with open(self.save_name, 'w') as f:

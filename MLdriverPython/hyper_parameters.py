@@ -15,8 +15,9 @@ class HyperParameters:
         self.train_num = 2# how many times to train in every step
 
         #########################
-        self.add_feature_to_action  = True
-        self.train_flag = True
+        self.add_feature_to_action  = False
+        self.analytic_action = True
+        self.train_flag =True
         self.noise_flag = True
         self.always_no_noise_flag = False
         self.zero_noise_every = 5
@@ -32,10 +33,10 @@ class HyperParameters:
         self.save_every = 100
         self.seed = 1111
         self.save_name ="test1"
-        self.save_file_path = os.getcwd()+ "\\files\\models\\final1\\"+self.save_name+"\\"
+        self.save_file_path = os.getcwd()+ "\\files\\models\\final3\\"+self.save_name+"\\"
 
         self.restore_name = "test1"
-        self.restore_file_path = os.getcwd()+ "\\files\\models\\final1\\"+self.restore_name+"\\"
+        self.restore_file_path = os.getcwd()+ "\\files\\models\\final3\\"+self.restore_name+"\\"
 
         if self.always_no_noise_flag:
             self.noise_flag = False

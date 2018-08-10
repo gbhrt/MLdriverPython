@@ -34,7 +34,7 @@ class OptimalVelocityPlannerData:
         self.path_lenght = 9000#self.feature_points*self.distance_between_points
         self.step_time = 0.2
         self.action_space_n = 1
-        self.max_deviation = 3 # [m] if more then maximum - end episode 
+        self.max_deviation = 2# 3 # [m] if more then maximum - end episode 
         self.visualized_points = int(self.feature_points/0.05) + 10 #how many points show on the map and lenght of local path
         self.max_pitch = 0.3#0.3
         self.max_roll = 0.2#0.07#0.05#0.3
@@ -198,7 +198,7 @@ class OptimalVelocityPlanner(OptimalVelocityPlannerData):
             analytic_vel = self.comp_analytic_velocity(next_state)
             reward = get_reward(self.pl.simulator.vehicle.velocity,self.max_velocity,mode,lower_bound = analytic_vel)
 
-        reward = get_reward(self.pl.simulator.vehicle.velocity,self.max_velocity,mode)
+        reward = get_reward(self.pl.simulator.vehicle.velocity,self.max_velocity,mode)#,analytic_velocity = local_path.analytic_velocity[0])#
 
         if self.episode_steps > self.max_episode_steps:
             mode = 'max_steps'
@@ -310,6 +310,11 @@ class OptimalVelocityPlanner(OptimalVelocityPlannerData):
                 print("crossed limit")
             print("cannot compute analytic velocity")
             return 0.0
+
+    def check_lower_bound(self,state):
+        vel = self.pl.simulator.vehicle.velocity
+        analytic_vel = state.analytic_velocity[0]
+
     def comp_steer(self):
         local_path = self.pl.get_local_path(send_path = False,num_of_points = self.visualized_points)
         steer_target = lib.comp_steer_target(local_path,self.pl.simulator.vehicle.velocity)

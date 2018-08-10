@@ -42,7 +42,7 @@ final_conv_analytic_new_reward_2 - new relative reward >200
 final_conv_analytic_new_reward_4 - new relative reward >200
 """
 
-def plot_rewards(names,shape,color):
+def plot_rewards(names,shape=None,color=None):
     max_train_num = 1000
     episodes_num = 50
     dataManager_vec = []
@@ -50,8 +50,8 @@ def plot_rewards(names,shape,color):
     for i in range(len(names)):
         HP.restore_name = names[i]
         HP.save_name = names[i]
-        save_path = os.getcwd()+ "\\files\\models\\final1\\"+HP.save_name+"\\"
-        restore_path = os.getcwd()+ "\\files\\models\\final1\\"+HP.restore_name+"\\"
+        save_path = os.getcwd()+ "\\files\\models\\final2\\"+HP.save_name+"\\"
+        restore_path = os.getcwd()+ "\\files\\models\\final2\\"+HP.restore_name+"\\"
         dataManager_vec.append(data_manager1.DataManager(save_path,restore_path,True))
         relative_rewards_changed_vec.append(np.array(change_failes_value(dataManager_vec[-1].relative_reward,dataManager_vec[-1].episode_end_mode)))#[:episodes_num]
 
@@ -106,9 +106,9 @@ def plot_rewards(names,shape,color):
         fails_vec.append(episode_fails)
 
     for i in range(len(dataManager_vec)):
-        fails = 1 in fails_vec[i]
-        print("fail:",  fails/len(dataManager_vec[i].episode_end_mode)*100,"[%]")
-
+        fails = fails_vec[i].count(1)
+        print("fail:",  fails/len(dataManager_vec[i].episode_end_mode)*100,"[%]", "lenght:",len(dataManager_vec[i].episode_end_mode),"check episodes")#
+        
     fails_density_vec = []
     N = 20
     for i in range(len(fails_vec)):
@@ -125,12 +125,13 @@ def plot_rewards(names,shape,color):
     combined_abs_rewards = []
     for i in range(len(dataManager_vec)):
         for j in range(len(relative_rewards_changed_vec[i])):
-            combined_abs_rewards.append([dataManager_vec[i].train_num[j],sum(dataManager_vec[i].paths[j][0])*0.2])
+            #combined_abs_rewards.append([dataManager_vec[i].train_num[j],sum(dataManager_vec[i].paths[j][0])*0.2])
+            combined_abs_rewards.append([dataManager_vec[i].train_num[j],dataManager_vec[i].paths[j][1][-1]])
     combined_abs_rewards = np.array(sorted(combined_abs_rewards, key=lambda x: x[0]))
 
     plt.figure(1)
     for j in range(len(relative_rewards_changed_vec)):
-        plt.scatter(np.array(dataManager_vec[j].train_num)[:max_train_num],(relative_rewards_changed_vec[j])[:max_train_num],marker = shape,alpha = 0.2)
+        plt.scatter(np.array(dataManager_vec[j].train_num)[:max_train_num],(relative_rewards_changed_vec[j])[:max_train_num],marker = shape,alpha = 0.2)#,c = color
     ave = lib.running_average(combined_rewards[:,1],20)[:max_train_num]
     plt.plot((combined_rewards[:,0])[:len(ave)],ave,c = color)
 
@@ -139,9 +140,14 @@ def plot_rewards(names,shape,color):
 
     plt.figure(2)
     for j in range(len(relative_rewards_changed_vec)):
-        abs_rewards = [sum(dataManager_vec[j].paths[k][0])*0.2 for k in range(len(dataManager_vec[j].paths))]
+        abs_rewards = [dataManager_vec[j].paths[k][1][-1] for k in range(len(dataManager_vec[j].paths))]
+        abs_rewards1 = [sum(dataManager_vec[j].paths[k][0])*0.2 for k in range(len(dataManager_vec[j].paths))]#for debugging
+        #for w in range(len(abs_rewards)):
+            #print("sum vel:",abs_rewards1[w],"dis:",abs_rewards[w])
+            #print(dataManager_vec[j].paths[w][1])
+
         abs_rewards = abs_rewards[:max_train_num]
-        plt.scatter(np.array(dataManager_vec[j].train_num)[:max_train_num],abs_rewards,marker = shape,alpha = 0.2)
+        plt.scatter(np.array(dataManager_vec[j].train_num)[:max_train_num],abs_rewards,marker = shape,alpha = 0.2)#c = color
     ave = lib.running_average(combined_abs_rewards[:,1],20)[:max_train_num]
     plt.plot((combined_abs_rewards[:,0])[:len(ave)],ave,c = color)
 
@@ -190,10 +196,10 @@ if __name__ == "__main__":
     
     #add analytic action to action. random paths, test same path (1111) 2 trains per step time:
     #analytic feature:
-    names1 = ["add_analytic_feature_random_2","add_analytic_feature_random_4","add_analytic_feature_random_6","add_analytic_feature_random_8","add_analytic_feature_random_0"]
+    #names1 = ["add_analytic_feature_random_2","add_analytic_feature_random_4","add_analytic_feature_random_6","add_analytic_feature_random_8","add_analytic_feature_random_0"]
     ## 900 630 592 496
     ## no analytic feature:
-    names2 = ["add_analytic_random_1","add_analytic_random_2","add_analytic_random_3","add_analytic_random_4","add_analytic_random_5"]\
+    #names2 = ["add_analytic_random_1","add_analytic_random_2","add_analytic_random_3","add_analytic_random_4","add_analytic_random_5"]\
         #,"add_analytic_random_5","add_analytic_random_7","add_analytic_random_6","add_analytic_random_8"]#not a big difference
 
    # names1 = ["add_analytic_random_5"]#,"add_analytic_random_7","add_analytic_random_6","add_analytic_random_8"]
@@ -220,9 +226,39 @@ if __name__ == "__main__":
     
 
     #names1 = ["final1_analytic_action_1_0","final_analytic_action_1_1","final_analytic_action_1_2"]
+
+
+    ############################################################################################################
+    # final1:
+    #"regular5" "regular7" to short
+    #,"add_acc_feature4" "add_acc_feature8", to short
+
+    #names1 = ["regular9","regular11","regular13"]#,"regular3"  ["regular1"]#,
+    #names2 = ["regular3"]
+    #names3 = ["regular11"]
+    #names4 = ["regular13"]
+    #names5 = ["regular9"]
+    #names1 = ["regular2","regular4","regular6","regular8"]
+    #names1 = ["regular_uni2","regular_uni4","regular_uni6"]
+    #names2 = ["add_acc_feature2_uni","add_acc_feature4_uni","add_acc_feature6_uni"]
+    
+
+   # names2 =["add_acc_feature2","add_acc_feature6","add_acc_feature10","add_acc_feature12","add_acc_feature14"]
+    #names3 =["add_acc2","add_acc6","add_acc8","add_acc10","add_acc12","add_acc14"]
+
+    ################################################33
+    names1 = ["regular2","regular4","regular6","regular8","regular10"]
+    names2 =["add_acc_feature2","add_acc_feature4","add_acc_feature6"]
+    names3 =["add_acc_same2","add_acc_same4","add_acc_same6"]
+
+
     plot_rewards(names1,'o',(0.0,0.0,0.0))#'b' 'tab:purple'
+    #plot_rewards(names2)
+    #plot_rewards(names3)
+    #plot_rewards(names4)
+    #plot_rewards(names5)
     plot_rewards(names2,'x','g')
-    #plot_rewards(names3,'.')
+    plot_rewards(names3,'.','b')
     size = 15
     plt.figure(2)
     plt.xlabel('Train iterations number',fontsize = size)

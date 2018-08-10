@@ -20,19 +20,41 @@ if __name__ == "__main__":
 
     #env  = gym.make("HalfCheetahBulletEnv-v0")
     HP = HyperParameters()
-  
-    #names = ["regular3","regular5","regular7","regular9"]
-    names = ["add_acc1","add_acc3","add_acc5","add_acc7","add_acc9"]
+    envData = enviroment1.OptimalVelocityPlannerData()#mode = 'DDPG'
+    """
+    finished:
+    regular1 - long 900 episodes
+    regular3 - 700 - from 300 continued training, seems like a problem from there
+    add_acc1 - 700 episodes
 
-    HP.num_of_runs = 700
+    regular3 - reached 260 episodes
+    in home computer- add_acc_feature2 - finished. add_acc_feature2. add_acc2
+
+    """
+    envData.analytic_feature_flag = False
+    HP.add_feature_to_action  = False
+    HP.analytic_action = False
+    HP.restore_flag = False
+    #names = ["regular13"]#600 steps
+    #names = ["add_acc3","add_acc5","add_acc7","add_acc9"]
+   # names = ["‏‏reward_shaping1_continue"]
+    #names = ["regular3"]
+    #names = ["add_acc_feature_uni"]#not bad
+    #names = ["test"]
+    #names = ["regular_uninoise"]
+    
+    #names = ["add_acc_feature_uni_test_critic"]
+
+    names = ["regular2","regular4","regular6","regular8","regular10"]
+    HP.num_of_runs = 500
     for name in names:
         HP.restore_name = name
         HP.save_name = name
-        HP.save_file_path = os.getcwd()+ "\\files\\models\\final1\\"+HP.save_name+"\\"
-        HP.restore_file_path = os.getcwd()+ "\\files\\models\\final1\\"+HP.restore_name+"\\"
+        HP.save_file_path = os.getcwd()+ "\\files\\models\\final3\\"+HP.save_name+"\\"
+        HP.restore_file_path = os.getcwd()+ "\\files\\models\\final3\\"+HP.restore_name+"\\"
 
         dataManager = data_manager1.DataManager(HP.save_file_path,HP.restore_file_path,HP.restore_flag)
-        envData = enviroment1.OptimalVelocityPlannerData()#mode = 'DDPG'
+
         net = DDPG_network(envData.observation_space.shape[0],envData.action_space.shape[0],envData.action_space.high[0],\
             HP.alpha_actor,HP.alpha_critic,HP.alpha_analytic_actor,HP.alpha_analytic_critic,tau = HP.tau,seed = HP.seed,feature_data_n = envData.feature_data_num, conv_flag = HP.conv_flag)  
         if HP.restore_flag:
@@ -41,6 +63,7 @@ if __name__ == "__main__":
         env = enviroment1.OptimalVelocityPlanner(dataManager)
         if env.opened:     
             DDPG_algorithm.train(env,HP,net,dataManager)
+
 
 
     #total_rewards_vec = []
