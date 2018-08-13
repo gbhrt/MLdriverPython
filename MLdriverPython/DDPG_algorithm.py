@@ -25,14 +25,14 @@ def train(env,HP,net,dataManager,seed = None):
   
     #pre-defined parameters:
     if seed != None:
-        HP.seed = seed
+        HP.seed[0] = seed
     ###################
     total_step_count = 0
     #env = enviroment1.OptimalVelocityPlanner(HP)
     #env  = gym.make("HalfCheetahBulletEnv-v0")
-    np.random.seed(HP.seed)
-    random.seed(HP.seed)
-    env.seed(HP.seed)
+    np.random.seed(HP.seed[0])
+    random.seed(HP.seed[0])
+    env.seed(HP.seed[0])
     steps = [0,0]#for random action selection of random number of steps
     waitFor = lib.waitFor()#wait for "enter" in another thread - then stop = true
     if HP.render_flag:
@@ -54,9 +54,9 @@ def train(env,HP,net,dataManager,seed = None):
     #    if pl.load_path(HP.path_name,HP.random_paths_flag) == -1:
     #        stop = [1]
       
-
+    test_path_ind = 0
     global_train_count = 0
-    seed = HP.seed
+    seed = HP.seed[0]
     for i in range(HP.num_of_runs): #number of runs - run end at the end of the main path and if vehicle deviation error is to big
         if waitFor.stop == [True]:
             break
@@ -220,12 +220,17 @@ def train(env,HP,net,dataManager,seed = None):
         if not HP.run_same_path:
             seed = int.from_bytes(os.urandom(8), byteorder="big")
         else:#not needed 
-            seed = HP.seed
+            seed = HP.seed[0]
 
-        if (i % HP.zero_noise_every == 0 and i > 0) or HP.always_no_noise_flag:
+        if (i % HP.zero_noise_every == 0 and i > 0) or test_path_ind != 0 or HP.always_no_noise_flag:
             HP.noise_flag = False
+            
             if HP.test_same_path:
-                seed = HP.seed
+                seed = HP.seed[test_path_ind]
+                print("seed:",seed)
+                test_path_ind +=1
+                if test_path_ind >= len(HP.seed):
+                    test_path_ind = 0
 
         if (i % HP.save_every == 0 and i > 0): 
             net.save_model(HP.save_file_path)

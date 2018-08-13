@@ -50,8 +50,8 @@ def plot_rewards(names,shape=None,color=None):
     for i in range(len(names)):
         HP.restore_name = names[i]
         HP.save_name = names[i]
-        save_path = os.getcwd()+ "\\files\\models\\final2\\"+HP.save_name+"\\"
-        restore_path = os.getcwd()+ "\\files\\models\\final2\\"+HP.restore_name+"\\"
+        save_path = os.getcwd()+ "\\files\\models\\final3\\"+HP.save_name+"\\"
+        restore_path = os.getcwd()+ "\\files\\models\\final3\\"+HP.restore_name+"\\"
         dataManager_vec.append(data_manager1.DataManager(save_path,restore_path,True))
         relative_rewards_changed_vec.append(np.array(change_failes_value(dataManager_vec[-1].relative_reward,dataManager_vec[-1].episode_end_mode)))#[:episodes_num]
 
@@ -247,18 +247,17 @@ if __name__ == "__main__":
     #names3 =["add_acc2","add_acc6","add_acc8","add_acc10","add_acc12","add_acc14"]
 
     ################################################33
-    names1 = ["regular2","regular4","regular6","regular8","regular10"]
-    names2 =["add_acc_feature2","add_acc_feature4","add_acc_feature6"]
-    names3 =["add_acc_same2","add_acc_same4","add_acc_same6"]
+    names1 = ["regular1","regular3","regular5","regular7","regular9"]
+   
 
-
+    names1 = ["regular5_1"]
     plot_rewards(names1,'o',(0.0,0.0,0.0))#'b' 'tab:purple'
     #plot_rewards(names2)
     #plot_rewards(names3)
     #plot_rewards(names4)
     #plot_rewards(names5)
-    plot_rewards(names2,'x','g')
-    plot_rewards(names3,'.','b')
+    #plot_rewards(names2,'x','g')
+    #plot_rewards(names3,'.','b')
     size = 15
     plt.figure(2)
     plt.xlabel('Train iterations number',fontsize = size)

@@ -31,7 +31,7 @@ class cFunctions:
         f_max = 4195*5.0
         mass = 3200
         vel_max = 30
-        fc = 1.0
+        fc = 0.8
         height = 0.94#0.86
         width = 2.08
 

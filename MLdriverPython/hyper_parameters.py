@@ -16,12 +16,12 @@ class HyperParameters:
 
         #########################
         self.add_feature_to_action  = False
-        self.analytic_action = True
+        self.analytic_action = False
         self.train_flag =True
         self.noise_flag = True
         self.always_no_noise_flag = False
-        self.zero_noise_every = 5
-        self.test_same_path = False
+        self.zero_noise_every = 10
+        self.test_same_path = True
         self.run_same_path = False
         self.conv_flag = False
         self.gym_flag = False
@@ -31,7 +31,7 @@ class HyperParameters:
         self.skip_run = False
         self.reset_every = 3
         self.save_every = 100
-        self.seed = 1111
+        self.seed = [1111,1112,1113,1114,1115]
         self.save_name ="test1"
         self.save_file_path = os.getcwd()+ "\\files\\models\\final3\\"+self.save_name+"\\"
 
