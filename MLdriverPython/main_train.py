@@ -36,17 +36,18 @@ if __name__ == "__main__":
     HP.analytic_action = False
     HP.restore_flag = False
 
-    names = ["test"]
+    #names = ["test"]
 
 
-    #names = ["regular1","regular3","regular5","regular7","regular9"]#finished all 500 steps
-    names = ["regular5_1","regular5_3","regular5_5","regular5_7","regular5_9"]
+    names = ["regular1","regular3","regular5","regular7","regular9"]#
+   
+    #names = ["regular5_1"]
     HP.num_of_runs = 500
     for name in names:
         HP.restore_name = name
         HP.save_name = name
-        HP.save_file_path = os.getcwd()+ "\\files\\models\\final3\\"+HP.save_name+"\\"
-        HP.restore_file_path = os.getcwd()+ "\\files\\models\\final3\\"+HP.restore_name+"\\"
+        HP.save_file_path = os.getcwd()+ "\\files\\models\\final_corl\\"+HP.save_name+"\\"
+        HP.restore_file_path = os.getcwd()+ "\\files\\models\\final_corl\\"+HP.restore_name+"\\"
 
         dataManager = data_manager1.DataManager(HP.save_file_path,HP.restore_file_path,HP.restore_flag)
 

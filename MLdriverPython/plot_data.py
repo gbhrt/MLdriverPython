@@ -50,8 +50,8 @@ def plot_rewards(names,shape=None,color=None):
     for i in range(len(names)):
         HP.restore_name = names[i]
         HP.save_name = names[i]
-        save_path = os.getcwd()+ "\\files\\models\\final3\\"+HP.save_name+"\\"
-        restore_path = os.getcwd()+ "\\files\\models\\final3\\"+HP.restore_name+"\\"
+        save_path = os.getcwd()+ "\\files\\models\\final_corl\\"+HP.save_name+"\\"
+        restore_path = os.getcwd()+ "\\files\\models\\final_corl\\"+HP.restore_name+"\\"
         dataManager_vec.append(data_manager1.DataManager(save_path,restore_path,True))
         relative_rewards_changed_vec.append(np.array(change_failes_value(dataManager_vec[-1].relative_reward,dataManager_vec[-1].episode_end_mode)))#[:episodes_num]
 
@@ -88,12 +88,33 @@ def plot_rewards(names,shape=None,color=None):
     #                count+=1
     #        mean_relative_reward_ind.append(mean_train_num/count)
     #        mean_relative_reward_vec.append(mean_relative_reward/count)
+ 
+
+    #relative_reward_vec = []
+    #for dataManager in dataManager_vec:
+    #    relative_reward = []
+    #    for j in range(len(dataManager.path_seed)):
+    #        real_dis = dataManager.paths[j][1][-1]
+    #        real_time = dataManager.paths[j][0][-1]
+    #        analytic_path = lib.compute_analytic_path(dataManager.path_seed[j])
+    #        for t,time in enumerate(analytic_path.analytic_time):
+    #            if time >= real_time:
+    #                break
+    #        analytic_distance = analytic_path.distance[t]
+    #        relative_reward.append(real_dis/analytic_distance)
+    #    relative_reward_vec.append(relative_reward)
+
     combined_rewards = []
     for i in range(len(dataManager_vec)):
         for j in range(len(relative_rewards_changed_vec[i])):
             if relative_rewards_changed_vec[i][j] != None:
                 combined_rewards.append([dataManager_vec[i].train_num[j],relative_rewards_changed_vec[i][j]])
     combined_rewards = np.array(sorted(combined_rewards, key=lambda x: x[0]))
+    #combined_rewards = []
+    #for i in range(len(dataManager_vec)):
+    #    for j in range(len(relative_reward_vec[i])):
+    #        combined_rewards.append([dataManager_vec[i].train_num[j],relative_reward_vec[i][j]])
+    #combined_rewards = np.array(sorted(combined_rewards, key=lambda x: x[0]))
 
     fails_vec = []
     for i in range(len(dataManager_vec)):
@@ -137,6 +158,14 @@ def plot_rewards(names,shape=None,color=None):
 
     ones = np.ones([len(dataManager_vec[max_len_ind].train_num)])[:max_train_num]
     plt.plot(dataManager_vec[max_len_ind].train_num[:max_train_num],ones,linewidth = 2.0,c = 'r')
+    #plt.figure(1)
+    #for j in range(len(relative_reward_vec)):
+    #    plt.scatter(np.array(dataManager_vec[j].train_num)[:max_train_num],(relative_reward_vec[j])[:max_train_num],marker = shape,alpha = 0.2)#,c = color
+    #ave = lib.running_average(combined_rewards[:,1],20)[:max_train_num]
+    #plt.plot((combined_rewards[:,0])[:len(ave)],ave,c = color)
+
+    #ones = np.ones([len(dataManager_vec[max_len_ind].train_num)])[:max_train_num]
+    #plt.plot(dataManager_vec[max_len_ind].train_num[:max_train_num],ones,linewidth = 2.0,c = 'r')
 
     plt.figure(2)
     for j in range(len(relative_rewards_changed_vec)):
@@ -247,16 +276,19 @@ if __name__ == "__main__":
     #names3 =["add_acc2","add_acc6","add_acc8","add_acc10","add_acc12","add_acc14"]
 
     ################################################33
-    names1 = ["regular1","regular3","regular5","regular7","regular9"]
+    #names1 = ["regular1","regular3","regular5","regular7","regular9"]
    
 
-    names1 = ["regular5_1"]
+    #names1 = ["regular5_1","regular5_3","regular5_5","regular5_7","regular5_9"]
+    #names2 = ["add_acc_feature5_2","add_acc_feature5_4","add_acc_feature5_6","add_acc_feature5_8","add_acc_feature5_10"]
+    names1 = ["regular1"]
+   # names2 = ["add_acc_feature5_10"]
     plot_rewards(names1,'o',(0.0,0.0,0.0))#'b' 'tab:purple'
     #plot_rewards(names2)
     #plot_rewards(names3)
     #plot_rewards(names4)
     #plot_rewards(names5)
-    #plot_rewards(names2,'x','g')
+   # plot_rewards(names2,'x','g')
     #plot_rewards(names3,'.','b')
     size = 15
     plt.figure(2)

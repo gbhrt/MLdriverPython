@@ -28,6 +28,7 @@ def train(env,HP,net,dataManager,seed = None):
         HP.seed[0] = seed
     ###################
     total_step_count = 0
+    evaluation_flag = False
     #env = enviroment1.OptimalVelocityPlanner(HP)
     #env  = gym.make("HalfCheetahBulletEnv-v0")
     np.random.seed(HP.seed[0])
@@ -91,24 +92,40 @@ def train(env,HP,net,dataManager,seed = None):
                     path_state = state[:]
                 analytic_action = env.comp_analytic_acceleration(path_state)
                 noise_range = env.action_space.high[0] - abs(analytic_action)
+                vel = path_state[0]
             else:
                 noise_range = env.action_space.high[0]
+                vel = state[0]
             
             a = net.get_actions(np.reshape(state, (1, env.observation_space.shape[0])))#[[action]] batch, action list
             print("action:",a)#,"analytic_action:",analytic_action)
             noise = actionNoise() * noise_range
             #noise = random.uniform(-1, 1)* noise_range
-            #Qa = net.get_Qa(np.reshape(state, (1, env.observation_space.shape[0])),a)[0][0]
-            #Q0 = net.get_Qa(np.reshape(state, (1, env.observation_space.shape[0])),[[0]])[0][0]
-            #Q1 = net.get_Qa(np.reshape(state, (1, env.observation_space.shape[0])),[[1.0]])[0][0]
-            #Qneg1 = net.get_Qa(np.reshape(state, (1, env.observation_space.shape[0])),[[-1.0]])[0][0]
+            Qa = net.get_Qa(np.reshape(state, (1, env.observation_space.shape[0])),a)[0][0]
+            Q0 = net.get_Qa(np.reshape(state, (1, env.observation_space.shape[0])),[[0]])[0][0]
+            Q1 = net.get_Qa(np.reshape(state, (1, env.observation_space.shape[0])),[[1.0]])[0][0]
+            Qneg1 = net.get_Qa(np.reshape(state, (1, env.observation_space.shape[0])),[[-1.0]])[0][0]
+
+            Qa_target = net.get_targetQa(np.reshape(state, (1, env.observation_space.shape[0])),a)[0][0]
+            Q0_target = net.get_targetQa(np.reshape(state, (1, env.observation_space.shape[0])),[[0]])[0][0]
+            Q1_target = net.get_targetQa(np.reshape(state, (1, env.observation_space.shape[0])),[[1.0]])[0][0]
+            Qneg1_target = net.get_targetQa(np.reshape(state, (1, env.observation_space.shape[0])),[[-1.0]])[0][0]
+
             #print("Qa:",Qa,"Q0:",Q0,"Q1",Q1,"Qneg1",Qneg1)
-            #dataManager.Qa.append(Qa)
-            #dataManager.Q0.append(Q0)
-            #dataManager.Q1.append(Q1)
-            #dataManager.Qneg1.append(Qneg1)
+            dataManager.Qa.append(Qa)
+            dataManager.Q0.append(Q0)
+            dataManager.Q1.append(Q1)
+            dataManager.Qneg1.append(Qneg1)
+
+            dataManager.Qa_target.append(Qa_target)
+            dataManager.Q0_target.append(Q0_target)
+            dataManager.Q1_target.append(Q1_target)
+            dataManager.Qneg1_target.append(Qneg1_target)
+
             a = a[0]
-            if HP.noise_flag:
+            if not evaluation_flag:# HP.noise_flag:
+                if vel <0.02:
+                    noise = abs(noise)
                 a +=  noise#np vectors##########################################################
                 dataManager.noise.append(noise)
                 print("noise:",noise)
@@ -130,11 +147,12 @@ def train(env,HP,net,dataManager,seed = None):
            # print("state:", state)
             #a = env.get_analytic_action()
             #print("action: ", a)#,"noise: ",noise)
+            dataManager.acc_target.append(net.get_target_actions(np.reshape(state, (1, env.observation_space.shape[0])))[0])
             dataManager.acc.append(a)
             if not HP.gym_flag:
                 env.command(a)
 
-            if len(Replay.memory) > HP.batch_size and HP.train_flag:############
+            if len(Replay.memory) > HP.batch_size and HP.train_flag and not evaluation_flag:############
                 if not HP.gym_flag:
                     start_time = time.time()
                     t = start_time
@@ -180,8 +198,8 @@ def train(env,HP,net,dataManager,seed = None):
             #Replay.add((state,a,reward,next_state,fail))#done
             if HP.add_feature_to_action:
                 a[0] -= analytic_action
-
-            Replay.add((state,a,reward,next_state,done))#  
+            if not evaluation_flag:
+                Replay.add((state,a,reward,next_state,done))#  
             state = next_state
 
             if done:
@@ -195,7 +213,7 @@ def train(env,HP,net,dataManager,seed = None):
         #for k,r in enumerate(reward_vec):
         #    total_reward+=r*HP.gamma**k
         total_reward = sum(reward_vec)
-        if not HP.gym_flag and not HP.noise_flag:
+        if not HP.gym_flag and evaluation_flag:#not HP.noise_flag
 
             #dist = sum(dataManager.real_path.velocity)*env.step_time#integral on velocities
             #analytic_dist = sum(dataManager.real_path.analytic_velocity)*env.step_time
@@ -212,8 +230,8 @@ def train(env,HP,net,dataManager,seed = None):
             dataManager.add_train_num(global_train_count)
             dataManager.path_seed.append(env.path_seed)#current used seed (for paths)
             dataManager.update_relative_rewards_and_paths()
-            
-            HP.noise_flag =True
+            evaluation_flag = False
+           # HP.noise_flag =True
         #print("episode time:",time.time()-episode_start_time)
         print("episode: ", i, " total reward: ", total_reward, "episode steps: ",step_count)
         
@@ -222,8 +240,9 @@ def train(env,HP,net,dataManager,seed = None):
         else:#not needed 
             seed = HP.seed[0]
 
-        if (i % HP.zero_noise_every == 0 and i > 0) or test_path_ind != 0 or HP.always_no_noise_flag:
-            HP.noise_flag = False
+        if (i % HP.evaluation_every == 0 and i > 0) or test_path_ind != 0 or HP.always_no_noise_flag:
+            #HP.noise_flag = False
+            evaluation_flag = True
             
             if HP.test_same_path:
                 seed = HP.seed[test_path_ind]

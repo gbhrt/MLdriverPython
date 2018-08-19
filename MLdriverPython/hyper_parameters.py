@@ -20,7 +20,7 @@ class HyperParameters:
         self.train_flag =True
         self.noise_flag = True
         self.always_no_noise_flag = False
-        self.zero_noise_every = 10
+        self.evaluation_every = 10
         self.test_same_path = True
         self.run_same_path = False
         self.conv_flag = False

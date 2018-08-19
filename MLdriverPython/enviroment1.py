@@ -37,7 +37,7 @@ class OptimalVelocityPlannerData:
         self.max_deviation = 2# 3 # [m] if more then maximum - end episode 
         self.visualized_points = int(self.feature_points/0.05) + 10 #how many points show on the map and lenght of local path
         self.max_pitch = 0.3#0.3
-        self.max_roll = 0.2#0.07#0.05#0.3
+        self.max_roll = 0.07#0.05#0.3# last 0.2
         self.acc = 1.38# 0-100 kmh in 20 sec. 1.5 # [m/s^2]  need to be more then maximum acceleration in real
         self.torque_reduce = 1.0 # 0.2
         self.reduce_factor = 1.0

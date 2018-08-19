@@ -46,9 +46,14 @@ class DataManager():
         self.Q0 = []
         self.Q1 = []
         self.Qneg1 = []
+        self.Qa_target = [] 
+        self.Q0_target = [] 
+        self.Q1_target = [] 
+        self.Qneg1_target = []
         self.roll = []
         self.noise = []
         self.acc = []
+        self.acc_target = []
         ###############################
         
         if restore_flag:
@@ -91,8 +96,8 @@ class DataManager():
                 vel, =      plt.plot(self.real_path.distance,self.real_path.velocity,'o', label = "vehicle velocity")
                 plt.legend(handles=[real_vel, vel_lim,vel])
             plt.subplot(222)  
-         
-                
+            plt.plot(self.real_path.distance[:max_time_ind],self.acc)
+            plt.plot(self.real_path.distance[:max_time_ind],self.acc_target)
             #print("self.real_path.time[-1] in plot",self.real_path.time[-1])
             #print("analytic_dist in plot:",path.distance[max_time_ind])
             ##if len(self.real_path.time) > 0:
@@ -102,17 +107,22 @@ class DataManager():
 
             ##    plt.plot(self.real_path.time,self.real_path.velocity)
             
-            #x = np.array(self.real_path.distance)
-            #Qa, = plt.plot(x,self.Qa,label = "Qa")
-            #Q0, = plt.plot(x,self.Q0,label = "Q0")
-            #Q1, = plt.plot(x,self.Q1,label = "Q1")
-            #Qneg1, = plt.plot(x,self.Qneg1,label = "Qneg1")
-            #plt.legend(handles=[Qa, Q0,Q1,Qneg1])
+            
 
 
             plt.subplot(223)  
+            
             if len(self.real_path.time) > 0:
-                plt.plot(path.distance[:max_time_ind],self.roll[:max_time_ind])
+                #plot roll:
+            #    plt.plot(path.distance[:max_time_ind],self.roll[:max_time_ind])
+
+                x = np.array(self.real_path.distance[:max_time_ind])
+                Qa, = plt.plot(x,self.Qa,label = "Qa")
+                Q0, = plt.plot(x,self.Q0,label = "Q0")
+                Q1, = plt.plot(x,self.Q1,label = "Q1")
+                Qneg1, = plt.plot(x,self.Qneg1,label = "Qneg1")
+                plt.legend(handles=[Qa, Q0,Q1,Qneg1])
+
             #plt.title("train num - relative reward")
             
             #col = []
@@ -155,7 +165,14 @@ class DataManager():
             #    plt.plot(self.run_num[:len(ave)],ave)
             #plt.plot(self.run_num,lib.running_average(self.rewards,100))
         
-            plt.subplot(224)  
+            plt.subplot(224)   
+            #x = np.array(self.real_path.distance[:max_time_ind])
+            #Qa, = plt.plot(x,self.Qa_target,label = "Qa")
+            #Q0, = plt.plot(x,self.Q0_target,label = "Q0")
+            #Q1, = plt.plot(x,self.Q1_target,label = "Q1")
+            #Qneg1, = plt.plot(x,self.Qneg1_target,label = "Qneg1")
+            #plt.legend(handles=[Qa, Q0,Q1,Qneg1])
+
             plt.title("episodes - relative reward")
             col = []
             for mode in self.episode_end_mode:
@@ -168,6 +185,7 @@ class DataManager():
                 if self.episode_end_mode[i] == 'kipp' or self.episode_end_mode[i] == 'deviate':
                     relative_reward_zero[i] = -0.0
             plt.scatter(self.run_num,relative_reward_zero,c = col)
+
             #if len(self.run_num) >= 50:
             #    ave = lib.running_average(relative_reward_zero,50)
             #    plt.plot(self.run_num[:len(ave)],ave)
@@ -225,6 +243,7 @@ class DataManager():
         if seed != None: self.real_path.seed = seed
         return
     def comp_relative_reward(self):
+        print("relative reward seed:",self.real_path.seed)
         if self.episode_end_mode[-1] == 'kipp' or self.episode_end_mode[-1] == 'deviate' or len(self.real_path.distance) == 0:
             return None
         #dist = sum(self.real_path.velocity)*0.2
@@ -232,6 +251,7 @@ class DataManager():
         print("dist",dist)
         path = classes.Path()
         path.position = lib.create_random_path(9000,0.05,seed = self.real_path.seed)
+        
         lib.comp_velocity_limit_and_velocity(path,skip = 10,reduce_factor = 1.0)
         max_time_ind = 0
         for i,tim in enumerate (path.analytic_time):
@@ -254,9 +274,14 @@ class DataManager():
         self.Q0 = []
         self.Q1 = []
         self.Qneg1 = []
+        self.Qa_target = [] 
+        self.Q0_target = [] 
+        self.Q1_target = [] 
+        self.Qneg1_target = []
         self.roll = []
         self.noise = []
         self.acc = []
+        self.acc_target = []
         
     def save_readeable_data(self):
         try: 

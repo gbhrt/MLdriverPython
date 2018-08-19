@@ -43,7 +43,7 @@ class DDPG_network(NetLib):
             #miu_grads = tf.gradients(self.action_out, actor_params)
             self.Q_grads_neg = list(map(lambda x: -x, self.Q_grads))
             #actor_gradients = zip(Q_grads,miu_grads)
-            self.actor_gradients = tf.gradients(self.action_out, self.actor_params, self.Q_grads_neg)#self.Q_grads_neg)
+            self.actor_gradients = tf.gradients(self.action_out, self.actor_params, self.Q_grads_neg)
 
             batch_size = tf.cast((tf.size(self.state)/state_n),tf.float32)
    
