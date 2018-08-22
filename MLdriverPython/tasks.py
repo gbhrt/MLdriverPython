@@ -110,7 +110,8 @@ def run_test(path_name, learned_velocity = False):
             target_index = pl.select_target_index(index)
             steer_ang = comp_steer(pl.simulator.vehicle.position,pl.simulator.vehicle.angle[1],pl.desired_path.position[target_index])#target in global
             if learned_velocity:
-                local_path = pl.get_local_path(send_path = True,num_of_points = visualized_points)#num_of_points = visualized_points
+                local_path = pl.get_local_path(num_of_points = visualized_points)#num_of_points = visualized_points
+                pl.send_path()
                 state = pLib.get_state(pl,local_path,features_num,distance_between_points)
                 Pi = net.get_Pi(state)
                 a,_ = pLib.choose_action(action_space,Pi)#choose action 

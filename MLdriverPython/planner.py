@@ -22,18 +22,22 @@ class SimVehicle:#simulator class - include communication to simulator, vehicle 
         return
 
     def send_drive_commands(self,velocity,steering):#send drive commands to simulator
-        dataType = 1
+        data_type = 1
         #print("vel",velocity)
-        self.comm.serialize(dataType)
+        self.comm.serialize(data_type)
         self.comm.serialize(velocity)
         self.comm.serialize(steering)
         self.comm.sendData()
         self.comm.readData()
-        dataType = self.comm.deserialize(1,int)
-        return
+        data_type = self.comm.deserialize(1,int)
+        error = 0
+        if data_type == -1:
+           print("error read data____________________________________________________________________________")
+           error = 1 
+        return error
     def send_path(self,path_des):
-        dataType = 2
-        self.comm.serialize(dataType)
+        data_type = 2
+        self.comm.serialize(data_type)
         self.comm.serialize(len(path_des.position))
         for i in range(len(path_des.position)):
             self.comm.serialize(path_des.position[i][0])
@@ -42,11 +46,19 @@ class SimVehicle:#simulator class - include communication to simulator, vehicle 
             #comm.serialize(path_des.position[i].z)
         self.comm.sendData()
         self.comm.readData()
-        dataType = self.comm.deserialize(1,int)
-        return
+        data_type = self.comm.deserialize(1,int)
+        error = 0
+        if data_type == -1:
+           print("error read data______________________________________________________________________")
+           error = 1 
+        return error
     def read_vehicle_data(self):
         self.comm.readData()
-        dataType = self.comm.deserialize(1,int)        
+        data_type = self.comm.deserialize(1,int) 
+        error = 0
+        if data_type == -1:
+            return 1  
+                 
         self.vehicle.position = lib.changeZtoY(self.comm.deserialize(3,float))
         self.vehicle.position[2] = 0.
         self.vehicle.angle = lib.change_to_rad(self.comm.deserialize(3,float))
@@ -59,23 +71,27 @@ class SimVehicle:#simulator class - include communication to simulator, vehicle 
         self.vehicle.backPosition = lib.changeZtoY(self.comm.deserialize(3,float))
         self.vehicle.velocity = self.comm.deserialize(1,float)
         self.vehicle.steering = self.comm.deserialize(1,float)
-        return 
+        return error
     def get_vehicle_data(self):
-        dataType = 0
-        self.comm.serialize(dataType)
+        data_type = 0
+        self.comm.serialize(data_type)
         self.comm.sendData()
-        self.read_vehicle_data()
-        return 
+        error = self.read_vehicle_data()
+        return error 
     def reset_position(self):
-        dataType = 3
-        self.comm.serialize(dataType)
+        data_type = 3
+        self.comm.serialize(data_type)
         command = 0
         self.comm.serialize(command)
         self.comm.sendData()
         self.comm.readData()
-        dataType = self.comm.deserialize(1,int)
+        data_type = self.comm.deserialize(1,int)
         time.sleep(1)
-        return
+        error = 0
+        if data_type == -1:
+            print("error read data__________________________________________________________")
+            error = 1
+        return error
 
 
 
@@ -131,7 +147,10 @@ class Planner(PathManager):#planner - get and send data to simulator. input - mi
                 break
             time.sleep(0.1)
         if abs(self.simulator.vehicle.velocity) > 0.03:#temp from 0.01
-            self.simulator.reset_position()
+            error = self.simulator.reset_position()
+            if error:
+                print("comm error at reset position")
+                self.simulator.reset_position()
             self.wait_for_stop()
 
     def restart(self):
@@ -334,21 +353,25 @@ class Planner(PathManager):#planner - get and send data to simulator. input - mi
         self.in_vehicle_reference_path = self.path_tranformation_to_local(self.reference_free_path)# transform to vehicle position and angle
         self.desired_path = self.copy_path(self.in_vehicle_reference_path,self.main_index,points_num)#just for the first time
 
-    def get_local_path(self,send_path = True, num_of_points = None):
+    def get_local_path(self, num_of_points = None):#send_path = True,
         #local_path = comp_path(pl,main_path_trans,main_index,num_of_points)#compute local path and global path(inside the planner)
         self.index = self.find_index_on_path(0)
         self.main_index += self.index
         self.desired_path = self.copy_path(self.in_vehicle_reference_path,self.main_index,num_of_points)#choose 100 next points from vehicle position
-        if send_path:
-            send_path = Path()
-            send_path.position =self.desired_path.position[0::10]
+        #if send_path:
+        #    send_path = Path()
+        #    send_path.position =self.desired_path.position[0::10]
             
-            self.simulator.send_path(send_path)
+        #    self.simulator.send_path(send_path)
         local_path = self.path_to_local(self.desired_path)#translate path in vehicle reference system
         self.desired_path.comp_distance()
         local_path.distance = copy.copy(self.desired_path.distance)
         return local_path
-
+    def send_path(self):
+        send_path = Path()
+        send_path.position = self.desired_path.position[0::10]
+        return self.simulator.send_path(send_path)
+        
     def get_local_path_vehicle_on_path(self,send_path = True, num_of_points = None):#temp function
         #local_path = comp_path(pl,main_path_trans,main_index,num_of_points)#compute local path and global path(inside the planner)
         self.index = self.find_index_on_path(0)

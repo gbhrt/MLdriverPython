@@ -10,6 +10,7 @@ from DDPG_net import DDPG_network
 import init_nets
 #import threading
 import os
+import time
 if __name__ == "__main__": 
     #cd C:\Users\gavri\Desktop\sim_15_3_18
     #cd C:\Users\gavri\Desktop\thesis\ArielUnity - learning2\sim4_5_18
@@ -34,14 +35,14 @@ if __name__ == "__main__":
     envData.analytic_feature_flag = False
     HP.add_feature_to_action  = False
     HP.analytic_action = False
-    HP.restore_flag = False
+    HP.restore_flag = True
 
-    #names = ["test"]
+    #names = ["test1","test2","test3","test4","test5","test6","test7","test8","test9"]
 
 
-    names = ["regular1","regular3","regular5","regular7","regular9"]#
+    #names = ["regular5","regular7","regular9"]#
    
-    #names = ["regular5_1"]
+    names = ["regular_tau001"]
     HP.num_of_runs = 500
     for name in names:
         HP.restore_name = name
@@ -59,6 +60,7 @@ if __name__ == "__main__":
         env = enviroment1.OptimalVelocityPlanner(dataManager)
         if env.opened:     
             DDPG_algorithm.train(env,HP,net,dataManager)
+    time.sleep(3)
 
 
 

@@ -92,7 +92,7 @@ class OptimalVelocityPlanner(OptimalVelocityPlannerData):
         self.episode_steps = 0
         self.last_time = [0]
         self.pl.restart()#not sure
-        self.pl.simulator.get_vehicle_data()#read data after time step from last action
+        self.error = self.pl.simulator.get_vehicle_data()#read data after time step from last action
         #if self.path_source == "saved_random" or self.path_source == "create_random":
         if seed == None:
             seed = int.from_bytes(os.urandom(8), byteorder="big")
@@ -112,6 +112,7 @@ class OptimalVelocityPlanner(OptimalVelocityPlannerData):
         #self.dataManager.update_planned_path(self.pl.in_vehicle_reference_path)
         #first state:
         local_path = self.pl.get_local_path()#num_of_points = self.visualized_points
+        self.error = self.pl.send_path()
         if self.mode == 'DDPG':
             
             state = get_ddpg_state(self.pl,local_path,self.feature_points,self.distance_between_points,self.max_velocity,self.max_curvature)
@@ -161,13 +162,13 @@ class OptimalVelocityPlanner(OptimalVelocityPlannerData):
             time.sleep(0.00001)
         #print("after wait: ",time.time() - temp_last_time)
         #get next state:
-        self.pl.simulator.get_vehicle_data()#read data after time step from last action
+        self.error = self.pl.simulator.get_vehicle_data()#read data after time step from last action
         #t = time.time()
         #print (t - self.lt)
         #self.lt = t
        # print("after get data: ",time.time() - temp_last_time)
        # print("before get_local_path: ",time.time() - self.last_time[0])
-        local_path = self.pl.get_local_path(send_path = False,num_of_points = self.visualized_points)#num_of_points = visualized_points
+        local_path = self.pl.get_local_path(num_of_points = self.visualized_points)#num_of_points = visualized_points
 
         if self.mode == 'DDPG':
             #local_path = self.pl.get_local_path_vehicle_on_path(send_path = False,num_of_points = self.visualized_points)#num_of_points = visualized_points
@@ -210,8 +211,9 @@ class OptimalVelocityPlanner(OptimalVelocityPlannerData):
             
             done = True
             #print("done___________________________________")
-            if mode != 'kipp' and mode != 'seen_path_end':
+            if (mode != 'kipp' and mode != 'seen_path_end') or self.error:
                 self.pl.stop_vehicle()
+                self.error = 0
             if  mode == 'kipp': #(i % HP.reset_every == 0 and i > 0) or
                 #self.pl.stop_vehicle()
                 self.pl.simulator.reset_position()
@@ -233,7 +235,7 @@ class OptimalVelocityPlanner(OptimalVelocityPlannerData):
         #d = self.pl.in_vehicle_reference_path.distance[self.pl.main_index+1] - self.pl.in_vehicle_reference_path.distance[self.pl.main_index]
         #self.pl.simulator.get_vehicle_data()#read data after time step from last action
        # print("after get data: ",time.time() - temp_last_time)
-        local_path = self.pl.get_local_path(send_path = False,num_of_points = self.visualized_points)#num_of_points = visualized_points
+        local_path = self.pl.get_local_path(num_of_points = self.visualized_points)#num_of_points = visualized_points
         v1 = local_path.analytic_velocity[0]
         v2 = local_path.analytic_velocity[1]
         d =local_path.distance[1] - local_path.distance[0]
@@ -316,7 +318,7 @@ class OptimalVelocityPlanner(OptimalVelocityPlannerData):
         analytic_vel = state.analytic_velocity[0]
 
     def comp_steer(self):
-        local_path = self.pl.get_local_path(send_path = False,num_of_points = self.visualized_points)
+        local_path = self.pl.get_local_path(num_of_points = self.visualized_points)
         steer_target = lib.comp_steer_target(local_path,self.pl.simulator.vehicle.velocity)
         steer = lib.comp_steer_local(steer_target)
         return steer

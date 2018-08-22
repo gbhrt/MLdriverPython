@@ -81,7 +81,7 @@ def collect_random_data(buffer_size,path,name):
                     
             #buffer.add((pos_rel_to_last[0],pos_rel_to_last[1],ang_rel_to_last,pl.simulator.vehicle.velocity,steer,acc,steer_des))
 
-            local_path = pl.get_local_path(send_path = False,num_of_points = 100)#just for check end
+            local_path = pl.get_local_path(num_of_points = 100)#just for check end
             mode = pl.check_end(deviation = lib.dist(local_path.position[0][0],local_path.position[0][1],0,0))#check if end of the episode
             if mode != 'ok':
                 if mode != 'kipp' and mode != 'seen_path_end':
