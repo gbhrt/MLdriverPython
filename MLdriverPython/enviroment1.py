@@ -21,11 +21,13 @@ class OptimalVelocityPlannerData:
     def __init__(self):#mode = 'DDPG' ,mode = 'model_based'
         self.mode = 'DDPG'#'model_based'#mode
         self.analytic_feature_flag = False
+        self.roll_feature_flag = False
+        self.wheels_vel_feature_flag = False
         self.end_indication_flag = False
         self.lower_bound_flag = False
         self.max_episode_steps = 100#200#
-        self.feature_points = 25 # number of points on the path in the state +(1*self.end_indication_flag)
-        self.feature_data_num = 1  + (1*self.analytic_feature_flag) # number of data in state (vehicle velocity, analytic data...)
+        self.feature_points = 25#60 # number of points on the path in the state +(1*self.end_indication_flag)
+        self.feature_data_num = 1  + (1*self.analytic_feature_flag)+ (1*self.roll_feature_flag) + (5*self.wheels_vel_feature_flag)# number of data in state (vehicle velocity, analytic data...)
         if self.mode == 'DDPG':
             self.features_num = self.feature_data_num +  2*self.feature_points #vehicle state points on the path (distance)
         if self.mode == 'model_based':
@@ -34,10 +36,13 @@ class OptimalVelocityPlannerData:
         self.path_lenght = 9000#self.feature_points*self.distance_between_points
         self.step_time = 0.2
         self.action_space_n = 1
-        self.max_deviation = 2# 3 # [m] if more then maximum - end episode 
         self.visualized_points = int(self.feature_points/0.05) + 10 #how many points show on the map and lenght of local path
+        self.max_deviation = 1# 3 # [m] if more then maximum - end episode 
+        self.max_velocity = 30
         self.max_pitch = 0.3#0.3
         self.max_roll = 0.07#0.05#0.3# last 0.2
+        self.max_steering = 0.7
+        self.max_wheel_vel = 60# rad/sec. in unity limited to 5720 deg/sec for some reason
         self.acc = 1.38# 0-100 kmh in 20 sec. 1.5 # [m/s^2]  need to be more then maximum acceleration in real
         self.torque_reduce = 1.0 # 0.2
         self.reduce_factor = 1.0
@@ -47,7 +52,6 @@ class OptimalVelocityPlannerData:
         self.action_space.high = [1.0]#self.acc*self.step_time] #, torque in Nm
         self.observation_space = ObservationSpace()
         self.observation_space.shape = [self.features_num]
-        self.max_velocity = 30
         self.observation_space.range = [[0,self.max_velocity],[-0.7,0.7],[-0.7,0.7],[-1.0,1.0]]
         self.max_curvature = 0.12
 
@@ -68,7 +72,7 @@ class OptimalVelocityPlanner(OptimalVelocityPlannerData):
         self.dataManager = dataManager
        
         ####
-        self.path_name = "paths//straight_path_limit_json.txt"     #long random path: path3.txt  #long straight path: straight_path.txt
+        self.path_name = 'paths//circle_r7_json.txt'#"paths//straight_path_limit_json.txt"     #long random path: path3.txt  #long straight path: straight_path.txt
         self.path_source = "create_random" #"create"#  "regular" #"create_random" #saved_random"
       
         self.reset_count = 0
@@ -116,6 +120,11 @@ class OptimalVelocityPlanner(OptimalVelocityPlannerData):
         if self.mode == 'DDPG':
             
             state = get_ddpg_state(self.pl,local_path,self.feature_points,self.distance_between_points,self.max_velocity,self.max_curvature)
+            if self.roll_feature_flag:
+                state = [self.pl.simulator.vehicle.angle[2]/self.max_roll]+state
+            if self.wheels_vel_feature_flag:
+                state = [self.pl.simulator.vehicle.steering/self.max_steering]+state
+                state = [wheel_vel/self.max_wheel_vel for wheel_vel in self.pl.simulator.vehicle.wheels_vel]+state
             if self.analytic_feature_flag:
                 analytic_a = [self.comp_analytic_acceleration(state)]
                 state = analytic_a + state
@@ -174,6 +183,11 @@ class OptimalVelocityPlanner(OptimalVelocityPlannerData):
             #local_path = self.pl.get_local_path_vehicle_on_path(send_path = False,num_of_points = self.visualized_points)#num_of_points = visualized_points
        
             next_state = get_ddpg_state(self.pl,local_path,self.feature_points,self.distance_between_points,self.max_velocity,self.max_curvature)
+            if self.roll_feature_flag:
+                next_state = [self.pl.simulator.vehicle.angle[2]/self.max_roll]+next_state
+            if self.wheels_vel_feature_flag:
+                next_state = [self.pl.simulator.vehicle.steering/self.max_steering]+next_state
+                next_state = [wheel_vel/self.max_wheel_vel for wheel_vel in self.pl.simulator.vehicle.wheels_vel]+next_state
             if self.analytic_feature_flag:
                 analytic_a = [self.comp_analytic_acceleration(next_state)]
                 next_state = analytic_a + next_state
@@ -194,6 +208,7 @@ class OptimalVelocityPlanner(OptimalVelocityPlannerData):
             ,max_roll = self.max_roll,max_pitch = self.max_pitch,end_distance = end_distance)#check if end of the episode 
         #print("roll:",self.pl.simulator.vehicle.angle)
         self.dataManager.roll.append(self.pl.simulator.vehicle.angle[2])
+        self.dataManager.wheels_vel.append(self.pl.simulator.vehicle.wheels_vel)
         #get reward:
         if self.lower_bound_flag:
             analytic_vel = self.comp_analytic_velocity(next_state)
@@ -259,15 +274,19 @@ class OptimalVelocityPlanner(OptimalVelocityPlannerData):
         #    for pos in state_path.position:
         #        f.write("%s \t %s\t %s \n" % (pos[0],pos[1],pos[2]))
         result = lib.comp_velocity_limit_and_velocity(state_path,init_vel = pos_state[0]*self.max_velocity, final_vel = 0,reduce_factor = self.reduce_factor)
+        max_acc = lib.cf.max_acc
+        #print("max_acc:",max_acc)
         if result == 1:#computed analytic velocity
             acc = state_path.analytic_acceleration[0]
-            return np.clip(acc/8,-1,1)
+            print("acc",acc/max_acc)
+            return np.clip(acc/max_acc,-1,1)
+            #return np.clip(acc/8,-1,1)
         else:
             print("vels",pos_state[0]*self.max_velocity,state_path.analytic_velocity_limit[0])
             if pos_state[0]*self.max_velocity > state_path.analytic_velocity_limit[0]:
                 print("crossed limit")
             print("cannot compute analytic velocity")
-            return -0.7
+            return -1.0
         
 
 

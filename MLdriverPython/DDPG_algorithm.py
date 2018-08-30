@@ -58,10 +58,13 @@ def train(env,HP,net,dataManager,seed = None):
     test_path_ind = 0
     global_train_count = 0
     seed = HP.seed[0]
+    reduce_vel = 0.0
     for i in range(HP.num_of_runs): #number of runs - run end at the end of the main path and if vehicle deviation error is to big
         if waitFor.stop == [True]:
             break
         # initialize every episode:
+        #reduce_vel+=0.01
+        #print("reduce_vel: ",reduce_vel)
         step_count = 0
         reward_vec = []
         last_time = [0]
@@ -141,9 +144,10 @@ def train(env,HP,net,dataManager,seed = None):
             if HP.add_feature_to_action:
                 a[0] += analytic_action
 
-            if HP.analytic_action and HP.noise_flag:
+            if HP.analytic_action:# and HP.noise_flag:
+                state[0] = state[0]#*(1.0- reduce_vel)
                 a = [env.comp_analytic_acceleration(state)]#env.analytic_feature_flag must be false
-            
+                #print("acc:",a)
            # print("state:", state)
             #a = env.get_analytic_action()
             #print("action: ", a)#,"noise: ",noise)

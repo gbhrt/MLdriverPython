@@ -21,6 +21,7 @@ pl.torque_command(1.0,steer = 0)
 start = time.time()
 t = []
 vel = []
+wheels_vel =[]
 #pl.simulator.send_drive_commands(0.2 ,0)#math.sin(0.2*i)  0.276
 
 for i in range(20):
@@ -29,6 +30,7 @@ for i in range(20):
 #    #pl.simulator.send_drive_commands(pl.simulator.vehicle.velocity +0.276 ,0)#math.sin(0.2*i)  0.276
     t.append(time.time() -start)
     vel.append(pl.simulator.vehicle.velocity)
+    wheels_vel.append(pl.simulator.vehicle.wheels_vel)
     time.sleep(0.2)
 pl.torque_command(-1.0,steer = 0)
 for i in range(30):
@@ -37,6 +39,7 @@ for i in range(30):
 #    #pl.simulator.send_drive_commands(pl.simulator.vehicle.velocity +0.276 ,0)#math.sin(0.2*i)  0.276
     t.append(time.time() -start)
     vel.append(pl.simulator.vehicle.velocity)
+    wheels_vel.append(pl.simulator.vehicle.wheels_vel)
     time.sleep(0.2)
 #pl.simulator.send_drive_commands(-0.2 ,0)#math.sin(0.2*i)  0.276
 
@@ -54,15 +57,21 @@ for i in range(30):
 pl.stop_vehicle()
 pl.end()
 
-path = classes.Path()
-path.position = [[0,0.05*i,0] for i in range(10000)]
-lib.comp_velocity_limit_and_velocity(path)
-
+#path = classes.Path()
+#path.position = [[0,0.05*i,0] for i in range(10000)]
+#lib.comp_velocity_limit_and_velocity(path)
+plt.figure(1)
 plt.plot(t,vel)
-plt.plot(path.analytic_time,path.analytic_velocity)
+#plt.plot(path.analytic_time,path.analytic_velocity)
+plt.figure(2)
+plt.plot(t,np.array(wheels_vel)[:,0])
+plt.plot(t,np.array(wheels_vel)[:,1])
+plt.plot(t,np.array(wheels_vel)[:,2])
+plt.plot(t,np.array(wheels_vel)[:,3])
+
 plt.show()
 #pm = classes.PathManager()
-##pm.convert_to_json('paths//straight_path_limit.txt','paths//straight_path_limit_json.txt')
+#pm.convert_to_json('paths//circle_path.txt','paths//circle_r7_json.txt')
 
 #path = pm.read_path("paths//straight_path_limit_json.txt")
 #random.seed(1234)

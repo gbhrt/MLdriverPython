@@ -119,11 +119,9 @@ class DDPG_network(NetLib):
             #batch_size.shape()
             # Flatten the data to a 1-D vector for the fully connected layer
             conv = tf.contrib.layers.flatten(conv)
-            hidden_data_layer_nodes = 50
-            fc_data = tflearn.fully_connected(data_s, hidden_data_layer_nodes,regularizer='L2', weight_decay=0.01)#
             fc1_1 = tflearn.fully_connected(conv, hidden_layer_nodes1,regularizer='L2', weight_decay=0.01)#from state
-            fc1_2 = tflearn.fully_connected(fc_data, hidden_layer_nodes1,regularizer='L2', weight_decay=0.01)#from analytic action
-            fc1 = tflearn.activation(tf.matmul(conv, fc1_1.W) + tf.matmul(fc_data, fc1_2.W) + fc1_1.b + fc1_2.b, activation='relu')
+            fc1_2 = tflearn.fully_connected(data_s, hidden_layer_nodes1,regularizer='L2', weight_decay=0.01)#from analytic action
+            fc1 = tflearn.activation(tf.matmul(conv, fc1_1.W) + tf.matmul(data_s, fc1_2.W) + fc1_1.b + fc1_2.b, activation='relu')
             #state[...,1:].shape()
         else:
             fc1 = tflearn.fully_connected(state, hidden_layer_nodes1,regularizer='L2', weight_decay=0.01)#from state
@@ -196,13 +194,9 @@ class DDPG_network(NetLib):
             #batch_size.shape()
             # Flatten the data to a 1-D vector for the fully connected layer
             conv = tf.contrib.layers.flatten(conv)
-
-            hidden_data_layer_nodes = 50
-            fc_data = tflearn.fully_connected(data_s, hidden_data_layer_nodes,regularizer='L2', weight_decay=0.01)#
-
             fc1_1 = tflearn.fully_connected(conv, hidden_layer_nodes1,regularizer='L2', weight_decay=0.01)#from state
-            fc1_2 = tflearn.fully_connected(fc_data, hidden_layer_nodes1,regularizer='L2', weight_decay=0.01)#from analytic action
-            fc1 = tflearn.activation(tf.matmul(conv, fc1_1.W) + tf.matmul(fc_data, fc1_2.W) + fc1_1.b + fc1_2.b, activation='relu')
+            fc1_2 = tflearn.fully_connected(data_s, hidden_layer_nodes1,regularizer='L2', weight_decay=0.01)#from analytic action
+            fc1 = tflearn.activation(tf.matmul(conv, fc1_1.W) + tf.matmul(data_s, fc1_2.W) + fc1_1.b + fc1_2.b, activation='relu')
             #state[...,1:].shape()
         else:
             fc1 = tflearn.fully_connected(state, hidden_layer_nodes1,regularizer='L2', weight_decay=0.01)#from state

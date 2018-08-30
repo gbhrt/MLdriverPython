@@ -28,12 +28,14 @@ class cFunctions:
         #    return 1
         return c_limit_curve[:]
     def comp_limit_curve_and_velocity(self,x,y,z,init_vel = 0, final_vel = 0):
-        f_max = 4195*5.0
+        f_max = 4195*5.0# 4195# = 2000 torque.  8864# from 0-100 in 10 sec  4195#*5.0
         mass = 3200
         vel_max = 30
         fc = 1.0
-        height = 0.94#0.86
+        height = 1.7#0.94#0.86
         width = 2.08
+
+        self.max_acc= f_max/mass
 
 
         #global c_lib

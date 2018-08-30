@@ -18,6 +18,7 @@ class DataManager():
             pathlib.Path(save_path).mkdir(parents=True, exist_ok=True) 
             self.save_name = save_path+"data.txt"
             self.save_readable_data_name = save_path+"readable_data.txt"
+            self.save_run_data_name = save_path+"run_data.txt"
         else:
             self.save_name ="data.txt"
         if restore_path != None:
@@ -38,6 +39,7 @@ class DataManager():
         self.train_num = []
         self.init_train_num = 0
         self.paths = []
+        self.run_data =[]
         
         
 
@@ -54,6 +56,7 @@ class DataManager():
         self.noise = []
         self.acc = []
         self.acc_target = []
+        self.wheels_vel = []
         ###############################
         
         if restore_flag:
@@ -117,11 +120,16 @@ class DataManager():
             #    plt.plot(path.distance[:max_time_ind],self.roll[:max_time_ind])
 
                 x = np.array(self.real_path.distance[:max_time_ind])
-                Qa, = plt.plot(x,self.Qa,label = "Qa")
-                Q0, = plt.plot(x,self.Q0,label = "Q0")
-                Q1, = plt.plot(x,self.Q1,label = "Q1")
-                Qneg1, = plt.plot(x,self.Qneg1,label = "Qneg1")
-                plt.legend(handles=[Qa, Q0,Q1,Qneg1])
+                #Qa, = plt.plot(x,self.Qa,label = "Qa")
+                #Q0, = plt.plot(x,self.Q0,label = "Q0")
+                #Q1, = plt.plot(x,self.Q1,label = "Q1")
+                #Qneg1, = plt.plot(x,self.Qneg1,label = "Qneg1")
+                #plt.legend(handles=[Qa, Q0,Q1,Qneg1])
+                plt.plot(x,np.array(self.wheels_vel)[:,0])
+                plt.plot(x,np.array(self.wheels_vel)[:,1])
+                plt.plot(x,np.array(self.wheels_vel)[:,2])
+                plt.plot(x,np.array(self.wheels_vel)[:,3])
+                
 
             #plt.title("train num - relative reward")
             
@@ -282,7 +290,14 @@ class DataManager():
         self.noise = []
         self.acc = []
         self.acc_target = []
-        
+        self.wheels_vel = []
+    def save_run_data(self):
+        #try: 
+            with open(self.save_run_data_name, 'w') as f:
+                for data in self.run_data:
+                    f.write("%s \n" % (data))
+        #except:
+        #    print("cannot save data")      
     def save_readeable_data(self):
         try: 
             with open(self.save_readable_data_name, 'w') as f:
@@ -305,5 +320,5 @@ class DataManager():
             print("data manager restored")
         except:
             print ("cannot restore data manager:", sys.exc_info()[0])
-            raise
+            #raise
     

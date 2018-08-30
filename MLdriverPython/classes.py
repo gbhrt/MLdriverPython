@@ -5,6 +5,7 @@ import os
 import library as lib
 import _thread
 
+
 class Vehicle:
     def __init__(self):
         self.position=[0,0,0]
@@ -12,6 +13,7 @@ class Vehicle:
         self.angle = [0,0,0]
         self.steering = 0
         self.velocity = 0
+        self.wheels_vel = [0,0,0,0]
 class Path:
     def __init__(self):
         self.position = []#

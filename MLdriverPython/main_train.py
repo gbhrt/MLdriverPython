@@ -34,16 +34,26 @@ if __name__ == "__main__":
     """
     envData.analytic_feature_flag = False
     HP.add_feature_to_action  = False
-    HP.analytic_action = False
-    HP.restore_flag = True
+    HP.analytic_action = True
+    HP.restore_flag = False 
 
     #names = ["test1","test2","test3","test4","test5","test6","test7","test8","test9"]
 
 
     #names = ["regular5","regular7","regular9"]#
    
-    names = ["regular_tau001"]
-    HP.num_of_runs = 500
+    names = ["test"]#["regular_slip_com_high_1","regular_slip_com_high_2","regular_slip_com_high_3"]
+    description = "friction 1, high com"
+    run_data = ["envData.analytic_feature_flag: "+str(envData.analytic_feature_flag), 
+                "HP.add_feature_to_action: "+str(HP.add_feature_to_action),
+                description]
+
+    #with_features_new_desing_conv - not good, max 0.8 to many fails
+    #not at all
+    #low_acc_diff_path no so good, with wheel vel
+    #low_acc_diff_path_regular regular features, not work
+
+    HP.num_of_runs = 1000
     for name in names:
         HP.restore_name = name
         HP.save_name = name
@@ -51,7 +61,8 @@ if __name__ == "__main__":
         HP.restore_file_path = os.getcwd()+ "\\files\\models\\final_corl\\"+HP.restore_name+"\\"
 
         dataManager = data_manager1.DataManager(HP.save_file_path,HP.restore_file_path,HP.restore_flag)
-
+        dataManager.run_data = run_data
+        dataManager.save_run_data()
         net = DDPG_network(envData.observation_space.shape[0],envData.action_space.shape[0],envData.action_space.high[0],\
             HP.alpha_actor,HP.alpha_critic,HP.alpha_analytic_actor,HP.alpha_analytic_critic,tau = HP.tau,seed = HP.seed[0],feature_data_n = envData.feature_data_num, conv_flag = HP.conv_flag)  
         if HP.restore_flag:

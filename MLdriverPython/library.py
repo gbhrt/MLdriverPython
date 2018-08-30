@@ -437,7 +437,8 @@ def create_random_path(number,resolution,seed = None):
 
     if seed != None:
         random.seed(seed)
-    max_rand_num = 500
+    max_rand_num = 500#2000#500
+    min_rand_num = 0#200#0
     pos = np.array([0.0,0.0,0.0])
     ang = 0
     curvature = 0 
@@ -446,8 +447,14 @@ def create_random_path(number,resolution,seed = None):
     i=0
     j = 0
     while i < number:
-        rand_num = random.randint(0,max_rand_num)
-        des_curvature = random.uniform(-0.12,0.12)
+        #des_curvature = random.uniform(-0.12,0.12)
+        #if abs (des_curvature) > 0.0001:
+        #    max_arc = int((math.pi/(abs(des_curvature)))/0.05)#maximum a 0.5 of a circle
+        #    max_rand_num = min(max_rand_num,max_arc)
+            #min_arc = int((0.5*math.pi/(abs(des_curvature)))/0.05)#maximum a 0.25 of a circle
+
+        rand_num = random.randint(min_rand_num,max_rand_num)
+        des_curvature = random.uniform(-0.12,0.12) #changed order
         #print("num: ",rand_num,"curv: ",des_curvature)
         for j in range(rand_num):
             if curvature < des_curvature:

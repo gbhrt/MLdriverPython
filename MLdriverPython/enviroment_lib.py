@@ -122,12 +122,12 @@ def get_reward(velocity,max_vel,mode,lower_bound = 0.0,analytic_velocity = None)
             reward = (velocity - analytic_velocity)/max_vel #positive reward
         print("velocity:",velocity,"analytic_velocity:",analytic_velocity,"reward:",reward)
     else:
-        reward = velocity/max_vel 
+        reward = 0.2*velocity/max_vel 
         #if velocity <= 0.0:
     if velocity <= lower_bound:
-        reward = -1.0
+        reward = -0.2
     if mode == 'kipp'or mode == 'deviate':
-        reward = -5.0
+        reward = -1.0
     #elif mode == 'path_end':#problem - agent dont know that he is at the end
     #    reward = 10
 

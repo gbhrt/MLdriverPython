@@ -68,9 +68,11 @@ class SimVehicle:#simulator class - include communication to simulator, vehicle 
             self.vehicle.angle[0] = -(2*math.pi - self.vehicle.angle[0])
         if self.vehicle.angle[2] > math.pi:#angle form 0 to 2 pi, convert from -pi to pi
             self.vehicle.angle[2] = -(2*math.pi - self.vehicle.angle[2])
-        self.vehicle.backPosition = lib.changeZtoY(self.comm.deserialize(3,float))
+       # self.vehicle.backPosition = lib.changeZtoY(self.comm.deserialize(3,float))
         self.vehicle.velocity = self.comm.deserialize(1,float)
         self.vehicle.steering = self.comm.deserialize(1,float)
+        self.vehicle.wheels_vel = lib.change_to_rad(self.comm.deserialize(4,float))
+        #print("wheels_vel:",self.vehicle.wheels_vel)
         return error
     def get_vehicle_data(self):
         data_type = 0

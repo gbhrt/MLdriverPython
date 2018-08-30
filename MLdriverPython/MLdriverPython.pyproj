@@ -41,6 +41,7 @@
     <Compile Include="data_manager1.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="DDPG_net - Copy.py" />
     <Compile Include="gui.py">
       <SubType>Code</SubType>
     </Compile>

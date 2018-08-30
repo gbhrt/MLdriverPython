@@ -52,4 +52,4 @@ class NetLib:
             print("Model restored.")
         except:
             print('cannot restore net',sys.exc_info()[0])
-            raise
+            #raise
