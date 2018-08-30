@@ -407,13 +407,15 @@ def comp_velocity_limit_and_velocity(path,skip = 1,reduce_factor = 1.0,init_vel 
     path.analytic_velocity_limit = np.interp(np.array(real_x), np.array(skiped_x), np.array(velocity_limit))*reduce_factor
     if result == 1:
         path.analytic_velocity = np.interp(np.array(real_x), np.array(skiped_x), np.array(velocity))*reduce_factor
-        dtime_vec[-1] = dtime_vec[-2]#temp bug fix - last dt is 0
-        
+
+        #dt[i] is the time from point i to i+1, hence the last is not defined hence is 0
+        #sum t such that t[i] is the time to reach i, first point is 0 last sum of all dt except the last dt
         t = 0
         analytic_time = []
         for dt in dtime_vec:
-            t+=dt
             analytic_time.append(t)
+            t+=dt
+            
         path.analytic_time = np.interp(np.array(real_x), np.array(skiped_x), np.array(analytic_time))#*reduce_factor 
     #path.analytic_acceleration = np.interp(np.array(real_x), np.array(skiped_x), np.array(acc_vec))*reduce_factor
         path.comp_distance()

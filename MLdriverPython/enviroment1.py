@@ -1,6 +1,5 @@
 from planner import Planner
 import numpy as np
-#from library import *  #temp
 import library as lib
 import classes
 import copy
@@ -82,7 +81,6 @@ class OptimalVelocityPlanner(OptimalVelocityPlannerData):
         self.opened = self.pl.connected
 
         self.path_seed = None
-
         return
 
         
@@ -277,8 +275,24 @@ class OptimalVelocityPlanner(OptimalVelocityPlannerData):
         max_acc = lib.cf.max_acc
         #print("max_acc:",max_acc)
         if result == 1:#computed analytic velocity
-            acc = state_path.analytic_acceleration[0]
-            print("acc",acc/max_acc)
+            v1 = state_path.analytic_velocity[0]#must be the same as current velocity
+            #for i, t in enumerate (state_path.analytic_time):
+            #    if t>self.step_time:
+            #        break
+            for i in range(len (state_path.analytic_time)):
+                if state_path.analytic_time[i] > self.step_time:
+                    break
+
+            
+            v2 = state_path.analytic_velocity[i]
+            d = state_path.distance[i]# - path.distance[0]
+            print("i:",i, "time:",state_path.analytic_time[i],"v2:",v2,"d:",d)
+            if d < 0.01:
+                print("_____________________________________________________________________________")
+            acc = (v2**2 - v1**2 )/(2*d)#acceleration [m/s^2]
+            acc_tmp = state_path.analytic_acceleration[0]
+
+            print("acc",acc/max_acc,"acc_tmp:",acc_tmp/max_acc)
             return np.clip(acc/max_acc,-1,1)
             #return np.clip(acc/8,-1,1)
         else:
@@ -316,7 +330,7 @@ class OptimalVelocityPlanner(OptimalVelocityPlannerData):
         for i in range(len(state_path.distance)-1):
             if state_path.distance[i+1] - state_path.distance[i]  < 0.01:
                 #print("dis<0----------------------------------------")
-                return -0.7
+                return -1.0
         #print(state_path.position)
         #with open("state_path", 'w') as f:
         #    for pos in state_path.position:

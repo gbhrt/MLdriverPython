@@ -98,9 +98,12 @@ class DataManager():
                 vel_lim,  = plt.plot(np.array(path.distance)[:max_time_ind],np.array(path.analytic_velocity)[:max_time_ind],label = "analytic velocity")
                 vel, =      plt.plot(self.real_path.distance,self.real_path.velocity,'o', label = "vehicle velocity")
                 plt.legend(handles=[real_vel, vel_lim,vel])
-            plt.subplot(222)  
-            plt.plot(self.real_path.distance[:max_time_ind],self.acc)
-            plt.plot(self.real_path.distance[:max_time_ind],self.acc_target)
+
+            plt.subplot(222) 
+            #print("acc_vec:",self.acc)
+            plt.plot(self.real_path.distance[:max_time_ind-1],self.acc[1:]) #action is before the saved distance
+            plt.plot(self.real_path.distance[:max_time_ind-1],self.acc[1:],'o')
+           # plt.plot(self.real_path.distance[:max_time_ind],self.acc_target)
             #print("self.real_path.time[-1] in plot",self.real_path.time[-1])
             #print("analytic_dist in plot:",path.distance[max_time_ind])
             ##if len(self.real_path.time) > 0:

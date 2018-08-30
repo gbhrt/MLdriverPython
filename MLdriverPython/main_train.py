@@ -32,17 +32,18 @@ if __name__ == "__main__":
     in home computer- add_acc_feature2 - finished. add_acc_feature2. add_acc2
 
     """
-    envData.analytic_feature_flag = False
-    HP.add_feature_to_action  = False
-    HP.analytic_action = True
-    HP.restore_flag = False 
+    envData.analytic_feature_flag = True
+    HP.add_feature_to_action  = True
+    HP.analytic_action = False
+    HP.restore_flag = True 
+
 
     #names = ["test1","test2","test3","test4","test5","test6","test7","test8","test9"]
 
 
     #names = ["regular5","regular7","regular9"]#
    
-    names = ["test"]#["regular_slip_com_high_1","regular_slip_com_high_2","regular_slip_com_high_3"]
+    names = ["bevo_1"]#["regular_slip_com_high_1","regular_slip_com_high_2","regular_slip_com_high_3"]
     description = "friction 1, high com"
     run_data = ["envData.analytic_feature_flag: "+str(envData.analytic_feature_flag), 
                 "HP.add_feature_to_action: "+str(HP.add_feature_to_action),
@@ -57,8 +58,8 @@ if __name__ == "__main__":
     for name in names:
         HP.restore_name = name
         HP.save_name = name
-        HP.save_file_path = os.getcwd()+ "\\files\\models\\final_corl\\"+HP.save_name+"\\"
-        HP.restore_file_path = os.getcwd()+ "\\files\\models\\final_corl\\"+HP.restore_name+"\\"
+        HP.save_file_path = os.getcwd()+ "\\files\\models\\slip_com_high\\"+HP.save_name+"\\"
+        HP.restore_file_path = os.getcwd()+ "\\files\\models\\slip_com_high\\"+HP.restore_name+"\\"
 
         dataManager = data_manager1.DataManager(HP.save_file_path,HP.restore_file_path,HP.restore_flag)
         dataManager.run_data = run_data

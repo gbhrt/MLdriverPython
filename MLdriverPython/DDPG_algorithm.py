@@ -152,7 +152,8 @@ def train(env,HP,net,dataManager,seed = None):
             #a = env.get_analytic_action()
             #print("action: ", a)#,"noise: ",noise)
             dataManager.acc_target.append(net.get_target_actions(np.reshape(state, (1, env.observation_space.shape[0])))[0])
-            dataManager.acc.append(a)
+            #print("a:",a)
+            dataManager.acc.append(a[0])
             if not HP.gym_flag:
                 env.command(a)
 
@@ -237,7 +238,7 @@ def train(env,HP,net,dataManager,seed = None):
             evaluation_flag = False
            # HP.noise_flag =True
         #print("episode time:",time.time()-episode_start_time)
-        print("episode: ", i, " total reward: ", total_reward, "episode steps: ",step_count)
+        print("episode: ", i, " total reward: ", total_reward, "episode steps: ",step_count,"file name:",HP.save_file_path)
         
         if not HP.run_same_path:
             seed = int.from_bytes(os.urandom(8), byteorder="big")
