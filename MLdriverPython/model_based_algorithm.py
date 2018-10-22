@@ -81,17 +81,19 @@ def train(env,HP,net,Replay,dataManager,trainShared,guiShared,seed = None):
             pLib.model_based_update([state], [[0,0]], [state],[False],net,HP)
 
         #episode_start_time = time.time()
+        steer = 0
+        a = [0.7]
         while  waitFor.stop != [True]:#while not stoped, the loop break if reached the end or the deviation is to big
             step_count+=1
                
             #choose and make action:
 
-            #noise_range = env.action_space.high[0]
-            #noise = actionNoise() * noise_range
+            noise_range = env.action_space.high[0]
+            noise = actionNoise() * noise_range
             #if random_action_flag:
             #    a = noise
             #else:
-            #    a = pLib.comp_model_based_action(state)
+              #  a = pLib.comp_model_based_action(state)
 
 
 
@@ -102,29 +104,36 @@ def train(env,HP,net,Replay,dataManager,trainShared,guiShared,seed = None):
 
             
             #a = [env.comp_analytic_acceleration(state)]#env.analytic_feature_flag must be false
-            a = [env.comp_const_vel_acc(6.0+step_count/25)]
-            #a = env.get_analytic_action()+noise
+            #next_a = [env.comp_const_vel_acc(5.0)+float(noise)]# +noise (6.0+step_count/25)
+            #a = env.get_analytic_action()#+noise
             #a = list(np.clip(a,-env.action_space.high[0],env.action_space.high[0]))
-            a = [float(a[k]) for k in range(len(a))]  
+            #next_a = [float(a[k]) for k in range(len(a))]
+              
             #a = [env.comp_analytic_acc_compare()]
            # print("state:", state)
 
             #print("action: ", a)#,"noise: ",noise)
             #dataManager.acc.append(a)
             if not HP.gym_flag:
+                #steer = env.comp_steer()
+                #print("regular steer:",steer)
+                next_steer = pLib.comp_steer_from_next_state(net,state,steer,a)
+                print("next state steer:",steer)
                 
-                steer = env.comp_steer()
+                
+                
                 
                 n = 10
-                max_roll = 0.05
+                max_roll = 0.03
                 #print("t2:", time.time() - t1)
-                predicted_values,roll_flag = pLib.predict_n_next(n,net,state,max_roll)
+                predicted_values,roll_flag = pLib.predict_n_next(n,net,state,max_roll,a)
                 #print("after n predict:", time.time() - t1)
-                ##if roll_flag:
-                ##    a = [-0.7]
-                ##else:
-                ##    a = [0.7]
-
+                if roll_flag:
+                    next_a = [-0.7]
+                else:
+                    next_a = [0.7]
+                print("next_a:",next_a,"noise: ",noise)
+                #steer_command = env.command(a,steer)#steer
                 
                 ##print("t4:", time.time() - t1)
                 #steer = lib.comp_steer_general(state['path'],[0,0],0,state['vel'])
@@ -133,39 +142,44 @@ def train(env,HP,net,Replay,dataManager,trainShared,guiShared,seed = None):
                     guiShared.predicded_path = [pred[0] for pred in predicted_values]
                     guiShared.state = copy.deepcopy(state)
                     guiShared.steer = steer
-                steer_command = env.command(a,steer)#steer
+                
                 
 
-                    
-            
+            print("time before command:",time.time()-env.lt)
+            #env.command(a,steer)#steer  steer_command = 
+
             #print("before step:", time.time() - t1)
-            next_state, reward, done, info = env.step(a)
+            next_state, reward, done, info = env.step(next_a,steer = next_steer)#input the estimated next actions to execute after delta t and getting next state
+            
             #t1 = time.time()
             
             reward_vec.append(reward)
-          #  print("after append:", time.time() - t1)
+            print("after append:", time.time() - env.lt)
             #add data to replay buffer:
-            if info == 'kipp':
+            if info[0] == 'kipp':
                 fail = True
             else:
                 fail = False
+            time_step_error = info[1]
 
  
+            if not time_step_error:
+                tmp_next_path = next_state['path']
+              #  print("after copy1:", time.time() - t1)
+                state['path'] = []
+                next_state['path'] = []
+              #  print("after copy2:", time.time() - t1)
+                #t = time.time()
+                #print (t - lt)
+                #lt = t
+                Replay.add(copy.deepcopy((state,[a[0],steer],next_state,done,fail)))#  
 
-            tmp_next_path = next_state['path']
-          #  print("after copy1:", time.time() - t1)
-            state['path'] = []
-            next_state['path'] = []
-          #  print("after copy2:", time.time() - t1)
-            #t = time.time()
-            #print (t - lt)
-            #lt = t
-            Replay.add(copy.deepcopy((state,[a[0],steer_command],next_state,done,fail)))#  
+                next_state['path'] = tmp_next_path
 
-            next_state['path'] = tmp_next_path
-           # print("after add:", time.time() - t1)
+               # print("after add:", time.time() - t1)
 
             state = copy.deepcopy(next_state)
+            a,steer = copy.copy(next_a), copy.copy(next_steer)
             #print("t9:", time.time() - t1)
             if done:
                 break
@@ -188,7 +202,7 @@ def train(env,HP,net,Replay,dataManager,trainShared,guiShared,seed = None):
             #else:
             #    relative_dist = 0.0
             #dataManager.relative_reward.append(relative_dist)
-            dataManager.episode_end_mode.append(info)
+            dataManager.episode_end_mode.append(info[0])
             dataManager.rewards.append(total_reward)
             dataManager.lenght.append(step_count)
             dataManager.add_run_num(i)

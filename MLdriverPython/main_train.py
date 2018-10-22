@@ -21,47 +21,36 @@ if __name__ == "__main__":
 
     #env  = gym.make("HalfCheetahBulletEnv-v0")
     HP = HyperParameters()
-    envData = enviroment1.OptimalVelocityPlannerData()#mode = 'DDPG'
-    """
-    finished:
-    regular1 - long 900 episodes
-    regular3 - 700 - from 300 continued training, seems like a problem from there
-    add_acc1 - 700 episodes
-
-    regular3 - reached 260 episodes
-    in home computer- add_acc_feature2 - finished. add_acc_feature2. add_acc2
-
-    """
-    envData.analytic_feature_flag = True
-    HP.add_feature_to_action  = True
+    envData = enviroment1.OptimalVelocityPlannerData(mode = "DDPG")#mode = 'DDPG'
+    
+    envData.analytic_feature_flag = False
+    HP.add_feature_to_action  = False
     HP.analytic_action = False
-    HP.restore_flag = True 
+    HP.restore_flag = False
 
-
-    #names = ["test1","test2","test3","test4","test5","test6","test7","test8","test9"]
-
-
-    #names = ["regular5","regular7","regular9"]#
-   
-    names = ["bevo_1"]#["regular_slip_com_high_1","regular_slip_com_high_2","regular_slip_com_high_3"]
-    description = "friction 1, high com"
-    run_data = ["envData.analytic_feature_flag: "+str(envData.analytic_feature_flag), 
-                "HP.add_feature_to_action: "+str(HP.add_feature_to_action),
-                description]
+    names = ["test_sep_replay_2"]
+    description = "test times"
 
     #with_features_new_desing_conv - not good, max 0.8 to many fails
     #not at all
     #low_acc_diff_path no so good, with wheel vel
     #low_acc_diff_path_regular regular features, not work
-
-    HP.num_of_runs = 1000
+    HP.reduce_vel = 0.0
+    HP.num_of_runs = 5000
     for name in names:
+        
+        run_data = ["envData.analytic_feature_flag: "+str(envData.analytic_feature_flag), 
+                "HP.add_feature_to_action: "+str(HP.add_feature_to_action),
+                "roll_feature_flag: "+str(envData.roll_feature_flag),
+                "alpha_actor: "+str(HP.alpha_actor),
+                "reduce_vel: "+str(HP.reduce_vel),
+                description]
         HP.restore_name = name
         HP.save_name = name
-        HP.save_file_path = os.getcwd()+ "\\files\\models\\slip_com_high\\"+HP.save_name+"\\"
-        HP.restore_file_path = os.getcwd()+ "\\files\\models\\slip_com_high\\"+HP.restore_name+"\\"
+        HP.save_file_path = os.getcwd()+ "\\files\\models\\no_friction_hard\\"+HP.save_name+"\\"
+        HP.restore_file_path = os.getcwd()+ "\\files\\models\\no_friction_hard\\"+HP.restore_name+"\\"
 
-        dataManager = data_manager1.DataManager(HP.save_file_path,HP.restore_file_path,HP.restore_flag)
+        dataManager = data_manager1.DataManager(HP.save_file_path,HP.restore_file_path,HP.restore_flag)#HP.restore_flag
         dataManager.run_data = run_data
         dataManager.save_run_data()
         net = DDPG_network(envData.observation_space.shape[0],envData.action_space.shape[0],envData.action_space.high[0],\
@@ -69,9 +58,10 @@ if __name__ == "__main__":
         if HP.restore_flag:
             net.restore(HP.restore_file_path)
         #train agent on simulator
-        env = enviroment1.OptimalVelocityPlanner(dataManager)
+        env = enviroment1.OptimalVelocityPlanner(dataManager,mode="DDPG")
         if env.opened:     
             DDPG_algorithm.train(env,HP,net,dataManager)
+        #HP.reduce_vel +=0.05
     time.sleep(3)
 
 

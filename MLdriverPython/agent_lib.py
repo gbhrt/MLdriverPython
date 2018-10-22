@@ -18,7 +18,8 @@ class Replay:
         self.memory.append(data)
     def sample(self,batch_size):
         samples = random.sample(self.memory,np.clip(batch_size,0,len(self.memory)))
-        return map(np.array, zip(*samples))
+        #return map(np.array, zip(*samples))
+        return map(list, zip(*samples))
     def change_path(self):
         for i in range(len(self.memory)):
             path = self.memory[i][0]
@@ -146,13 +147,29 @@ def comp_abs_pos_ang(rel_pos,rel_ang,abs_pos,abs_ang):
     #if next_rel_ang  > math.pi: rel_ang  -= 2*math.pi
     #if next_rel_ang  < -math.pi: rel_ang  += 2*math.pi
     return next_abs_pos,next_rel_ang
-def predict_n_next(n,net,init_state,max_roll):
+
+#def predict_next_state(net,state,steer_command,acc_command):
+#    next_state = copy.deepcopy(state)
+#    X = [state['vel'],state['steer'],steer_command,acc_command]
+#    Y = net.get_Y([X])[0]
+#    abs_pos,abs_ang = comp_abs_pos_ang(Y[0:2],Y[2],state['pos'],state['ang'])
+#    next_state['vel'] = Y[3]
+#    next_state['steer'] = Y[4]
+#    next_state['roll'] = Y[5]
+#    return next_state
+def comp_steer_from_next_state(net,state,steer_command,acc_command):
+    X = [state['vel'],state['steer'],steer_command,acc_command[0]]
+    Y = net.get_Y([X])[0]
+    abs_pos,abs_ang = comp_abs_pos_ang(Y[0:2],Y[2],[0,0],0)
+    next_steer_command = lib.comp_steer_general(state['path'],abs_pos,abs_ang,state['vel'])#action steer
+    return next_steer_command
+def predict_n_next(n,net,init_state,max_roll,action):
     
     abs_pos = [0,0]#relative to the local path
     abs_ang = 0
     
     steer_command = lib.comp_steer_general(init_state['path'],abs_pos,abs_ang,init_state['vel'])
-    acc_command = 0.7
+    acc_command = action[0]#0.7 first action is already executed and known
     pred_vec = [[abs_pos,abs_ang,init_state['vel'],init_state['steer'],init_state['roll']]]
     X = [init_state['vel'],init_state['steer'],steer_command,acc_command]
     #X = [5.0,0.1,steer_command,acc_command]
@@ -170,12 +187,17 @@ def predict_n_next(n,net,init_state,max_roll):
         steer_command =  lib.comp_steer_general(init_state['path'],abs_pos,abs_ang,init_state['vel'])#action steer
         #print("steer_command:",steer_command)
         X[2] =  steer_command
-        acc_command = -0.7
+        if i<2:
+            acc_command = 0.7
+        else:
+            acc_command = -0.7
         X[3] = acc_command #action acceleration
         pred_vec.append([abs_pos,abs_ang,Y[3],Y[4],Y[5]])
-        if Y[3] < 0:#reach velocity 0
+        if Y[3] < 2.0:#reach velocity 0 - or safe velocity
+            #print("reach velocity 0")
             break
         if abs(Y[5]) > max_roll:# roll
+            #print("reach roll")
             roll_flag = True
             break
     

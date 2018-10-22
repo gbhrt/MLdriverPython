@@ -30,7 +30,7 @@ def run(guiShared):
     HP = hyper_parameters.ModelBasedHyperParameters()
 
     dataManager = data_manager1.DataManager(HP.save_file_path,HP.restore_file_path,HP.restore_flag)
-    envData = enviroment1.OptimalVelocityPlannerData()#'model_based'
+    envData = enviroment1.OptimalVelocityPlannerData('model_based')
     #net = DDPG_network(envData.observation_space.shape[0],envData.action_space.shape[0],envData.action_space.high[0],\
     #    HP.alpha_actor,HP.alpha_critic,HP.alpha_analytic_actor,HP.alpha_analytic_critic,tau = HP.tau,seed = HP.seed,feature_data_n = envData.feature_data_num, conv_flag = HP.conv_flag)  
 
@@ -47,7 +47,7 @@ def run(guiShared):
         trainTread.start()
 
     #train agent on simulator
-    env = enviroment1.OptimalVelocityPlanner(dataManager)
+    env = enviroment1.OptimalVelocityPlanner(dataManager,mode = "model_based")
     if env.opened:     
         model_based_algorithm.train(env,HP,net,Replay,dataManager,trainShared,guiShared)
     trainShared.train = False

@@ -101,8 +101,8 @@ class DataManager():
 
             plt.subplot(222) 
             #print("acc_vec:",self.acc)
-            plt.plot(self.real_path.distance[:max_time_ind-1],self.acc[1:]) #action is before the saved distance
-            plt.plot(self.real_path.distance[:max_time_ind-1],self.acc[1:],'o')
+            #plt.plot(self.real_path.distance[:max_time_ind-1],self.acc[1:]) #action is before the saved distance
+            #plt.plot(self.real_path.distance[:max_time_ind-1],self.acc[1:],'o')
            # plt.plot(self.real_path.distance[:max_time_ind],self.acc_target)
             #print("self.real_path.time[-1] in plot",self.real_path.time[-1])
             #print("analytic_dist in plot:",path.distance[max_time_ind])
@@ -112,26 +112,27 @@ class DataManager():
           
 
             ##    plt.plot(self.real_path.time,self.real_path.velocity)
-            
+            #plot roll:
+            plt.plot(path.distance[:max_time_ind],self.roll[:max_time_ind])
             
 
 
             plt.subplot(223)  
             
-            if len(self.real_path.time) > 0:
-                #plot roll:
-            #    plt.plot(path.distance[:max_time_ind],self.roll[:max_time_ind])
+            #if len(self.real_path.time) > 0:
+             
 
-                x = np.array(self.real_path.distance[:max_time_ind])
-                #Qa, = plt.plot(x,self.Qa,label = "Qa")
-                #Q0, = plt.plot(x,self.Q0,label = "Q0")
-                #Q1, = plt.plot(x,self.Q1,label = "Q1")
-                #Qneg1, = plt.plot(x,self.Qneg1,label = "Qneg1")
-                #plt.legend(handles=[Qa, Q0,Q1,Qneg1])
-                plt.plot(x,np.array(self.wheels_vel)[:,0])
-                plt.plot(x,np.array(self.wheels_vel)[:,1])
-                plt.plot(x,np.array(self.wheels_vel)[:,2])
-                plt.plot(x,np.array(self.wheels_vel)[:,3])
+            #    x = np.array(self.real_path.distance[:max_time_ind])
+            #    Qa, = plt.plot(x,self.Qa,label = "Qa")
+            #    Q0, = plt.plot(x,self.Q0,label = "Q0")
+            #    Q1, = plt.plot(x,self.Q1,label = "Q1")
+            #    Qneg1, = plt.plot(x,self.Qneg1,label = "Qneg1")
+            #    plt.legend(handles=[Qa, Q0,Q1,Qneg1])
+
+                #plt.plot(x,np.array(self.wheels_vel)[:,0])
+                #plt.plot(x,np.array(self.wheels_vel)[:,1])
+                #plt.plot(x,np.array(self.wheels_vel)[:,2])
+                #plt.plot(x,np.array(self.wheels_vel)[:,3])
                 
 
             #plt.title("train num - relative reward")
@@ -177,12 +178,7 @@ class DataManager():
             #plt.plot(self.run_num,lib.running_average(self.rewards,100))
         
             plt.subplot(224)   
-            #x = np.array(self.real_path.distance[:max_time_ind])
-            #Qa, = plt.plot(x,self.Qa_target,label = "Qa")
-            #Q0, = plt.plot(x,self.Q0_target,label = "Q0")
-            #Q1, = plt.plot(x,self.Q1_target,label = "Q1")
-            #Qneg1, = plt.plot(x,self.Qneg1_target,label = "Qneg1")
-            #plt.legend(handles=[Qa, Q0,Q1,Qneg1])
+
 
             plt.title("episodes - relative reward")
             col = []

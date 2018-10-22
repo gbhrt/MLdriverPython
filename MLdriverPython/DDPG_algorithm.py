@@ -45,6 +45,9 @@ def train(env,HP,net,dataManager,seed = None):
         
     #plot = Plot()
     #dataManager = data_manager.DataManager(total_data_names = ['total_reward'],  file = HP.save_name+".txt")
+    Replay_fails = pLib.Replay(HP.replay_memory_size)
+    if HP.restore_flag:
+        Replay_fails.restore(HP.restore_file_pat,name = "replay_fails")
     Replay = pLib.Replay(HP.replay_memory_size)
     if HP.restore_flag:
         Replay.restore(HP.restore_file_path)
@@ -104,26 +107,7 @@ def train(env,HP,net,dataManager,seed = None):
             print("action:",a)#,"analytic_action:",analytic_action)
             noise = actionNoise() * noise_range
             #noise = random.uniform(-1, 1)* noise_range
-            Qa = net.get_Qa(np.reshape(state, (1, env.observation_space.shape[0])),a)[0][0]
-            Q0 = net.get_Qa(np.reshape(state, (1, env.observation_space.shape[0])),[[0]])[0][0]
-            Q1 = net.get_Qa(np.reshape(state, (1, env.observation_space.shape[0])),[[1.0]])[0][0]
-            Qneg1 = net.get_Qa(np.reshape(state, (1, env.observation_space.shape[0])),[[-1.0]])[0][0]
-
-            Qa_target = net.get_targetQa(np.reshape(state, (1, env.observation_space.shape[0])),a)[0][0]
-            Q0_target = net.get_targetQa(np.reshape(state, (1, env.observation_space.shape[0])),[[0]])[0][0]
-            Q1_target = net.get_targetQa(np.reshape(state, (1, env.observation_space.shape[0])),[[1.0]])[0][0]
-            Qneg1_target = net.get_targetQa(np.reshape(state, (1, env.observation_space.shape[0])),[[-1.0]])[0][0]
-
-            #print("Qa:",Qa,"Q0:",Q0,"Q1",Q1,"Qneg1",Qneg1)
-            dataManager.Qa.append(Qa)
-            dataManager.Q0.append(Q0)
-            dataManager.Q1.append(Q1)
-            dataManager.Qneg1.append(Qneg1)
-
-            dataManager.Qa_target.append(Qa_target)
-            dataManager.Q0_target.append(Q0_target)
-            dataManager.Q1_target.append(Q1_target)
-            dataManager.Qneg1_target.append(Qneg1_target)
+            
 
             a = a[0]
             if not evaluation_flag:# HP.noise_flag:
@@ -145,17 +129,40 @@ def train(env,HP,net,dataManager,seed = None):
                 a[0] += analytic_action
 
             if HP.analytic_action:# and HP.noise_flag:
-                state[0] = state[0]#*(1.0- reduce_vel)
+                state[0] = state[0]*(1.0- HP.reduce_vel)
                 a = [env.comp_analytic_acceleration(state)]#env.analytic_feature_flag must be false
                 #print("acc:",a)
            # print("state:", state)
             #a = env.get_analytic_action()
             #print("action: ", a)#,"noise: ",noise)
+           
+            if not HP.gym_flag:
+                env.command(a)
+            print("time from get state to execute action:",time.time() - env.lt)
+
             dataManager.acc_target.append(net.get_target_actions(np.reshape(state, (1, env.observation_space.shape[0])))[0])
             #print("a:",a)
             dataManager.acc.append(a[0])
-            if not HP.gym_flag:
-                env.command(a)
+            Qa = net.get_Qa(np.reshape(state, (1, env.observation_space.shape[0])),[a])[0][0]
+            Q0 = net.get_Qa(np.reshape(state, (1, env.observation_space.shape[0])),[[0]])[0][0]
+            Q1 = net.get_Qa(np.reshape(state, (1, env.observation_space.shape[0])),[[1.0]])[0][0]
+            Qneg1 = net.get_Qa(np.reshape(state, (1, env.observation_space.shape[0])),[[-1.0]])[0][0]
+
+            Qa_target = net.get_targetQa(np.reshape(state, (1, env.observation_space.shape[0])),[a])[0][0]
+            Q0_target = net.get_targetQa(np.reshape(state, (1, env.observation_space.shape[0])),[[0]])[0][0]
+            Q1_target = net.get_targetQa(np.reshape(state, (1, env.observation_space.shape[0])),[[1.0]])[0][0]
+            Qneg1_target = net.get_targetQa(np.reshape(state, (1, env.observation_space.shape[0])),[[-1.0]])[0][0]
+
+            #print("Qa:",Qa,"Q0:",Q0,"Q1",Q1,"Qneg1",Qneg1)
+            dataManager.Qa.append(Qa)
+            dataManager.Q0.append(Q0)
+            dataManager.Q1.append(Q1)
+            dataManager.Qneg1.append(Qneg1)
+
+            dataManager.Qa_target.append(Qa_target)
+            dataManager.Q0_target.append(Q0_target)
+            dataManager.Q1_target.append(Q1_target)
+            dataManager.Qneg1_target.append(Qneg1_target)
 
             if len(Replay.memory) > HP.batch_size and HP.train_flag and not evaluation_flag:############
                 if not HP.gym_flag:
@@ -169,7 +176,21 @@ def train(env,HP,net,dataManager,seed = None):
                         last_time = t
                         train_count += 1
                         #sample from replay buffer:
-                        rand_state, rand_a, rand_reward, rand_next_state, rand_end = Replay.sample(HP.batch_size)
+                        if len(Replay_fails.memory)>0:
+                            rand_state1, rand_a1, rand_reward1, rand_next_state1, rand_end1 = Replay_fails.sample(int(HP.batch_size*(1-HP.sample_ratio)))
+                            print("number of done samples:",len(rand_state1))
+                            rand_state, rand_a, rand_reward, rand_next_state, rand_end = Replay.sample(HP.batch_size - len(rand_state1))#HP.batch_size*HP.sample_ratio)
+                            rand_state+=rand_state1;rand_a+=rand_a1;rand_reward+=rand_reward1;rand_next_state+=rand_next_state1;rand_end+=rand_end1
+
+                            #np.concatenate(rand_state,rand_state1)
+                            #np.concatenate(rand_a,rand_a1)
+                            #np.concatenate(rand_reward,rand_reward1)
+                            #np.concatenate(rand_next_state,rand_next_state1)
+                            #np.concatenate(rand_end,rand_end1)
+                        else:
+                            rand_state, rand_a, rand_reward, rand_next_state, rand_end = Replay.sample(HP.batch_size)#
+
+
                         #update neural networs:
                         #pLib.DDQN(rand_state, rand_a, rand_reward, rand_next_state,net,HP)
                         #if HP.add_feature_to_action:
@@ -204,7 +225,10 @@ def train(env,HP,net,dataManager,seed = None):
             if HP.add_feature_to_action:
                 a[0] -= analytic_action
             if not evaluation_flag:
-                Replay.add((state,a,reward,next_state,done))#  
+                if done == False:
+                    Replay.add((state,a,reward,next_state,done))# 
+                else: 
+                    Replay_fails.add((state,a,reward,next_state,done))# 
             state = next_state
 
             if done:
@@ -228,7 +252,7 @@ def train(env,HP,net,dataManager,seed = None):
             #else:
             #    relative_dist = 0.0
             #dataManager.relative_reward.append(relative_dist)
-            dataManager.episode_end_mode.append(info)
+            dataManager.episode_end_mode.append(info[0])
             dataManager.rewards.append(total_reward)
             dataManager.lenght.append(step_count)
             dataManager.add_run_num(i)
@@ -259,6 +283,7 @@ def train(env,HP,net,dataManager,seed = None):
         if (i % HP.save_every == 0 and i > 0): 
             net.save_model(HP.save_file_path)
             Replay.save(HP.save_file_path)
+            Replay_fails.save(HP.save_file_path,name = "replay_fails")
             dataManager.save_data()
         if HP.plot_flag and waitFor.command == [b'1']:
             dataManager.plot_all()
@@ -285,6 +310,7 @@ def train(env,HP,net,dataManager,seed = None):
     env.close()
     net.save_model(HP.save_file_path)
     Replay.save(HP.save_file_path)
+    Replay.save(HP.save_file_path,name = "replay_fails")
     dataManager.save_data()
         
     

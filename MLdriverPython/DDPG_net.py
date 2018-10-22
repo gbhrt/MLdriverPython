@@ -88,6 +88,8 @@ class DDPG_network(NetLib):
     def continues_actor(self,action_n,action_limit,state,state_n,feature_data_n = 1,conv_flag = True): #define a net - input: state (and dimentions) - output: a continues action ,
         hidden_layer_nodes1 = 400#400
         hidden_layer_nodes2 = 300#300
+        #hidden_layer_nodes1 = 40#400
+        #hidden_layer_nodes2 = 30#300
 
         ##hidden layer 1:
         #theta1 = tf.Variable(tf.truncated_normal([state_n,hidden_layer_nodes1], stddev=0.02),name = "P_th1")
@@ -143,6 +145,10 @@ class DDPG_network(NetLib):
     def continues_critic(self,action,action_n,state,state_n,feature_data_n = 1,conv_flag = True):#define a net - input: state (and dimentions) - output: Q - Value
         hidden_layer_nodes1 = 400
         hidden_layer_nodes2 = 300
+        #hidden_layer_nodes1 = 40#400
+        #hidden_layer_nodes2 = 30
+        #hidden_layer_nodes1 = 200#400
+        #hidden_layer_nodes2 = 150
 
         #linear regression:
         #W1 = tf.Variable(tf.truncated_normal([features_num,action_space_n], stddev=1e-5))

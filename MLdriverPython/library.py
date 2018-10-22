@@ -280,6 +280,7 @@ def read_data(file_name):#, x,y,steer_ang
             results.append(list(map(float, x)))
 
     return results
+
 def step_now(last_time,step_time):
     t = time.time()
     if t - last_time[0] > step_time:
@@ -288,6 +289,21 @@ def step_now(last_time,step_time):
         last_time[0] = t
         return True
     return False
+
+def wait_until_end_step(last_time,step_time,max_time_deviation = 0.005):
+    while(True):
+        t = time.time()
+        if t - last_time[0] > step_time:
+            if t - last_time[0] > step_time + max_time_deviation:
+                print("step time too short! deviation:",t - last_time[0] - step_time)
+                last_time[0] = t
+                return True
+            last_time[0] = t
+            return False
+
+
+    while (not lib.step_now(self.last_time,self.step_time)):#wait for the next step (after step_time)
+        time.sleep(0.00001)
 
 
 

@@ -32,14 +32,14 @@ class Comm:
             print("cannot connect to server")
 
     def readData(self):
-        print("wait for input")
+       # print("wait for input")
         self.input_data_str = self.sock.recv(self.buffSize) 
-        print("input: ",self.input_data_str)
+       # print("input: ",self.input_data_str)
         return
 
     def sendData(self):
         #self.serialize(999)
-        print("output: ", self.output_data_str)
+       # print("output: ", self.output_data_str)
 
         self.sock.send(bytes(self.output_data_str, 'UTF-8'))
         self.output_data_str = ""

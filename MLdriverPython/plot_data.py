@@ -42,16 +42,21 @@ final_conv_analytic_new_reward_2 - new relative reward >200
 final_conv_analytic_new_reward_4 - new relative reward >200
 """
 
-def plot_rewards(names,shape=None,color=None):
-    max_train_num = 1000
+def plot_rewards(folder,names,shape=None,color=None,label = None,vod_label = None,max_train_iterations = 1000000):
+    N = 10#80
     episodes_num = 50
     dataManager_vec = []
     relative_rewards_changed_vec = []
     for i in range(len(names)):
         HP.restore_name = names[i]
         HP.save_name = names[i]
-        save_path = os.getcwd()+ "\\files\\models\\final_corl\\"+HP.save_name+"\\"
-        restore_path = os.getcwd()+ "\\files\\models\\final_corl\\"+HP.restore_name+"\\"
+        
+        #low_friction_high_com_soft
+        #slip_com_high
+        #no_friction_hard
+        
+        save_path = os.getcwd()+ "\\files\\models\\"+str(folder)+"\\"+HP.save_name+"\\"
+        restore_path = os.getcwd()+ "\\files\\models\\"+str(folder)+"\\"+HP.restore_name+"\\"
         dataManager_vec.append(data_manager1.DataManager(save_path,restore_path,True))
         relative_rewards_changed_vec.append(np.array(change_failes_value(dataManager_vec[-1].relative_reward,dataManager_vec[-1].episode_end_mode)))#[:episodes_num]
 
@@ -67,6 +72,8 @@ def plot_rewards(names,shape=None,color=None):
         max_tim_ind = j
         if tim > 20:
             break
+
+
 
 
     #mean_relative_reward_vec = []
@@ -131,7 +138,7 @@ def plot_rewards(names,shape=None,color=None):
         print("fail:",  fails/len(dataManager_vec[i].episode_end_mode)*100,"[%]", "lenght:",len(dataManager_vec[i].episode_end_mode),"check episodes")#
         
     fails_density_vec = []
-    N = 20
+
     for i in range(len(fails_vec)):
         fails_density = lib.running_average(fails_vec[i],N)
         fails_density_vec.append(fails_density)
@@ -150,14 +157,38 @@ def plot_rewards(names,shape=None,color=None):
             combined_abs_rewards.append([dataManager_vec[i].train_num[j],dataManager_vec[i].paths[j][1][-1]])
     combined_abs_rewards = np.array(sorted(combined_abs_rewards, key=lambda x: x[0]))
 
+
+
+
+
     plt.figure(1)
     for j in range(len(relative_rewards_changed_vec)):
-        plt.scatter(np.array(dataManager_vec[j].train_num)[:max_train_num],(relative_rewards_changed_vec[j])[:max_train_num],marker = shape,alpha = 0.2)#,c = color
-    ave = lib.running_average(combined_rewards[:,1],20)[:max_train_num]
-    plt.plot((combined_rewards[:,0])[:len(ave)],ave,c = color)
+        max_train_num = len(dataManager_vec[j].train_num)
+        for i,train_n in enumerate (dataManager_vec[j].train_num):
+            if train_n > max_train_iterations:
+                max_train_num = i
+                break
+        #plt.scatter(np.array(dataManager_vec[j].train_num)[:max_train_num],(relative_rewards_changed_vec[j])[:max_train_num],marker = shape,alpha = 0.2,c = color)
+    
+    max_train_num = len(combined_rewards[:,0])
+    for dataManager in dataManager_vec:
+        for j,train_n in enumerate (combined_rewards[:,0]):
+            if train_n > max_train_iterations:
+                max_train_num = j
+                break    
+    ave = lib.running_average(combined_rewards[:,1],N)[:max_train_num]
+    plt.plot((combined_rewards[:,0])[:len(ave)],ave,c = color,label = label)
 
+
+    max_train_num = len(dataManager_vec[0].train_num)
+    for i,train_n in enumerate (dataManager_vec[0].train_num):
+        if train_n > max_train_iterations:
+            max_train_num = i
+            break
     ones = np.ones([len(dataManager_vec[max_len_ind].train_num)])[:max_train_num]
-    plt.plot(dataManager_vec[max_len_ind].train_num[:max_train_num],ones,linewidth = 2.0,c = 'r')
+    
+    plt.plot(dataManager_vec[max_len_ind].train_num[:max_train_num],ones,linewidth = 2.0,c = 'r',label = vod_label)
+    plt.legend()
     #plt.figure(1)
     #for j in range(len(relative_reward_vec)):
     #    plt.scatter(np.array(dataManager_vec[j].train_num)[:max_train_num],(relative_reward_vec[j])[:max_train_num],marker = shape,alpha = 0.2)#,c = color
@@ -176,20 +207,27 @@ def plot_rewards(names,shape=None,color=None):
             #print(dataManager_vec[j].paths[w][1])
 
         abs_rewards = abs_rewards[:max_train_num]
-        plt.scatter(np.array(dataManager_vec[j].train_num)[:max_train_num],abs_rewards,marker = shape,alpha = 0.2)#c = color
-    ave = lib.running_average(combined_abs_rewards[:,1],20)[:max_train_num]
-    plt.plot((combined_abs_rewards[:,0])[:len(ave)],ave,c = color)
+        plt.scatter(np.array(dataManager_vec[j].train_num)[:max_train_num],abs_rewards,marker = shape,alpha = 0.2,c = color)
+    ave = lib.running_average(combined_abs_rewards[:,1],N)[:max_train_num]
+    plt.plot((combined_abs_rewards[:,0])[:len(ave)],ave,c = color,label = label)
 
     analytic_dist_vec = [analytic_path.distance[max_tim_ind] for _ in range(len(dataManager_vec[max_len_ind].train_num))]
     analytic_dist_vec = analytic_dist_vec[:max_train_num]
     plt.plot(dataManager_vec[max_len_ind].train_num[:max_train_num],analytic_dist_vec,linewidth = 2.0,c = 'r')
+    plt.legend()
 
+    max_train_num = len(combined_fails_density[:,0])
+    for dataManager in dataManager_vec:
+        for j,train_n in enumerate (combined_fails_density[:,0]):
+            if train_n > max_train_iterations:
+                max_train_num = j
+                break
     plt.figure(3)
     #for i in range(len(fails_density_vec)):
     #    plt.plot(np.array(dataManager_vec[i].train_num)[:len(fails_density_vec[i])],(fails_density_vec[i]))
-    ave = lib.running_average(combined_fails_density[:,1],20)[:max_train_num]
-    plt.plot((combined_fails_density[:,0])[:len(ave)],ave*100,c = color)
-
+    ave = lib.running_average(combined_fails_density[:,1],N)[:max_train_num]
+    plt.plot((combined_fails_density[:,0])[:len(ave)],ave*100,c = color,label = label)
+    plt.legend()
 if __name__ == "__main__":
     #convolution:
     #names1 = ["final_conv_analytic_new_reward_2","final_conv_analytic_new_reward_4","final_conv_analytic_new_reward_6","final_conv_analytic_new_reward_8"]#,"
@@ -281,22 +319,47 @@ if __name__ == "__main__":
 
     #names1 = ["regular5_1","regular5_3","regular5_5","regular5_7","regular5_9"]
     #names2 = ["add_acc_feature5_2","add_acc_feature5_4","add_acc_feature5_6","add_acc_feature5_8","add_acc_feature5_10"]
-    names1 = ["regular1"]
-   # names2 = ["add_acc_feature5_10"]
-    plot_rewards(names1,'o',(0.0,0.0,0.0))#'b' 'tab:purple'
-    #plot_rewards(names2)
-    #plot_rewards(names3)
-    #plot_rewards(names4)
-    #plot_rewards(names5)
-   # plot_rewards(names2,'x','g')
-    #plot_rewards(names3,'.','b')
+    #no_friction_hard:
+    #final:
+    folder = "model_based"
+    #names1 = ["REVO_1","REVO_2","REVO_3","REVO_4","REVO_5"]#
+    #names2 = ["REVO_size_200_150_1","REVO_size_200_150_2","REVO_3","REVO_size_200_150_4","REVO_size_200_150_5"]#
+    #names2 = ["REVO_F_1","REVO_F_2","REVO_F_3","REVO_F_4","REVO_F_5"]#
+    
+    #names2 = ["REVO_F_again_1","REVO_F_again_2","REVO_F_again_3","REVO_F_again_4","REVO_F_again_5"]#
+    #names3 = ["acvo_1","acvo_2","acvo_3","acvo_4","acvo_5"]
+    #names4 = ["bevo_1","bevo_2","bevo_3","bevo_4","bevo_5"]#,"bevo4"
+    names1 = names = ["train_15_10"]#,
+             #"analytic_check_2",
+             #"analytic_check_3",
+             #"analytic_check_4",
+             #"analytic_check_5"]
+    #names1 = ["REVO_1","REVO_2","REVO_3","REVO_4","REVO_5"]
+    #names2 = ["REVO_tau_1","REVO_tau_2","REVO_tau_3","REVO_tau_4","REVO_tau_5"]
+
+        #names2 = ["REVO_roll_1","REVO_roll_2","REVO_roll_3","REVO_roll_4","REVO_roll_5"]#very simmilar to vod
+    #names2 = ["REVO_wheels_1","REVO_wheels_2","REVO_wheels_3","REVO_wheels_4","REVO_wheels_5"]#better then vod
+    #names2 = ["vod_actor_alpha_0.00001_1","vod_actor_alpha_0.00001_2","vod_actor_alpha_0.00001_3","vod_actor_alpha_0.00001_4"]
+    #names2 = ["vod_actor_alpha_1","vod_actor_alpha_2","vod_actor_alpha_3"] #not clear, 
+    
+
+   # slip_com_high:
+    #folder = "slip_com_high"
+    #names1 = ["vod1","vod2","vod3","vod4"]#
+    #names2 = [ "bevo1","bevo2","bevo3"]#,"bevo4"  "bevo6"
+
+    #folder = "no_friction_tests"
+    plot_rewards(folder,names1,'.','g',max_train_iterations = 20000,label = "REVO",vod_label = "VOD")#'b' 'tab:purple'
+    #plot_rewards(folder,names2,'.','b',max_train_iterations = 20000,label = "REVO+F")
+    #plot_rewards(folder,names3,'.',(0.0,0.0,0.0),max_train_iterations = 20000,label = "REVO+A")
+    #plot_rewards(folder,names4,'.',"orange",max_train_iterations = 20000,label = "REVO+FA")#(1.0,1.0,0.0)
     size = 15
     plt.figure(2)
     plt.xlabel('Train iterations number',fontsize = size)
     plt.ylabel('Progress on the path [m]',fontsize = size)
     plt.figure(1)
     plt.xlabel('Train iterations number',fontsize = size)
-    plt.ylabel('Relative mean velocity',fontsize = size)
+    plt.ylabel('Relative progress',fontsize = size)
     plt.figure(3)
     plt.xlabel('Train iterations number',fontsize = size)
     plt.ylabel('Fails [%]',fontsize = size)

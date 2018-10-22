@@ -52,6 +52,23 @@ class SimVehicle:#simulator class - include communication to simulator, vehicle 
            print("error read data______________________________________________________________________")
            error = 1 
         return error
+    def send_target_points(self,points):
+        data_type = 5
+        self.comm.serialize(data_type)
+        self.comm.serialize(len(points))
+        for point in points:
+            self.comm.serialize(point[0])
+        for point in points:
+            self.comm.serialize(point[1])
+            #comm.serialize(path_des.position[i].z)
+        self.comm.sendData()
+        self.comm.readData()
+        data_type = self.comm.deserialize(1,int)
+        error = 0
+        if data_type == -1:
+           print("error read data______________________________________________________________________")
+           error = 1 
+        return error
     def read_vehicle_data(self):
         self.comm.readData()
         data_type = self.comm.deserialize(1,int) 
@@ -369,10 +386,10 @@ class Planner(PathManager):#planner - get and send data to simulator. input - mi
         self.desired_path.comp_distance()
         local_path.distance = copy.copy(self.desired_path.distance)
         return local_path
-    def send_path(self):
-        send_path = Path()
-        send_path.position = self.desired_path.position[0::10]
-        return self.simulator.send_path(send_path)
+    def send_desired_path(self):
+        send_to_path = Path()
+        send_to_path.position = self.desired_path.position[0::10]
+        return self.simulator.send_path(send_to_path)
         
     def get_local_path_vehicle_on_path(self,send_path = True, num_of_points = None):#temp function
         #local_path = comp_path(pl,main_path_trans,main_index,num_of_points)#compute local path and global path(inside the planner)

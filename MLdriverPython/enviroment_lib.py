@@ -97,8 +97,8 @@ def get_model_based_state(pl,last_abs_pos,last_abs_ang,local_path):
     if rel_ang  < -math.pi: rel_ang  += 2*math.pi
     vel = pl.simulator.vehicle.velocity
     steer = pl.simulator.vehicle.steering
-    roll = rel_ang = pl.simulator.vehicle.angle[2]
-
+    #roll = rel_ang = pl.simulator.vehicle.angle[2]
+    roll = pl.simulator.vehicle.angle[2]
     state = {'rel_pos':rel_pos,
              'rel_ang':rel_ang,
              'vel':vel,
@@ -113,7 +113,7 @@ def get_model_based_state(pl,last_abs_pos,last_abs_ang,local_path):
     last_abs_ang[1] = pl.simulator.vehicle.angle[1]
     return state
 
-def get_reward(velocity,max_vel,mode,lower_bound = 0.0,analytic_velocity = None): 
+def get_reward(velocity,max_vel,mode,lower_bound = 0.0,analytic_velocity = None,roll = None,max_alowed_roll = None,max_roll =None): 
     if analytic_velocity is not None:
         #reward = -abs((velocity - analytic_velocity)/max_vel)
         if velocity < analytic_velocity:
@@ -122,10 +122,15 @@ def get_reward(velocity,max_vel,mode,lower_bound = 0.0,analytic_velocity = None)
             reward = (velocity - analytic_velocity)/max_vel #positive reward
         print("velocity:",velocity,"analytic_velocity:",analytic_velocity,"reward:",reward)
     else:
-        reward = 0.2*velocity/max_vel 
+        #reward = 0.2*velocity/max_vel 
+        reward = 0.02*velocity/max_vel 
         #if velocity <= 0.0:
     if velocity <= lower_bound:
+        #reward = -0.2
         reward = -0.2
+    #if roll is not None:
+    #    if roll > max_alowed_roll:
+    #        reward = 0.02*velocity/max_vel - roll/max_roll
     if mode == 'kipp'or mode == 'deviate':
         reward = -1.0
     #elif mode == 'path_end':#problem - agent dont know that he is at the end
