@@ -47,7 +47,7 @@ def train(env,HP,net,dataManager,seed = None):
     #dataManager = data_manager.DataManager(total_data_names = ['total_reward'],  file = HP.save_name+".txt")
     Replay_fails = pLib.Replay(HP.replay_memory_size)
     if HP.restore_flag:
-        Replay_fails.restore(HP.restore_file_pat,name = "replay_fails")
+        Replay_fails.restore(HP.restore_file_path,name = "replay_fails")
     Replay = pLib.Replay(HP.replay_memory_size)
     if HP.restore_flag:
         Replay.restore(HP.restore_file_path)
@@ -176,7 +176,7 @@ def train(env,HP,net,dataManager,seed = None):
                         last_time = t
                         train_count += 1
                         #sample from replay buffer:
-                        if len(Replay_fails.memory)>0:
+                        if len(Replay_fails.memory)>0 and HP.sample_ratio != 1.0:
                             rand_state1, rand_a1, rand_reward1, rand_next_state1, rand_end1 = Replay_fails.sample(int(HP.batch_size*(1-HP.sample_ratio)))
                             print("number of done samples:",len(rand_state1))
                             rand_state, rand_a, rand_reward, rand_next_state, rand_end = Replay.sample(HP.batch_size - len(rand_state1))#HP.batch_size*HP.sample_ratio)
@@ -225,10 +225,12 @@ def train(env,HP,net,dataManager,seed = None):
             if HP.add_feature_to_action:
                 a[0] -= analytic_action
             if not evaluation_flag:
-                if done == False:
-                    Replay.add((state,a,reward,next_state,done))# 
-                else: 
+                if done == True and HP.sample_ratio != 1.0:
                     Replay_fails.add((state,a,reward,next_state,done))# 
+                    
+                else:
+                    Replay.add((state,a,reward,next_state,done))#  
+                    
             state = next_state
 
             if done:

@@ -11,9 +11,9 @@ class HyperParameters:
         self.alpha_analytic_actor = 1e-5#1e3 - too high, loss stop at 0.1
         self.alpha_analytic_critic = 1e-4
         self.batch_size = 64
-        self.replay_memory_size = 10000
+        self.replay_memory_size = 1000000
         self.train_num = 2# how many times to train in every step
-        self.sample_ratio = 0.5
+        self.sample_ratio = 1.0
         #########################
         self.reduce_vel = 0.0
         self.add_feature_to_action  = False
@@ -32,7 +32,7 @@ class HyperParameters:
         self.skip_run = False
         self.reset_every = 3
         self.save_every = 100
-        self.seed = [1111]#,1112,1113,1114,1115]
+        self.seed = [1111,1112,1113,1114,1115]
         self.save_name ="test1"
         self.save_file_path = os.getcwd()+ "\\files\\models\\final4\\"+self.save_name+"\\"
 
@@ -44,7 +44,7 @@ class HyperParameters:
 
 class ModelBasedHyperParameters:
     def __init__(self):
-        self.num_of_runs = 100000
+        self.num_of_runs = 100
         self.alpha = 0.001# #learning rate
         self.batch_size = 64
         self.replay_memory_size = 100000
@@ -54,6 +54,7 @@ class ModelBasedHyperParameters:
         self.train_flag = True
         self.noise_flag = True
         self.always_no_noise_flag = False
+        self.analytic_action = False
         self.zero_noise_every = 1
         self.test_same_path = False
         self.run_same_path = False
@@ -61,16 +62,16 @@ class ModelBasedHyperParameters:
         self.gym_flag = False
         self.render_flag = True
         self.plot_flag = True
-        self.restore_flag = True
+        self.restore_flag = False
         self.skip_run = False
         self.reset_every = 3
         self.save_every = 100
         self.save_every_time = 5000 #minutes
         self.seed = 1111
-        self.save_name ="train_15_10"
+        self.save_name ="MB_1_003_max02"
         self.save_file_path = os.getcwd()+ "\\files\\models\\model_based\\"+self.save_name+"\\"
 
-        self.restore_name = "train_15_10"#train_4_10"
+        self.restore_name = "MB_1_003_max02"#train_4_10"
         self.restore_file_path = os.getcwd()+ "\\files\\models\\model_based\\"+self.restore_name+"\\"
 
         if self.always_no_noise_flag:

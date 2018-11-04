@@ -88,6 +88,10 @@ class SimVehicle:#simulator class - include communication to simulator, vehicle 
        # self.vehicle.backPosition = lib.changeZtoY(self.comm.deserialize(3,float))
         self.vehicle.velocity = self.comm.deserialize(1,float)
         self.vehicle.steering = self.comm.deserialize(1,float)
+        self.vehicle.tan_velocity = self.comm.deserialize(1,float) 
+        print("tan_velocity:",self.vehicle.tan_velocity)
+        self.vehicle.tan_acceleration = self.comm.deserialize(1,float)
+        print("tan_acceleration:",self.vehicle.tan_acceleration) 
         self.vehicle.wheels_vel = lib.change_to_rad(self.comm.deserialize(4,float))
         #print("wheels_vel:",self.vehicle.wheels_vel)
         return error

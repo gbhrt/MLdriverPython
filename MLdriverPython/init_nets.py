@@ -84,12 +84,21 @@ def init_net_analytic(envData,net,save_file_path,restore_file_path,gamma,create_
 
     waitFor = lib.waitFor()
 
-    if create_data_flag:
-        buffer = create_data(envData,net,save_file_path,restore_file_path,gamma,buffer_size,waitFor)
-        buffer.save(save_file_path,"analytic_data")
-    else:
-        buffer = a_lib.Replay(buffer_size)
-        buffer.restore(restore_file_path,"analytic_data")
+    #if create_data_flag:
+    #    buffer = create_data(envData,net,save_file_path,restore_file_path,gamma,buffer_size,waitFor)
+    #    buffer.save(save_file_path,"analytic_data")
+    #else:
+    #    buffer = a_lib.Replay(buffer_size)
+    #    buffer.restore(restore_file_path,"analytic_data")
+
+    replay_buffer = a_lib.Replay(buffer_size)
+    replay_buffer.restore(restore_file_path)
+
+    buffer = a_lib.Replay(buffer_size)
+
+    state_vec, a_vec,reward_vec, next_state_vec, end_vec = replay_buffer.sample(len(replay_buffer.memory))
+    for state, a,reward in zip( state_vec, a_vec,reward_vec):
+        buffer.add((state,a,reward))
 
     #for mem in buffer.memory:
     #    mem[0] = [-i for i in mem[0]]
@@ -127,27 +136,22 @@ def init_net_analytic(envData,net,save_file_path,restore_file_path,gamma,create_
     
 
     
-    #state_batch,action_batch = buffer.sample(1000)
-    #for i in range(1000):
-    #    if action_batch[i][0] > 0.85 and action_batch[i][0] < 0.95:
-    #        plt.plot(state_batch[i],'o')
-    #        plt.plot(action_batch[i],'o')
-    #        plt.show()
-    ##actor_loss_vec = []
-    ##critic_loss_vec = []
-    ##for i in range(num_train):
-    ##   train_actor(net,train_buffer,10000,batch_size,actor_loss_vec,waitFor)
-    ##   train_critic(net,train_buffer,10000,batch_size,critic_loss_vec,waitFor)
-   # train_actor(net,train_buffer,10000000,batch_size,actor_loss_vec,waitFor)
 
+    actor_loss_vec = []
+    #critic_loss_vec = []
+    #for i in range(num_train):
+    #   train_actor(net,train_buffer,10000,batch_size,actor_loss_vec,waitFor)
+       #train_critic(net,train_buffer,10000,batch_size,critic_loss_vec,waitFor)
+   # train_actor(net,train_buffer,10000000,batch_size,actor_loss_vec,waitFor)
+    train_actor(net,train_buffer,1000000,batch_size,actor_loss_vec,waitFor)
     #"1e4.txt"
     #"1e4_no_norm.txt"
     #with open(save_file_path+"1e4_no_reg.txt", 'w') as f:
     #    json.dump(loss_vec,f)
     print("actor test loss:",test_actor_loss(net,test_buffer))
-    print("test critic loss:",test_critic_loss(net,test_buffer))
+    #print("test critic loss:",test_critic_loss(net,test_buffer))
     test_action_diff(net,test_buffer)
-    test_Q_diff(net,test_buffer)
+    #test_Q_diff(net,test_buffer)
 
     net.copy_targets()#copy critic and actor networks to the target networks
     net.save_model(save_file_path)
@@ -183,7 +187,7 @@ def test_critic_loss(net,buffer):
 
 def train_actor(net,buffer,num_train,batch_size,actor_loss_vec,waitFor):
 
-    
+    plt.ion()
     for i in range(num_train):
         if waitFor.stop == [True]:
             break
@@ -199,12 +203,20 @@ def train_actor(net,buffer,num_train,batch_size,actor_loss_vec,waitFor):
             #a = net.get_actions(state_batch)
             actor_loss_vec.append(loss)
             print("actor loss:",loss)#,"action analytic:",action_batch,"action:",a)
+            plt.cla()
+            plt.plot(actor_loss_vec)
+            plt.plot(lib.running_average(actor_loss_vec,50))
+            plt.draw()
+            plt.pause(0.0001)
+
         if waitFor.command == [b'1']:
             plt.plot(actor_loss_vec)
             plt.plot(lib.running_average(actor_loss_vec,50))
             plt.show()
             test_action_diff(net,buffer)
             waitFor.command[0] = b'0'
+    plt.ioff()        
+    plt.show()
     return 
 
 def train_critic(net,buffer,num_train,batch_size,critic_loss_vec,waitFor):

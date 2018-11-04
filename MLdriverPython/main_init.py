@@ -9,6 +9,8 @@ from hyper_parameters import HyperParameters
 from DDPG_net import DDPG_network
 import init_nets
 
+import os
+
 if __name__ == "__main__": 
     #cd C:\Users\gavri\Desktop\sim_15_3_18
     #cd C:\Users\gavri\Desktop\thesis\ArielUnity - learning2\sim4_5_18
@@ -16,6 +18,11 @@ if __name__ == "__main__":
 
     #env  = gym.make("HalfCheetahBulletEnv-v0")
     HP = HyperParameters()
+    HP.restore_flag = False
+    HP.restore_name = "analytic_action"
+    HP.save_name = "net_400_300"
+    HP.save_file_path = os.getcwd()+ "\\files\\models\\no_friction_hard\\imitation\\"+HP.save_name+"\\"
+    HP.restore_file_path = os.getcwd()+ "\\files\\models\\no_friction_hard\\"+HP.restore_name+"\\"
     #dataManager = data_manager.DataManager(total_data_names = ['total_reward'], special = 1, file = HP.save_name+".txt")#episode_data_names = ['limit_curve','velocity']
     dataManager = data_manager1.DataManager(HP.save_file_path,HP.restore_file_path,HP.restore_flag)
     envData = enviroment1.OptimalVelocityPlannerData(mode = "DDPG")

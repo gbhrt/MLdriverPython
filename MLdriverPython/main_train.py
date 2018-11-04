@@ -21,22 +21,22 @@ if __name__ == "__main__":
 
     #env  = gym.make("HalfCheetahBulletEnv-v0")
     HP = HyperParameters()
-    envData = enviroment1.OptimalVelocityPlannerData(mode = "DDPG")#mode = 'DDPG'
+    envData = enviroment1.OptimalVelocityPlannerData(mode = "DDPG")
     
     envData.analytic_feature_flag = False
     HP.add_feature_to_action  = False
     HP.analytic_action = False
-    HP.restore_flag = False
+    HP.restore_flag = False 
 
-    names = ["test_sep_replay_2"]
-    description = "test times"
+    names = ["RL_800_600_400"]#"test_sep_replay_2"
+    description = "big net 800_600_400"
 
     #with_features_new_desing_conv - not good, max 0.8 to many fails
     #not at all
     #low_acc_diff_path no so good, with wheel vel
     #low_acc_diff_path_regular regular features, not work
     HP.reduce_vel = 0.0
-    HP.num_of_runs = 5000
+    HP.num_of_runs = 10000
     for name in names:
         
         run_data = ["envData.analytic_feature_flag: "+str(envData.analytic_feature_flag), 
@@ -48,7 +48,7 @@ if __name__ == "__main__":
         HP.restore_name = name
         HP.save_name = name
         HP.save_file_path = os.getcwd()+ "\\files\\models\\no_friction_hard\\"+HP.save_name+"\\"
-        HP.restore_file_path = os.getcwd()+ "\\files\\models\\no_friction_hard\\"+HP.restore_name+"\\"
+        HP.restore_file_path = os.getcwd()+ "\\files\\models\\no_friction_hard\\imitation\\"+HP.restore_name+"\\"
 
         dataManager = data_manager1.DataManager(HP.save_file_path,HP.restore_file_path,HP.restore_flag)#HP.restore_flag
         dataManager.run_data = run_data

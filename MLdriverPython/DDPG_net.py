@@ -10,7 +10,7 @@ class DDPG_network(NetLib):
         alpha_actor = None,alpha_critic = None,alpha_analytic_actor = None,alpha_analytic_critic = None,  tau = 1.0,seed = None,conv_flag = True,feature_data_n = 1):
        
 
-        tf.reset_default_graph()                                                                 
+        tf.reset_default_graph()                  
         if seed != None:
             tf.set_random_seed(seed)
         self.state = tf.placeholder(tf.float32, [None,state_n] )
@@ -86,10 +86,12 @@ class DDPG_network(NetLib):
             print("Network ready")
         return
     def continues_actor(self,action_n,action_limit,state,state_n,feature_data_n = 1,conv_flag = True): #define a net - input: state (and dimentions) - output: a continues action ,
-        hidden_layer_nodes1 = 400#400
-        hidden_layer_nodes2 = 300#300
+        hidden_layer_nodes1 = 800#400
+        hidden_layer_nodes2 = 600#300
         #hidden_layer_nodes1 = 40#400
         #hidden_layer_nodes2 = 30#300
+
+        hidden_layer_nodes3 = 400
 
         ##hidden layer 1:
         #theta1 = tf.Variable(tf.truncated_normal([state_n,hidden_layer_nodes1], stddev=0.02),name = "P_th1")
@@ -136,15 +138,20 @@ class DDPG_network(NetLib):
         #net = tflearn.layers.normalization.batch_normalization(net)
         fc2 = tflearn.activations.relu(fc2)
         
+        fc3 = tflearn.fully_connected(fc2, hidden_layer_nodes3,regularizer='L2', weight_decay=0.01)
+        #net = tflearn.layers.normalization.batch_normalization(net)
+        fc3 = tflearn.activations.relu(fc3)
+
         init = tflearn.initializations.uniform(minval=-0.003, maxval=0.003)# Final layer weights are init to Uniform[-3e-3, 3e-3]
-        action = tflearn.fully_connected(fc2, action_n, activation='tanh', weights_init=init,bias_init = init,regularizer='L2', weight_decay=0.01)
+        action = tflearn.fully_connected(fc3, action_n, activation='tanh', weights_init=init,bias_init = init,regularizer='L2', weight_decay=0.01)
         # Scale output to -action_bound to action_bound
         action = tf.multiply(action, action_limit)
 
         return action
     def continues_critic(self,action,action_n,state,state_n,feature_data_n = 1,conv_flag = True):#define a net - input: state (and dimentions) - output: Q - Value
-        hidden_layer_nodes1 = 400
-        hidden_layer_nodes2 = 300
+        hidden_layer_nodes1 = 800#400
+        hidden_layer_nodes2 = 600#300
+        hidden_layer_nodes3 = 400
         #hidden_layer_nodes1 = 40#400
         #hidden_layer_nodes2 = 30
         #hidden_layer_nodes1 = 200#400
@@ -222,12 +229,14 @@ class DDPG_network(NetLib):
 
         fc2 = tflearn.activation(tf.matmul(fc1, fc2_1.W) + tf.matmul(action, fc2_2.W)  + fc2_2.b + fc2_1.b, activation='relu')#
           
-
+        fc3 = tflearn.fully_connected(fc2, hidden_layer_nodes3,regularizer='L2', weight_decay=0.01)
+        #net = tflearn.layers.normalization.batch_normalization(net)
+        fc3 = tflearn.activations.relu(fc3)
         # linear layer connected to 1 output representing Q(s,a)
         # Weights are init to Uniform[-3e-3, 3e-3]
         init = tflearn.initializations.uniform(minval=-0.003, maxval=0.003)
 
-        Qa = tflearn.fully_connected(fc2, 1, weights_init=init,bias_init = init, regularizer='L2', weight_decay=0.01)
+        Qa = tflearn.fully_connected(fc3, 1, weights_init=init,bias_init = init, regularizer='L2', weight_decay=0.01)
         return Qa
 
 

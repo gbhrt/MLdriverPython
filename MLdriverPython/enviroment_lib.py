@@ -123,7 +123,7 @@ def get_reward(velocity,max_vel,mode,lower_bound = 0.0,analytic_velocity = None,
         print("velocity:",velocity,"analytic_velocity:",analytic_velocity,"reward:",reward)
     else:
         #reward = 0.2*velocity/max_vel 
-        reward = 0.02*velocity/max_vel 
+         reward = 0.02*velocity/max_vel 
         #if velocity <= 0.0:
     if velocity <= lower_bound:
         #reward = -0.2

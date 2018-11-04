@@ -48,7 +48,7 @@ def train(env,HP,net,Replay,dataManager,trainShared,guiShared,seed = None):
 
         
 
-    actionNoise = pLib.OrnsteinUhlenbeckActionNoise(mu=np.zeros(env.action_space.shape[0]),dt = 0.2)#env.step_time
+    #actionNoise = pLib.OrnsteinUhlenbeckActionNoise(mu=np.zeros(env.action_space.shape[0]),dt = 0.2)#env.step_time
     #if not HP.random_paths_flag:
     #    if pl.load_path(HP.path_name,HP.random_paths_flag) == -1:
     #        stop = [1]
@@ -68,12 +68,7 @@ def train(env,HP,net,Replay,dataManager,trainShared,guiShared,seed = None):
         step_count = 0
         reward_vec = []
         t1 = 0
-        #########################
-        #if waitFor.command == [b'3']:
-        #    print("repeat last path")
-        #    #state = env.reset(path_num = len(dataManager.path_seed) - 1)
-        #    state = env.reset(path_num = 1)
-        #state = env.reset(path_num = 1234)####################################################################
+
 
         state = env.reset(seed = seed)   
         if i == 0:
@@ -88,24 +83,19 @@ def train(env,HP,net,Replay,dataManager,trainShared,guiShared,seed = None):
                
             #choose and make action:
 
-            noise_range = env.action_space.high[0]
-            noise = actionNoise() * noise_range
-            #if random_action_flag:
-            #    a = noise
-            #else:
-              #  a = pLib.comp_model_based_action(state)
+
+            #a = pLib.comp_model_based_action(state)
 
 
 
-            #if HP.noise_flag:
-            #    a +=  noise#np vectors##########################################################
-            #    dataManager.noise.append(noise)
-                #print("noise:",noise)
+
 
             
             #a = [env.comp_analytic_acceleration(state)]#env.analytic_feature_flag must be false
             #next_a = [env.comp_const_vel_acc(5.0)+float(noise)]# +noise (6.0+step_count/25)
-            #a = env.get_analytic_action()#+noise
+            if HP.analytic_action:
+                a = env.get_analytic_action()#+noise
+                a = [float(a[k]) for k in range(len(a))]
             #a = list(np.clip(a,-env.action_space.high[0],env.action_space.high[0]))
             #next_a = [float(a[k]) for k in range(len(a))]
               
@@ -117,40 +107,46 @@ def train(env,HP,net,Replay,dataManager,trainShared,guiShared,seed = None):
             if not HP.gym_flag:
                 #steer = env.comp_steer()
                 #print("regular steer:",steer)
-                next_steer = pLib.comp_steer_from_next_state(net,state,steer,a)
-                print("next state steer:",steer)
+                if not HP.analytic_action:
+                    next_steer = pLib.comp_steer_from_next_state(net,state,steer,a)
+                    print("next state steer:",steer)
                 
                 
                 
                 
-                n = 10
-                max_roll = 0.03
-                #print("t2:", time.time() - t1)
-                predicted_values,roll_flag = pLib.predict_n_next(n,net,state,max_roll,a)
-                #print("after n predict:", time.time() - t1)
-                if roll_flag:
-                    next_a = [-0.7]
-                else:
-                    next_a = [0.7]
-                print("next_a:",next_a,"noise: ",noise)
+                    n = 10
+                    max_roll = 0.02
+                    #print("t2:", time.time() - t1)
+                    predicted_values,roll_flag = pLib.predict_n_next(n,net,state,max_roll,a)
+                    #print("after n predict:", time.time() - t1)
+                    if roll_flag:
+                        next_a = [-1.0]
+                    else:
+                        next_a = [1.0]
+                    print("next_a:",next_a,"noise: ",noise)
                 #steer_command = env.command(a,steer)#steer
                 
                 ##print("t4:", time.time() - t1)
                 #steer = lib.comp_steer_general(state['path'],[0,0],0,state['vel'])
                 ##print("t5:", time.time() - t1)
-                with guiShared.Lock:
-                    guiShared.predicded_path = [pred[0] for pred in predicted_values]
-                    guiShared.state = copy.deepcopy(state)
-                    guiShared.steer = steer
+                    with guiShared.Lock:
+                        guiShared.predicded_path = [pred[0] for pred in predicted_values]
+                        guiShared.state = copy.deepcopy(state)
+                        guiShared.steer = steer
                 
                 
 
-            print("time before command:",time.time()-env.lt)
-            #env.command(a,steer)#steer  steer_command = 
+                    print("time before command:",time.time()-env.lt)
+                    #env.command(a,steer)#steer  steer_command = 
 
-            #print("before step:", time.time() - t1)
-            next_state, reward, done, info = env.step(next_a,steer = next_steer)#input the estimated next actions to execute after delta t and getting next state
+                    #print("before step:", time.time() - t1)
+                    next_state, reward, done, info = env.step(next_a,steer = next_steer)#input the estimated next actions to execute after delta t and getting next state
             
+                else:
+                    steer = env.comp_steer()
+                    env.command(a,steer)
+                    next_state, reward, done, info = env.step(a)#input the estimated next actions to execute after delta t and getting next state
+
             #t1 = time.time()
             
             reward_vec.append(reward)
@@ -179,7 +175,8 @@ def train(env,HP,net,Replay,dataManager,trainShared,guiShared,seed = None):
                # print("after add:", time.time() - t1)
 
             state = copy.deepcopy(next_state)
-            a,steer = copy.copy(next_a), copy.copy(next_steer)
+            if not HP.analytic_action:
+                a,steer = copy.copy(next_a), copy.copy(next_steer)
             #print("t9:", time.time() - t1)
             if done:
                 break

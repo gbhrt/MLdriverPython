@@ -41,7 +41,7 @@ class OptimalVelocityPlannerData:
         self.max_deviation = 1# 3 # [m] if more then maximum - end episode 
         self.max_velocity = 30
         self.max_pitch = 0.3#0.3
-        self.max_roll = 0.07#0.05#0.3# last 0.2
+        self.max_roll = 0.2#0.05#0.3# last 0.2
         self.max_steering = 0.7
         self.max_wheel_vel = 60# rad/sec. in unity limited to 5720 deg/sec for some reason
         self.acc = 1.38# 0-100 kmh in 20 sec. 1.5 # [m/s^2]  need to be more then maximum acceleration in real
@@ -167,7 +167,7 @@ class OptimalVelocityPlanner(OptimalVelocityPlannerData):
         #print("after wait: ",time.time() - temp_last_time)
         #get next state:
         self.error = self.pl.simulator.get_vehicle_data()#read data after time step from last action
-        if self.mode == "model_based":
+        if self.mode == "model_based" and steer is not None:
             self.command(action,steer)#send action immidetlly after get state data. this action is based upon the estimation of the current state
         # that is estimated from the previus state
         t = time.time()

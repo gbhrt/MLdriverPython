@@ -13,6 +13,8 @@ class Vehicle:
         self.angle = [0,0,0]
         self.steering = 0
         self.velocity = 0
+        self.tan_velocity = 0
+        self.tan_acceleration = 0
         self.wheels_vel = [0,0,0,0]
 class Path:
     def __init__(self):
