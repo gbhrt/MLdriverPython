@@ -137,7 +137,7 @@ def train(env,HP,net,dataManager,seed = None):
             #print("action: ", a)#,"noise: ",noise)
            
             if not HP.gym_flag:
-                env.command(a)
+                env.command(a[0])
             print("time from get state to execute action:",time.time() - env.lt)
 
             dataManager.acc_target.append(net.get_target_actions(np.reshape(state, (1, env.observation_space.shape[0])))[0])
@@ -214,7 +214,7 @@ def train(env,HP,net,dataManager,seed = None):
                     
                 
 
-            next_state, reward, done, info = env.step(a)
+            next_state, reward, done, info = env.step(a[0])
             reward_vec.append(reward)
             #add data to replay buffer:
             #if info == 'kipp':

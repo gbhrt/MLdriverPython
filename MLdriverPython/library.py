@@ -14,21 +14,21 @@ def clear_screen():
     os.system('cls')
 
 
-def input_thread(stop,command):
-    stop.append(False)
-    command.append(None)
-    while True:
+#def input_thread(stop,command):
+#    stop.append(False)
+#    command.append(None)
+#    while True:
         
-        inp = classes.getch()
+#        inp = classes.getch()
         
-        if inp == b'\r':
-            stop[0] = True
-        else:
-            command[0] = inp
-    return
-def wait_for(stop,command):
-    _thread.start_new_thread(input_thread, (stop,command,))
-    return
+#        if inp == b'\r':
+#            stop[0] = True
+#        else:
+#            command[0] = inp
+#    return
+#def wait_for(stop,command):
+#    _thread.start_new_thread(input_thread, (stop,command,))
+#    return
 
 def normalize(data,norm_vec):
     n_data = copy.deepcopy(data)
@@ -42,14 +42,14 @@ def normalize(data,norm_vec):
             for j in range(len(data)):
                 n_data[j][i] = -1+(data[j][i]-min_data)*2/(max_data - min_data)
     return n_data
-def comp_norm_vec(data):
-     norm_vec = []
-     for i in range(len(data[0])):
-         dat = np.array(data)[:,i]
-         min_data = min(dat)
-         max_data = max(dat)
-         norm_vec.append([min_data,max_data])
-     return norm_vec
+#def comp_norm_vec(data):
+#     norm_vec = []
+#     for i in range(len(data[0])):
+#         dat = np.array(data)[:,i]
+#         min_data = min(dat)
+#         max_data = max(dat)
+#         norm_vec.append([min_data,max_data])
+#     return norm_vec
 #
 def denormalize(n_data,range_vec):
     data = copy.deepcopy(n_data)
@@ -292,7 +292,7 @@ def step_now(last_time,step_time):
 
 def wait_until_end_step(last_time,step_time,max_time_deviation = 0.005):
     while(True):
-        t = time.time()
+        t = time.clock()
         if t - last_time[0] > step_time:
             if t - last_time[0] > step_time + max_time_deviation:
                 print("step time too short! deviation:",t - last_time[0] - step_time)
@@ -557,12 +557,13 @@ class waitFor:
             inp = getch()
             if inp ==  b'\x00':
                 continue
-            #print("input:",inp)
+            print("input:",inp)
             if inp == b'\r':
                 stop[0] = True
             else:
                 command[0] = inp
-            time.sleep(0.02)
+               
+            time.sleep(00.2)#0.02
         return
     def wait_for(self):
         _thread.start_new_thread(self.input_thread, (self.stop,self.command,))

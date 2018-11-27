@@ -32,18 +32,21 @@ class OptimalVelocityPlannerData:
         if self.mode == 'DDPG':
             self.features_num = self.feature_data_num +  2*self.feature_points #vehicle state points on the path (distance)
         if self.mode == 'model_based':
-            self.features_num = 4 #
+            #self.features_names = ["vel","steer"]
+            #self.prediction_names = ["rel_pos","rel_ang","vel","steer","roll"]
+            self.features_num = 5#
         self.distance_between_points = 1.0 #meter 1.0
         self.path_lenght = 9000#self.feature_points*self.distance_between_points
         self.step_time = 0.2
         self.action_space_n = 1
         self.visualized_points = int(self.feature_points/0.05) + 10 #how many points show on the map and lenght of local path
-        self.max_deviation = 1# 3 # [m] if more then maximum - end episode 
+        self.max_deviation =  10 # [m] if more then maximum - end episode 
         self.max_velocity = 30
         self.max_pitch = 0.3#0.3
         self.max_roll = 0.2#0.05#0.3# last 0.2
+        self.max_plan_roll = 0.05
         self.max_steering = 0.7
-        self.max_wheel_vel = 60# rad/sec. in unity limited to 5720 deg/sec for some reason
+        self.max_wheel_vel = 60# rad/sec. in unity limited to 5720 deg/sec 
         self.acc = 1.38# 0-100 kmh in 20 sec. 1.5 # [m/s^2]  need to be more then maximum acceleration in real
         self.torque_reduce = 1.0 # 0.2
         self.reduce_factor = 1.0
@@ -53,11 +56,36 @@ class OptimalVelocityPlannerData:
         self.action_space.high = [1.0]#self.acc*self.step_time] #, torque in Nm
         self.observation_space = ObservationSpace()
         self.observation_space.shape = [self.features_num]
-        self.observation_space.range = [[0,self.max_velocity],[-0.7,0.7],[-0.7,0.7],[-1.0,1.0]]
+        self.observation_space.range = [[0,self.max_velocity],
+                                        [-self.max_steering,self.max_steering],
+                                        [-self.max_roll,self.max_roll],
+                                        [-self.max_steering,self.max_steering],
+                                        [-1.0,1.0]]#vel,steer,roll,steer_comand,acc_comand
         self.max_curvature = 0.12
 
         self.lt = 0
 
+    def create_X(self,state,a):
+        X = []
+        for i in range(len(state)):
+             X.append([state[i]['vel'],
+                       state[i]['steer'],
+                       state[i]['roll'],
+                       a[i][1],#steer
+                       np.clip(a[i][0],-1.0,1.0)])#acc
+        return X
+    def create_XY_(self,state,a,next_state):
+        X = self.create_X(state,a)
+        Y_ = []
+        for i in range(len(state)):
+             Y_.append([next_state[i]['rel_pos'][0],
+                        next_state[i]['rel_pos'][1],
+                        next_state[i]['rel_ang'],
+                        next_state[i]['vel'],   # - state[i]['vel'],
+                        next_state[i]['steer'], #  - state[i]['steer'],
+                        next_state[i]['roll']  # - state[i]['roll']
+                        ])
+        return X,Y_
         #if mode == 'model_based':
         #    self.get_state = get_model_based_state
         #elif mode == 'DDPG':
@@ -94,7 +122,7 @@ class OptimalVelocityPlanner(OptimalVelocityPlannerData):
     def reset(self,seed = None):
   #     self.lt = 0 #tmp
         if (self.reset_count % self.reset_every == 0 and self.reset_count > 0): 
-            self.pl.simulator.reset_position()
+            self.error = self.pl.simulator.reset_position()
             self.pl.stop_vehicle()
         self.episode_steps = 0
         self.last_time = [0]
@@ -135,6 +163,9 @@ class OptimalVelocityPlanner(OptimalVelocityPlannerData):
             self.last_pos = self.pl.simulator.vehicle.position#first time init abs position and angle - updated in the function
             self.last_ang = self.pl.simulator.vehicle.angle
             state = get_model_based_state(self.pl,self.last_pos,self.last_ang,local_path)
+
+        #self.dataManager.update_real_path(pl = self.pl,velocity_limit = local_path.analytic_velocity_limit[0],analytic_vel = local_path.analytic_velocity[0]\
+        #    ,curvature = local_path.curvature[0],seed = self.path_seed)#update at the first time
         #if self.end_indication_flag:
         #    dis_from_end = self.features_num*self.feature_points - self.pl.in_vehicle_reference_path.distance[self.pl.main_index]
             #self.dataManager.add(('curvature',(self.pl.desired_path.curvature)))
@@ -144,7 +175,7 @@ class OptimalVelocityPlanner(OptimalVelocityPlannerData):
 
     def command(self,action,steer = None):# the algo assume that the action is in the last state, must be close as possible to the end of the
                                 #last step command, hence the training is between command and state update (while waiting for step time)
-        action = action[0]
+        #action = action[0]
         self.episode_steps+=1
         #print("before command: ",time.time() - self.last_time[0])
         steer_command = self.pl.torque_command(action,steer = steer,reduce = self.torque_reduce)
@@ -170,7 +201,7 @@ class OptimalVelocityPlanner(OptimalVelocityPlannerData):
         if self.mode == "model_based" and steer is not None:
             self.command(action,steer)#send action immidetlly after get state data. this action is based upon the estimation of the current state
         # that is estimated from the previus state
-        t = time.time()
+        t = time.clock()
         #print (t - self.lt)
         self.lt = t
        # print("after get data: ",time.time() - temp_last_time)
@@ -203,8 +234,8 @@ class OptimalVelocityPlanner(OptimalVelocityPlannerData):
         else:
             end_distance = None
         #print("before check end: ",time.time() - self.last_time[0])
-        mode = self.pl.check_end(deviation = lib.dist(local_path.position[0][0],local_path.position[0][1],0,0)\
-            ,max_roll = self.max_roll,max_pitch = self.max_pitch,end_distance = end_distance)#check if end of the episode 
+        mode = self.pl.check_end(deviation = lib.dist(local_path.position[0][0],local_path.position[0][1],0,0),
+            max_deviation = self.max_deviation,max_roll = self.max_roll,max_pitch = self.max_pitch,end_distance = end_distance)#check if end of the episode 
         #print("roll:",self.pl.simulator.vehicle.angle)
         self.dataManager.roll.append(self.pl.simulator.vehicle.angle[2])
         self.dataManager.wheels_vel.append(self.pl.simulator.vehicle.wheels_vel)
@@ -235,7 +266,7 @@ class OptimalVelocityPlanner(OptimalVelocityPlannerData):
         else:
             done = False
         #print("reward", reward, "velocity: ", self.pl.simulator.vehicle.velocity, "mode:", mode)
-        info = [mode,time_step_error]
+        info = [mode,time_step_error or self.error]
         #print("end step time: ",time.time() - self.last_time[0])
         return next_state, reward, done, info
 

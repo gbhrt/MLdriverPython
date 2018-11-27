@@ -46,7 +46,7 @@ if __name__ == "__main__":
         rand_state, rand_a, rand_next_state, rand_end, _ = Replay.sample(HP.batch_size)
                             #update neural networs:
                             #pLib.DDQN(rand_state, rand_a, rand_reward, rand_next_state,net,HP)
-        pLib.model_based_update(rand_state, rand_a, rand_next_state,rand_end,net,HP)
+        pLib.model_based_update(rand_state, rand_a, rand_next_state,rand_end,net,HP,env)
         if i%100 == 0:
             X = []
             Y_ = []

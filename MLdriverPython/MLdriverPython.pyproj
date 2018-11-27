@@ -5,7 +5,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>67d1be9f-78bf-410b-b3ad-9001facbb70e</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>main_init.py</StartupFile>
+    <StartupFile>model_based_main.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -42,6 +42,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="DDPG_net - Copy.py" />
+    <Compile Include="drive_test.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="gui.py">
       <SubType>Code</SubType>
     </Compile>
@@ -61,6 +64,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="model_based_run.py" />
+    <Compile Include="test_net_performance.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="train_offline.py">
       <SubType>Code</SubType>
     </Compile>

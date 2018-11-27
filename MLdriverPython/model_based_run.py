@@ -41,13 +41,15 @@ def run(guiShared):
     Replay = pLib.Replay(HP.replay_memory_size)
     if HP.restore_flag:
         Replay.restore(HP.restore_file_path)
-    trainShared = shared.trainShared()
-    if HP.train_flag:
-        trainTread = train_thread.trainThread(net,Replay,HP,trainShared)
-        trainTread.start()
+
 
     #train agent on simulator
     env = enviroment1.OptimalVelocityPlanner(dataManager,mode = "model_based")
+
+    trainShared = shared.trainShared()
+    if HP.train_flag:
+        trainTread = train_thread.trainThread(net,Replay,HP,env,trainShared)
+        trainTread.start()
     if env.opened:     
         model_based_algorithm.train(env,HP,net,Replay,dataManager,trainShared,guiShared)
     trainShared.train = False

@@ -14,5 +14,6 @@ class guiShared:
 class trainShared:
     def __init__(self):
         self.Lock = threading.Lock()
+        self.algorithmIsIn = threading.Event()
         self.exit = False
         self.train = False

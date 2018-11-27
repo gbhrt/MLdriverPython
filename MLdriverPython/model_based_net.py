@@ -14,7 +14,8 @@ class model_based_network(NetLib):
         self.hidden_layer_nodes1 = 200
         self.hidden_layer_nodes2 = 100
 
-        self.alpha = 0.001
+        self.alpha = alpha#0.001
+
         self.X=tf.placeholder(tf.float32, [None,X_n])
         self.Y_=tf.placeholder(tf.float32,[None,Y_n])
         #X = tflearn.layers.normalization.batch_normalization(X)
@@ -83,4 +84,9 @@ class model_based_network(NetLib):
     def get_loss(self,X,Y_):
         return self.sess.run(self.loss, feed_dict= {self.X: lib.normalize(X,self.norm_vec) ,self.Y_: Y_})# 
     def get_Y(self,X):
-        return self.sess.run(self.Y, feed_dict= {self.X: lib.normalize(X,self.norm_vec)})
+        Y = self.sess.run(self.Y, feed_dict= {self.X: lib.normalize(X,self.norm_vec)})
+        #X = np.array(X)
+        #Y[:,3]+=X[:,0]#absolute velocity
+        #Y[:,4]+=X[:,1]#absolute steer
+        #Y[:,5]+=X[:,2]#absolute roll
+        return Y

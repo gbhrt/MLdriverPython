@@ -28,8 +28,8 @@ if __name__ == "__main__":
     HP.analytic_action = False
     HP.restore_flag = False 
 
-    names = ["RL_800_600_400"]#"test_sep_replay_2"
-    description = "big net 800_600_400"
+    names = ["RL_actor_critic_800_600_400"]#"test_sep_replay_2"
+    description = "big actor and critic net 800_600_400 critic 800 600" 
 
     #with_features_new_desing_conv - not good, max 0.8 to many fails
     #not at all

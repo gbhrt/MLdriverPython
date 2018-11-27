@@ -131,12 +131,8 @@ def DDPG(rand_state, rand_a, rand_reward, rand_next_state,rand_end,net,HP,comp_a
     net.Update_actor(rand_state,pred_action)
     net.update_targets()
     return critic_loss, Qa#temp
-def model_based_update(rand_state, rand_a, rand_next_state,rand_end,net,HP):
-    X = []
-    Y_ = []
-    for i in range(len(rand_state)):
-        X.append([rand_state[i]['vel'], rand_state[i]['steer'],rand_a[i][1],rand_a[i][0]])#action steer, action acc
-        Y_.append([rand_next_state[i]['rel_pos'][0],rand_next_state[i]['rel_pos'][1],rand_next_state[i]['rel_ang'],rand_next_state[i]['vel'],rand_next_state[i]['steer'],rand_next_state[i]['roll']])
+def model_based_update(rand_state, rand_a, rand_next_state,rand_end,net,HP,env):
+    X,Y_ = env.create_XY_(rand_state, rand_a, rand_next_state)
     net.update_network(X,Y_)
     #print("loss:",net.get_loss(X,Y_))
     return
@@ -157,57 +153,68 @@ def comp_abs_pos_ang(rel_pos,rel_ang,abs_pos,abs_ang):
 #    next_state['steer'] = Y[4]
 #    next_state['roll'] = Y[5]
 #    return next_state
-def comp_steer_from_next_state(net,state,steer_command,acc_command):
-    X = [state['vel'],state['steer'],steer_command,acc_command[0]]
-    Y = net.get_Y([X])[0]
+def comp_steer_from_next_state(net,env,state,steer_command,acc_command):
+    X = env.create_X([state],[[acc_command,steer_command]])
+    Y = net.get_Y(X)[0]
     abs_pos,abs_ang = comp_abs_pos_ang(Y[0:2],Y[2],[0,0],0)
     next_steer_command = lib.comp_steer_general(state['path'],abs_pos,abs_ang,state['vel'])#action steer
     return next_steer_command
-def predict_n_next(n,net,init_state,max_roll,action):
-    
+
+def predict_n_next(n,net,env,init_state,action,acc_try = 1.0,max_plan_roll = None):
+    if max_plan_roll is None:
+        max_plan_roll = env.max_plan_roll
     abs_pos = [0,0]#relative to the local path
     abs_ang = 0
     
     steer_command = lib.comp_steer_general(init_state['path'],abs_pos,abs_ang,init_state['vel'])
-    acc_command = action[0]#0.7 first action is already executed and known
-    pred_vec = [[abs_pos,abs_ang,init_state['vel'],init_state['steer'],init_state['roll']]]
-    X = [init_state['vel'],init_state['steer'],steer_command,acc_command]
-    #X = [5.0,0.1,steer_command,acc_command]
+    
+    print("current action: ",action, "try action: ",acc_try)
+    acc_command = action# first action is already executed and known
     roll_flag = False
-    for i in range(1,n):#n times 
-        Y = net.get_Y([X])[0]#predict_next(features_num,train_data, sample, k, p)
-        #print("X:",X,"Y:",Y)
-        #pred_vec.append(Y)#x,y,ang,vel, steer roll - all relative 
+    if abs(init_state['roll']) > max_plan_roll:#check the current roll 
+        roll_flag = True
+    pred_vec = [[abs_pos,abs_ang,init_state['vel'],init_state['steer'],init_state['roll']]]
+    X = env.create_X([init_state],[[acc_command,steer_command]])[0]
+    #X = [5.0,0.1,steer_command,acc_command]
 
+    if roll_flag == False:
+        for i in range(1,n):#n times 
+            Y = net.get_Y([X])[0]#predict_next(features_num,train_data, sample, k, p)
 
-        X[0] = Y[3]#vel
-        X[1] = Y[4]#steer
-        abs_pos,abs_ang = comp_abs_pos_ang(Y[0:2],Y[2],abs_pos,abs_ang)#rel_pos = Y[0:2] rel_ang = Y[2] roll Y[5]
-        #print("abs_pos",abs_pos,"abs_ang",abs_ang)
-        steer_command =  lib.comp_steer_general(init_state['path'],abs_pos,abs_ang,init_state['vel'])#action steer
-        #print("steer_command:",steer_command)
-        X[2] =  steer_command
-        if i<2:
-            acc_command = 0.7
-        else:
-            acc_command = -0.7
-        X[3] = acc_command #action acceleration
-        pred_vec.append([abs_pos,abs_ang,Y[3],Y[4],Y[5]])
-        if Y[3] < 2.0:#reach velocity 0 - or safe velocity
-            #print("reach velocity 0")
-            break
-        if abs(Y[5]) > max_roll:# roll
-            #print("reach roll")
-            roll_flag = True
-            break
+            #print("X:",X,"Y:",Y)
+            #pred_vec.append(Y)#x,y,ang,vel, steer roll - all relative 
+        
+
+            X[0] = Y[3]#vel
+            X[1] = Y[4]#steer
+            abs_pos,abs_ang = comp_abs_pos_ang(Y[0:2],Y[2],abs_pos,abs_ang)#rel_pos = Y[0:2] rel_ang = Y[2] roll Y[5]
+            #print("abs_pos",abs_pos,"abs_ang",abs_ang)
+            steer_command =  lib.comp_steer_general(init_state['path'],abs_pos,abs_ang,init_state['vel'])#action steer
+            #print("steer_command:",steer_command)
+            X[2] = Y[5]#roll
+            X[3] =  steer_command#X[2]
+            if i==1:#the firs time determent by the current given action
+                acc_command = acc_try
+            else:
+                acc_command = -1.0
+            X[4] = acc_command #action acceleration  X[3]
+            pred_vec.append([abs_pos,abs_ang,Y[3],Y[4],Y[5]])
+            if Y[3] < 2.0:#reach velocity 0 - or safe velocity
+                #print("reach velocity 0")
+                break
+            if abs(Y[5]) > max_plan_roll:# roll
+                #print("reach roll")
+                roll_flag = True
+                break
     
     print("roll:", np.array(pred_vec)[:,4])
     print("vel:", np.array(pred_vec)[:,2])
+   
     #print("end--------------------------")
     return pred_vec,roll_flag
-def predict_n_next_abs(n,net,init_state):
-    predict_n_next(n,net,init_state)
-    return
+#def predict_n_next_abs(n,net,env,init_state):
+#    predict_n_next(n,net,env,init_state)
+#    return
 def choose_action(action_space,Pi,steps = None,epsilon = 0.1):
     if random.random() < epsilon:
         a = random.randint(0,len(action_space) - 1)#random.randint(0,(len(action_space.data) - 1))

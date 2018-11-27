@@ -44,7 +44,7 @@ class HyperParameters:
 
 class ModelBasedHyperParameters:
     def __init__(self):
-        self.num_of_runs = 100
+        self.num_of_runs = 200
         self.alpha = 0.001# #learning rate
         self.batch_size = 64
         self.replay_memory_size = 100000
@@ -62,16 +62,17 @@ class ModelBasedHyperParameters:
         self.gym_flag = False
         self.render_flag = True
         self.plot_flag = True
-        self.restore_flag = False
+        self.restore_flag = True
         self.skip_run = False
         self.reset_every = 3
         self.save_every = 100
         self.save_every_time = 5000 #minutes
         self.seed = 1111
-        self.save_name ="MB_1_003_max02"
+        self.save_name = "test"#"test_no_train1"#"MB_1_003_max02"
         self.save_file_path = os.getcwd()+ "\\files\\models\\model_based\\"+self.save_name+"\\"
-
-        self.restore_name = "MB_1_003_max02"#train_4_10"
+        #test_no_train1 model trained in trained1. replay is now more than 20000
+        #trained1 replay contain more than 6000. test loss 0.02
+        self.restore_name = "trained4"#"trained1"#train_4_10"
         self.restore_file_path = os.getcwd()+ "\\files\\models\\model_based\\"+self.restore_name+"\\"
 
         if self.always_no_noise_flag:

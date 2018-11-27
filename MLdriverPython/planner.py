@@ -89,10 +89,10 @@ class SimVehicle:#simulator class - include communication to simulator, vehicle 
         self.vehicle.velocity = self.comm.deserialize(1,float)
         self.vehicle.steering = self.comm.deserialize(1,float)
         self.vehicle.tan_velocity = self.comm.deserialize(1,float) 
-        print("tan_velocity:",self.vehicle.tan_velocity)
+        #print("tan_velocity:",self.vehicle.tan_velocity)
         self.vehicle.tan_acceleration = self.comm.deserialize(1,float)
-        print("tan_acceleration:",self.vehicle.tan_acceleration) 
-        self.vehicle.wheels_vel = lib.change_to_rad(self.comm.deserialize(4,float))
+        #print("tan_acceleration:",self.vehicle.tan_acceleration) 
+        #self.vehicle.wheels_vel = lib.change_to_rad(self.comm.deserialize(4,float))
         #print("wheels_vel:",self.vehicle.wheels_vel)
         return error
     def get_vehicle_data(self):
@@ -163,9 +163,9 @@ class Planner(PathManager):#planner - get and send data to simulator. input - mi
             self.simulator.send_drive_commands(0,0)
         self.wait_for_stop()
     def wait_for_stop(self):
-        self.simulator.get_vehicle_data()
+        error = self.simulator.get_vehicle_data()
         for _ in range(100):
-            self.simulator.get_vehicle_data()
+            error =self.simulator.get_vehicle_data()
             if abs(self.simulator.vehicle.velocity) < 0.03:
                 break
             time.sleep(0.1)

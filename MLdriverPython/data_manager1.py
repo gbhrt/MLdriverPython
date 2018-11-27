@@ -290,6 +290,7 @@ class DataManager():
         self.acc = []
         self.acc_target = []
         self.wheels_vel = []
+        print("data manager restarted")
     def save_run_data(self):
         #try: 
             with open(self.save_run_data_name, 'w') as f:

@@ -19,8 +19,8 @@ if __name__ == "__main__":
     #env  = gym.make("HalfCheetahBulletEnv-v0")
     HP = HyperParameters()
     HP.restore_flag = False
-    HP.restore_name = "analytic_action"
-    HP.save_name = "net_400_300"
+    HP.restore_name = "RL_actor_800_600_400"#"RL_actor_800_600_400" #analytic_action
+    HP.save_name = "critic_400_300"
     HP.save_file_path = os.getcwd()+ "\\files\\models\\no_friction_hard\\imitation\\"+HP.save_name+"\\"
     HP.restore_file_path = os.getcwd()+ "\\files\\models\\no_friction_hard\\"+HP.restore_name+"\\"
     #dataManager = data_manager.DataManager(total_data_names = ['total_reward'], special = 1, file = HP.save_name+".txt")#episode_data_names = ['limit_curve','velocity']

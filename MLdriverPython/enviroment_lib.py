@@ -1,6 +1,7 @@
 import library as lib
 import numpy as np
 import math
+import classes
 def choose_velocity_limit_points(local_path,number,distance_between_points):#return points from the local path, choose a point every "skip" points
     index = 0
     last_index = 0
@@ -92,6 +93,11 @@ def get_ddpg_state(pl = None,local_path = None,num_points = 1,distance_between =
 
 def get_model_based_state(pl,last_abs_pos,last_abs_ang,local_path):
     rel_pos = lib.to_local(pl.simulator.vehicle.position,last_abs_pos,last_abs_ang[1])
+    if rel_pos[0] >10:
+        print ("error in get state__________________________________________________________________")
+        print("pos:",pl.simulator.vehicle.position)
+        a = lib.getch()
+
     rel_ang = pl.simulator.vehicle.angle[1] - last_abs_ang[1]
     if rel_ang  > math.pi: rel_ang  -= 2*math.pi
     if rel_ang  < -math.pi: rel_ang  += 2*math.pi

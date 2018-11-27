@@ -139,7 +139,6 @@ class DDPG_network(NetLib):
         fc2 = tflearn.activations.relu(fc2)
         
         fc3 = tflearn.fully_connected(fc2, hidden_layer_nodes3,regularizer='L2', weight_decay=0.01)
-        #net = tflearn.layers.normalization.batch_normalization(net)
         fc3 = tflearn.activations.relu(fc3)
 
         init = tflearn.initializations.uniform(minval=-0.003, maxval=0.003)# Final layer weights are init to Uniform[-3e-3, 3e-3]
@@ -149,8 +148,8 @@ class DDPG_network(NetLib):
 
         return action
     def continues_critic(self,action,action_n,state,state_n,feature_data_n = 1,conv_flag = True):#define a net - input: state (and dimentions) - output: Q - Value
-        hidden_layer_nodes1 = 800#400
-        hidden_layer_nodes2 = 600#300
+        hidden_layer_nodes1 = 400#400
+        hidden_layer_nodes2 = 300#300
         hidden_layer_nodes3 = 400
         #hidden_layer_nodes1 = 40#400
         #hidden_layer_nodes2 = 30
@@ -222,6 +221,9 @@ class DDPG_network(NetLib):
             #fc1 = tflearn.layers.normalization.batch_normalization(fc1)
             fc1 = tflearn.activations.relu(fc1)
 
+            #fc3 = tflearn.fully_connected(fc1, hidden_layer_nodes3,regularizer='L2', weight_decay=0.01)
+            #fc3 = tflearn.activations.relu(fc3)
+
         # Add the action tensor in the 2nd hidden layer
         # Use two temp layers to get the corresponding weights and biases
         fc2_1 = tflearn.fully_connected(fc1, hidden_layer_nodes2,regularizer='L2', weight_decay=0.01)
@@ -229,14 +231,14 @@ class DDPG_network(NetLib):
 
         fc2 = tflearn.activation(tf.matmul(fc1, fc2_1.W) + tf.matmul(action, fc2_2.W)  + fc2_2.b + fc2_1.b, activation='relu')#
           
-        fc3 = tflearn.fully_connected(fc2, hidden_layer_nodes3,regularizer='L2', weight_decay=0.01)
-        #net = tflearn.layers.normalization.batch_normalization(net)
-        fc3 = tflearn.activations.relu(fc3)
+        #fc3 = tflearn.fully_connected(fc2, hidden_layer_nodes3,regularizer='L2', weight_decay=0.01)
+        #fc3 = tflearn.activations.relu(fc3)
+
         # linear layer connected to 1 output representing Q(s,a)
         # Weights are init to Uniform[-3e-3, 3e-3]
         init = tflearn.initializations.uniform(minval=-0.003, maxval=0.003)
 
-        Qa = tflearn.fully_connected(fc3, 1, weights_init=init,bias_init = init, regularizer='L2', weight_decay=0.01)
+        Qa = tflearn.fully_connected(fc2, 1, weights_init=init,bias_init = init, regularizer='L2', weight_decay=0.01)
         return Qa
 
 

@@ -12,6 +12,26 @@ import agent_lib as pLib
 import math
 import os
 
+def comp_MB_acc(net,env,state,acc):
+    fail_flag = False
+    n = 10
+    print("___________________new acc compution____________________________")
+    predicted_values,roll_flag = pLib.predict_n_next(n,net,env,state,acc,1.0)#try 1.0
+    if roll_flag:#if not ok - try 0.0                                                   
+        predicted_values,roll_flag = pLib.predict_n_next(n,net,env,state,acc,0.0)
+        if roll_flag:#if not ok - try -1.0   
+            predicted_values,roll_flag = pLib.predict_n_next(n,net,env,state,acc,-1.0,max_plan_roll = 0.1)
+            if roll_flag:
+                next_acc = -1.0
+                fail_flag = True
+            else:#-1.0 is ok
+                next_acc = -1.0
+        else:# 0.0 is ok
+            next_acc = 0.0
+    else:#1.0 is ok
+        next_acc = 1.0
+    print("________________________end________________________________")
+    return next_acc,predicted_values,fail_flag
 
 def train(env,HP,net,Replay,dataManager,trainShared,guiShared,seed = None):
     
@@ -38,21 +58,6 @@ def train(env,HP,net,Replay,dataManager,trainShared,guiShared,seed = None):
     waitFor = lib.waitFor()#wait for "enter" in another thread - then stop = true
     if HP.render_flag:
         env.render()
-    #env.reset()
-
-   
-    #if not HP.skip_run:
-        
-    #plot = Plot()
-    #dataManager = data_manager.DataManager(total_data_names = ['total_reward'],  file = HP.save_name+".txt")
-
-        
-
-    #actionNoise = pLib.OrnsteinUhlenbeckActionNoise(mu=np.zeros(env.action_space.shape[0]),dt = 0.2)#env.step_time
-    #if not HP.random_paths_flag:
-    #    if pl.load_path(HP.path_name,HP.random_paths_flag) == -1:
-    #        stop = [1]
-      
 
     global_train_count = 0
     seed = HP.seed
@@ -61,6 +66,7 @@ def train(env,HP,net,Replay,dataManager,trainShared,guiShared,seed = None):
     for i in range(HP.num_of_runs): #number of runs - run end at the end of the main path and if vehicle deviation error is to big
         if waitFor.stop == [True]:
             break
+        
         # initialize every episode:
         if HP.run_random_num != 'inf':
             if i > HP.run_random_num:
@@ -71,64 +77,44 @@ def train(env,HP,net,Replay,dataManager,trainShared,guiShared,seed = None):
 
 
         state = env.reset(seed = seed)   
+        if env.error:
+            i-=1
+            continue
         if i == 0:
             print("update nets first time")
-            pLib.model_based_update([state], [[0,0]], [state],[False],net,HP)
+            pLib.model_based_update([state], [[0,0]], [state],[False],net,HP,env)
 
         #episode_start_time = time.time()
         steer = 0
-        a = [0.7]
+        acc = 0.7
         while  waitFor.stop != [True]:#while not stoped, the loop break if reached the end or the deviation is to big
-            step_count+=1
+            print("time before Lock:",time.clock()-env.lt)
+            trainShared.algorithmIsIn.clear()#indicates that are ready to take the lock
+            with trainShared.Lock:
+                trainShared.algorithmIsIn.set()
+                print("time after Lock:",time.clock()-env.lt)
+                step_count+=1
                
-            #choose and make action:
+                #choose and make action:
 
 
-            #a = pLib.comp_model_based_action(state)
+                if HP.analytic_action:
+                    acc = float(env.get_analytic_action()[0])#+noise
+                    steer = env.comp_steer()
+                    env.command(acc,steer)
+                    next_state, reward, done, info = env.step(acc)#input the estimated next actions to execute after delta t and getting next state
 
 
-
-
-
-            
-            #a = [env.comp_analytic_acceleration(state)]#env.analytic_feature_flag must be false
-            #next_a = [env.comp_const_vel_acc(5.0)+float(noise)]# +noise (6.0+step_count/25)
-            if HP.analytic_action:
-                a = env.get_analytic_action()#+noise
-                a = [float(a[k]) for k in range(len(a))]
-            #a = list(np.clip(a,-env.action_space.high[0],env.action_space.high[0]))
-            #next_a = [float(a[k]) for k in range(len(a))]
+                else:#not HP.analytic_action
+                    next_steer = pLib.comp_steer_from_next_state(net,env,state,steer,acc)
+                    #print("next state steer:",steer)
+                
+                    fail_flag = False
+                    next_acc,predicted_values,fail_flag = comp_MB_acc(net,env,state,acc)
+                    print("fail_flag:",fail_flag)
+                    if fail_flag:
+                        next_steer = 0.0
               
-            #a = [env.comp_analytic_acc_compare()]
-           # print("state:", state)
-
-            #print("action: ", a)#,"noise: ",noise)
-            #dataManager.acc.append(a)
-            if not HP.gym_flag:
-                #steer = env.comp_steer()
-                #print("regular steer:",steer)
-                if not HP.analytic_action:
-                    next_steer = pLib.comp_steer_from_next_state(net,state,steer,a)
-                    print("next state steer:",steer)
-                
-                
-                
-                
-                    n = 10
-                    max_roll = 0.02
-                    #print("t2:", time.time() - t1)
-                    predicted_values,roll_flag = pLib.predict_n_next(n,net,state,max_roll,a)
-                    #print("after n predict:", time.time() - t1)
-                    if roll_flag:
-                        next_a = [-1.0]
-                    else:
-                        next_a = [1.0]
-                    print("next_a:",next_a,"noise: ",noise)
-                #steer_command = env.command(a,steer)#steer
-                
-                ##print("t4:", time.time() - t1)
-                #steer = lib.comp_steer_general(state['path'],[0,0],0,state['vel'])
-                ##print("t5:", time.time() - t1)
                     with guiShared.Lock:
                         guiShared.predicded_path = [pred[0] for pred in predicted_values]
                         guiShared.state = copy.deepcopy(state)
@@ -136,56 +122,51 @@ def train(env,HP,net,Replay,dataManager,trainShared,guiShared,seed = None):
                 
                 
 
-                    print("time before command:",time.time()-env.lt)
-                    #env.command(a,steer)#steer  steer_command = 
+                    #print("time before command:",time.time()-env.lt)
 
                     #print("before step:", time.time() - t1)
-                    next_state, reward, done, info = env.step(next_a,steer = next_steer)#input the estimated next actions to execute after delta t and getting next state
-            
-                else:
-                    steer = env.comp_steer()
-                    env.command(a,steer)
-                    next_state, reward, done, info = env.step(a)#input the estimated next actions to execute after delta t and getting next state
+                    next_state, reward, done, info = env.step(next_acc,steer = next_steer)#input the estimated next actions to execute after delta t and getting next state
 
-            #t1 = time.time()
             
-            reward_vec.append(reward)
-            print("after append:", time.time() - env.lt)
-            #add data to replay buffer:
-            if info[0] == 'kipp':
-                fail = True
-            else:
-                fail = False
-            time_step_error = info[1]
+                reward_vec.append(reward)
+                # print("after append:", time.time() - env.lt)
+                #add data to replay buffer:
+                if info[0] == 'kipp':
+                    fail = True
+                else:
+                    fail = False
+                time_step_error = info[1]
 
  
-            if not time_step_error:
-                tmp_next_path = next_state['path']
-              #  print("after copy1:", time.time() - t1)
-                state['path'] = []
-                next_state['path'] = []
-              #  print("after copy2:", time.time() - t1)
-                #t = time.time()
-                #print (t - lt)
-                #lt = t
-                Replay.add(copy.deepcopy((state,[a[0],steer],next_state,done,fail)))#  
+                if not time_step_error:
+                    tmp_next_path = next_state['path']
+                    #  print("after copy1:", time.time() - t1)
+                    state['path'] = []
+                    next_state['path'] = []
+                    #  print("after copy2:", time.time() - t1)
+                    #t = time.time()
+                    #print (t - lt)
+                    #lt = t
+                    Replay.add(copy.deepcopy((state,[acc,steer],next_state,done,fail)))#  
 
-                next_state['path'] = tmp_next_path
+                    next_state['path'] = tmp_next_path
 
-               # print("after add:", time.time() - t1)
+                    # print("after add:", time.time() - t1)
 
-            state = copy.deepcopy(next_state)
-            if not HP.analytic_action:
-                a,steer = copy.copy(next_a), copy.copy(next_steer)
-            #print("t9:", time.time() - t1)
-            if done:
-                break
+                state = copy.deepcopy(next_state)
+                if not HP.analytic_action:
+                    acc,steer = copy.copy(next_acc), copy.copy(next_steer)
+                #print("t9:", time.time() - t1)
+                if done:
+                    break
+
+            
            # print("end loop:", time.time() - t1)
             #end if time
         #end while
 
         #after episode end:
-        total_reward = 0
+        #total_reward = 0
         #for k,r in enumerate(reward_vec):
         #    total_reward+=r*HP.gamma**k
         total_reward = sum(reward_vec)
@@ -234,6 +215,7 @@ def train(env,HP,net,Replay,dataManager,trainShared,guiShared,seed = None):
             #dataManager.plot.plot_path(dataManager.real_path,block = True)
         #dataManager.save_readeable_data()
         dataManager.restart()
+
         #try:
         #    dataManager.comp_rewards(path_num-1,HP.gamma)
         #    dataManager.print_data()
