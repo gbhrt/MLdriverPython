@@ -86,14 +86,20 @@ class SimVehicle:#simulator class - include communication to simulator, vehicle 
         if self.vehicle.angle[2] > math.pi:#angle form 0 to 2 pi, convert from -pi to pi
             self.vehicle.angle[2] = -(2*math.pi - self.vehicle.angle[2])
        # self.vehicle.backPosition = lib.changeZtoY(self.comm.deserialize(3,float))
-        self.vehicle.velocity = self.comm.deserialize(1,float)
+        self.vehicle.velocity = lib.changeZtoY(self.comm.deserialize(3,float))
+        self.vehicle.rot_velocity = self.comm.deserialize(3,float)#in radians
+        self.vehicle.acceleration =self.comm.deserialize(3,float)
+        self.vehicle.rot_acceleration =self.comm.deserialize(3,float)#in radians
+        self.vehicle.wheels_vel = lib.change_to_rad(self.comm.deserialize(4,float))
+
         self.vehicle.steering = self.comm.deserialize(1,float)
-        self.vehicle.tan_velocity = self.comm.deserialize(1,float) 
-        #print("tan_velocity:",self.vehicle.tan_velocity)
-        self.vehicle.tan_acceleration = self.comm.deserialize(1,float)
-        #print("tan_acceleration:",self.vehicle.tan_acceleration) 
-        #self.vehicle.wheels_vel = lib.change_to_rad(self.comm.deserialize(4,float))
-        #print("wheels_vel:",self.vehicle.wheels_vel)
+        self.vehicle.last_time_stamp = self.comm.deserialize(1,float)
+        self.vehicle.input_time = self.comm.deserialize(1,float)
+        #print("velocity:",self.vehicle.velocity)
+        #print("acceleration:",self.vehicle.acceleration)
+        #print("rotation velocity:",self.vehicle.rot_velocity)
+        #print("rotation acceleration:",self.vehicle.rot_acceleration)
+        print("time_stamp:",self.vehicle.last_time_stamp)
         return error
     def get_vehicle_data(self):
         data_type = 0
@@ -154,7 +160,7 @@ class Planner(PathManager):#planner - get and send data to simulator. input - mi
     def external_update_vehicle(self,position, angle,velocity):
         self.simulator.vehicle.position = position
         self.simulator.vehicle.angle = angle
-        self.simulator.vehicle.velocity = velocity
+        self.simulator.vehicle.velocity[1] = velocity
 
     def stop_vehicle(self):
         if self.mode == "torque":
@@ -166,10 +172,10 @@ class Planner(PathManager):#planner - get and send data to simulator. input - mi
         error = self.simulator.get_vehicle_data()
         for _ in range(100):
             error =self.simulator.get_vehicle_data()
-            if abs(self.simulator.vehicle.velocity) < 0.03:
+            if abs(self.simulator.vehicle.velocity[1]) < 0.03:
                 break
             time.sleep(0.1)
-        if abs(self.simulator.vehicle.velocity) > 0.03:#temp from 0.01
+        if abs(self.simulator.vehicle.velocity[1]) > 0.03:#temp from 0.01
             error = self.simulator.reset_position()
             if error:
                 print("comm error at reset position")
@@ -302,7 +308,7 @@ class Planner(PathManager):#planner - get and send data to simulator. input - mi
 
         if index > len(self.desired_path.distance)-1:
             index = len(self.desired_path.distance) - 1
-        forward_distance = k*self.simulator.vehicle.velocity#self.desired_path.velocity[index]
+        forward_distance = k*self.simulator.vehicle.velocity[1]#self.desired_path.velocity[index]
         forward_distance = np.clip(forward_distance,min,max)
         target_index = index
         while (self.desired_path.distance[target_index] - self.desired_path.distance[index]) < forward_distance:
@@ -318,7 +324,7 @@ class Planner(PathManager):#planner - get and send data to simulator. input - mi
 
     def delta_velocity_command(self, delta_vel,max_delta_vel,max_vel = 50):
         delta_vel_norm = delta_vel*max_delta_vel
-        des_vel = np.clip(self.simulator.vehicle.velocity + delta_vel_norm,0,max_vel)#assume velocity is updated
+        des_vel = np.clip(self.simulator.vehicle.velocity[1] + delta_vel_norm,0,max_vel)#assume velocity is updated
         target_index = self.select_target_index(self.index)
         steer_ang1 = lib.comp_steer(self.simulator.vehicle.position,self.simulator.vehicle.angle[1],self.desired_path.position[target_index])#target in global
         self.simulator.send_drive_commands(des_vel,steer_ang1) #send commands
@@ -411,7 +417,7 @@ class Planner(PathManager):#planner - get and send data to simulator. input - mi
         end_tolerance = 0.3
         dis_from_end = self.in_vehicle_reference_path.distance[-1] - self.in_vehicle_reference_path.distance[self.main_index]
         
-        #if  (dis_from_end < end_tolerance and self.simulator.vehicle.velocity < 0.001)\
+        #if  (dis_from_end < end_tolerance and self.simulator.vehicle.velocity[1] < 0.001)\
         #    or dis_from_end <= 0: #end if reach the end or when close to end and velocity is 0
         if self.main_index >= len(self.in_vehicle_reference_path.position)-1:#end of the main path
         #if self.in_vehicle_reference_path.distance[self.main_index] > lenght:

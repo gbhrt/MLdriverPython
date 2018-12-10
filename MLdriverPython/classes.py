@@ -12,10 +12,14 @@ class Vehicle:
         self.backPosition = [0,0,0]
         self.angle = [0,0,0]
         self.steering = 0
-        self.velocity = 0
-        self.tan_velocity = 0
-        self.tan_acceleration = 0
+        self.velocity = [0,0,0]
+        self.rot_velocity = [0,0,0]
+        self.acceleration = [0,0,0]
+        self.rot_acceleration = [0,0,0]
+
         self.wheels_vel = [0,0,0,0]
+        self.last_time_stamp = 0
+        self.input_time = 0
 class Path:
     def __init__(self):
         self.position = []#

@@ -42,8 +42,35 @@ class DataManager():
         self.run_data =[]
         
         
+        
 
         #reset every episode:
+        self.restart()
+        #self.Qa = []
+        #self.Q0 = []
+        #self.Q1 = []
+        #self.Qneg1 = []
+        #self.Qa_target = [] 
+        #self.Q0_target = [] 
+        #self.Q1_target = [] 
+        #self.Qneg1_target = []
+        #self.roll = []
+        #self.noise = []
+        #self.acc = []
+        #self.acc_target = []
+        #self.wheels_vel = []
+        #self.time_stamps = []
+        ###############################
+        
+        if restore_flag:
+            self.load_data()
+        if len(self.run_num) > 0:
+            self.init_run_num = self.run_num[-1]
+        if len(self.train_num) > 0:
+            self.init_train_num = self.train_num[-1]
+
+    def restart(self):
+        self.real_path = classes.Path()
         self.Qa = []
         self.Q0 = []
         self.Q1 = []
@@ -57,14 +84,10 @@ class DataManager():
         self.acc = []
         self.acc_target = []
         self.wheels_vel = []
-        ###############################
-        
-        if restore_flag:
-            self.load_data()
-        if len(self.run_num) > 0:
-            self.init_run_num = self.run_num[-1]
-        if len(self.train_num) > 0:
-            self.init_train_num = self.train_num[-1]
+        self.time_stamps = []
+        self.input_time = []
+        self.step_times = []
+        print("data manager restarted")
     def add_run_num(self,i):
         self.run_num.append(i+self.init_run_num)
     def add_train_num(self,i):
@@ -118,7 +141,16 @@ class DataManager():
 
 
             plt.subplot(223)  
-            
+            dtime_stamps,dinput_time,dstep_times = [],[],[]
+            for i in range(1,len(self.time_stamps)):
+                dtime_stamps.append(self.time_stamps[i] - self.time_stamps[i-1])
+                dinput_time.append(self.input_time[i] - self.input_time[i-1])
+                dstep_times.append(self.step_times[i] - self.step_times[i-1])
+            plt.plot(dtime_stamps,label = "stamps")
+            plt.plot(dinput_time,label ="input")
+            plt.plot(dstep_times,label = "steps")
+            plt.legend()
+
             #if len(self.real_path.time) > 0:
              
 
@@ -242,7 +274,7 @@ class DataManager():
         dist = pl.in_vehicle_reference_path.distance[pl.main_index]
         self.real_path.distance.append(dist)
         self.real_path.position.append(pl.simulator.vehicle.position)
-        self.real_path.velocity.append(pl.simulator.vehicle.velocity)
+        self.real_path.velocity.append(pl.simulator.vehicle.velocity[1])
         self.real_path.time.append(pl.get_time())
         if velocity_limit != None: self.real_path.analytic_velocity_limit.append(velocity_limit)
         if analytic_vel != None: self.real_path.analytic_velocity.append(analytic_vel)
@@ -275,22 +307,7 @@ class DataManager():
     def update_relative_rewards_and_paths(self):
         self.relative_reward.append(self.comp_relative_reward())
         self.paths.append([self.real_path.velocity,self.real_path.distance])
-    def restart(self):
-        self.real_path = classes.Path()
-        self.Qa = []
-        self.Q0 = []
-        self.Q1 = []
-        self.Qneg1 = []
-        self.Qa_target = [] 
-        self.Q0_target = [] 
-        self.Q1_target = [] 
-        self.Qneg1_target = []
-        self.roll = []
-        self.noise = []
-        self.acc = []
-        self.acc_target = []
-        self.wheels_vel = []
-        print("data manager restarted")
+
     def save_run_data(self):
         #try: 
             with open(self.save_run_data_name, 'w') as f:

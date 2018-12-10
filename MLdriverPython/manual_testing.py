@@ -50,7 +50,7 @@ for run in range(30):
     for i in range (100):
         pl.simulator.get_vehicle_data()
         t.append(time.time() -start)
-        vel.append(pl.simulator.vehicle.velocity)
+        vel.append(pl.simulator.vehicle.velocity[1])
         pos.append(lib.to_local(pl.simulator.vehicle.position,init_pos,init_ang))
         while not lib.step_now(last_time,0.2):# and stop != [True]: #wait for the next step (after step_time)
         #print("before wait: ",time.time() - self.last_time[0])

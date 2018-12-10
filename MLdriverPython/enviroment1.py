@@ -123,11 +123,19 @@ class OptimalVelocityPlanner(OptimalVelocityPlannerData):
   #     self.lt = 0 #tmp
         if (self.reset_count % self.reset_every == 0 and self.reset_count > 0): 
             self.error = self.pl.simulator.reset_position()
+            if self.error:
+                return "error"
+         #   print("self.error",self.error)
             self.pl.stop_vehicle()
+          #  print("after stop")
         self.episode_steps = 0
         self.last_time = [0]
         self.pl.restart()#not sure
+       # print("after restart")
         self.error = self.pl.simulator.get_vehicle_data()#read data after time step from last action
+        if self.error:
+            return "error"
+       # print("after restart self.error",self.error)
         #if self.path_source == "saved_random" or self.path_source == "create_random":
         if seed == None:
             seed = int.from_bytes(os.urandom(8), byteorder="big")
@@ -148,6 +156,8 @@ class OptimalVelocityPlanner(OptimalVelocityPlannerData):
         #first state:
         local_path = self.pl.get_local_path()#num_of_points = self.visualized_points
         self.error = self.pl.send_desired_path()
+        if self.error:
+            return "error"
         if self.mode == 'DDPG':
             
             state = get_ddpg_state(self.pl,local_path,self.feature_points,self.distance_between_points,self.max_velocity,self.max_curvature)
@@ -169,7 +179,7 @@ class OptimalVelocityPlanner(OptimalVelocityPlannerData):
         #if self.end_indication_flag:
         #    dis_from_end = self.features_num*self.feature_points - self.pl.in_vehicle_reference_path.distance[self.pl.main_index]
             #self.dataManager.add(('curvature',(self.pl.desired_path.curvature)))
- 
+        print("reset done")
         self.reset_count+=1
         return state
 
@@ -194,16 +204,16 @@ class OptimalVelocityPlanner(OptimalVelocityPlannerData):
         #temp_last_time = self.last_time[0]
 
         time_step_error = lib.wait_until_end_step(self.last_time,self.step_time)
-
+        t = time.clock()
         #print("after wait: ",time.time() - temp_last_time)
         #get next state:
         self.error = self.pl.simulator.get_vehicle_data()#read data after time step from last action
         if self.mode == "model_based" and steer is not None:
             self.command(action,steer)#send action immidetlly after get state data. this action is based upon the estimation of the current state
         # that is estimated from the previus state
-        t = time.clock()
+        
         #print (t - self.lt)
-        self.lt = t
+        #self.lt = t
        # print("after get data: ",time.time() - temp_last_time)
        # print("before get_local_path: ",time.time() - self.last_time[0])
         local_path = self.pl.get_local_path(num_of_points = self.visualized_points)#num_of_points = visualized_points
@@ -239,16 +249,19 @@ class OptimalVelocityPlanner(OptimalVelocityPlannerData):
         #print("roll:",self.pl.simulator.vehicle.angle)
         self.dataManager.roll.append(self.pl.simulator.vehicle.angle[2])
         self.dataManager.wheels_vel.append(self.pl.simulator.vehicle.wheels_vel)
+        self.dataManager.time_stamps.append(self.pl.simulator.vehicle.last_time_stamp) 
+        self.dataManager.input_time.append(self.pl.simulator.vehicle.input_time) 
+        self.dataManager.step_times.append(t)
         #get reward:
         if self.lower_bound_flag:
             analytic_vel = self.comp_analytic_velocity(next_state)
-            reward = get_reward(self.pl.simulator.vehicle.velocity,self.max_velocity,mode,lower_bound = analytic_vel)
+            reward = get_reward(self.pl.simulator.vehicle.velocity[1],self.max_velocity,mode,lower_bound = analytic_vel)
 
-        reward = get_reward(self.pl.simulator.vehicle.velocity,self.max_velocity,mode)#,analytic_velocity = local_path.analytic_velocity[0])#
+        reward = get_reward(self.pl.simulator.vehicle.velocity[1],self.max_velocity,mode)#,analytic_velocity = local_path.analytic_velocity[0])#
 
         if self.episode_steps > self.max_episode_steps:
             mode = 'max_steps'
-        #if self.pl.simulator.vehicle.velocity > local_path.analytic_velocity_limit[0]:
+        #if self.pl.simulator.vehicle.velocity[1] > local_path.analytic_velocity_limit[0]:
         #    mode = 'cross'
         if mode != 'ok':
             #if mode != 'path end' and mode != 'max_steps':
@@ -338,7 +351,7 @@ class OptimalVelocityPlanner(OptimalVelocityPlannerData):
 
     def comp_const_vel_acc(self,des_vel):
         kp=1.0
-        error =  (des_vel - self.pl.simulator.vehicle.velocity)*kp
+        error =  (des_vel - self.pl.simulator.vehicle.velocity[1])*kp
         return np.clip(error*0.5,-1,1)
 
 
@@ -349,7 +362,7 @@ class OptimalVelocityPlanner(OptimalVelocityPlannerData):
             vel = self.pl.in_vehicle_reference_path.analytic_velocity[-1]
         kp = 100
             #constant velocity:
-        error =  (vel - self.pl.simulator.vehicle.velocity)*kp
+        error =  (vel - self.pl.simulator.vehicle.velocity[1])*kp
         acc = np.clip(error*0.5,-1,1)
         return acc
 
@@ -379,12 +392,12 @@ class OptimalVelocityPlanner(OptimalVelocityPlannerData):
             return 0.0
 
     def check_lower_bound(self,state):
-        vel = self.pl.simulator.vehicle.velocity
+        vel = self.pl.simulator.vehicle.velocity[1]
         analytic_vel = state.analytic_velocity[0]
 
     def comp_steer(self):
         local_path = self.pl.get_local_path(num_of_points = self.visualized_points)
-        steer_target = lib.comp_steer_target(local_path,self.pl.simulator.vehicle.velocity)
+        steer_target = lib.comp_steer_target(local_path,self.pl.simulator.vehicle.velocity[1])
         steer = lib.comp_steer_local(steer_target)
         return steer
     def close(self):

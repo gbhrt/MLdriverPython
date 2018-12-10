@@ -34,7 +34,7 @@ def create_data(envData,net,save_file_path,restore_file_path,gamma,buffer_size,w
             state_path = classes.Path()
             for j in range(0,len(position_state)-1,2):
                 state_path.position.append([position_state[j],position_state[j+1],0.0])
-            lib.comp_velocity_limit_and_velocity(state_path,init_vel = pl.simulator.vehicle.velocity, final_vel = 0)
+            lib.comp_velocity_limit_and_velocity(state_path,init_vel = pl.simulator.vehicle.velocity[1], final_vel = 0)
             acc = state_path.analytic_acceleration[0]
             #print(acc)
             #if i % 1 == 0:

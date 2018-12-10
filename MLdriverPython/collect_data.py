@@ -46,7 +46,7 @@ def collect_random_data(buffer_size,path,name):
                 vel = pl.in_vehicle_reference_path.analytic_velocity[-1]
             kp = 100
             #constant velocity:
-            error =  (vel - pl.simulator.vehicle.velocity)*kp
+            error =  (vel - pl.simulator.vehicle.velocity[1])*kp
             acc = np.clip(error*0.5,-1,1)
             action['steer'] = pl.torque_command(acc)
             action['acc'] = acc
@@ -57,7 +57,7 @@ def collect_random_data(buffer_size,path,name):
             pl.simulator.get_vehicle_data()
 
             next_state['pos'] = pl.simulator.vehicle.position
-            next_state['vel'] = pl.simulator.vehicle.velocity
+            next_state['vel'] = pl.simulator.vehicle.velocity[1]
             next_state['ang'] = pl.simulator.vehicle.angle[1]
             next_state['steer'] = pl.simulator.vehicle.steering #right is positive
             next_state['rel_pos'] = lib.to_local(next_state['pos'],state['pos'],state['ang'])

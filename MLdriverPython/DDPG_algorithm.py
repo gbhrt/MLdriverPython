@@ -138,7 +138,7 @@ def train(env,HP,net,dataManager,seed = None):
            
             if not HP.gym_flag:
                 env.command(a[0])
-            print("time from get state to execute action:",time.time() - env.lt)
+            #print("time from get state to execute action:",time.time() - env.lt)
 
             dataManager.acc_target.append(net.get_target_actions(np.reshape(state, (1, env.observation_space.shape[0])))[0])
             #print("a:",a)

@@ -27,7 +27,7 @@ wheels_vel =[]
 for i in range(20):
     pl.simulator.get_vehicle_data()
     t.append(time.time() -start)
-    vel.append(pl.simulator.vehicle.velocity)
+    vel.append(pl.simulator.vehicle.velocity[1])
     wheels_vel.append(pl.simulator.vehicle.wheels_vel)
     time.sleep(0.2)
 pl.torque_command(-0.2,steer = 0.5)
@@ -35,7 +35,7 @@ for i in range(30):
     pl.simulator.get_vehicle_data()
 
     t.append(time.time() -start)
-    vel.append(pl.simulator.vehicle.velocity)
+    vel.append(pl.simulator.vehicle.velocity[1])
     wheels_vel.append(pl.simulator.vehicle.wheels_vel)
     time.sleep(0.2)
 #pl.simulator.send_drive_commands(-0.2 ,0)#math.sin(0.2*i)  0.276

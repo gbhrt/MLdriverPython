@@ -71,7 +71,7 @@ def get_ddpg_state(pl = None,local_path = None,num_points = 1,distance_between =
 
     
     
-    vel = max(pl.simulator.vehicle.velocity/max_velocity,0)
+    vel = max(pl.simulator.vehicle.velocity[1]/max_velocity,0)
     state = [vel] +  points
     #state = lib.normalize(state,0,30)
 
@@ -96,12 +96,12 @@ def get_model_based_state(pl,last_abs_pos,last_abs_ang,local_path):
     if rel_pos[0] >10:
         print ("error in get state__________________________________________________________________")
         print("pos:",pl.simulator.vehicle.position)
-        a = lib.getch()
+       # a = lib.getch()
 
     rel_ang = pl.simulator.vehicle.angle[1] - last_abs_ang[1]
     if rel_ang  > math.pi: rel_ang  -= 2*math.pi
     if rel_ang  < -math.pi: rel_ang  += 2*math.pi
-    vel = pl.simulator.vehicle.velocity
+    vel = pl.simulator.vehicle.velocity[1]
     steer = pl.simulator.vehicle.steering
     #roll = rel_ang = pl.simulator.vehicle.angle[2]
     roll = pl.simulator.vehicle.angle[2]

@@ -109,7 +109,7 @@ class DataManager:
         dist = pl.in_vehicle_reference_path.distance[pl.main_index]
         self.real_path.distance.append(dist)
         self.real_path.position.append(pl.simulator.vehicle.position)
-        self.real_path.velocity.append(pl.simulator.vehicle.velocity)
+        self.real_path.velocity.append(pl.simulator.vehicle.velocity[1])
         self.real_path.time.append(pl.get_time())
         if velocity_limit != None: self.real_path.analytic_velocity_limit.append(velocity_limit)
         if analytic_vel != None: self.real_path.analytic_velocity.append(analytic_vel)

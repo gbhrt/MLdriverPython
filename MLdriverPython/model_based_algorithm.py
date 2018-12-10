@@ -88,11 +88,7 @@ def train(env,HP,net,Replay,dataManager,trainShared,guiShared,seed = None):
         steer = 0
         acc = 0.7
         while  waitFor.stop != [True]:#while not stoped, the loop break if reached the end or the deviation is to big
-            print("time before Lock:",time.clock()-env.lt)
-            trainShared.algorithmIsIn.clear()#indicates that are ready to take the lock
-            with trainShared.Lock:
-                trainShared.algorithmIsIn.set()
-                print("time after Lock:",time.clock()-env.lt)
+           
                 step_count+=1
                
                 #choose and make action:
@@ -106,14 +102,22 @@ def train(env,HP,net,Replay,dataManager,trainShared,guiShared,seed = None):
 
 
                 else:#not HP.analytic_action
-                    next_steer = pLib.comp_steer_from_next_state(net,env,state,steer,acc)
-                    #print("next state steer:",steer)
+                     #print("time before Lock:",time.clock()-env.lt)
+                    #print("try lock1")
+                    trainShared.algorithmIsIn.clear()#indicates that are ready to take the lock
+                    with trainShared.Lock:
+                       # print("locked1")
+                        trainShared.algorithmIsIn.set()
+                        #net and Replay are shared
+                #print("time after Lock:",time.clock()-env.lt)
+                        next_steer = pLib.comp_steer_from_next_state(net,env,state,steer,acc)
+                        #print("next state steer:",steer)
                 
-                    fail_flag = False
-                    next_acc,predicted_values,fail_flag = comp_MB_acc(net,env,state,acc)
-                    print("fail_flag:",fail_flag)
-                    if fail_flag:
-                        next_steer = 0.0
+                        fail_flag = False
+                        next_acc,predicted_values,fail_flag = comp_MB_acc(net,env,state,acc)
+                        print("fail_flag:",fail_flag)
+                        if fail_flag:
+                            next_steer = 0.0
               
                     with guiShared.Lock:
                         guiShared.predicded_path = [pred[0] for pred in predicted_values]
@@ -147,7 +151,12 @@ def train(env,HP,net,Replay,dataManager,trainShared,guiShared,seed = None):
                     #t = time.time()
                     #print (t - lt)
                     #lt = t
-                    Replay.add(copy.deepcopy((state,[acc,steer],next_state,done,fail)))#  
+                    #print("try lock2")
+                    trainShared.algorithmIsIn.clear()#indicates that are ready to take the lock
+                    with trainShared.Lock:
+                       # print("locked2")
+                        trainShared.algorithmIsIn.set()
+                        Replay.add(copy.deepcopy((state,[acc,steer],next_state,done,fail)))#  
 
                     next_state['path'] = tmp_next_path
 
@@ -231,6 +240,7 @@ def train(env,HP,net,Replay,dataManager,trainShared,guiShared,seed = None):
     #end all:
     
     env.close()
+    trainShared.train = False
     net.save_model(HP.save_file_path)
     Replay.save(HP.save_file_path)
     #Replay1.save(HP.save_file_path)

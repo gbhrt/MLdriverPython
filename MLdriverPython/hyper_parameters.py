@@ -62,13 +62,13 @@ class ModelBasedHyperParameters:
         self.gym_flag = False
         self.render_flag = True
         self.plot_flag = True
-        self.restore_flag = True
+        self.restore_flag = False
         self.skip_run = False
         self.reset_every = 3
         self.save_every = 100
         self.save_every_time = 5000 #minutes
         self.seed = 1111
-        self.save_name = "test"#"test_no_train1"#"MB_1_003_max02"
+        self.save_name = "trained4"#"test_no_train1"#"MB_1_003_max02"
         self.save_file_path = os.getcwd()+ "\\files\\models\\model_based\\"+self.save_name+"\\"
         #test_no_train1 model trained in trained1. replay is now more than 20000
         #trained1 replay contain more than 6000. test loss 0.02

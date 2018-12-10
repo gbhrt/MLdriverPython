@@ -32,7 +32,7 @@ def create_path_in_run(points,file_name):
         pl.real_path.position.append(pl.simulator.vehicle.position)
         pl.real_path.angle.append(pl.simulator.vehicle.angle)
         pl.real_path.steering.append(pl.simulator.vehicle.steering)
-        pl.real_path.velocity.append(pl.simulator.vehicle.velocity)
+        pl.real_path.velocity.append(pl.simulator.vehicle.velocity[1])
         time.sleep(resolution)
         return
 
@@ -159,7 +159,7 @@ if __name__ == "__main__":
     pl.simulator.send_drive_commands(10,0.2)
     while waitFor.stop != [True]:
         pl.simulator.get_vehicle_data()
-        print("velocity: ",pl.simulator.vehicle.velocity)
+        print("velocity: ",pl.simulator.vehicle.velocity[1])
     pl.stop_vehicle()
 
     pl.end()
