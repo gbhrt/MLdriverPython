@@ -13,9 +13,9 @@ class Vehicle:
         self.angle = [0,0,0]
         self.steering = 0
         self.velocity = [0,0,0]
-        self.rot_velocity = [0,0,0]
+        self.angular_velocity = [0,0,0]
         self.acceleration = [0,0,0]
-        self.rot_acceleration = [0,0,0]
+        self.angular_acceleration = [0,0,0]
 
         self.wheels_vel = [0,0,0,0]
         self.last_time_stamp = 0

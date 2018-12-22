@@ -104,7 +104,7 @@ if __name__ == "__main__":
     waitFor = lib.waitFor()
     HP = hyper_parameters.ModelBasedHyperParameters()
     envData = enviroment1.OptimalVelocityPlannerData('model_based')
-    net = model_based_network(envData.observation_space.shape[0],6,HP.alpha,envData.observation_space.range)
+    net = model_based_network(envData.X_n,envData.Y_n,HP.alpha,envData.observation_space.range)
 
     Replay = pLib.Replay(1000000)
     #velocity, steering angle, steering action, acceleration action,  rel x, rel y, rel ang, velocity next, steering next, roll
@@ -127,50 +127,87 @@ if __name__ == "__main__":
     print("test loss: ",net.get_loss(X,Y_))
     #compare one step prediction:
    ## Y = np.array([net.get_Y(x) for x in X])
-   # Y = net.get_Y(X)
-   # Y = np.array(Y)
-   # Y_ = np.array(Y_)
-   # errors = Y - Y_
+    Y = net.get_Y(X)
+    Y = np.array(Y)
+    Y_ = np.array(Y_)
+    errors = Y - Y_
 
 
-    #compare n step prediction:
-    vec_Y_n =  []
-    vec_Y_n_ = []
-    n = 2
-    for i in range(len(X)-n):
-        Y_n, Y_n_ = compare_n_samples(net,X[i:i+n],end[i:i+n],Y_[i:i+n],n)#compute the predicted and real state during n steps 
-        if  len(Y_n) < n:
-            continue
-        vec_Y_n_.append(Y_n_[-1])
-        vec_Y_n.append(Y_n[-1])
+    ##compare n step prediction:
+    #vec_Y_n =  []
+    #vec_Y_n_ = []
+    #n = 2
+    #for i in range(len(X)-n):
+    #    Y_n, Y_n_ = compare_n_samples(net,X[i:i+n],end[i:i+n],Y_[i:i+n],n)#compute the predicted and real state during n steps 
+    #    if  len(Y_n) < n:
+    #        continue
+    #    vec_Y_n_.append(Y_n_[-1])
+    #    vec_Y_n.append(Y_n[-1])
 
-    vec_Y_n = np.array(vec_Y_n)
-    vec_Y_n_ = np.array(vec_Y_n_)
-    errors = vec_Y_n - vec_Y_n_
+    #vec_Y_n = np.array(vec_Y_n)
+    #vec_Y_n_ = np.array(vec_Y_n_)
+    #errors = vec_Y_n - vec_Y_n_
 
-    fail_Y, fail_Y_ = [],[]
-    for y, y_ in zip(vec_Y_n,vec_Y_n_):
-        if abs(y[5]) < envData.max_plan_roll and abs(y_[5]) > envData.max_plan_roll:
-            fail_Y.append(y[5])
-            fail_Y_.append(y_[5])
-    total_fails = 0
-    for roll in vec_Y_n_[:,5]:
-        if roll > envData.max_plan_roll:
-            total_fails+=1 
-    print("total_fails:",total_fails)
-    print("fails: ",len(fail_Y))
-    plot_comparison(fail_Y_, fail_Y,"fails")
+    #fail_Y, fail_Y_ = [],[]
+    #for y, y_ in zip(vec_Y_n,vec_Y_n_):
+    #    if abs(y[5]) < envData.max_plan_roll and abs(y_[5]) > envData.max_plan_roll:
+    #        fail_Y.append(y[5])
+    #        fail_Y_.append(y_[5])
+    #total_fails = 0
+    #for roll in vec_Y_n_[:,5]:
+    #    if roll > envData.max_plan_roll:
+    #        total_fails+=1 
+    #print("total_fails:",total_fails)
+    #print("fails: ",len(fail_Y))
+    #plot_comparison(fail_Y_, fail_Y,"fails")
 
-    plot_distribution(errors[:,0],"error x")
-    plot_distribution(errors[:,1],"error y")
-    plot_distribution(errors[:,2],"error ang")
-    plot_distribution(errors[:,3],"error vel")
-    plot_distribution(errors[:,5],"error roll")
-    #plot_comparison(Y[:,0], Y_[:,0],"x")
-    #plot_comparison(vec_Y_n_[:,0], vec_Y_n[:,0],"x")
-    #plot_comparison(vec_Y_n_[:,1], vec_Y_n[:,1],"y")
-    #plot_comparison(vec_Y_n_[:,2], vec_Y_n[:,2],"ang")
-    #plot_comparison(vec_Y_n_[:,3], vec_Y_n[:,3],"vel")
-    plot_comparison(vec_Y_n_[:,5], vec_Y_n[:,5],"roll")
+    #plot_distribution(errors[:,0],"error x")
+    #plot_distribution(errors[:,1],"error y")
+    #plot_distribution(errors[:,2],"error ang")
+    #plot_distribution(errors[:,3],"error vel")
+    #plot_distribution(errors[:,5],"error roll")
+    ##plot_comparison(Y[:,0], Y_[:,0],"x")
+    #plot_comparison(vec_Y_n_[:,0], vec_Y_n[:,0],"ang")
+    #plot_comparison(vec_Y_n_[:,1], vec_Y_n[:,1],"vel")
+    #plot_comparison(vec_Y_n_[:,2], vec_Y_n[:,2],"roll")
+    #plot_comparison(vec_Y_n_[:,3], vec_Y_n[:,3],"x")
+    #plot_comparison(vec_Y_n_[:,5], vec_Y_n[:,5],"y")
+
+    plot_comparison(Y_[:,0], Y[:,0],"vel")
+    plot_comparison(Y_[:,1], Y[:,1],"steer")
+    plot_comparison(Y_[:,2], Y[:,2],"roll")
+    plot_comparison(Y_[:,3], Y[:,3],"x")
+    plot_comparison(Y_[:,4], Y[:,4],"y")
+    plot_comparison(Y_[:,5], Y[:,5],"ang")
+
+    
+    
+    #plot_comparison(Y_[:,0], Y[:,0],"vel0")
+    #plot_comparison(Y_[:,1], Y[:,1],"vel1")
+    #plot_comparison(Y_[:,2], Y[:,2],"vel2")
+    #plot_comparison(Y_[:,3], Y[:,3],"ang_vel0")
+    #plot_comparison(Y_[:,4], Y[:,4],"ang_vel1")
+    #plot_comparison(Y_[:,5], Y[:,5],"ang_vel2")
+    #plot_comparison(Y_[:,6], Y[:,6],"acc0")
+    #plot_comparison(Y_[:,7], Y[:,7],"acc1")
+    #plot_comparison(Y_[:,8], Y[:,8],"acc2")
+    #plot_comparison(Y_[:,9], Y[:,9],"ang_acc0")
+    #plot_comparison(Y_[:,10], Y[:,10],"ang_acc1")
+    #plot_comparison(Y_[:,11], Y[:,11],"ang_acc2")
+    #plot_comparison(Y_[:,12], Y[:,12],"steer")
+    #plot_comparison(Y_[:,13], Y[:,13],"roll")
+    #plot_comparison(Y_[:,14], Y[:,14],"dx")
+    #plot_comparison(Y_[:,15], Y[:,15],"dy")
+    #plot_comparison(Y_[:,16], Y[:,16],"dang")
+
     plt.show()
 
+                 #Y_.append( lib.flat_list(state[i]['vel'])+
+                 #       lib.flat_list(state[i]['angular_vel'])+
+                 #       lib.flat_list(state[i]['acc'])+
+                 #       lib.flat_list(state[i]['angular_acc'])+
+                 #       [next_state[i]['steer'], 
+                 #       next_state[i]['roll']]+
+                 #       lib.flat_list(next_state[i]['rel_pos'])+
+                 #       [next_state[i]['rel_ang']]
+                 #       )

@@ -34,7 +34,9 @@ def run(guiShared):
     #net = DDPG_network(envData.observation_space.shape[0],envData.action_space.shape[0],envData.action_space.high[0],\
     #    HP.alpha_actor,HP.alpha_critic,HP.alpha_analytic_actor,HP.alpha_analytic_critic,tau = HP.tau,seed = HP.seed,feature_data_n = envData.feature_data_num, conv_flag = HP.conv_flag)  
 
-    net = model_based_network(envData.observation_space.shape[0],6,HP.alpha,envData.observation_space.range)
+   # net = model_based_network(envData.observation_space.shape[0],6,HP.alpha,envData.observation_space.range)
+    net = model_based_network(envData.X_n,envData.Y_n,HP.alpha,envData.observation_space.range)
+
     if HP.restore_flag:
         net.restore(HP.restore_file_path)
 
@@ -57,24 +59,4 @@ def run(guiShared):
     trainShared.exit = True
     guiShared.exit_program = True
 
-
-    #total_rewards_vec = []
-    #for i in range(5):
-    #    total_rewards_vec.append(DDPG_algorithm.train(env,i))
-    #    print(total_rewards_vec)
-    #print(total_rewards_vec)
-
-    
-    #for i in range(5):
-    #    plt.plot(total_rewards_vec[i])
-    #mean_rewards = []
-    #for j in range(len(total_rewards_vec[0])):
-    #    sum = 0
-    #    for i in range(5):
-    #        sum+=total_rewards_vec[i][j]
-    #    mean_rewards.append(sum/5)
-
-    #plt.plot(mean_rewards,'o')
-
-    #plt.show()
 

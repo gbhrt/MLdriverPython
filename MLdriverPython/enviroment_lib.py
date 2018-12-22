@@ -2,6 +2,8 @@ import library as lib
 import numpy as np
 import math
 import classes
+import copy
+
 def choose_velocity_limit_points(local_path,number,distance_between_points):#return points from the local path, choose a point every "skip" points
     index = 0
     last_index = 0
@@ -92,27 +94,37 @@ def get_ddpg_state(pl = None,local_path = None,num_points = 1,distance_between =
     return state
 
 def get_model_based_state(pl,last_abs_pos,last_abs_ang,local_path):
-    rel_pos = lib.to_local(pl.simulator.vehicle.position,last_abs_pos,last_abs_ang[1])
-    if rel_pos[0] >10:
+    rel_pos = lib.to_local(pl.simulator.vehicle.position,last_abs_pos,last_abs_ang[1])#relative position
+    if rel_pos[0] >10:#temp error
         print ("error in get state__________________________________________________________________")
         print("pos:",pl.simulator.vehicle.position)
-       # a = lib.getch()
 
-    rel_ang = pl.simulator.vehicle.angle[1] - last_abs_ang[1]
+    rel_ang = pl.simulator.vehicle.angle[1] - last_abs_ang[1]#relative angle
     if rel_ang  > math.pi: rel_ang  -= 2*math.pi
     if rel_ang  < -math.pi: rel_ang  += 2*math.pi
-    vel = pl.simulator.vehicle.velocity[1]
+    #vel = pl.simulator.vehicle.velocity[1]
     steer = pl.simulator.vehicle.steering
-    #roll = rel_ang = pl.simulator.vehicle.angle[2]
     roll = pl.simulator.vehicle.angle[2]
+    #state = {'rel_pos':rel_pos,
+    #         'rel_ang':rel_ang,
+    #         'vel':vel,
+    #         'steer':steer,
+    #         'roll':roll,
+    #         'path':local_path
+    #         }
+
     state = {'rel_pos':rel_pos,
              'rel_ang':rel_ang,
-             'vel':vel,
+             'vel':pl.simulator.vehicle.velocity,
+             'angular_vel':pl.simulator.vehicle.angular_velocity,
+             'acc':pl.simulator.vehicle.acceleration,
+             'angular_acc':pl.simulator.vehicle.angular_acceleration,
              'steer':steer,
              'roll':roll,
              'path':local_path
              }
-    
+    #last_abs_pos = copy.copy(pl.simulator.vehicle.position)
+    #last_abs_ang = copy.copy(pl.simulator.vehicle.angle)
     last_abs_pos[0] = pl.simulator.vehicle.position[0]
     last_abs_pos[1] = pl.simulator.vehicle.position[1]
     last_abs_pos[2] = pl.simulator.vehicle.position[2]

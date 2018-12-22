@@ -80,9 +80,9 @@ def train(env,HP,net,Replay,dataManager,trainShared,guiShared,seed = None):
         if env.error:
             i-=1
             continue
-        if i == 0:
-            print("update nets first time")
-            pLib.model_based_update([state], [[0,0]], [state],[False],net,HP,env)
+        #if i == 0:
+        #    print("update nets first time")
+        #    pLib.model_based_update([state], [[0,0]], [state],[False],net,HP,env)
 
         #episode_start_time = time.time()
         steer = 0

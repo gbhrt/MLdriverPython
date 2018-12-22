@@ -1,126 +1,11 @@
 import library as lib
+import simulator_thread 
 from classes import *
-from communicationLib import Comm
+
 import copy
 import random
 import time
-class SimVehicle:#simulator class - include communication to simulator, vehicle state and world state (recived states).
-                 #
-                 #also additional objects there like drawed path
 
-    def __init__(self):
-        self.UDP_IP = "127.0.0.1"
-        self.UDP_PORT = 5007
-        self.vehicle = Vehicle()
-    def set_address(self,IP,PORT):
-        self.UDP_IP = IP
-        self.UDP_PORT = PORT
-
-    def connect(self):
-        self.comm = Comm()
-        self.comm.connectToServer(self.UDP_IP,self.UDP_PORT)
-        return
-
-    def send_drive_commands(self,velocity,steering):#send drive commands to simulator
-        data_type = 1
-        #print("vel",velocity)
-        self.comm.serialize(data_type)
-        self.comm.serialize(velocity)
-        self.comm.serialize(steering)
-        self.comm.sendData()
-        self.comm.readData()
-        data_type = self.comm.deserialize(1,int)
-        error = 0
-        if data_type == -1:
-           print("error read data____________________________________________________________________________")
-           error = 1 
-        return error
-    def send_path(self,path_des):
-        data_type = 2
-        self.comm.serialize(data_type)
-        self.comm.serialize(len(path_des.position))
-        for i in range(len(path_des.position)):
-            self.comm.serialize(path_des.position[i][0])
-        for i in range(len(path_des.position)):
-            self.comm.serialize(path_des.position[i][1])
-            #comm.serialize(path_des.position[i].z)
-        self.comm.sendData()
-        self.comm.readData()
-        data_type = self.comm.deserialize(1,int)
-        error = 0
-        if data_type == -1:
-           print("error read data______________________________________________________________________")
-           error = 1 
-        return error
-    def send_target_points(self,points):
-        data_type = 5
-        self.comm.serialize(data_type)
-        self.comm.serialize(len(points))
-        for point in points:
-            self.comm.serialize(point[0])
-        for point in points:
-            self.comm.serialize(point[1])
-            #comm.serialize(path_des.position[i].z)
-        self.comm.sendData()
-        self.comm.readData()
-        data_type = self.comm.deserialize(1,int)
-        error = 0
-        if data_type == -1:
-           print("error read data______________________________________________________________________")
-           error = 1 
-        return error
-    def read_vehicle_data(self):
-        self.comm.readData()
-        data_type = self.comm.deserialize(1,int) 
-        error = 0
-        if data_type == -1:
-            return 1  
-                 
-        self.vehicle.position = lib.changeZtoY(self.comm.deserialize(3,float))
-        self.vehicle.position[2] = 0.
-        self.vehicle.angle = lib.change_to_rad(self.comm.deserialize(3,float))
-        if self.vehicle.angle[1] > math.pi:#angle form 0 to 2 pi, convert from -pi to pi
-            self.vehicle.angle[1] = -(2*math.pi - self.vehicle.angle[1])
-        if self.vehicle.angle[0] > math.pi:#angle form 0 to 2 pi, convert from -pi to pi
-            self.vehicle.angle[0] = -(2*math.pi - self.vehicle.angle[0])
-        if self.vehicle.angle[2] > math.pi:#angle form 0 to 2 pi, convert from -pi to pi
-            self.vehicle.angle[2] = -(2*math.pi - self.vehicle.angle[2])
-       # self.vehicle.backPosition = lib.changeZtoY(self.comm.deserialize(3,float))
-        self.vehicle.velocity = lib.changeZtoY(self.comm.deserialize(3,float))
-        self.vehicle.rot_velocity = self.comm.deserialize(3,float)#in radians
-        self.vehicle.acceleration =self.comm.deserialize(3,float)
-        self.vehicle.rot_acceleration =self.comm.deserialize(3,float)#in radians
-        self.vehicle.wheels_vel = lib.change_to_rad(self.comm.deserialize(4,float))
-
-        self.vehicle.steering = self.comm.deserialize(1,float)
-        self.vehicle.last_time_stamp = self.comm.deserialize(1,float)
-        self.vehicle.input_time = self.comm.deserialize(1,float)
-        #print("velocity:",self.vehicle.velocity)
-        #print("acceleration:",self.vehicle.acceleration)
-        #print("rotation velocity:",self.vehicle.rot_velocity)
-        #print("rotation acceleration:",self.vehicle.rot_acceleration)
-        print("time_stamp:",self.vehicle.last_time_stamp)
-        return error
-    def get_vehicle_data(self):
-        data_type = 0
-        self.comm.serialize(data_type)
-        self.comm.sendData()
-        error = self.read_vehicle_data()
-        return error 
-    def reset_position(self):
-        data_type = 3
-        self.comm.serialize(data_type)
-        command = 0
-        self.comm.serialize(command)
-        self.comm.sendData()
-        self.comm.readData()
-        data_type = self.comm.deserialize(1,int)
-        time.sleep(1)
-        error = 0
-        if data_type == -1:
-            print("error read data__________________________________________________________")
-            error = 1
-        return error
 
 
 
@@ -130,15 +15,17 @@ class Planner(PathManager):#planner - get and send data to simulator. input - mi
         self.desired_path = Path()
         self.reference_free_path = Path()#a path without reference system (start at (0,0) and angle 0)
         self.in_vehicle_reference_path = Path()# reference_free_path shifted and rotated to vehicle position (vehicle on the path start)
-        self.simulator = SimVehicle()      
+        
+        self.simulator = simulator_thread.start_simulator_connection()#start thread for connection with the simulator 
         self.start_time = 0
         self.index = 0
         self.main_index = 0
         self.mode = mode
-        self.connected = False
+        
         #if mode == "simple":
-        if mode != "dont_connect":
-            self.connected = self.start_simple()         
+        #if mode != "dont_connect":
+        self.restart()
+        print("started simple scene in simulator")       
                  
         return
 
@@ -190,20 +77,10 @@ class Planner(PathManager):#planner - get and send data to simulator. input - mi
         self.init_state = copy.copy(self.simulator.vehicle)#save initial state of the vehicle(local reference system)
         
 
-    def start_simple(self):
-        try:
-            self.simulator.connect()
-            print("connected")
-        except:
-            print("cannot connect to simulator")
-            return False
-        
-        self.restart()
-        print("started simple scene in simulator")
-        return True
+
    
     def end(self):
-        self.simulator.comm.end_connection()
+        self.simulator.end_connection()
         return 
 
     def dist_from_target(self):

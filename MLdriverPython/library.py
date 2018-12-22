@@ -29,6 +29,8 @@ def clear_screen():
 #def wait_for(stop,command):
 #    _thread.start_new_thread(input_thread, (stop,command,))
 #    return
+def flat_list(alist):
+    return [item for item in alist]
 
 def normalize(data,norm_vec):
     n_data = copy.deepcopy(data)

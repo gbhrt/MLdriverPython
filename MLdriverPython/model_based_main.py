@@ -12,7 +12,7 @@ class programThread (threading.Thread):
       
    def run(self):
         print ("Starting " + self.name)
-        model_based_run.run(guiShared)
+        model_based_run.run(self.guiShared)
         print ("Exiting " + self.name)
 
 #def print_time(threadName, counter, delay):
@@ -27,9 +27,8 @@ if __name__ == "__main__":
 
     guiShared = shared.guiShared()
 
-    # Create new threads
+    # Create new thread
     programThread = programThread(guiShared)
-    # Start new Threads
     programThread.start()
 
     #start the gui:

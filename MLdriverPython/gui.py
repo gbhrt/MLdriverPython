@@ -2,9 +2,9 @@ import math
 import pyglet
 import numpy as np
 from pyglet.gl import *
-import threading
+#import threading
 import time
-import ion_graph
+#import ion_graph
 import copy
 
 def PointsInCircum(r, n=25, pi=3.14):
@@ -128,14 +128,16 @@ def start_gui(guiShared):
         #glEnd()
         with guiShared.Lock: 
             draw_win(win,guiShared)
+            if guiShared.exit_program:
+                pyglet.app.exit()
         #ionGraph.update(guiShared)
         #test(win)
         
 
-            
+         
 
     # every 1/10 th get the next frame
     pyglet.clock.schedule(update_frame, 1/10.0)
     pyglet.app.run()
-
+    
 

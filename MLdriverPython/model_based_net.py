@@ -13,6 +13,8 @@ class model_based_network(NetLib):
         tf.reset_default_graph()   
         self.hidden_layer_nodes1 = 200
         self.hidden_layer_nodes2 = 100
+        #self.hidden_layer_nodes1 = 400
+        #self.hidden_layer_nodes2 = 200
 
         self.alpha = alpha#0.001
 
