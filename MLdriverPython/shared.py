@@ -3,7 +3,9 @@ import classes
 class guiShared:
     def __init__(self):
         self.Lock = threading.Lock()
-        self.exit_program = False
+        self.request_exit = False
+        self.exit = False
+        self.pause_after_episode_flag = False
         self.path = None
         self.state = None
         self.steer = None
@@ -16,6 +18,7 @@ class trainShared:
     def __init__(self):
         self.Lock = threading.Lock()
         self.algorithmIsIn = threading.Event()
+        self.request_exit = False
         self.exit = False
         self.train = False
 

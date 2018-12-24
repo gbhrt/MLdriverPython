@@ -34,6 +34,9 @@
     <Compile Include="communicationLib.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="compare_performance.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="c_functions.py" />
     <Compile Include="data_manager.py">
       <SubType>Code</SubType>
@@ -68,6 +71,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="test_net_performance.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="tkinker_gui.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="train_offline.py">

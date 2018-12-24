@@ -209,8 +209,7 @@ def find_index_on_path(path,pos,start_index = 0):#return closest index to vehicl
             distances[i] = (path.position[i][0] - pos[0])**2 + (path.position[i][1] - pos[1])**2
     index_min = np.argmin(distances)
     return index_min
-def comp_steer_general(path,pos,ang,vel):
-    index = find_index_on_path(path,pos)
+def comp_steer_general(path,index,pos,ang,vel):#nearest index on path 
     target = comp_steer_target(path,vel,index = index)
     local_target = to_local(np.asarray(target),np.asarray(pos),ang)#compute target in vehicle reference system
     steer = comp_steer(pos,ang,target)
@@ -565,7 +564,7 @@ class waitFor:
             else:
                 command[0] = inp
                
-            time.sleep(00.2)#0.02
+            time.sleep(0.02)#0.02
         return
     def wait_for(self):
         _thread.start_new_thread(self.input_thread, (self.stop,self.command,))

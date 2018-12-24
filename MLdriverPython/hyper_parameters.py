@@ -68,11 +68,9 @@ class ModelBasedHyperParameters:
         self.save_every = 100
         self.save_every_time = 5000 #minutes
         self.seed = 1111
-        self.save_name = "trained4"#"test_no_train1"#"MB_1_003_max02"
+        self.save_name = "friction1"
         self.save_file_path = os.getcwd()+ "\\files\\models\\model_based\\"+self.save_name+"\\"
-        #test_no_train1 model trained in trained1. replay is now more than 20000
-        #trained1 replay contain more than 6000. test loss 0.02
-        self.restore_name = "trained4"#"trained1"#train_4_10"
+        self.restore_name = "friction1"
         self.restore_file_path = os.getcwd()+ "\\files\\models\\model_based\\"+self.restore_name+"\\"
 
         if self.always_no_noise_flag:

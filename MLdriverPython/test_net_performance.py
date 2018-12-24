@@ -6,6 +6,10 @@ import numpy as np
 import library as lib
 import enviroment1
 
+def save_Y_Y_(file_name,Y,Y_):
+    with open(file_name, 'w') as f:#append data to the file
+        for y, y_ in zip(Y,Y_):
+            f.write("%s\t %s\t\n" % (y,y_))
 def plot_distribution(data,name):
     plt.figure(name+" distribution")
     plt.hist(data,bins='auto')
@@ -95,7 +99,7 @@ def compare_n_samples(net,X,end,Y_,n):
     return abs_pred,abs_real_pred
 
 if __name__ == "__main__": 
-    restore = True
+    restore = False
     train = True
     split_buffer = True
     train_part = 0.5
@@ -131,6 +135,8 @@ if __name__ == "__main__":
     Y = np.array(Y)
     Y_ = np.array(Y_)
     errors = Y - Y_
+
+    save_Y_Y_("data1.txt",Y,Y_)
 
 
     ##compare n step prediction:
@@ -173,15 +179,16 @@ if __name__ == "__main__":
     #plot_comparison(vec_Y_n_[:,3], vec_Y_n[:,3],"x")
     #plot_comparison(vec_Y_n_[:,5], vec_Y_n[:,5],"y")
 
-    plot_comparison(Y_[:,0], Y[:,0],"vel")
-    plot_comparison(Y_[:,1], Y[:,1],"steer")
-    plot_comparison(Y_[:,2], Y[:,2],"roll")
-    plot_comparison(Y_[:,3], Y[:,3],"x")
-    plot_comparison(Y_[:,4], Y[:,4],"y")
-    plot_comparison(Y_[:,5], Y[:,5],"ang")
+    #plot_comparison(Y_[:,0], Y[:,0],"vel")
+    #plot_comparison(Y_[:,1], Y[:,1],"steer")
+    #plot_comparison(Y_[:,2], Y[:,2],"roll")
+    #plot_comparison(Y_[:,3], Y[:,3],"x")
+    #plot_comparison(Y_[:,4], Y[:,4],"y")
+    #plot_comparison(Y_[:,5], Y[:,5],"ang")
 
     
-    
+    plot_comparison(Y_[:,0], Y[:,0],"roll")
+    plot_distribution(errors[:,0],"error roll")
     #plot_comparison(Y_[:,0], Y[:,0],"vel0")
     #plot_comparison(Y_[:,1], Y[:,1],"vel1")
     #plot_comparison(Y_[:,2], Y[:,2],"vel2")
@@ -202,12 +209,4 @@ if __name__ == "__main__":
 
     plt.show()
 
-                 #Y_.append( lib.flat_list(state[i]['vel'])+
-                 #       lib.flat_list(state[i]['angular_vel'])+
-                 #       lib.flat_list(state[i]['acc'])+
-                 #       lib.flat_list(state[i]['angular_acc'])+
-                 #       [next_state[i]['steer'], 
-                 #       next_state[i]['roll']]+
-                 #       lib.flat_list(next_state[i]['rel_pos'])+
-                 #       [next_state[i]['rel_ang']]
-                 #       )
+       

@@ -35,6 +35,7 @@ class OptimalVelocityPlannerData:
         self.action_space_n = 1
         self.visualized_points = int(self.feature_points/0.05) + 10 #how many points show on the map and lenght of local path
         self.max_deviation =  10 # [m] if more then maximum - end episode 
+        self.max_plan_deviation = 3
         self.max_velocity = 30
         self.max_angular_velocity = 6
         self.max_pitch = 0.3#0.3
@@ -124,6 +125,8 @@ class OptimalVelocityPlannerData:
                         next_state[i]['rel_pos'][1],
                         next_state[i]['rel_ang']]
                         )
+             #Y_.append([next_state[i]['roll']])
+
         return X,Y_
         #if mode == 'model_based':
         #    self.get_state = get_model_based_state

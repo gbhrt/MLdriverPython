@@ -1,4 +1,5 @@
 import tensorflow as tf
+import tflearn
 import os
 import pathlib
 import numpy as np
@@ -11,29 +12,39 @@ class model_based_network(NetLib):
     def __init__(self,X_n,Y_n,alpha,norm_vec):
         self.norm_vec = norm_vec
         tf.reset_default_graph()   
-        self.hidden_layer_nodes1 = 200
-        self.hidden_layer_nodes2 = 100
-        #self.hidden_layer_nodes1 = 400
-        #self.hidden_layer_nodes2 = 200
+        #hidden_layer_nodes1 = 200
+        #hidden_layer_nodes2 = 100
+        hidden_layer_nodes1 = 200
+        hidden_layer_nodes2 = 100
 
         self.alpha = alpha#0.001
 
         self.X=tf.placeholder(tf.float32, [None,X_n])
         self.Y_=tf.placeholder(tf.float32,[None,Y_n])
-        #X = tflearn.layers.normalization.batch_normalization(X)
 
-        self.W1 = tf.Variable(tf.truncated_normal([X_n,self.hidden_layer_nodes1], stddev=0.1))
-        self.b1 = tf.Variable(tf.constant(0.1, shape=[self.hidden_layer_nodes1]))
-        self.z1 = tf.nn.relu(tf.add(tf.matmul(self.X,self.W1),self.b1))
+        #self.W1 = tf.Variable(tf.truncated_normal([X_n,hidden_layer_nodes1], stddev=0.1))
+        #self.b1 = tf.Variable(tf.constant(0.1, shape=[hidden_layer_nodes1]))
+        #self.z1 = tf.nn.relu(tf.add(tf.matmul(self.X,self.W1),self.b1))
 
-        self.W2 = tf.Variable(tf.truncated_normal([self.hidden_layer_nodes1,self.hidden_layer_nodes2], stddev=0.1))
-        self.b2 = tf.Variable(tf.constant(0.1, shape=[self.hidden_layer_nodes2]))
-        self.z2 = tf.nn.relu(tf.matmul(self.z1,self.W2)+self.b2)
+        #self.W2 = tf.Variable(tf.truncated_normal([hidden_layer_nodes1,hidden_layer_nodes2], stddev=0.1))
+        #self.b2 = tf.Variable(tf.constant(0.1, shape=[hidden_layer_nodes2]))
+        #self.z2 = tf.nn.relu(tf.matmul(self.z1,self.W2)+self.b2)
 
-        self.W3 = tf.Variable(tf.truncated_normal([self.hidden_layer_nodes2,Y_n], stddev=0.1))
-        self.b3 = tf.Variable(0.)
+        #self.W3 = tf.Variable(tf.truncated_normal([hidden_layer_nodes2,Y_n], stddev=0.1))
+        #self.b3 = tf.Variable(tf.constant(0.1, shape=[Y_n]))
+        #self.Y = tf.matmul(self.z2,self.W3)+self.b3
 
-        self.Y = tf.matmul(self.z2,self.W3)+self.b3
+        fc1 = tflearn.fully_connected(self.X, hidden_layer_nodes1,regularizer='L2', weight_decay=0.01)
+        fc1 = tflearn.activations.relu(fc1)
+        fc2 = tflearn.fully_connected(fc1, hidden_layer_nodes2,regularizer='L2', weight_decay=0.01)
+        fc2 = tflearn.activations.relu(fc2)
+        self.Y = tflearn.fully_connected(fc2, Y_n,regularizer='L2', weight_decay=0.01)
+
+        #init = tflearn.initializations.truncated_normal(stddev = 0.1)
+
+        #fc1 = tflearn.fully_connected(self.X, hidden_layer_nodes1,weights_init = init,bias_init = tf.constant(0.1, shape=[hidden_layer_nodes1]))
+        #fc2 = tflearn.fully_connected(fc1, hidden_layer_nodes2,weights_init = init,bias_init = tf.constant(0.1, shape=[hidden_layer_nodes2]))
+        #self.Y = tflearn.fully_connected(fc2, Y_n,weights_init = init,bias_init = tf.constant(0.1, shape=[Y_n]))
 
         self.loss=tf.reduce_mean(tf.squared_difference(self.Y,self.Y_))
         self.update=tf.train.AdamOptimizer(alpha).minimize(self.loss)

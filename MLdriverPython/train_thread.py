@@ -4,7 +4,7 @@ import agent_lib as pLib
 import time
 
 def train(net,Replay,HP,env,trainShared):
-    while not trainShared.exit:
+    while not trainShared.request_exit:
         if len(Replay.memory) > 2 and HP.train_flag:############ len(Replay.memory) > HP.batch_size and 
             trainShared.train = True
             last_save_time = time.time()
@@ -32,8 +32,8 @@ def train(net,Replay,HP,env,trainShared):
                 last_save_time = time.time()
 
             #print("train:",train_count)
-
- 
+    
+    trainShared.exit = True
         
 
             #net.save_model(HP.save_file_path)
