@@ -14,45 +14,25 @@ def clear_screen():
     os.system('cls')
 
 
-#def input_thread(stop,command):
-#    stop.append(False)
-#    command.append(None)
-#    while True:
-        
-#        inp = classes.getch()
-        
-#        if inp == b'\r':
-#            stop[0] = True
-#        else:
-#            command[0] = inp
-#    return
-#def wait_for(stop,command):
-#    _thread.start_new_thread(input_thread, (stop,command,))
-#    return
 def flat_list(alist):
     return [item for item in alist]
 
 def normalize(data,norm_vec):
-    n_data = copy.deepcopy(data)
+    try:
+        n_data = copy.deepcopy(data)
+        #print("data:",data)
+        for i in range(len(data[0])):
+            dat = np.array(data)[:,i]
 
-    for i in range(len(data[0])):
-        dat = np.array(data)[:,i]
-
-        min_data = norm_vec[i][0]
-        max_data = norm_vec[i][1]
-        if abs((max_data - min_data)) > 0.000001:
-            for j in range(len(data)):
-                n_data[j][i] = -1+(data[j][i]-min_data)*2/(max_data - min_data)
+            min_data = norm_vec[i][0]
+            max_data = norm_vec[i][1]
+            if abs((max_data - min_data)) > 0.000001:
+                for j in range(len(data)):
+                    n_data[j][i] = -1+(data[j][i]-min_data)*2/(max_data - min_data)
+    except:
+        print("data:",data)
     return n_data
-#def comp_norm_vec(data):
-#     norm_vec = []
-#     for i in range(len(data[0])):
-#         dat = np.array(data)[:,i]
-#         min_data = min(dat)
-#         max_data = max(dat)
-#         norm_vec.append([min_data,max_data])
-#     return norm_vec
-#
+
 def denormalize(n_data,range_vec):
     data = copy.deepcopy(n_data)
     for i in range(len(data[0])):

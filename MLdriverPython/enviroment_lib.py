@@ -113,12 +113,13 @@ def get_model_based_state(pl,last_abs_pos,last_abs_ang,local_path):
     #         'path':local_path
     #         }
 
-    state = {'rel_pos':rel_pos,
+    state = {'rel_pos':rel_pos[:2],
              'rel_ang':rel_ang,
              'vel':pl.simulator.vehicle.velocity,
              'angular_vel':pl.simulator.vehicle.angular_velocity,
              'acc':pl.simulator.vehicle.acceleration,
              'angular_acc':pl.simulator.vehicle.angular_acceleration,
+             'wheel_n_vel':[pl.simulator.vehicle.wheels[0].vel_n,pl.simulator.vehicle.wheels[2].vel_n],#[wheel.vel_n for wheel in pl.simulator.vehicle.wheels],
              'steer':steer,
              'roll':roll,
              'path':local_path

@@ -88,18 +88,20 @@ class SimVehicle:#simulator class - include communication to simulator, vehicle 
        # self.vehicle.backPosition = lib.changeZtoY(self.comm.deserialize(3,float))
         self.vehicle.velocity = lib.changeZtoY(self.comm.deserialize(3,float))
         self.vehicle.angular_velocity = self.comm.deserialize(3,float)#in radians
-        self.vehicle.acceleration =self.comm.deserialize(3,float)
+        self.vehicle.acceleration = lib.changeZtoY(self.comm.deserialize(3,float))
         self.vehicle.angular_acceleration =self.comm.deserialize(3,float)#in radians
-        self.vehicle.wheels_vel = lib.change_to_rad(self.comm.deserialize(4,float))
-
+        wheels_angular_vel = lib.change_to_rad(self.comm.deserialize(4,float))
+        wheels_vel = self.comm.deserialize(8,float)
+        #j = 0
+        #for i in range(4):
+        #    self.vehicle.wheels[i].angular_vel = wheels_angular_vel[i] 
+        #    self.vehicle.wheels[i].vel_n = wheels_vel[j]
+        #    self.vehicle.wheels[i].vel_t = wheels_vel[j+1]
+        #    j+=2
         self.vehicle.steering = self.comm.deserialize(1,float)
         self.vehicle.last_time_stamp = self.comm.deserialize(1,float)
         self.vehicle.input_time = self.comm.deserialize(1,float)
-        #print("velocity:",self.vehicle.velocity)
-        #print("acceleration:",self.vehicle.acceleration)
-        #print("rotation velocity:",self.vehicle.rot_velocity)
-        #print("rotation acceleration:",self.vehicle.rot_acceleration)
-        #print("time_stamp:",self.vehicle.last_time_stamp,"time:",time.time())
+
         return error
     def get_vehicle_data(self):
         data_type = 0
@@ -125,35 +127,37 @@ class SimVehicle:#simulator class - include communication to simulator, vehicle 
 
 def copy_vehicle(vehicle2):#copy 2 to 1
         vehicle1 = Vehicle()
-        vehicle1.position = copy.deepcopy(vehicle2.position)
-        vehicle1.backPosition = copy.deepcopy(vehicle2.backPosition)
-        vehicle1.angle = copy.deepcopy(vehicle2.angle)
-        vehicle1.steering =  copy.deepcopy(vehicle2.steering)
-        vehicle1.velocity =  copy.deepcopy(vehicle2.velocity)
-        vehicle1.angular_velocity = copy.deepcopy(vehicle2.angular_velocity)
-        vehicle1.acceleration =  copy.deepcopy(vehicle2.acceleration)
-        vehicle1.angular_acceleration = copy.deepcopy(vehicle2.angular_acceleration)
-        vehicle1.wheels_vel =  copy.deepcopy(vehicle2.wheels_vel)
-        vehicle1.last_time_stamp =  copy.deepcopy(vehicle2.last_time_stamp)
-        vehicle1.input_time =  copy.deepcopy(vehicle2.input_time)
+        vehicle1 = copy.deepcopy(vehicle2)
+        #vehicle1.position = copy.deepcopy(vehicle2.position)
+        #vehicle1.backPosition = copy.deepcopy(vehicle2.backPosition)
+        #vehicle1.angle = copy.deepcopy(vehicle2.angle)
+        #vehicle1.steering =  copy.deepcopy(vehicle2.steering)
+        #vehicle1.velocity =  copy.deepcopy(vehicle2.velocity)
+        #vehicle1.angular_velocity = copy.deepcopy(vehicle2.angular_velocity)
+        #vehicle1.acceleration =  copy.deepcopy(vehicle2.acceleration)
+        #vehicle1.angular_acceleration = copy.deepcopy(vehicle2.angular_acceleration)
+        #vehicle1.wheels_vel =  copy.deepcopy(vehicle2.wheels)##
+        #vehicle1.last_time_stamp =  copy.deepcopy(vehicle2.last_time_stamp)
+        #vehicle1.input_time =  copy.deepcopy(vehicle2.input_time)
         return vehicle1
 
 def copy_path(path2):
     path1 = Path()
-    path1.position = copy.deepcopy(path2.position)#
-    path1.backPosition = copy.deepcopy(path2.backPosition)
-    path1.angle = copy.deepcopy(path2.angle)
-    path1.curvature = copy.deepcopy(path2.curvature)
-    path1.velocity = copy.deepcopy(path2.velocity)
-    path1.steering = copy.deepcopy(path2.steering)
-    path1.distance = copy.deepcopy(path2.distance)
-    path1.time = copy.deepcopy(path2.time)
-    path1.max_velocity = copy.deepcopy(path2.max_velocity)
-    path1.analytic_velocity_limit = copy.deepcopy(path2.analytic_velocity_limit)
-    path1.analytic_velocity = copy.deepcopy(path2.analytic_velocity)
-    path1.analytic_acceleration = copy.deepcopy(path2.analytic_acceleration)
-    path1.analytic_time = copy.deepcopy(path2.analytic_time)
-    path1.seed = copy.deepcopy(path2.seed)
+    path1 = copy.deepcopy(path2)
+    #path1.position = copy.deepcopy(path2.position)#
+    #path1.backPosition = copy.deepcopy(path2.backPosition)
+    #path1.angle = copy.deepcopy(path2.angle)
+    #path1.curvature = copy.deepcopy(path2.curvature)
+    #path1.velocity = copy.deepcopy(path2.velocity)
+    #path1.steering = copy.deepcopy(path2.steering)
+    #path1.distance = copy.deepcopy(path2.distance)
+    #path1.time = copy.deepcopy(path2.time)
+    #path1.max_velocity = copy.deepcopy(path2.max_velocity)
+    #path1.analytic_velocity_limit = copy.deepcopy(path2.analytic_velocity_limit)
+    #path1.analytic_velocity = copy.deepcopy(path2.analytic_velocity)
+    #path1.analytic_acceleration = copy.deepcopy(path2.analytic_acceleration)
+    #path1.analytic_time = copy.deepcopy(path2.analytic_time)
+    #path1.seed = copy.deepcopy(path2.seed)
     return path1
 
 def communication_loop(simulatorShared):

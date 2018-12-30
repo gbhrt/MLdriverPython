@@ -6,7 +6,7 @@ import copy
 import random
 import os
 import time
-
+#import coll
 from enviroment_lib import *
 class ActionSpace:
     shape = []
@@ -40,6 +40,8 @@ class OptimalVelocityPlannerData:
         self.max_angular_velocity = 6
         self.max_pitch = 0.3#0.3
         self.max_roll = 0.2#0.05#0.3# last 0.2
+        self.max_slip = 10
+        self.max_plan_slip = 0.1
         self.max_plan_roll = 0.05
         self.max_steering = 0.7
         self.max_wheel_vel = 60# rad/sec. in unity limited to 5720 deg/sec 
@@ -61,30 +63,107 @@ class OptimalVelocityPlannerData:
                                 [-self.max_steering,self.max_steering],
                                 [-1.0,1.0]]#vel,steer,roll,steer_comand,acc_comand
         if self.mode == 'model_based':
-            #self.features_names = ["vel","steer"]
-            #self.prediction_names = ["rel_pos","rel_ang","vel","steer","roll"]
-            #self.X_names = [("vel")]
-            self.observation_space.range = [[0,self.max_velocity],[0,self.max_velocity],[0,self.max_velocity],
-                                        [-self.max_angular_velocity,self.max_angular_velocity],[-self.max_angular_velocity,self.max_angular_velocity],[-self.max_angular_velocity,self.max_angular_velocity],
-                                        [-self.max_acc,self.max_acc],[-self.max_acc,self.max_acc],[-self.max_acc,self.max_acc],
-                                        [-self.max_angular_acc,self.max_angular_acc],[-self.max_angular_acc,self.max_angular_acc],[-self.max_angular_acc,self.max_angular_acc],
-                                        [-self.max_steering,self.max_steering],
-                                        [-self.max_roll,self.max_roll],
-                                        [-self.max_steering,self.max_steering],
-                                        [-1.0,1.0]]#vel,steer,roll,steer_comand,acc_comand
+            max_min_X = {'vel':[0,self.max_velocity],#max, min, number
+                           'angular_vel':[-self.max_angular_velocity,self.max_angular_velocity],
+                           'acc':[-self.max_acc,self.max_acc],
+                           'angular_acc':[-self.max_angular_acc,self.max_angular_acc],
+                           'steer':[-self.max_steering,self.max_steering],
+                           'roll':[-self.max_roll,self.max_roll],
+                           'steer_action':[-self.max_steering,self.max_steering],
+                           'acc_action':[-1.0,1.0]
+                           }
+            self.features_numbers = {"vel":3,
+                                    "angular_vel":3,
+                                    "acc":3,
+                                    "angular_acc":3,
+                                    "steer":1,
+                                    "roll":1,
+                                    'wheel_n_vel':2,
+                                    "rel_pos":2,
+                                    "rel_ang":1,
+                                    "acc_action":1,
+                                    "steer_action":1}
+
+            #self.X_names = ["vel","angular_vel","acc","angular_acc","steer","roll","acc_action","steer_action"]
+            #self.Y_names = ["vel","angular_vel","acc","angular_acc","steer","roll",'wheel_n_vel',"rel_pos","rel_ang"]
+            #self.copy_Y_to_X_names = ["vel","angular_vel","acc","angular_acc","steer","roll"]
+            self.X_names = ["vel","steer","roll","acc_action","steer_action"]
+            self.Y_names = ["vel","steer","roll",'wheel_n_vel',"rel_pos","rel_ang"]
+            self.copy_Y_to_X_names = ["vel","steer","roll"]
+
+            self.observation_space.range = []
+            for name in self.X_names:
+                for _ in range(self.features_numbers[name]):
+                    self.observation_space.range.append(max_min_X[name])
+
+            
+            #self.observation_space.range = [[0,self.max_velocity],[0,self.max_velocity],[0,self.max_velocity],
+            #                                [-self.max_angular_velocity,self.max_angular_velocity],[-self.max_angular_velocity,self.max_angular_velocity],[-self.max_angular_velocity,self.max_angular_velocity],
+            #                                [-self.max_acc,self.max_acc],[-self.max_acc,self.max_acc],[-self.max_acc,self.max_acc],
+            #                                [-self.max_angular_acc,self.max_angular_acc],[-self.max_angular_acc,self.max_angular_acc],[-self.max_angular_acc,self.max_angular_acc],
+            #                                [-self.max_steering,self.max_steering],
+            #                                [-self.max_roll,self.max_roll],
+            #                                [-self.max_steering,self.max_steering],
+            #                                [-1.0,1.0]]#vel,steer,roll,steer_comand,acc_comand
             #self.observation_space.range = [[0,self.max_velocity],
             #                                [-self.max_steering,self.max_steering],
             #                                [-self.max_roll,self.max_roll],
             #                                [-self.max_steering,self.max_steering],
             #                                [-1.0,1.0]]#vel,steer,roll,steer_comand,acc_comand
-            self.X_n = len(self.observation_space.range)
-            self.Y_n = self.X_n + 1#add rel x rel y rel ang, remove steering command and acceleration command
+            #self.X_n = len(self.observation_space.range)
+            self.X_n = 0 
+            for name in self.X_names:
+                self.X_n+=self.features_numbers[name]
+
+            #self.Y_n = self.X_n + 3 #add rel x rel y rel ang, remove steering command and acceleration command  
+            self.Y_n = 0
+            for name in self.Y_names:
+                self.Y_n+=self.features_numbers[name]
             self.observation_space.shape = [self.X_n]
         
         self.max_curvature = 0.12
 
         self.lt = 0
 
+    def X_to_X_dict(self,X):
+        X_dict = {}
+        j = 0
+        for name in self.X_names:
+            if self.features_numbers[name] == 1:
+                X_dict[name] = X[j]
+                j+=1
+            else:
+                x = []
+                for i in range(self.features_numbers[name]):
+                    x.append(X[j])
+                    j+=1
+                X_dict[name] = x
+        return X_dict
+    def Y_to_Y_dict(self,Y):
+        Y_dict = {}
+        j = 0
+        for name in self.Y_names:
+            if self.features_numbers[name] == 1:
+                Y_dict[name] = Y[j]
+                j+=1
+            else:
+                y = []
+                for i in range(self.features_numbers[name]):
+                    y.append(Y[j])
+                    j+=1
+                Y_dict[name] = y
+        return Y_dict
+    def dict_X_to_X(self,X_dict):
+        X = []
+        for name in self.X_names:
+            Xi = []
+            num = self.features_numbers[name]
+            if num == 1:
+                X.append(X_dict[name])
+            else:
+                for i in range(num):
+                    X.append(X_dict[name][i])
+        return X
     def create_X(self,state,a):
         X = []
         for i in range(len(state)):
@@ -93,14 +172,24 @@ class OptimalVelocityPlannerData:
              #          state[i]['roll'],
              #          a[i][1],#steer
              #          np.clip(a[i][0],-1.0,1.0)])#acc
-             X.append(lib.flat_list(state[i]['vel'])+
-                      lib.flat_list(state[i]['angular_vel'])+
-                      lib.flat_list(state[i]['acc'])+
-                      lib.flat_list(state[i]['angular_acc'])+
-                      [state[i]['steer'],
-                      state[i]['roll'],
-                       a[i][1],#steer
-                       np.clip(a[i][0],-1.0,1.0)])#acc
+            Xi = []
+            for name in self.X_names[:-2]:#X names includes actions hence [:-3]
+                if not isinstance(state[i][name], list):
+                    Xi += [state[i][name]]#
+                else:
+                    Xi += state[i][name]#
+            Xi += [a[i][1],np.clip(a[i][0],-1.0,1.0)]#steer,acc
+
+            X.append(Xi)
+
+             #X.append(lib.flat_list(state[i]['vel'])+
+             #         lib.flat_list(state[i]['angular_vel'])+
+             #         lib.flat_list(state[i]['acc'])+
+             #         lib.flat_list(state[i]['angular_acc'])+
+             #         [state[i]['steer'],
+             #         state[i]['steer'],
+             #          a[i][1],#steer
+             #          np.clip(a[i][0],-1.0,1.0)])#acc
         return X
     def create_XY_(self,state,a,next_state):
         X = self.create_X(state,a)
@@ -115,18 +204,27 @@ class OptimalVelocityPlannerData:
              #           next_state[i]['rel_ang']
              #           ])
         for i in range(len(state)):
-             Y_.append( lib.flat_list(state[i]['vel'])+
-                        lib.flat_list(state[i]['angular_vel'])+
-                        lib.flat_list(state[i]['acc'])+
-                        lib.flat_list(state[i]['angular_acc'])+
-                        [next_state[i]['steer'], 
-                        next_state[i]['roll'],
-                        next_state[i]['rel_pos'][0],
-                        next_state[i]['rel_pos'][1],
-                        next_state[i]['rel_ang']]
-                        )
+            Yi = []
+            for name in self.Y_names:
+                if not isinstance(state[i][name], list):
+                    Yi += [state[i][name]]#
+                else:
+                    Yi += state[i][name]#
+            Y_.append(Yi)
+             #Y_.append( lib.flat_list(state[i]['vel'])+
+             #           lib.flat_list(state[i]['angular_vel'])+
+             #           lib.flat_list(state[i]['acc'])+
+             #           lib.flat_list(state[i]['angular_acc'])+
+             #           [next_state[i]['steer'],
+             #           next_state[i]['roll'],
+             #           next_state[i]['wheel_n_vel'][0],
+             #           next_state[i]['wheel_n_vel'][2],
+             #           next_state[i]['rel_pos'][0],
+             #           next_state[i]['rel_pos'][1],
+             #           next_state[i]['rel_ang']]
+             #           )
              #Y_.append([next_state[i]['roll']])
-
+       
         return X,Y_
         #if mode == 'model_based':
         #    self.get_state = get_model_based_state
@@ -207,7 +305,7 @@ class OptimalVelocityPlanner(OptimalVelocityPlannerData):
                 state = [self.pl.simulator.vehicle.angle[2]/self.max_roll]+state
             if self.wheels_vel_feature_flag:
                 state = [self.pl.simulator.vehicle.steering/self.max_steering]+state
-                state = [wheel_vel/self.max_wheel_vel for wheel_vel in self.pl.simulator.vehicle.wheels_vel]+state
+                state = [wheel.angular_vel/self.max_wheel_vel for wheel in self.pl.simulator.vehicle.wheels]+state
             if self.analytic_feature_flag:
                 analytic_a = [self.comp_analytic_acceleration(state)]
                 state = analytic_a + state
@@ -268,7 +366,7 @@ class OptimalVelocityPlanner(OptimalVelocityPlannerData):
                 next_state = [self.pl.simulator.vehicle.angle[2]/self.max_roll]+next_state
             if self.wheels_vel_feature_flag:
                 next_state = [self.pl.simulator.vehicle.steering/self.max_steering]+next_state
-                next_state = [wheel_vel/self.max_wheel_vel for wheel_vel in self.pl.simulator.vehicle.wheels_vel]+next_state
+                next_state = [wheel.angular_vel/self.max_wheel_vel for wheel in self.pl.simulator.vehicle.wheels]+next_state
             if self.analytic_feature_flag:
                 analytic_a = [self.comp_analytic_acceleration(next_state)]
                 next_state = analytic_a + next_state
@@ -290,7 +388,7 @@ class OptimalVelocityPlanner(OptimalVelocityPlannerData):
             max_deviation = self.max_deviation,max_roll = self.max_roll,max_pitch = self.max_pitch,end_distance = end_distance)#check if end of the episode 
         #print("roll:",self.pl.simulator.vehicle.angle)
         self.dataManager.roll.append(self.pl.simulator.vehicle.angle[2])
-        self.dataManager.wheels_vel.append(self.pl.simulator.vehicle.wheels_vel)
+        #self.dataManager.wheels_vel.append(self.pl.simulator.vehicle.wheels_angular_vel)
         self.dataManager.time_stamps.append(self.pl.simulator.vehicle.last_time_stamp) 
         self.dataManager.input_time.append(self.pl.simulator.vehicle.input_time) 
         self.dataManager.step_times.append(t)

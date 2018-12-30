@@ -173,52 +173,68 @@ def predict_n_next(n,net,env,init_state,action,acc_try = 1.0,max_plan_roll = Non
     index = lib.find_index_on_path(init_state['path'],abs_pos)
     steer_command = lib.comp_steer_general(init_state['path'],index,abs_pos,abs_ang,init_state['vel'][1])
     
-    print("current action: ",action, "try action: ",acc_try)
+    #print("current action: ",action, "try action: ",acc_try)
     acc_command = action# first action is already executed and known
     dev_flag,roll_flag = False,False
     dev_from_path = lib.dist(init_state['path'].position[index][0],init_state['path'].position[index][1],0,0)#absolute deviation from the path
-    print("deviation:", dev_from_path)
+    #print("deviation:", dev_from_path)
     if abs(init_state['roll']) > max_plan_roll: #check the current roll 
         roll_flag = True
     if dev_from_path > max_plan_deviation:
-        dev_flag = True
+        #dev_flag = True
+        max_plan_deviation = 10
     pred_vec = [[abs_pos]]#,abs_ang,init_state['vel'],init_state['steer'],init_state['roll']]]
     X = env.create_X([init_state],[[acc_command,steer_command]])[0]
+    X_dict = env.X_to_X_dict(X)
 
 
-    if fail_flag == False:
-        for i in range(1,n):#n times 
-            Y = list(net.get_Y([X])[0])#predict_next(features_num,train_data, sample, k, p)
+    if dev_flag == False and roll_flag == False:
+        for i in range(1,n):#n times       
+            X = env.dict_X_to_X(X_dict)
+            Y = list(net.get_Y([X])[0])#get Y list from X list
+            Y_dict = env.Y_to_Y_dict(Y)
 
-            #print("X:",X,"Y:",Y)
-            #pred_vec.append(Y)#x,y,ang,vel, steer roll - all relative 
-            X = copy.copy(Y[:len(Y) - 3])#copy the whole relative information (exclude commands, rel pos (2) and rel ang(1))
-            #X[0] = Y[3]#vel
-            #X[1] = Y[4]#steer
-            abs_pos,abs_ang = comp_abs_pos_ang(Y[-3:-1],Y[-1],abs_pos,abs_ang)#rel_pos = Y[0:2] rel_ang = Y[2] roll Y[5]
+            for name in env.copy_Y_to_X_names:
+                X_dict[name] = Y_dict[name]
+
+            #for i,y in enumerate(Y):#copy all features in X to Y
+            #    try:
+            #        X_ind = env.X_names.index(env.Y_names[i])
+            #        X[X_ind] = copy.copy(y)
+            #    except:
+            #        continue
+
+            #X = copy.copy(Y[:len(Y) - 5])#copy the whole relative information (exclude commands, rel pos (2) and rel ang(1))
+
+            #abs_pos,abs_ang = comp_abs_pos_ang(Y[-3:-1],Y[-1],abs_pos,abs_ang)#rel_pos = Y[0:2] rel_ang = Y[2] roll Y[5]
+            abs_pos,abs_ang = comp_abs_pos_ang(Y_dict["rel_pos"],Y_dict["rel_ang"],abs_pos,abs_ang)#rel_pos = Y[0:2] rel_ang = Y[2] roll Y[5]
+
             index = lib.find_index_on_path(init_state['path'],abs_pos)
 
-
             steer_command =  lib.comp_steer_general(init_state['path'],index,abs_pos,abs_ang,init_state['vel'][1])#action steer
-            #print("steer_command:",steer_command)
-            #X[2] = Y[5]#roll
-            #X[3] =  steer_command#X[2]
-            X.append(steer_command)
+
+            #X.append(steer_command)
+            #X[-2] = copy.copy(steer_command)
+            X_dict["steer_action"] = steer_command
             if i==1:#the firs time determent by the current given action
                 acc_command = acc_try
             else:
                 acc_command = -1.0
-            X.append(acc_command)
-           
+            #X.append(acc_command)
+            #X[-1] = copy.copy(acc_command)
+            X_dict["acc_action"] = acc_command
+
             pred_vec.append([abs_pos])#,abs_ang,Y[3],Y[4],Y[5]])
-            #if Y[0] < 2.0:#reach velocity 0 - or safe velocity
-            if Y[1] < 2.0:
+            
+            #if Y[1] < 2.0:
+            if Y_dict["vel"][1] < 2.0:
                 #print("reach velocity 0")
                 break
             #if abs(Y[2]) > max_plan_roll:# roll
             dev_from_path = lib.dist(init_state['path'].position[index][0],init_state['path'].position[index][1],abs_pos[0],abs_pos[1])#absolute deviation from the path
-            print("deviation:", dev_from_path)
-            if abs(Y[13]) > max_plan_roll: 
+            #print("deviation:", dev_from_path)
+            #if abs(Y[13]) > max_plan_roll: 
+            if abs(Y_dict["roll"]) > max_plan_roll: 
                 #print("fail rool or dev")
                 roll_flag = True
                 break
@@ -231,9 +247,8 @@ def predict_n_next(n,net,env,init_state,action,acc_try = 1.0,max_plan_roll = Non
    
     #print("end--------------------------")
     return pred_vec,roll_flag,dev_flag
-#def predict_n_next_abs(n,net,env,init_state):
-#    predict_n_next(n,net,env,init_state)
-#    return
+
+
 def choose_action(action_space,Pi,steps = None,epsilon = 0.1):
     if random.random() < epsilon:
         a = random.randint(0,len(action_space) - 1)#random.randint(0,(len(action_space.data) - 1))

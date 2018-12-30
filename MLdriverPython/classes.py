@@ -5,7 +5,11 @@ import os
 import library as lib
 import _thread
 
-
+class Wheel:
+    def __init__(self):
+        self.angular_vel = 0
+        self.vel_n = 0
+        self.vel_t = 0
 class Vehicle:
     def __init__(self):
         self.position=[0,0,0]
@@ -15,11 +19,16 @@ class Vehicle:
         self.velocity = [0,0,0]
         self.angular_velocity = [0,0,0]
         self.acceleration = [0,0,0]
+
         self.angular_acceleration = [0,0,0]
 
-        self.wheels_vel = [0,0,0,0]
+        #self.wheels_angular_vel = [0,0,0,0]
+        #self.wheels_vel = [0,0,0,0,0,0,0,0]
         self.last_time_stamp = 0
         self.input_time = 0
+        self.wheels = [Wheel() for _ in range(4)]
+        
+
 class Path:
     def __init__(self):
         self.position = []#

@@ -99,7 +99,7 @@ def compare_n_samples(net,X,end,Y_,n):
     return abs_pred,abs_real_pred
 
 if __name__ == "__main__": 
-    restore = False
+    restore = True
     train = True
     split_buffer = True
     train_part = 0.5
@@ -187,22 +187,29 @@ if __name__ == "__main__":
     #plot_comparison(Y_[:,5], Y[:,5],"ang")
 
     
-    plot_comparison(Y_[:,0], Y[:,0],"roll")
-    plot_distribution(errors[:,0],"error roll")
-    #plot_comparison(Y_[:,0], Y[:,0],"vel0")
-    #plot_comparison(Y_[:,1], Y[:,1],"vel1")
-    #plot_comparison(Y_[:,2], Y[:,2],"vel2")
-    #plot_comparison(Y_[:,3], Y[:,3],"ang_vel0")
-    #plot_comparison(Y_[:,4], Y[:,4],"ang_vel1")
-    #plot_comparison(Y_[:,5], Y[:,5],"ang_vel2")
-    #plot_comparison(Y_[:,6], Y[:,6],"acc0")
-    #plot_comparison(Y_[:,7], Y[:,7],"acc1")
-    #plot_comparison(Y_[:,8], Y[:,8],"acc2")
-    #plot_comparison(Y_[:,9], Y[:,9],"ang_acc0")
-    #plot_comparison(Y_[:,10], Y[:,10],"ang_acc1")
-    #plot_comparison(Y_[:,11], Y[:,11],"ang_acc2")
-    #plot_comparison(Y_[:,12], Y[:,12],"steer")
-    #plot_comparison(Y_[:,13], Y[:,13],"roll")
+    #plot_comparison(Y_[:,0], Y[:,0],"roll")
+    #plot_distribution(errors[:,0],"error roll")
+
+    plot_comparison(Y_[:,0], Y[:,0],"vel0")
+    plot_comparison(Y_[:,1], Y[:,1],"vel1")
+    plot_comparison(Y_[:,2], Y[:,2],"vel2")
+    plot_comparison(Y_[:,3], Y[:,3],"ang_vel0")
+    plot_comparison(Y_[:,4], Y[:,4],"ang_vel1")
+    plot_comparison(Y_[:,5], Y[:,5],"ang_vel2")
+    plot_comparison(Y_[:,6], Y[:,6],"acc0")
+    plot_comparison(Y_[:,7], Y[:,7],"acc1")
+    plot_comparison(Y_[:,8], Y[:,8],"acc2")
+    plot_comparison(Y_[:,9], Y[:,9],"ang_acc0")
+    plot_comparison(Y_[:,10], Y[:,10],"ang_acc1")
+    plot_comparison(Y_[:,11], Y[:,11],"ang_acc2")
+    plot_comparison(Y_[:,12], Y[:,12],"steer")
+    plot_comparison(Y_[:,13], Y[:,13],"roll")
+    plot_comparison(Y_[:,14], Y[:,14],"rear")
+    plot_comparison(Y_[:,15], Y[:,15],"front")
+    plot_comparison(Y_[:,16], Y[:,16],"dx")
+    plot_comparison(Y_[:,17], Y[:,17],"dy")
+    plot_comparison(Y_[:,18], Y[:,18],"dang")
+
     #plot_comparison(Y_[:,14], Y[:,14],"dx")
     #plot_comparison(Y_[:,15], Y[:,15],"dy")
     #plot_comparison(Y_[:,16], Y[:,16],"dang")

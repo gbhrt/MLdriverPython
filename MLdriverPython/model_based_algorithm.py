@@ -97,9 +97,9 @@ def train(env,HP,net,Replay,dataManager,trainShared,guiShared,seed = None):
                         #net and Replay are shared
                         #print("time after Lock:",time.clock()-env.lt)
                         next_steer = pLib.comp_steer_from_next_state(net,env,state,steer,acc)
-
+                        print("vel_n:",env.pl.simulator.vehicle.wheels[0].vel_n)
                         next_acc,predicted_values,roll_flag,dev_flag = comp_MB_acc(net,env,state,acc)
-                        print("roll_flag:",roll_flag,"dev_flag:",dev_flag)
+                        #print("roll_flag:",roll_flag,"dev_flag:",dev_flag)
                         if roll_flag:
                             next_steer = 0.0
                         if dev_flag:
