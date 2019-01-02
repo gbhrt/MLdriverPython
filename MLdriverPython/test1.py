@@ -5,14 +5,22 @@
 #import numpy as np
 #import tensorflow as tf
 #import time
-import collections
+#import collections
 
 #OrderedDict ={'banana': 3, 'apple': 4, 'pear': 1, 'orange': 2}
-x = collections.OrderedDict((("a", "1"), ("c", '3'), ("b", "2")))
-x["d"] = 4
-print(list(x.keys()).index("c"))
+#x = collections.OrderedDict((("a", "1"), ("c", '3'), ("b", "2")))
+#x["d"] = 4
+#print(list(x.keys()).index("c"))
 
 #print(x.keys().index("c"))
+# importing the required module 
+# importing the required modules 
+import timeit 
+
+# binary search function 
+
+
+
 
 
 #def measure():

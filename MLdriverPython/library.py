@@ -118,12 +118,7 @@ def to_global(pos, init_pos, init_ang):#pos given in local reference system (loc
     return global_pos.tolist()
 
 
-def find_index_on_path(path, vehicle, start_index):#return closest index to vehicle
-    distances = [10000. for _ in range(len(path.position))]
-    for i in range(start_index, len(path.position)):
-         distances[i] = (path.position[i].x - vehicle.position[0])**2 + (path.position[i].y - vehicle.position[1])**2
-    index_min = np.argmin(distances)
-    return index_min
+
 
 def select_target_index(path,vehicle,index):
     k = 1.
@@ -189,6 +184,13 @@ def find_index_on_path(path,pos,start_index = 0):#return closest index to vehicl
             distances[i] = (path.position[i][0] - pos[0])**2 + (path.position[i][1] - pos[1])**2
     index_min = np.argmin(distances)
     return index_min
+#def find_index_on_path(path, vehicle, start_index):#return closest index to vehicle
+#    distances = [10000. for _ in range(len(path.position))]
+#    for i in range(start_index, len(path.position)):
+#         distances[i] = (path.position[i].x - vehicle.position[0])**2 + (path.position[i].y - vehicle.position[1])**2
+#    index_min = np.argmin(distances)
+#    return index_min
+
 def comp_steer_general(path,index,pos,ang,vel):#nearest index on path 
     target = comp_steer_target(path,vel,index = index)
     local_target = to_local(np.asarray(target),np.asarray(pos),ang)#compute target in vehicle reference system

@@ -1,0 +1,9 @@
+1236 data points
+נסיעה של רכב בלי החלקות בלי הרבה כשלונות
+למידה רק של roll 
+רשת 200 100
+train loss = 1e-6
+test loss = 0.00056
+over fitting. with net 20 10, train loss = 1e-5 and more noise but test loss 0.0004
+using all features Y = {roll}
+test loss 0.000171

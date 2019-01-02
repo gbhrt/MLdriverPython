@@ -63,17 +63,23 @@ class OptimalVelocityPlannerData:
                                 [-self.max_steering,self.max_steering],
                                 [-1.0,1.0]]#vel,steer,roll,steer_comand,acc_comand
         if self.mode == 'model_based':
-            max_min_X = {'vel':[0,self.max_velocity],#max, min, number
-                           'angular_vel':[-self.max_angular_velocity,self.max_angular_velocity],
-                           'acc':[-self.max_acc,self.max_acc],
-                           'angular_acc':[-self.max_angular_acc,self.max_angular_acc],
-                           'steer':[-self.max_steering,self.max_steering],
-                           'roll':[-self.max_roll,self.max_roll],
-                           'steer_action':[-self.max_steering,self.max_steering],
-                           'acc_action':[-1.0,1.0]
+            max_min_X = {'vel0':[0,self.max_velocity],
+                         'vel1':[0,self.max_velocity],
+                         'vel2':[0,self.max_velocity],
+                         'vel':[0,self.max_velocity],#max, min, number
+                         'angular_vel':[-self.max_angular_velocity,self.max_angular_velocity],
+                         'acc':[-self.max_acc,self.max_acc],
+                         'angular_acc':[-self.max_angular_acc,self.max_angular_acc],
+                         'steer':[-self.max_steering,self.max_steering],
+                         'roll':[-self.max_roll,self.max_roll],
+                         'steer_action':[-self.max_steering,self.max_steering],
+                         'acc_action':[-1.0,1.0]
                            }
-            self.features_numbers = {"vel":3,
+            self.features_numbers = {'vel0':1,
+                                     'vel1':1,
+                                    'vel2':1,
                                     "angular_vel":3,
+                                    "vel":3,
                                     "acc":3,
                                     "angular_acc":3,
                                     "steer":1,
@@ -84,12 +90,17 @@ class OptimalVelocityPlannerData:
                                     "acc_action":1,
                                     "steer_action":1}
 
-            #self.X_names = ["vel","angular_vel","acc","angular_acc","steer","roll","acc_action","steer_action"]
-            #self.Y_names = ["vel","angular_vel","acc","angular_acc","steer","roll",'wheel_n_vel',"rel_pos","rel_ang"]
-            #self.copy_Y_to_X_names = ["vel","angular_vel","acc","angular_acc","steer","roll"]
-            self.X_names = ["vel","steer","roll","acc_action","steer_action"]
-            self.Y_names = ["vel","steer","roll",'wheel_n_vel',"rel_pos","rel_ang"]
-            self.copy_Y_to_X_names = ["vel","steer","roll"]
+            #self.X_names = ["vel0","vel1","vel2","angular_vel","acc","angular_acc","steer","roll","steer_action","acc_action"]
+            #self.Y_names = ["vel0","vel1","vel2","angular_vel","acc","angular_acc","steer","roll","rel_pos","rel_ang"]#,'wheel_n_vel'
+            #self.copy_Y_to_X_names = ["vel0","vel1","vel2","angular_vel","acc","angular_acc","steer","roll"]
+
+            #self.X_names = ["vel1","steer","roll","steer_action","acc_action"]
+            #self.Y_names = ["rel_pos","rel_ang","vel1","steer","roll"]
+            #self.copy_Y_to_X_names = ["vel1","steer","roll"]
+
+            self.X_names = ["vel0","vel1","vel2","angular_vel","acc","angular_acc","steer","roll","steer_action","acc_action"]
+            self.Y_names = ["angular_vel"]
+
 
             self.observation_space.range = []
             for name in self.X_names:
@@ -123,7 +134,7 @@ class OptimalVelocityPlannerData:
         
         self.max_curvature = 0.12
 
-        self.lt = 0
+        self.lt = time.clock()
 
     def X_to_X_dict(self,X):
         X_dict = {}
@@ -165,20 +176,21 @@ class OptimalVelocityPlannerData:
                     X.append(X_dict[name][i])
         return X
     def create_X(self,state,a):
+
         X = []
         for i in range(len(state)):
-             #X.append([state[i]['vel'][1],
-             #          state[i]['steer'],
-             #          state[i]['roll'],
-             #          a[i][1],#steer
-             #          np.clip(a[i][0],-1.0,1.0)])#acc
+        #     X.append([state[i]['vel1'],
+        #               state[i]['steer'],
+        #               state[i]['roll'],
+        #               a[i][1],#steer
+        #               np.clip(a[i][0],-1.0,1.0)])#acc
             Xi = []
             for name in self.X_names[:-2]:#X names includes actions hence [:-3]
                 if not isinstance(state[i][name], list):
                     Xi += [state[i][name]]#
                 else:
                     Xi += state[i][name]#
-            Xi += [a[i][1],np.clip(a[i][0],-1.0,1.0)]#steer,acc
+            Xi += [a[i][1] ,np.clip(a[i][0],-1.0,1.0)]#steer,acc
 
             X.append(Xi)
 
@@ -190,26 +202,29 @@ class OptimalVelocityPlannerData:
              #         state[i]['steer'],
              #          a[i][1],#steer
              #          np.clip(a[i][0],-1.0,1.0)])#acc
+
+
         return X
     def create_XY_(self,state,a,next_state):
         X = self.create_X(state,a)
-        Y_ = []
+        #Y_ = []
         #for i in range(len(state)):
-             #Y_.append([
-             #           next_state[i]['vel'][1], 
-             #           next_state[i]['steer'], 
-             #           next_state[i]['roll'],  
-             #           next_state[i]['rel_pos'][0],
-             #           next_state[i]['rel_pos'][1],
-             #           next_state[i]['rel_ang']
-             #           ])
+        #     Y_.append([
+        #                next_state[i]['rel_pos'][0],
+        #                next_state[i]['rel_pos'][1],
+        #                next_state[i]['rel_ang'],
+        #                next_state[i]['vel1'], 
+        #                next_state[i]['steer'], 
+        #                next_state[i]['roll'],  
+        #                ])
+        Y_ = []
         for i in range(len(state)):
             Yi = []
             for name in self.Y_names:
-                if not isinstance(state[i][name], list):
-                    Yi += [state[i][name]]#
+                if not isinstance(next_state[i][name], list):
+                    Yi += [next_state[i][name]]#
                 else:
-                    Yi += state[i][name]#
+                    Yi += next_state[i][name]#
             Y_.append(Yi)
              #Y_.append( lib.flat_list(state[i]['vel'])+
              #           lib.flat_list(state[i]['angular_vel'])+
@@ -224,7 +239,8 @@ class OptimalVelocityPlannerData:
              #           next_state[i]['rel_ang']]
              #           )
              #Y_.append([next_state[i]['roll']])
-       
+        #print("Y_:",Y_)
+        #print("Y_1:",Y_1)
         return X,Y_
         #if mode == 'model_based':
         #    self.get_state = get_model_based_state
@@ -340,22 +356,18 @@ class OptimalVelocityPlanner(OptimalVelocityPlannerData):
     def step(self,action,steer = None):#get action for gym compatibility
        # self.pl.torque_command(action,reduce = self.torque_reduce)
         #wait for step time:
-        #print("before wait: ",time.time() - self.last_time[0])
-        #temp_last_time = self.last_time[0]
 
+        #print("step begin time:",time.clock() - self.lt)
         time_step_error = lib.wait_until_end_step(self.last_time,self.step_time)
-        t = time.clock()
-        #print("after wait: ",time.time() - temp_last_time)
+        self.lt = time.clock()
         #get next state:
         self.error = self.pl.simulator.get_vehicle_data()#read data after time step from last action
+        #print("get data time: ",time.clock() - self.lt)
         if self.mode == "model_based" and steer is not None:
             self.command(action,steer)#send action immidetlly after get state data. this action is based upon the estimation of the current state
         # that is estimated from the previus state
-        
-        #print (t - self.lt)
-        #self.lt = t
-       # print("after get data: ",time.time() - temp_last_time)
-       # print("before get_local_path: ",time.time() - self.last_time[0])
+        #print("command time: ",time.clock() - self.lt)
+
         local_path = self.pl.get_local_path(num_of_points = self.visualized_points)#num_of_points = visualized_points
 
         if self.mode == 'DDPG':
@@ -391,7 +403,7 @@ class OptimalVelocityPlanner(OptimalVelocityPlannerData):
         #self.dataManager.wheels_vel.append(self.pl.simulator.vehicle.wheels_angular_vel)
         self.dataManager.time_stamps.append(self.pl.simulator.vehicle.last_time_stamp) 
         self.dataManager.input_time.append(self.pl.simulator.vehicle.input_time) 
-        self.dataManager.step_times.append(t)
+        self.dataManager.step_times.append(self.lt)
         #get reward:
         if self.lower_bound_flag:
             analytic_vel = self.comp_analytic_velocity(next_state)
@@ -420,7 +432,8 @@ class OptimalVelocityPlanner(OptimalVelocityPlannerData):
             done = False
         #print("reward", reward, "velocity: ", self.pl.simulator.vehicle.velocity, "mode:", mode)
         info = [mode,time_step_error or self.error]
-        #print("end step time: ",time.time() - self.last_time[0])
+
+        #print("end step time: ",time.clock() - self.lt)
         return next_state, reward, done, info
 
     def seed(self,seed_int):

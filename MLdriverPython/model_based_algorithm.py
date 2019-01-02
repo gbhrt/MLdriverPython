@@ -15,12 +15,12 @@ import os
 def comp_MB_acc(net,env,state,acc):
     roll_flag,dev_flag = False, False
     n = 10
-    print("___________________new acc compution____________________________")
+    #print("___________________new acc compution____________________________")
     predicted_values,roll_flag,dev_flag = pLib.predict_n_next(n,net,env,state,acc,1.0)#try 1.0
     if roll_flag or dev_flag:#if not ok - try 0.0                                                   
         predicted_values,roll_flag,dev_flag = pLib.predict_n_next(n,net,env,state,acc,0.0)
         if roll_flag or dev_flag:#if not ok - try -1.0   
-            predicted_values,roll_flag,dev_flag = pLib.predict_n_next(n,net,env,state,acc,-1.0,max_plan_roll = 0.1,max_plan_deviation = 10)
+            predicted_values,roll_flag,dev_flag = pLib.predict_n_next(n,net,env,state,acc,-1.0,max_plan_roll = 0.1)#,max_plan_deviation = 10)
             if roll_flag or dev_flag:
                 next_acc = -1.0
             else:#-1.0 is ok
@@ -29,7 +29,7 @@ def comp_MB_acc(net,env,state,acc):
             next_acc = 0.0
     else:#1.0 is ok
         next_acc = 1.0
-    print("________________________end________________________________")
+    #print("________________________end________________________________")
     return next_acc,predicted_values,roll_flag,dev_flag
 
 def train(env,HP,net,Replay,dataManager,trainShared,guiShared,seed = None):
@@ -82,68 +82,73 @@ def train(env,HP,net,Replay,dataManager,trainShared,guiShared,seed = None):
         steer = 0
         acc = 0.7
         while  waitFor.stop != [True] and guiShared.request_exit == False:#while not stoped, the loop break if reached the end or the deviation is to big          
-                step_count+=1
-                #choose and make action:
-                if HP.analytic_action:
-                    acc = float(env.get_analytic_action()[0])#+noise
-                    steer = env.comp_steer()
-                    env.command(acc,steer)
-                    next_state, reward, done, info = env.step(acc)#input the estimated next actions to execute after delta t and getting next state
+            step_count+=1
+            #choose and make action:
+            if HP.analytic_action:
+                acc = float(env.get_analytic_action()[0])#+noise
+                steer = env.comp_steer()
+                env.command(acc,steer)
+                next_state, reward, done, info = env.step(acc)#input the estimated next actions to execute after delta t and getting next state
 
-                else:#not HP.analytic_action
-                    trainShared.algorithmIsIn.clear()#indicates that are ready to take the lock
-                    with trainShared.Lock:
-                        trainShared.algorithmIsIn.set()
-                        #net and Replay are shared
-                        #print("time after Lock:",time.clock()-env.lt)
-                        next_steer = pLib.comp_steer_from_next_state(net,env,state,steer,acc)
-                        print("vel_n:",env.pl.simulator.vehicle.wheels[0].vel_n)
-                        next_acc,predicted_values,roll_flag,dev_flag = comp_MB_acc(net,env,state,acc)
-                        #print("roll_flag:",roll_flag,"dev_flag:",dev_flag)
-                        if roll_flag:
-                            next_steer = 0.0
-                        if dev_flag:
-                            fail = True #save in the Replay buffer that this episode failed
-                            done = True #break
+            else:#not HP.analytic_action
+                trainShared.algorithmIsIn.clear()#indicates that are ready to take the lock
+                with trainShared.Lock:
+                    trainShared.algorithmIsIn.set()
+                    #net and Replay are shared
+                    #print("time after Lock:",time.clock()-env.lt)
+                    next_steer = pLib.comp_steer_from_next_state(net,env,state,steer,acc)
+                    #print("vel_n:",env.pl.simulator.vehicle.wheels[0].vel_n)
+                    #print("before comp_MB_acc time:",time.clock() - env.lt)
+                    next_acc,predicted_values,roll_flag,dev_flag = comp_MB_acc(net,env,state,acc)
+                    #print("after comp_MB_acc time:",time.clock() - env.lt)
+                    #print("roll_flag:",roll_flag,"dev_flag:",dev_flag)
+                    if roll_flag:
+                        next_steer = 0.0
+                        print("emergency steering")
+                    if dev_flag:
+                        fail = True #save in the Replay buffer that this episode failed
+                        done = True #break
 
-              
-                    with guiShared.Lock:
-                        guiShared.predicded_path = [pred[0] for pred in predicted_values]
-                        guiShared.state = copy.deepcopy(state)
-                        guiShared.steer = steer
-
-                    #print("before step:", time.time() - t1)
-                    next_state, reward, done, info = env.step(next_acc,steer = next_steer)#input the estimated next actions to execute after delta t and getting next state
-
+                #t= time.clock()
+                with guiShared.Lock:
+                    guiShared.predicded_path = [pred[0] for pred in predicted_values]
+                    guiShared.state = copy.deepcopy(state)
+                    guiShared.steer = steer
+                #print("update gui time:",time.clock() - t)
+                
+                next_state, reward, done, info = env.step(next_acc,steer = next_steer)#input the estimated next actions to execute after delta t and getting next state
+                #print("after step 2 time:",time.clock() - env.lt)
             
-                reward_vec.append(reward)
-                # print("after append:", time.time() - env.lt)
-                #add data to replay buffer:
-                if info[0] == 'kipp':
-                    fail = True
-                else:
-                    fail = False
-                time_step_error = info[1]
+            reward_vec.append(reward)
+            # print("after append:", time.time() - env.lt)
+            #add data to replay buffer:
+            if info[0] == 'kipp':
+                fail = True
+            else:
+                fail = False
+            time_step_error = info[1]
 
  
-                if not time_step_error:
-                    tmp_next_path = next_state['path']
-                    #  print("after copy1:", time.time() - t1)
-                    state['path'] = []
-                    next_state['path'] = []
+            if not time_step_error:               
+                tmp_next_path = next_state['path']
+                #  print("after copy1:", time.time() - t1)
+                state['path'] = []
+                next_state['path'] = []
 
-                    trainShared.algorithmIsIn.clear()#indicates that are ready to take the lock
-                    with trainShared.Lock:
-                        trainShared.algorithmIsIn.set()
-                        Replay.add(copy.deepcopy((state,[acc,steer],next_state,done,fail)))#  
+                trainShared.algorithmIsIn.clear()#indicates that are ready to take the lock
+                with trainShared.Lock:
+                    trainShared.algorithmIsIn.set()
+                    Replay.add(copy.deepcopy((state,[acc,steer],next_state,done,fail)))#  
 
-                    next_state['path'] = tmp_next_path
-
-                state = copy.deepcopy(next_state)
-                if not HP.analytic_action:
-                    acc,steer = copy.copy(next_acc), copy.copy(next_steer)
-                if done:
-                    break
+                next_state['path'] = tmp_next_path
+                #print("add to replay time:",time.clock() - env.lt)
+            
+            state = copy.deepcopy(next_state)
+            #print("copy state time:",time.clock() - env.lt)
+            if not HP.analytic_action:
+                acc,steer = copy.copy(next_acc), copy.copy(next_steer)
+            if done:
+                break
 
             #end if time
         #end while

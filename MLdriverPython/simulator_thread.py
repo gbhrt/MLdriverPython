@@ -12,6 +12,7 @@ class SimVehicle:#simulator class - include communication to simulator, vehicle 
         self.UDP_IP = "127.0.0.1"
         self.UDP_PORT = 5007
         self.vehicle = Vehicle()
+        self.connected = False
     def set_address(self,IP,PORT):
         self.UDP_IP = IP
         self.UDP_PORT = PORT
@@ -19,6 +20,11 @@ class SimVehicle:#simulator class - include communication to simulator, vehicle 
     def connect(self):
         self.comm = Comm()
         self.comm.connectToServer(self.UDP_IP,self.UDP_PORT)
+        self.connected = True
+        return
+    def end_connection(self):
+        self.comm.end_connection()
+        self.connected = False
         return
 
     def send_drive_commands(self,velocity,steering):#send drive commands to simulator
@@ -91,7 +97,7 @@ class SimVehicle:#simulator class - include communication to simulator, vehicle 
         self.vehicle.acceleration = lib.changeZtoY(self.comm.deserialize(3,float))
         self.vehicle.angular_acceleration =self.comm.deserialize(3,float)#in radians
         wheels_angular_vel = lib.change_to_rad(self.comm.deserialize(4,float))
-        wheels_vel = self.comm.deserialize(8,float)
+        #wheels_vel = self.comm.deserialize(8,float)
         #j = 0
         #for i in range(4):
         #    self.vehicle.wheels[i].angular_vel = wheels_angular_vel[i] 
@@ -128,36 +134,11 @@ class SimVehicle:#simulator class - include communication to simulator, vehicle 
 def copy_vehicle(vehicle2):#copy 2 to 1
         vehicle1 = Vehicle()
         vehicle1 = copy.deepcopy(vehicle2)
-        #vehicle1.position = copy.deepcopy(vehicle2.position)
-        #vehicle1.backPosition = copy.deepcopy(vehicle2.backPosition)
-        #vehicle1.angle = copy.deepcopy(vehicle2.angle)
-        #vehicle1.steering =  copy.deepcopy(vehicle2.steering)
-        #vehicle1.velocity =  copy.deepcopy(vehicle2.velocity)
-        #vehicle1.angular_velocity = copy.deepcopy(vehicle2.angular_velocity)
-        #vehicle1.acceleration =  copy.deepcopy(vehicle2.acceleration)
-        #vehicle1.angular_acceleration = copy.deepcopy(vehicle2.angular_acceleration)
-        #vehicle1.wheels_vel =  copy.deepcopy(vehicle2.wheels)##
-        #vehicle1.last_time_stamp =  copy.deepcopy(vehicle2.last_time_stamp)
-        #vehicle1.input_time =  copy.deepcopy(vehicle2.input_time)
         return vehicle1
 
 def copy_path(path2):
     path1 = Path()
     path1 = copy.deepcopy(path2)
-    #path1.position = copy.deepcopy(path2.position)#
-    #path1.backPosition = copy.deepcopy(path2.backPosition)
-    #path1.angle = copy.deepcopy(path2.angle)
-    #path1.curvature = copy.deepcopy(path2.curvature)
-    #path1.velocity = copy.deepcopy(path2.velocity)
-    #path1.steering = copy.deepcopy(path2.steering)
-    #path1.distance = copy.deepcopy(path2.distance)
-    #path1.time = copy.deepcopy(path2.time)
-    #path1.max_velocity = copy.deepcopy(path2.max_velocity)
-    #path1.analytic_velocity_limit = copy.deepcopy(path2.analytic_velocity_limit)
-    #path1.analytic_velocity = copy.deepcopy(path2.analytic_velocity)
-    #path1.analytic_acceleration = copy.deepcopy(path2.analytic_acceleration)
-    #path1.analytic_time = copy.deepcopy(path2.analytic_time)
-    #path1.seed = copy.deepcopy(path2.seed)
     return path1
 
 def communication_loop(simulatorShared):

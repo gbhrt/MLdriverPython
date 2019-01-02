@@ -68,9 +68,9 @@ class ModelBasedHyperParameters:
         self.save_every = 100
         self.save_every_time = 5000 #minutes
         self.seed = 1111
-        self.save_name = "friction2"
+        self.save_name = "test"
         self.save_file_path = os.getcwd()+ "\\files\\models\\model_based\\"+self.save_name+"\\"
-        self.restore_name = "friction2"
+        self.restore_name = "friction2"#friction2 - data from small X, test_just_roll - data from all features
         self.restore_file_path = os.getcwd()+ "\\files\\models\\model_based\\"+self.restore_name+"\\"
 
         if self.always_no_noise_flag:

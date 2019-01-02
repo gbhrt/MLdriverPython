@@ -14,8 +14,8 @@ class model_based_network(NetLib):
         tf.reset_default_graph()   
         #hidden_layer_nodes1 = 200
         #hidden_layer_nodes2 = 100
-        hidden_layer_nodes1 = 200
-        hidden_layer_nodes2 = 100
+        hidden_layer_nodes1 = 400
+        hidden_layer_nodes2 = 200
 
         self.alpha = alpha#0.001
 
@@ -98,8 +98,4 @@ class model_based_network(NetLib):
         return self.sess.run(self.loss, feed_dict= {self.X: lib.normalize(X,self.norm_vec) ,self.Y_: Y_})# 
     def get_Y(self,X):
         Y = self.sess.run(self.Y, feed_dict= {self.X: lib.normalize(X,self.norm_vec)})
-        #X = np.array(X)
-        #Y[:,3]+=X[:,0]#absolute velocity
-        #Y[:,4]+=X[:,1]#absolute steer
-        #Y[:,5]+=X[:,2]#absolute roll
         return Y

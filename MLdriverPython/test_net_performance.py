@@ -4,7 +4,7 @@ import hyper_parameters
 import matplotlib.pyplot as plt
 import numpy as np
 import library as lib
-import enviroment1
+import enviroment1 
 
 def save_Y_Y_(file_name,Y,Y_):
     with open(file_name, 'w') as f:#append data to the file
@@ -16,6 +16,39 @@ def plot_distribution(data,name):
     print("variance of",name,":",np.var(data))
 def plot_comparison(real, predicted,name):
     plt.figure(name)
+    plt.plot(real,'o')
+    plt.plot(predicted,'o')
+
+def plot_distribution(Y_, Y,feature,index = None,plot_name=" "):
+    plt.figure(plot_name+" distribution")
+    real,predicted = [],[]
+    for y_,y in zip(Y_,Y):
+        y_dict_ = envData.Y_to_Y_dict(y_)
+        y_dict = envData.Y_to_Y_dict(y)
+        if index is None:
+            real.append(y_dict_[feature])
+            predicted.append(y_dict[feature])
+        else:
+            real.append(y_dict_[feature][index])
+            predicted.append(y_dict[feature][index])
+    error = np.array(real) - np.array(predicted)
+    plt.hist(error,bins='auto')
+    print("variance of",name,":",np.var(error))
+
+def plot_comparison_dict(Y_, Y,feature,index = None,plot_name=" "):
+    plt.figure(plot_name)
+    real,predicted = [],[]
+    for y_,y in zip(Y_,Y):
+        y_dict_ = envData.Y_to_Y_dict(y_)
+        y_dict = envData.Y_to_Y_dict(y)
+        if index is None:
+            real.append(y_dict_[feature])
+            predicted.append(y_dict[feature])
+        else:
+            real.append(y_dict_[feature][index])
+            predicted.append(y_dict[feature][index])
+
+   
     plt.plot(real,'o')
     plt.plot(predicted,'o')
 
@@ -99,7 +132,7 @@ def compare_n_samples(net,X,end,Y_,n):
     return abs_pred,abs_real_pred
 
 if __name__ == "__main__": 
-    restore = True
+    restore = False
     train = True
     split_buffer = True
     train_part = 0.5
@@ -130,11 +163,12 @@ if __name__ == "__main__":
     X,Y_,end,fail = convert_data(ReplayTest,envData)
     print("test loss: ",net.get_loss(X,Y_))
     #compare one step prediction:
-   ## Y = np.array([net.get_Y(x) for x in X])
     Y = net.get_Y(X)
     Y = np.array(Y)
     Y_ = np.array(Y_)
     errors = Y - Y_
+
+ 
 
     save_Y_Y_("data1.txt",Y,Y_)
 
@@ -168,51 +202,22 @@ if __name__ == "__main__":
     #plot_comparison(fail_Y_, fail_Y,"fails")
 
     #plot_distribution(errors[:,0],"error x")
-    #plot_distribution(errors[:,1],"error y")
-    #plot_distribution(errors[:,2],"error ang")
-    #plot_distribution(errors[:,3],"error vel")
-    #plot_distribution(errors[:,5],"error roll")
-    ##plot_comparison(Y[:,0], Y_[:,0],"x")
-    #plot_comparison(vec_Y_n_[:,0], vec_Y_n[:,0],"ang")
-    #plot_comparison(vec_Y_n_[:,1], vec_Y_n[:,1],"vel")
-    #plot_comparison(vec_Y_n_[:,2], vec_Y_n[:,2],"roll")
-    #plot_comparison(vec_Y_n_[:,3], vec_Y_n[:,3],"x")
-    #plot_comparison(vec_Y_n_[:,5], vec_Y_n[:,5],"y")
 
-    #plot_comparison(Y_[:,0], Y[:,0],"vel")
-    #plot_comparison(Y_[:,1], Y[:,1],"steer")
-    #plot_comparison(Y_[:,2], Y[:,2],"roll")
-    #plot_comparison(Y_[:,3], Y[:,3],"x")
-    #plot_comparison(Y_[:,4], Y[:,4],"y")
-    #plot_comparison(Y_[:,5], Y[:,5],"ang")
+    for name in envData.Y_names:
+        if envData.features_numbers[name] == 1:
+            plot_distribution_dict(Y_,Y,name,plot_name = name)
+        else:
+            for i in range(envData.features_numbers[name]):
+                plot_distribution_dict(Y_,Y,name,i,plot_name = name+str(i))
 
-    
-    #plot_comparison(Y_[:,0], Y[:,0],"roll")
-    #plot_distribution(errors[:,0],"error roll")
+    for name in envData.Y_names:
+        if envData.features_numbers[name] == 1:
+            plot_comparison_dict(Y_,Y,name,plot_name = name)
+        else:
+            for i in range(envData.features_numbers[name]):
+                plot_comparison_dict(Y_,Y,name,i,plot_name = name+str(i))
 
-    plot_comparison(Y_[:,0], Y[:,0],"vel0")
-    plot_comparison(Y_[:,1], Y[:,1],"vel1")
-    plot_comparison(Y_[:,2], Y[:,2],"vel2")
-    plot_comparison(Y_[:,3], Y[:,3],"ang_vel0")
-    plot_comparison(Y_[:,4], Y[:,4],"ang_vel1")
-    plot_comparison(Y_[:,5], Y[:,5],"ang_vel2")
-    plot_comparison(Y_[:,6], Y[:,6],"acc0")
-    plot_comparison(Y_[:,7], Y[:,7],"acc1")
-    plot_comparison(Y_[:,8], Y[:,8],"acc2")
-    plot_comparison(Y_[:,9], Y[:,9],"ang_acc0")
-    plot_comparison(Y_[:,10], Y[:,10],"ang_acc1")
-    plot_comparison(Y_[:,11], Y[:,11],"ang_acc2")
-    plot_comparison(Y_[:,12], Y[:,12],"steer")
-    plot_comparison(Y_[:,13], Y[:,13],"roll")
-    plot_comparison(Y_[:,14], Y[:,14],"rear")
-    plot_comparison(Y_[:,15], Y[:,15],"front")
-    plot_comparison(Y_[:,16], Y[:,16],"dx")
-    plot_comparison(Y_[:,17], Y[:,17],"dy")
-    plot_comparison(Y_[:,18], Y[:,18],"dang")
 
-    #plot_comparison(Y_[:,14], Y[:,14],"dx")
-    #plot_comparison(Y_[:,15], Y[:,15],"dy")
-    #plot_comparison(Y_[:,16], Y[:,16],"dang")
 
     plt.show()
 
