@@ -97,13 +97,13 @@ class SimVehicle:#simulator class - include communication to simulator, vehicle 
         self.vehicle.acceleration = lib.changeZtoY(self.comm.deserialize(3,float))
         self.vehicle.angular_acceleration =self.comm.deserialize(3,float)#in radians
         wheels_angular_vel = lib.change_to_rad(self.comm.deserialize(4,float))
-        #wheels_vel = self.comm.deserialize(8,float)
-        #j = 0
-        #for i in range(4):
-        #    self.vehicle.wheels[i].angular_vel = wheels_angular_vel[i] 
-        #    self.vehicle.wheels[i].vel_n = wheels_vel[j]
-        #    self.vehicle.wheels[i].vel_t = wheels_vel[j+1]
-        #    j+=2
+        wheels_vel = self.comm.deserialize(8,float)
+        j = 0
+        for i in range(4):
+            self.vehicle.wheels[i].angular_vel = wheels_angular_vel[i] 
+            self.vehicle.wheels[i].vel_n = wheels_vel[j]
+            self.vehicle.wheels[i].vel_t = wheels_vel[j+1]
+            j+=2
         self.vehicle.steering = self.comm.deserialize(1,float)
         self.vehicle.last_time_stamp = self.comm.deserialize(1,float)
         self.vehicle.input_time = self.comm.deserialize(1,float)

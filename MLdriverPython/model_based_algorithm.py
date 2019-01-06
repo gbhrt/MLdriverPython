@@ -20,7 +20,7 @@ def comp_MB_acc(net,env,state,acc):
     if roll_flag or dev_flag:#if not ok - try 0.0                                                   
         predicted_values,roll_flag,dev_flag = pLib.predict_n_next(n,net,env,state,acc,0.0)
         if roll_flag or dev_flag:#if not ok - try -1.0   
-            predicted_values,roll_flag,dev_flag = pLib.predict_n_next(n,net,env,state,acc,-1.0,max_plan_roll = 0.1)#,max_plan_deviation = 10)
+            predicted_values,roll_flag,dev_flag = pLib.predict_n_next(n,net,env,state,acc,-1.0,max_plan_roll = env.max_plan_roll*2)#,max_plan_deviation = 10)
             if roll_flag or dev_flag:
                 next_acc = -1.0
             else:#-1.0 is ok
@@ -62,14 +62,14 @@ def train(env,HP,net,Replay,dataManager,trainShared,guiShared,seed = None):
     seed = HP.seed
 
     lt = 0#temp
-    for i in range(HP.num_of_runs): #number of runs - run end at the end of the main path and if vehicle deviation error is to big
+    for i in range(HP.num_of_runs): #number of runs - run ends at the end of the main path and if vehicle deviation error is to big
         if waitFor.stop == [True] or guiShared.request_exit:
             break
         
         # initialize every episode:
-        if HP.run_random_num != 'inf':
-            if i > HP.run_random_num:
-                random_action_flag = False
+        #if HP.run_random_num != 'inf':
+        #    if i > HP.run_random_num:
+        #        random_action_flag = False
         step_count = 0
         reward_vec = []
         t1 = 0
@@ -80,7 +80,7 @@ def train(env,HP,net,Replay,dataManager,trainShared,guiShared,seed = None):
             continue
         #episode_start_time = time.time()
         steer = 0
-        acc = 0.7
+        acc = 1.0
         while  waitFor.stop != [True] and guiShared.request_exit == False:#while not stoped, the loop break if reached the end or the deviation is to big          
             step_count+=1
             #choose and make action:
@@ -122,14 +122,14 @@ def train(env,HP,net,Replay,dataManager,trainShared,guiShared,seed = None):
             reward_vec.append(reward)
             # print("after append:", time.time() - env.lt)
             #add data to replay buffer:
-            if info[0] == 'kipp':
+            if info[0] == 'kipp' or info[0] == 'deviate':
                 fail = True
             else:
                 fail = False
             time_step_error = info[1]
 
  
-            if not time_step_error:               
+            if not time_step_error:#save state to the replay buffer (without the path)            
                 tmp_next_path = next_state['path']
                 #  print("after copy1:", time.time() - t1)
                 state['path'] = []

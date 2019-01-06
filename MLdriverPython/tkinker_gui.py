@@ -49,6 +49,9 @@ class data_plots():
         self.line1 = self.ax1.plot(np.array(self.dataManager.roll))[0]
         self.lines = plot_velocities(self.ax2)#,self.dataManager)
 
+        #self.figure2, self.ax1 = plt.subplots(1, 1,figsize=(5,4))
+
+
         self.canvas = FigureCanvasTkAgg(self.figure1, master= root)
         #self.canvas.get_tk_widget().pack()#side=tk.LEFT, fill=tk.BOTH)
         self.canvas.get_tk_widget().grid(row = 0,column = 0, columnspan=2)

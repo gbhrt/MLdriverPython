@@ -26,6 +26,8 @@ class OptimalVelocityPlannerData:
         self.wheels_vel_feature_flag = False
         self.end_indication_flag = False
         self.lower_bound_flag = False
+        self.update_max_roll_flag = False
+        self.roll_vec=[]#save all roll angles during one episode
         self.max_episode_steps = 100#100#200#
         self.feature_points = 25#60 # number of points on the path in the state +(1*self.end_indication_flag)
         self.feature_data_num = 1  + (1*self.analytic_feature_flag)+ (1*self.roll_feature_flag) + (5*self.wheels_vel_feature_flag)# number of data in state (vehicle velocity, analytic data...)
@@ -34,10 +36,23 @@ class OptimalVelocityPlannerData:
         self.step_time = 0.2
         self.action_space_n = 1
         self.visualized_points = int(self.feature_points/0.05) + 10 #how many points show on the map and lenght of local path
+
         self.max_deviation =  10 # [m] if more then maximum - end episode 
         self.max_plan_deviation = 3
-        self.max_velocity = 30
-        self.max_angular_velocity = 6
+        
+        self.max_velocity_x = 30
+        self.max_velocity_y = 30
+        self.max_velocity_z = 30
+        self.max_angular_velocity_x = 6
+        self.max_angular_velocity_y = 6
+        self.max_angular_velocity_z = 6
+        self.max_acc_x = 1.38# 0-100 kmh in 20 sec. 1.5 # [m/s^2]  need to be more then maximum acceleration in real
+        self.max_acc_y = 1.38# 0-100 kmh in 20 sec. 1.5 # [m/s^2]  need to be more then maximum acceleration in real
+        self.max_acc_z = 1.38# 0-100 kmh in 20 sec. 1.5 # [m/s^2]  need to be more then maximum acceleration in real
+        self.max_angular_acc_x = 100
+        self.max_angular_acc_y = 100
+        self.max_angular_acc_z = 100
+
         self.max_pitch = 0.3#0.3
         self.max_roll = 0.2#0.05#0.3# last 0.2
         self.max_slip = 10
@@ -45,8 +60,6 @@ class OptimalVelocityPlannerData:
         self.max_plan_roll = 0.05
         self.max_steering = 0.7
         self.max_wheel_vel = 60# rad/sec. in unity limited to 5720 deg/sec 
-        self.max_acc = 1.38# 0-100 kmh in 20 sec. 1.5 # [m/s^2]  need to be more then maximum acceleration in real
-        self.max_angular_acc = 100
         self.torque_reduce = 1.0 # 0.2
         self.reduce_factor = 1.0
         self.max_episode_length = 500
@@ -57,71 +70,75 @@ class OptimalVelocityPlannerData:
         
         if self.mode == 'DDPG':
             self.X_n = self.feature_data_num +  2*self.feature_points #vehicle state points on the path (distance)
-            self.observation_space.range = [[0,self.max_velocity],
+            self.observation_space.range = [[0,self.max_velocity_y],
                                 [-self.max_steering,self.max_steering],
                                 [-self.max_roll,self.max_roll],
                                 [-self.max_steering,self.max_steering],
                                 [-1.0,1.0]]#vel,steer,roll,steer_comand,acc_comand
         if self.mode == 'model_based':
-            max_min_X = {'vel0':[0,self.max_velocity],
-                         'vel1':[0,self.max_velocity],
-                         'vel2':[0,self.max_velocity],
-                         'vel':[0,self.max_velocity],#max, min, number
-                         'angular_vel':[-self.max_angular_velocity,self.max_angular_velocity],
-                         'acc':[-self.max_acc,self.max_acc],
-                         'angular_acc':[-self.max_angular_acc,self.max_angular_acc],
-                         'steer':[-self.max_steering,self.max_steering],
-                         'roll':[-self.max_roll,self.max_roll],
-                         'steer_action':[-self.max_steering,self.max_steering],
-                         'acc_action':[-1.0,1.0]
-                           }
-            self.features_numbers = {'vel0':1,
-                                     'vel1':1,
-                                    'vel2':1,
-                                    "angular_vel":3,
-                                    "vel":3,
-                                    "acc":3,
-                                    "angular_acc":3,
+            self.max_min_values = {'vel_x':[0,self.max_velocity_x],
+                                 'vel_y':[0,self.max_velocity_y],
+                                 'vel_z':[0,self.max_velocity_z],
+                                 'vel':[0,self.max_velocity_y],#max, min, number
+                                 'angular_vel_x':[-self.max_angular_velocity_x,self.max_angular_velocity_x],
+                                 'angular_vel_y':[-self.max_angular_velocity_y,self.max_angular_velocity_y],
+                                 'angular_vel_z':[-self.max_angular_velocity_z,self.max_angular_velocity_z],
+                                 'acc_x':[-self.max_acc_x,self.max_acc_x],
+                                 'acc_y':[-self.max_acc_y,self.max_acc_y],
+                                 'acc_z':[-self.max_acc_z,self.max_acc_z],
+                                 'angular_acc_x':[-self.max_angular_acc_x,self.max_angular_acc_x],
+                                 'angular_acc_y':[-self.max_angular_acc_y,self.max_angular_acc_y],
+                                 'angular_acc_z':[-self.max_angular_acc_z,self.max_angular_acc_z],
+                                 'steer':[-self.max_steering,self.max_steering],
+                                 'roll':[-self.max_roll,self.max_roll],
+                                 'steer_action':[-self.max_steering,self.max_steering],
+                                 'acc_action':[-1.0,1.0],
+                                 'rel_pos_x':[-5,5],
+                                 'rel_pos_y':[-5,5],
+                                 'rel_pos_z':[-5,5],
+                                 'rel_ang':[-1.0,1.0]
+                                   }
+            self.features_numbers = {'vel_x':1,
+                                     'vel_y':1,
+                                    'vel_z':1,
+                                    'angular_vel_x':1,
+                                    'angular_vel_y':1,
+                                    'angular_vel_z':1,
+                                    'acc_x':1,
+                                    'acc_y':1,
+                                    'acc_z':1,
+                                    'angular_acc_x':1,
+                                    'angular_acc_y':1,
+                                    'angular_acc_z':1,
                                     "steer":1,
                                     "roll":1,
                                     'wheel_n_vel':2,
-                                    "rel_pos":2,
+                                    'rel_pos_x':1,
+                                    'rel_pos_y':1,
+                                    'rel_pos_z':1,
                                     "rel_ang":1,
                                     "acc_action":1,
                                     "steer_action":1}
 
-            #self.X_names = ["vel0","vel1","vel2","angular_vel","acc","angular_acc","steer","roll","steer_action","acc_action"]
-            #self.Y_names = ["vel0","vel1","vel2","angular_vel","acc","angular_acc","steer","roll","rel_pos","rel_ang"]#,'wheel_n_vel'
-            #self.copy_Y_to_X_names = ["vel0","vel1","vel2","angular_vel","acc","angular_acc","steer","roll"]
+            #self.X_names = ["vel_x","vel_y","vel_z","angular_vel","acc","angular_acc","steer","roll","steer_action","acc_action"]
+            #self.Y_names = ["vel_x","vel_y","vel_z","angular_vel","acc","angular_acc","steer","roll","rel_pos","rel_ang"]#,'wheel_n_vel'
+            #self.copy_Y_to_X_names = ["vel_x","vel_y","vel_z","angular_vel","acc","angular_acc","steer","roll"]
 
-            #self.X_names = ["vel1","steer","roll","steer_action","acc_action"]
-            #self.Y_names = ["rel_pos","rel_ang","vel1","steer","roll"]
-            #self.copy_Y_to_X_names = ["vel1","steer","roll"]
+            self.X_names = ["vel_y","steer","roll","steer_action","acc_action"]
+            self.Y_names = ["rel_pos_x","rel_pos_y","rel_ang","vel_y","steer","roll"]
+            self.copy_Y_to_X_names = ["vel_y","steer","roll"]
 
-            self.X_names = ["vel0","vel1","vel2","angular_vel","acc","angular_acc","steer","roll","steer_action","acc_action"]
-            self.Y_names = ["angular_vel"]
+            #self.X_names = ["vel_x","vel_y","vel_z","angular_vel","acc","angular_acc","steer","roll","steer_action","acc_action"]
+            #self.Y_names = ["angular_vel"]
 
 
             self.observation_space.range = []
             for name in self.X_names:
                 for _ in range(self.features_numbers[name]):
-                    self.observation_space.range.append(max_min_X[name])
+                    self.observation_space.range.append(self.max_min_values[name])
 
             
-            #self.observation_space.range = [[0,self.max_velocity],[0,self.max_velocity],[0,self.max_velocity],
-            #                                [-self.max_angular_velocity,self.max_angular_velocity],[-self.max_angular_velocity,self.max_angular_velocity],[-self.max_angular_velocity,self.max_angular_velocity],
-            #                                [-self.max_acc,self.max_acc],[-self.max_acc,self.max_acc],[-self.max_acc,self.max_acc],
-            #                                [-self.max_angular_acc,self.max_angular_acc],[-self.max_angular_acc,self.max_angular_acc],[-self.max_angular_acc,self.max_angular_acc],
-            #                                [-self.max_steering,self.max_steering],
-            #                                [-self.max_roll,self.max_roll],
-            #                                [-self.max_steering,self.max_steering],
-            #                                [-1.0,1.0]]#vel,steer,roll,steer_comand,acc_comand
-            #self.observation_space.range = [[0,self.max_velocity],
-            #                                [-self.max_steering,self.max_steering],
-            #                                [-self.max_roll,self.max_roll],
-            #                                [-self.max_steering,self.max_steering],
-            #                                [-1.0,1.0]]#vel,steer,roll,steer_comand,acc_comand
-            #self.X_n = len(self.observation_space.range)
+  
             self.X_n = 0 
             for name in self.X_names:
                 self.X_n+=self.features_numbers[name]
@@ -175,48 +192,69 @@ class OptimalVelocityPlannerData:
                 for i in range(num):
                     X.append(X_dict[name][i])
         return X
-    def create_X(self,state,a):
 
+    def normalize(self,name_val, name):
+        if self.features_numbers[name] == 1:
+            norm = lib.normalize_value(name_val,self.max_min_values[name][0],self.max_min_values[name][1])
+        else:
+            norm = []
+            for i in range(self.features_numbers[name]):
+                norm.append(lib.normalize_value(name_val[i],self.max_min_values[name][0],self.max_min_values[name][1]))
+
+        return norm
+    def denormalize(self,name_val, name):
+        if self.features_numbers[name] == 1:
+            denorm = lib.denormalize_value(name_val,self.max_min_values[name][0],self.max_min_values[name][1])
+        else:
+            denorm = []
+            for i in range(self.features_numbers[name]):
+                denorm.append(lib.denormalize_value(name_val[i],self.max_min_values[name][0],self.max_min_values[name][1]))
+        return denorm
+
+    def create_X(self,state,a):
         X = []
         for i in range(len(state)):
-        #     X.append([state[i]['vel1'],
-        #               state[i]['steer'],
-        #               state[i]['roll'],
-        #               a[i][1],#steer
-        #               np.clip(a[i][0],-1.0,1.0)])#acc
             Xi = []
             for name in self.X_names[:-2]:#X names includes actions hence [:-3]
                 if not isinstance(state[i][name], list):
-                    Xi += [state[i][name]]#
+                    Xi += [self.normalize(state[i][name],name)]#
                 else:
-                    Xi += state[i][name]#
+                    Xi += self.normalize(state[i][name],name)# 
+
+            Xi += [self.normalize(a[i][1],"steer_action") ,self.normalize(np.clip(a[i][0],-1.0,1.0),"acc_action")]#steer,acc
+
+            X.append(Xi)
+        return X
+    def create_X_1(self,state,a):
+        X = []
+        for i in range(len(state)):
+            Xi = []
+            for name in self.X_names[:-2]:#X names includes actions hence [:-3]
+                if not isinstance(state[i][name], list):
+                    Xi += [state[i][name]]#     
+                else:
+                    Xi += state[i][name]# 
+
             Xi += [a[i][1] ,np.clip(a[i][0],-1.0,1.0)]#steer,acc
 
             X.append(Xi)
-
-             #X.append(lib.flat_list(state[i]['vel'])+
-             #         lib.flat_list(state[i]['angular_vel'])+
-             #         lib.flat_list(state[i]['acc'])+
-             #         lib.flat_list(state[i]['angular_acc'])+
-             #         [state[i]['steer'],
-             #         state[i]['steer'],
-             #          a[i][1],#steer
-             #          np.clip(a[i][0],-1.0,1.0)])#acc
-
-
         return X
     def create_XY_(self,state,a,next_state):
         X = self.create_X(state,a)
-        #Y_ = []
-        #for i in range(len(state)):
-        #     Y_.append([
-        #                next_state[i]['rel_pos'][0],
-        #                next_state[i]['rel_pos'][1],
-        #                next_state[i]['rel_ang'],
-        #                next_state[i]['vel1'], 
-        #                next_state[i]['steer'], 
-        #                next_state[i]['roll'],  
-        #                ])
+        Y_ = []
+        for i in range(len(state)):
+            Yi = []
+            for name in self.Y_names:
+                if not isinstance(next_state[i][name], list):
+                    Yi += [self.normalize(next_state[i][name],name)]#
+                else:
+                    Yi += self.normalize(next_state[i][name],name)#
+            Y_.append(Yi)
+
+        return X,Y_
+
+    def create_XY_1(self,state,a,next_state):
+        X = self.create_X_1(state,a)
         Y_ = []
         for i in range(len(state)):
             Yi = []
@@ -226,30 +264,8 @@ class OptimalVelocityPlannerData:
                 else:
                     Yi += next_state[i][name]#
             Y_.append(Yi)
-             #Y_.append( lib.flat_list(state[i]['vel'])+
-             #           lib.flat_list(state[i]['angular_vel'])+
-             #           lib.flat_list(state[i]['acc'])+
-             #           lib.flat_list(state[i]['angular_acc'])+
-             #           [next_state[i]['steer'],
-             #           next_state[i]['roll'],
-             #           next_state[i]['wheel_n_vel'][0],
-             #           next_state[i]['wheel_n_vel'][2],
-             #           next_state[i]['rel_pos'][0],
-             #           next_state[i]['rel_pos'][1],
-             #           next_state[i]['rel_ang']]
-             #           )
-             #Y_.append([next_state[i]['roll']])
-        #print("Y_:",Y_)
-        #print("Y_1:",Y_1)
-        return X,Y_
-        #if mode == 'model_based':
-        #    self.get_state = get_model_based_state
-        #elif mode == 'DDPG':
-        #    self.get_state = get_ddpg_state
-        #else:
-        #    print("error in enviroment - mode not exist")
 
-        
+        return X,Y_
 
         
 
@@ -301,6 +317,10 @@ class OptimalVelocityPlanner(OptimalVelocityPlannerData):
             #    seed = self.dataManager.path_seed[path_num]
             #else:
             #    print("error - path id not exist")
+        if self.reset_count>0 and len(self.roll_vec) > 25 and self.update_max_roll_flag:#not at the first time
+            max_episode_roll = max(self.roll_vec[:-25])# dont consider the last roll angles (during 5 sec) because maybe the are not asymtotic stable
+            if self.max_plan_roll < max_episode_roll: self.max_plan_roll = max_episode_roll
+             
 
         path_error = self.pl.load_path(self.path_lenght, self.path_name,self.path_source,seed = seed)#,seed = 1236
         self.path_seed = seed
@@ -316,7 +336,7 @@ class OptimalVelocityPlanner(OptimalVelocityPlannerData):
             return "error"
         if self.mode == 'DDPG':
             
-            state = get_ddpg_state(self.pl,local_path,self.feature_points,self.distance_between_points,self.max_velocity,self.max_curvature)
+            state = get_ddpg_state(self.pl,local_path,self.feature_points,self.distance_between_points,self.max_velocity_y,self.max_curvature)
             if self.roll_feature_flag:
                 state = [self.pl.simulator.vehicle.angle[2]/self.max_roll]+state
             if self.wheels_vel_feature_flag:
@@ -373,7 +393,7 @@ class OptimalVelocityPlanner(OptimalVelocityPlannerData):
         if self.mode == 'DDPG':
             #local_path = self.pl.get_local_path_vehicle_on_path(send_path = False,num_of_points = self.visualized_points)#num_of_points = visualized_points
        
-            next_state = get_ddpg_state(self.pl,local_path,self.feature_points,self.distance_between_points,self.max_velocity,self.max_curvature)
+            next_state = get_ddpg_state(self.pl,local_path,self.feature_points,self.distance_between_points,self.max_velocity_y,self.max_curvature)
             if self.roll_feature_flag:
                 next_state = [self.pl.simulator.vehicle.angle[2]/self.max_roll]+next_state
             if self.wheels_vel_feature_flag:
@@ -387,6 +407,7 @@ class OptimalVelocityPlanner(OptimalVelocityPlannerData):
         if self.mode == 'model_based':
            # print("before get_model_based_state: ",time.time() - self.last_time[0])
             next_state = get_model_based_state(self.pl,self.last_pos,self.last_ang,local_path)
+            self.roll_vec.append(self.pl.simulator.vehicle.angle[2])
 
         self.dataManager.update_real_path(pl = self.pl,velocity_limit = local_path.analytic_velocity_limit[0],analytic_vel = local_path.analytic_velocity[0]\
             ,curvature = local_path.curvature[0],seed = self.path_seed)
@@ -407,9 +428,9 @@ class OptimalVelocityPlanner(OptimalVelocityPlannerData):
         #get reward:
         if self.lower_bound_flag:
             analytic_vel = self.comp_analytic_velocity(next_state)
-            reward = get_reward(self.pl.simulator.vehicle.velocity[1],self.max_velocity,mode,lower_bound = analytic_vel)
+            reward = get_reward(self.pl.simulator.vehicle.velocity[1],self.max_velocity_y,mode,lower_bound = analytic_vel)
 
-        reward = get_reward(self.pl.simulator.vehicle.velocity[1],self.max_velocity,mode)#,analytic_velocity = local_path.analytic_velocity[0])#
+        reward = get_reward(self.pl.simulator.vehicle.velocity[1],self.max_velocity_y,mode)#,analytic_velocity = local_path.analytic_velocity[0])#
 
         if self.episode_steps > self.max_episode_steps:
             mode = 'max_steps'
@@ -469,7 +490,7 @@ class OptimalVelocityPlanner(OptimalVelocityPlannerData):
         #with open("state_path", 'w') as f:
         #    for pos in state_path.position:
         #        f.write("%s \t %s\t %s \n" % (pos[0],pos[1],pos[2]))
-        result = lib.comp_velocity_limit_and_velocity(state_path,init_vel = pos_state[0]*self.max_velocity, final_vel = 0,reduce_factor = self.reduce_factor)
+        result = lib.comp_velocity_limit_and_velocity(state_path,init_vel = pos_state[0]*self.max_velocity_y, final_vel = 0,reduce_factor = self.reduce_factor)
         max_acc = lib.cf.max_acc
         #print("max_acc:",max_acc)
         if result == 1:#computed analytic velocity
@@ -494,8 +515,8 @@ class OptimalVelocityPlanner(OptimalVelocityPlannerData):
             return np.clip(acc/max_acc,-1,1)
             #return np.clip(acc/8,-1,1)
         else:
-            print("vels",pos_state[0]*self.max_velocity,state_path.analytic_velocity_limit[0])
-            if pos_state[0]*self.max_velocity > state_path.analytic_velocity_limit[0]:
+            print("vels",pos_state[0]*self.max_velocity_y,state_path.analytic_velocity_limit[0])
+            if pos_state[0]*self.max_velocity_y > state_path.analytic_velocity_limit[0]:
                 print("crossed limit")
             print("cannot compute analytic velocity")
             return -1.0
@@ -533,13 +554,13 @@ class OptimalVelocityPlanner(OptimalVelocityPlannerData):
         #with open("state_path", 'w') as f:
         #    for pos in state_path.position:
         #        f.write("%s \t %s\t %s \n" % (pos[0],pos[1],pos[2]))
-        result = lib.comp_velocity_limit_and_velocity(state_path,init_vel = pos_state[0]*self.max_velocity, final_vel = 0,reduce_factor = 0.8)
+        result = lib.comp_velocity_limit_and_velocity(state_path,init_vel = pos_state[0]*self.max_velocity_y, final_vel = 0,reduce_factor = 0.8)
         if result == 1:#computed analytic velocity
             vel = state_path.analytic_velocity[0]
             return vel
         else:
-            print("vels",pos_state[0]*self.max_velocity,state_path.analytic_velocity_limit[0])
-            if pos_state[0]*self.max_velocity > state_path.analytic_velocity_limit[0]:
+            print("vels",pos_state[0]*self.max_velocity_y,state_path.analytic_velocity_limit[0])
+            if pos_state[0]*self.max_velocity_y > state_path.analytic_velocity_limit[0]:
                 print("crossed limit")
             print("cannot compute analytic velocity")
             return 0.0

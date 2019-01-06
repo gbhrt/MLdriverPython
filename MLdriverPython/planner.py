@@ -16,9 +16,9 @@ class Planner(PathManager):#planner - get and send data to simulator. input - mi
         self.reference_free_path = Path()#a path without reference system (start at (0,0) and angle 0)
         self.in_vehicle_reference_path = Path()# reference_free_path shifted and rotated to vehicle position (vehicle on the path start)
         
-        self.simulator = simulator_thread.start_simulator_connection()#start thread for connection with the simulator 
-        #self.simulator = simulator_thread.SimVehicle()
-        #self.simulator.connect()
+        #self.simulator = simulator_thread.start_simulator_connection()#start thread for connection with the simulator 
+        self.simulator = simulator_thread.SimVehicle()
+        self.simulator.connect()
         self.start_time = 0
         self.index = 0
         self.main_index = 0

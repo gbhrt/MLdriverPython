@@ -43,7 +43,7 @@ final_conv_analytic_new_reward_4 - new relative reward >200
 """
 
 def plot_rewards(folder,names,shape=None,color=None,label = None,vod_label = None,max_train_iterations = 1000000):
-    N = 10#80
+    N = 1#80
     episodes_num = 50
     dataManager_vec = []
     relative_rewards_changed_vec = []
@@ -224,7 +224,7 @@ def plot_rewards(folder,names,shape=None,color=None,label = None,vod_label = Non
             if train_n > max_train_iterations:
                 max_train_num = j
                 break
-    max_train_num =120#temp
+    #max_train_num =120#temp
     plt.figure(3)
     #for i in range(len(fails_density_vec)):
     #    plt.plot(np.array(dataManager_vec[i].train_num)[:len(fails_density_vec[i])],(fails_density_vec[i]))
@@ -333,7 +333,7 @@ if __name__ == "__main__":
     #names2 = ["REVO_F_again_1","REVO_F_again_2","REVO_F_again_3","REVO_F_again_4","REVO_F_again_5"]#
     #names3 = ["acvo_1","acvo_2","acvo_3","acvo_4","acvo_5"]
     #names4 = ["bevo_1","bevo_2","bevo_3","bevo_4","bevo_5"]#,"bevo4"
-    names1 = ["MB_1"]#,"MB_2","MB_3","MB_4"]#,
+    names1 = ["collect_data"]#,"MB_2","MB_3","MB_4"]#,
     #names1= ["MB_1_003_max02"]
              #"analytic_check_2",
              #"analytic_check_3",

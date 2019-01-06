@@ -158,64 +158,12 @@ def comp_steer_from_next_state(net,env,state,steer_command,acc_command):
     Y = net.get_Y(X)[0]
     Y_dict = env.Y_to_Y_dict(Y)
     #abs_pos,abs_ang = comp_abs_pos_ang(Y[0:2],Y[2],[0,0],0)
-    abs_pos,abs_ang = comp_abs_pos_ang(Y_dict["rel_pos"],Y_dict["rel_ang"],[0,0],0)
+    rel_pos = [env.denormalize(Y_dict["rel_pos_x"],"rel_pos_x"),env.denormalize(Y_dict["rel_pos_y"],"rel_pos_y")]
+    abs_pos,abs_ang = comp_abs_pos_ang(rel_pos,env.denormalize(Y_dict["rel_ang"],"rel_ang"),[0,0],0)
     index = lib.find_index_on_path(state['path'],abs_pos)
-    next_steer_command = lib.comp_steer_general(state['path'],index,abs_pos,abs_ang,state['vel1'])#action steer
+    next_steer_command = lib.comp_steer_general(state['path'],index,abs_pos,abs_ang,state['vel_y'])#action steer
     return next_steer_command
-#def predict_n_next(n,net,env,init_state,action,acc_try = 1.0,max_plan_roll = None):
-#    if max_plan_roll is None:
-#        max_plan_roll = env.max_plan_roll
-#    abs_pos = [0,0]#relative to the local path
-#    abs_ang = 0
-#    index = lib.find_index_on_path(init_state['path'],abs_pos)
-#    steer_command = lib.comp_steer_general(init_state['path'],index,abs_pos,abs_ang,init_state['vel1'])
-    
-#    #print("current action: ",action, "try action: ",acc_try)
-#    acc_command = action# first action is already executed and known
-#    roll_flag = False
-#    if abs(init_state['roll']) > max_plan_roll:#check the current roll 
-#        roll_flag = True
-#    pred_vec = [[abs_pos,abs_ang,init_state['vel1'],init_state['steer'],init_state['roll']]]
-#    X = env.create_X([init_state],[[acc_command,steer_command]])[0]
-#    #X = [5.0,0.1,steer_command,acc_command]
-#    print("X:",X)
-#    if roll_flag == False:
-#        for i in range(1,n):#n times 
-#            Y = net.get_Y([X])[0]#predict_next(features_num,train_data, sample, k, p)
 
-#            print("X:",X,"Y:",Y)
-#            #pred_vec.append(Y)#x,y,ang,vel, steer roll - all relative 
-        
-
-#            X[0] = Y[3]#vel
-#            X[1] = Y[4]#steer
-#            abs_pos,abs_ang = comp_abs_pos_ang(Y[0:2],Y[2],abs_pos,abs_ang)#rel_pos = Y[0:2] rel_ang = Y[2] roll Y[5]
-#            #print("abs_pos",abs_pos,"abs_ang",abs_ang)
-#            index = lib.find_index_on_path(init_state['path'],abs_pos)
-#            steer_command =  lib.comp_steer_general(init_state['path'],index,abs_pos,abs_ang,init_state['vel1'])#action steer
-#            #print("steer_command:",steer_command)
-#            X[2] = Y[5]#roll
-#            X[3] =  steer_command#X[2]
-#            if i==1:#the firs time determent by the current given action
-#                acc_command = acc_try
-#            else:
-#                acc_command = -1.0
-#            X[4] = acc_command #action acceleration  X[3]
-#            pred_vec.append([abs_pos,abs_ang,Y[3],Y[4],Y[5]])
-#            if Y[3] < 2.0:#reach velocity 0 - or safe velocity
-#                #print("reach velocity 0")
-#                break
-#            if abs(Y[5]) > max_plan_roll:# roll
-#                #print("reach roll")
-#                roll_flag = True
-#                break
-    
-#    print("roll:", np.array(pred_vec)[:,4])
-#    print("vel:", np.array(pred_vec)[:,2])
-   
-#    #print("end--------------------------")
-#    dev_flag = False
-#    return pred_vec,roll_flag,dev_flag
 def predict_n_next(n,net,env,init_state,action,acc_try = 1.0,max_plan_roll = None,max_plan_deviation = None):
     if max_plan_roll is None:
         max_plan_roll = env.max_plan_roll
@@ -225,7 +173,7 @@ def predict_n_next(n,net,env,init_state,action,acc_try = 1.0,max_plan_roll = Non
     abs_pos = [0,0]#relative to the local path
     abs_ang = 0
     index = lib.find_index_on_path(init_state['path'],abs_pos)
-    steer_command = lib.comp_steer_general(init_state['path'],index,abs_pos,abs_ang,init_state['vel1'])
+    steer_command = lib.comp_steer_general(init_state['path'],index,abs_pos,abs_ang,init_state['vel_y'])
 
     #print("after steer_command time:",time.clock() - env.lt)
     #print("current action: ",action, "try action: ",acc_try)
@@ -238,7 +186,7 @@ def predict_n_next(n,net,env,init_state,action,acc_try = 1.0,max_plan_roll = Non
     if dev_from_path > max_plan_deviation:
         #dev_flag = True
         max_plan_deviation = 10
-    pred_vec = [[abs_pos,abs_ang,init_state['vel1'],init_state['roll']]]#,abs_ang,init_state['vel'],init_state['steer'],init_state['roll']]]
+    pred_vec = [[abs_pos,abs_ang,init_state['vel_y'],init_state['roll']]]#,abs_ang,init_state['vel'],init_state['steer'],init_state['roll']]]
     X = env.create_X([init_state],[[acc_command ,steer_command]])[0]
 
     X_dict = env.X_to_X_dict(X)
@@ -256,21 +204,24 @@ def predict_n_next(n,net,env,init_state,action,acc_try = 1.0,max_plan_roll = Non
             Y_dict = env.Y_to_Y_dict(Y)
             #print("after prediction time:",time.clock() - env.lt)
             for name in env.copy_Y_to_X_names:
-                X_dict[name] = Y_dict[name]
+                X_dict[name] = Y_dict[name]#env.normalize(Y_dict[name],name)
            # print("X_dict:",X_dict,"Y_dict:",Y_dict)
             #X = copy.copy(Y[:len(Y) - 5])#copy the whole relative information (exclude commands, rel pos (2) and rel ang(1))
 
             #abs_pos,abs_ang = comp_abs_pos_ang(Y[-3:-1],Y[-1],abs_pos,abs_ang)#rel_pos = Y[0:2] rel_ang = Y[2] roll Y[5]
-            abs_pos,abs_ang = comp_abs_pos_ang(Y_dict["rel_pos"],Y_dict["rel_ang"],abs_pos,abs_ang)#rel_pos = Y[0:2] rel_ang = Y[2] roll Y[5]
+            rel_pos = [env.denormalize(Y_dict["rel_pos_x"],"rel_pos_x"),env.denormalize(Y_dict["rel_pos_y"],"rel_pos_y")]
+            #rel_pos = [(Y_dict["rel_pos_x"],Y_dict["rel_pos_y"]]
+            abs_pos,abs_ang = comp_abs_pos_ang(rel_pos,env.denormalize(Y_dict["rel_ang"],"rel_ang"),abs_pos,abs_ang)#rel_pos = Y[0:2] rel_ang = Y[2] roll Y[5]
 
             index = lib.find_index_on_path(init_state['path'],abs_pos)
             #print("index:",index)
-            steer_command =  lib.comp_steer_general(init_state['path'],index,abs_pos,abs_ang,Y_dict['vel1'])#action steerinit_state['vel1']
+            vel = env.denormalize(Y_dict['vel_y'],"vel_y")
+            steer_command =  lib.comp_steer_general(init_state['path'],index,abs_pos,abs_ang,vel)#action steerinit_state['vel_y']
             #print("steer command:",steer_command)
             #X.append(steer_command)
             #X[-2] = copy.copy(steer_command)
-            X_dict["steer_action"] = steer_command
-            if i==1:#the firs time determent by the current given action
+            X_dict["steer_action"] = env.normalize(steer_command,"steer_action")
+            if i==1:#the first time determent by the current given action
                 acc_command = acc_try
             else:
                 acc_command = -1.0
@@ -278,10 +229,11 @@ def predict_n_next(n,net,env,init_state,action,acc_try = 1.0,max_plan_roll = Non
             #X[-1] = copy.copy(acc_command)
             X_dict["acc_action"] = acc_command
 
+            roll = env.denormalize(Y_dict["roll"],"roll")
             #print("end loop X_dict:",X_dict,"Y_dict:",Y_dict)
-            pred_vec.append([abs_pos,abs_ang,Y_dict["vel1"],Y_dict["roll"]])
+            pred_vec.append([abs_pos,abs_ang,vel,roll])
             #if Y[1] < 2.0:
-            if Y_dict["vel1"] < 2.0:
+            if vel < 2.0:
                 #print("reach velocity 0")
                 break
             #if abs(Y[2]) > max_plan_roll:# roll
@@ -289,7 +241,7 @@ def predict_n_next(n,net,env,init_state,action,acc_try = 1.0,max_plan_roll = Non
             #print("deviation:", dev_from_path)
             #if abs(Y[13]) > max_plan_roll: 
             
-            if abs(Y_dict["roll"]) > max_plan_roll: 
+            if abs(roll) > max_plan_roll: 
                 #print("fail rool or dev")
                 roll_flag = True
                 break

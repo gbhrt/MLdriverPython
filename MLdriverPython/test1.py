@@ -15,7 +15,7 @@
 #print(x.keys().index("c"))
 # importing the required module 
 # importing the required modules 
-import timeit 
+#import timeit 
 
 # binary search function 
 
@@ -82,4 +82,7 @@ import timeit
      
 #        time.sleep(0.5)
 
-        
+a = [1,2,3]
+b = [4,5,6]
+c= zip(a,b)
+print(c)

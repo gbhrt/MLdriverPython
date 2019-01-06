@@ -5,11 +5,14 @@ import matplotlib.pyplot as plt
 import numpy as np
 import library as lib
 import enviroment1 
-
-def save_Y_Y_(file_name,Y,Y_):
+import json
+import os
+import random
+from sklearn import preprocessing
+def save_data(file_name,data):
     with open(file_name, 'w') as f:#append data to the file
-        for y, y_ in zip(Y,Y_):
-            f.write("%s\t %s\t\n" % (y,y_))
+        json.dump(data,f)
+
 def plot_distribution(data,name):
     plt.figure(name+" distribution")
     plt.hist(data,bins='auto')
@@ -19,7 +22,7 @@ def plot_comparison(real, predicted,name):
     plt.plot(real,'o')
     plt.plot(predicted,'o')
 
-def plot_distribution(Y_, Y,feature,index = None,plot_name=" "):
+def plot_distribution_dict(Y_, Y,feature,index = None,plot_name=" "):
     plt.figure(plot_name+" distribution")
     real,predicted = [],[]
     for y_,y in zip(Y_,Y):
@@ -52,13 +55,7 @@ def plot_comparison_dict(Y_, Y,feature,index = None,plot_name=" "):
     plt.plot(real,'o')
     plt.plot(predicted,'o')
 
-def split_to_columns(arr2d,n):
-    arr1 = []
-    arr2 = []
-    for a in arr2d:
-        arr1.append(a[:n])
-        arr2.append(a[n:])
-    return arr1,arr2
+
 
 
 def convert_data(Replay,envData):
@@ -66,21 +63,29 @@ def convert_data(Replay,envData):
     X,Y_ = envData.create_XY_(rand_state,rand_a,rand_next_state)
     return X,Y_,end,fail
 
-def train_net(HP,net,Replay,envData,waitFor,num_train):
+
+def train_net(HP,net,vec_X,vec_Y_,envData,waitFor,num_train):#Replay
     losses = []
     train_count = 0
+    batch_size = 64
     plt.ion()
+
+    XandY_  = [[X,Y_] for X,Y_ in zip(vec_X,vec_Y_)]
     for i in range(num_train):
         if waitFor.stop == [True]:
             break
         #with trainShared.Lock:
-        rand_state, rand_a, rand_next_state, rand_end,_ = Replay.sample(HP.batch_size)
+        #rand_state, rand_a, rand_next_state, rand_end,_ = Replay.sample(HP.batch_size)
+
+        #X,Y_ = map(list, zip(*random.sample(zip(vec_X,vec_Y_),np.clip(batch_size,0,len(vec_Y_)))))
+        X,Y_ = map(list, zip(*random.sample(XandY_,np.clip(batch_size,0,len(XandY_)))))
         #update neural networs:
-        pLib.model_based_update(rand_state, rand_a, rand_next_state,rand_end,net,HP,envData)
+        #pLib.model_based_update(rand_state, rand_a, rand_next_state,rand_end,net,HP,envData)
+        #X,Y_ = envData.create_XY_(rand_state, rand_a, rand_next_state)
+        net.update_network(X,Y_)
         train_count+=1
         if train_count % 100 == 0:
             #X,Y_,end,fail = convert_data(ReplayTest)
-            X,Y_ = envData.create_XY_(rand_state, rand_a, rand_next_state)
             loss = float(net.get_loss(X,Y_))
             if loss > 10:
                 print("what??")
@@ -131,12 +136,16 @@ def compare_n_samples(net,X,end,Y_,n):
     abs_real_pred = comp_abs_states(X[0],Y_[:len(pred_vec)])
     return abs_pred,abs_real_pred
 
+
 if __name__ == "__main__": 
     restore = False
     train = True
     split_buffer = True
-    train_part = 0.5
-    num_train = 1000000
+    test_part = 0.5
+    num_train = 10000000
+
+    description = "200 episodes"
+    file_name = "data5.txt"
 
     waitFor = lib.waitFor()
     HP = hyper_parameters.ModelBasedHyperParameters()
@@ -147,30 +156,57 @@ if __name__ == "__main__":
     #velocity, steering angle, steering action, acceleration action,  rel x, rel y, rel ang, velocity next, steering next, roll
     Replay.restore(HP.restore_file_path)
     print("lenght of buffer: ",len(Replay.memory))
-    ReplayTrain = pLib.Replay(1000000)
-    ReplayTest = pLib.Replay(1000000)
-    if split_buffer:
-        ReplayTrain.memory = Replay.memory[int(train_part*len(Replay.memory)):]#Replay.memory[:int(train_part*len(Replay.memory))]
-        ReplayTest.memory = Replay.memory[:int(train_part*len(Replay.memory))]#Replay.memory[int(train_part*len(Replay.memory)):]#
+    #ReplayTrain = pLib.Replay(1000000)
+    #ReplayTest = pLib.Replay(1000000)
+    #if split_buffer:
+    #    #test at the beggining of the buffer
+    #    #ReplayTrain.memory = Replay.memory[int(test_part*len(Replay.memory)):]
+    #    #ReplayTest.memory = Replay.memory[:int(test_part*len(Replay.memory))]#
+
+    #    #test at the end of the buffer
+    #    ReplayTrain.memory = Replay.memory[:int(test_part*len(Replay.memory))]
+    #    ReplayTest.memory = Replay.memory[int(test_part*len(Replay.memory)):]
+    state, a, next_state, end,_ = map(list, zip(*Replay.memory))#all data
+    vec_X,vec_Y_ = envData.create_XY_1(state,a,next_state)#not normalized!
+    train_X = vec_X[:int(test_part*len(vec_X))]
+    train_Y_ = vec_Y_[:int(test_part*len(vec_X))]
+
+    #train_X = preprocessing.scale(train_X)
+    #train_Y_ = preprocessing.scale(train_Y_)
+    scalerX = preprocessing.StandardScaler().fit(train_X)
+    scalerY = preprocessing.StandardScaler().fit(train_X)
+
+    test_X = vec_X[int(test_part*len(vec_X)):]
+    test_Y_ = vec_Y_[int(test_part*len(vec_X)):]
 
     if restore:
         net.restore(HP.restore_file_path)
 
     if train:
-        train_net(HP,net,ReplayTrain,envData, waitFor,num_train)
+        train_net(HP,net,train_X,train_Y_,envData, waitFor,num_train)#ReplayTrain
 
     
-    X,Y_,end,fail = convert_data(ReplayTest,envData)
-    print("test loss: ",net.get_loss(X,Y_))
+    data = [description]#data_name,train_X,train_Y, train_Y_,test_X,test_Y, test_Y_
+    #train_X,train_Y_,_,_ = convert_data(ReplayTrain,envData)
+    train_Y = net.get_Y(train_X).tolist()
+    data.append([envData.X_to_X_dict(train_x) for train_x in train_X])
+    data.append([envData.Y_to_Y_dict(train_y) for train_y in train_Y])
+    data.append([envData.Y_to_Y_dict(train_y_) for train_y_ in train_Y_])
+    #X,Y_,end,fail = convert_data(ReplayTest,envData)
+
+    print("test loss: ",net.get_loss(test_X,test_Y_))
     #compare one step prediction:
-    Y = net.get_Y(X)
-    Y = np.array(Y)
-    Y_ = np.array(Y_)
-    errors = Y - Y_
+    test_Y = net.get_Y(test_X).tolist()
+    data.append([envData.X_to_X_dict(x) for x in test_X])
+    data.append([envData.Y_to_Y_dict(y) for y in test_Y])
+    data.append([envData.Y_to_Y_dict(y_) for y_ in test_Y_])
+    #Y = np.array(Y)
+    #Y_ = np.array(Y_)
+    #errors = Y - Y_
 
- 
+    
 
-    save_Y_Y_("data1.txt",Y,Y_)
+    save_data(os.getcwd()+"\\files\\train_data\\"+file_name,data)
 
 
     ##compare n step prediction:
@@ -205,17 +241,17 @@ if __name__ == "__main__":
 
     for name in envData.Y_names:
         if envData.features_numbers[name] == 1:
-            plot_distribution_dict(Y_,Y,name,plot_name = name)
+            plot_distribution_dict(test_Y_,test_Y,name,plot_name = name)
         else:
             for i in range(envData.features_numbers[name]):
-                plot_distribution_dict(Y_,Y,name,i,plot_name = name+str(i))
+                plot_distribution_dict(test_Y_,test_Y,name,i,plot_name = name+str(i))
 
     for name in envData.Y_names:
         if envData.features_numbers[name] == 1:
-            plot_comparison_dict(Y_,Y,name,plot_name = name)
+            plot_comparison_dict(test_Y_,test_Y,name,plot_name = name)
         else:
             for i in range(envData.features_numbers[name]):
-                plot_comparison_dict(Y_,Y,name,i,plot_name = name+str(i))
+                plot_comparison_dict(test_Y_,test_Y,name,i,plot_name = name+str(i))
 
 
 

@@ -44,7 +44,7 @@ class HyperParameters:
 
 class ModelBasedHyperParameters:
     def __init__(self):
-        self.num_of_runs = 200
+        self.num_of_runs = 5000
         self.alpha = 0.001# #learning rate
         self.batch_size = 64
         self.replay_memory_size = 100000
@@ -68,9 +68,9 @@ class ModelBasedHyperParameters:
         self.save_every = 100
         self.save_every_time = 5000 #minutes
         self.seed = 1111
-        self.save_name = "test"
+        self.save_name = "collect_data_test"
         self.save_file_path = os.getcwd()+ "\\files\\models\\model_based\\"+self.save_name+"\\"
-        self.restore_name = "friction2"#friction2 - data from small X, test_just_roll - data from all features
+        self.restore_name = "collect_data"#test - data from small X, test1 - 10000+ points data, collect_data_no_slip -200 episodes
         self.restore_file_path = os.getcwd()+ "\\files\\models\\model_based\\"+self.restore_name+"\\"
 
         if self.always_no_noise_flag:

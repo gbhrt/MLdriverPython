@@ -17,12 +17,18 @@ def clear_screen():
 def flat_list(alist):
     return [item for item in alist]
 
+def normalize_value(val,min_val,max_val):
+    return -1+(val-min_val)*2/(max_val - min_val)
+
+def denormalize_value(val,min_val,max_val):
+    return 0.5*((max_val - min_val)*val + max_val + min_val)
+
 def normalize(data,norm_vec):
     try:
         n_data = copy.deepcopy(data)
         #print("data:",data)
         for i in range(len(data[0])):
-            dat = np.array(data)[:,i]
+            #dat = np.array(data)[:,i]
 
             min_data = norm_vec[i][0]
             max_data = norm_vec[i][1]

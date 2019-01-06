@@ -10,12 +10,13 @@ from net_lib import NetLib
 
 class model_based_network(NetLib):
     def __init__(self,X_n,Y_n,alpha,norm_vec):
-        self.norm_vec = norm_vec
+        self.X_norm_vec = norm_vec
         tf.reset_default_graph()   
         #hidden_layer_nodes1 = 200
         #hidden_layer_nodes2 = 100
-        hidden_layer_nodes1 = 400
-        hidden_layer_nodes2 = 200
+        hidden_layer_nodes1 = 50
+        hidden_layer_nodes2 = 50
+        hidden_layer_nodes3 = 50
 
         self.alpha = alpha#0.001
 
@@ -34,17 +35,28 @@ class model_based_network(NetLib):
         #self.b3 = tf.Variable(tf.constant(0.1, shape=[Y_n]))
         #self.Y = tf.matmul(self.z2,self.W3)+self.b3
 
+        #init = tflearn.initializations.truncated_normal(stddev = 0.1)
+        #fc1 = tflearn.fully_connected(self.X, hidden_layer_nodes1,weights_init = init,bias_init = tf.constant(0.1, shape=[hidden_layer_nodes1]))
+        #fc2 = tflearn.fully_connected(fc1, hidden_layer_nodes2,weights_init = init,bias_init = tf.constant(0.1, shape=[hidden_layer_nodes2]))
+        #self.Y = tflearn.fully_connected(fc2, Y_n,weights_init = init,bias_init = tf.constant(0.1, shape=[Y_n]))
+
+        #2 hidden layers:
+        #fc1 = tflearn.fully_connected(self.X, hidden_layer_nodes1,regularizer='L2', weight_decay=0.01)
+        #fc1 = tflearn.activations.relu(fc1)
+        #fc2 = tflearn.fully_connected(fc1, hidden_layer_nodes2,regularizer='L2', weight_decay=0.01)
+        #fc2 = tflearn.activations.relu(fc2)
+        #self.Y = tflearn.fully_connected(fc2, Y_n,regularizer='L2', weight_decay=0.01)
+
+        #3 hidden layers:
         fc1 = tflearn.fully_connected(self.X, hidden_layer_nodes1,regularizer='L2', weight_decay=0.01)
         fc1 = tflearn.activations.relu(fc1)
         fc2 = tflearn.fully_connected(fc1, hidden_layer_nodes2,regularizer='L2', weight_decay=0.01)
         fc2 = tflearn.activations.relu(fc2)
-        self.Y = tflearn.fully_connected(fc2, Y_n,regularizer='L2', weight_decay=0.01)
+        fc3 = tflearn.fully_connected(fc2, hidden_layer_nodes3,regularizer='L2', weight_decay=0.01)
+        fc3 = tflearn.activations.relu(fc3)
+        self.Y = tflearn.fully_connected(fc3, Y_n,regularizer='L2', weight_decay=0.01)
 
-        #init = tflearn.initializations.truncated_normal(stddev = 0.1)
 
-        #fc1 = tflearn.fully_connected(self.X, hidden_layer_nodes1,weights_init = init,bias_init = tf.constant(0.1, shape=[hidden_layer_nodes1]))
-        #fc2 = tflearn.fully_connected(fc1, hidden_layer_nodes2,weights_init = init,bias_init = tf.constant(0.1, shape=[hidden_layer_nodes2]))
-        #self.Y = tflearn.fully_connected(fc2, Y_n,weights_init = init,bias_init = tf.constant(0.1, shape=[Y_n]))
 
         self.loss=tf.reduce_mean(tf.squared_difference(self.Y,self.Y_))
         self.update=tf.train.AdamOptimizer(alpha).minimize(self.loss)
@@ -92,10 +104,19 @@ class model_based_network(NetLib):
         
 
     def update_network(self,X,Y_):
-        self.sess.run(self.update, feed_dict={self.X: lib.normalize(X,self.norm_vec) ,self.Y_: Y_})# 
+        #self.sess.run(self.update, feed_dict={self.X: lib.normalize(X,self.X_norm_vec) ,self.Y_: Y_})# 
+        self.sess.run(self.update, feed_dict={self.X: X ,self.Y_: Y_})
         return 
     def get_loss(self,X,Y_):
-        return self.sess.run(self.loss, feed_dict= {self.X: lib.normalize(X,self.norm_vec) ,self.Y_: Y_})# 
+        #return self.sess.run(self.loss, feed_dict= {self.X: lib.normalize(X,self.X_norm_vec) ,self.Y_: Y_})# 
+        return self.sess.run(self.loss, feed_dict= {self.X: X ,self.Y_: Y_})# 
+    def get_Y_1(self,X):
+        Y = self.sess.run(self.Y, feed_dict= {self.X: lib.normalize(X,self.X_norm_vec)})
+        #Y = self.sess.run(self.Y, feed_dict= {self.X: X})
+        return Y
     def get_Y(self,X):
-        Y = self.sess.run(self.Y, feed_dict= {self.X: lib.normalize(X,self.norm_vec)})
+        #norm_X = lib.normalize(X,self.X_norm_vec)
+        #print("norm x:",norm_X)
+        #Y = self.sess.run(self.Y, feed_dict= {self.X: lib.normalize(X,self.X_norm_vec)})
+        Y = self.sess.run(self.Y, feed_dict= {self.X:X})
         return Y
