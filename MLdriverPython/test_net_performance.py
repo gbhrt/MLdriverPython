@@ -78,13 +78,15 @@ def train_net(HP,net,vec_X,vec_Y_,envData,waitFor,num_train):#Replay
         #rand_state, rand_a, rand_next_state, rand_end,_ = Replay.sample(HP.batch_size)
 
         #X,Y_ = map(list, zip(*random.sample(zip(vec_X,vec_Y_),np.clip(batch_size,0,len(vec_Y_)))))
-        X,Y_ = map(list, zip(*random.sample(XandY_,np.clip(batch_size,0,len(XandY_)))))
+       # X,Y_ = map(list, zip(*random.sample(XandY_,np.clip(batch_size,0,len(XandY_)))))
+        X,Y_ = zip(*random.sample(XandY_,np.clip(batch_size,0,len(XandY_))))
+
         #update neural networs:
         #pLib.model_based_update(rand_state, rand_a, rand_next_state,rand_end,net,HP,envData)
         #X,Y_ = envData.create_XY_(rand_state, rand_a, rand_next_state)
         net.update_network(X,Y_)
         train_count+=1
-        if train_count % 100 == 0:
+        if train_count % 500 == 0:
             #X,Y_,end,fail = convert_data(ReplayTest)
             loss = float(net.get_loss(X,Y_))
             if loss > 10:
@@ -138,14 +140,25 @@ def compare_n_samples(net,X,end,Y_,n):
 
 
 if __name__ == "__main__": 
-    restore = False
-    train = True
+    restore = True
+    train = False
     split_buffer = True
-    test_part = 0.5
+
+    scaling_type = "standard_scaler"#standard_scaler
+    test_part = 0.3
     num_train = 10000000
 
-    description = "200 episodes"
-    file_name = "data5.txt"
+    description = "small_state_standard_norm_3_layers_100_nodes_L2_05"
+    file_name = "small_state_standard_norm_3_layers_100_nodes_L2_05.txt"
+    #small_state_regular_norm_3_layers_50_nodes
+    #small_state_standard_norm_3_layers_50_nodes
+
+    #big_state_standard_norm_3_layers_50_nodes
+
+    #big_state_standard_norm_3_layers_20_nodes_alpha_0001 - not good
+    #big_state_standard_norm_4_layers_20_nodes_alpha_0001
+    #big_state_standard_norm_3_layers_100_nodes saved in collect_data_test the best
+    #big_state_standard_norm_3_layers_20_nodes_L2_01
 
     waitFor = lib.waitFor()
     HP = hyper_parameters.ModelBasedHyperParameters()
@@ -155,51 +168,73 @@ if __name__ == "__main__":
     Replay = pLib.Replay(1000000)
     #velocity, steering angle, steering action, acceleration action,  rel x, rel y, rel ang, velocity next, steering next, roll
     Replay.restore(HP.restore_file_path)
+    #Replay.memory = Replay.memory[:10000]
     print("lenght of buffer: ",len(Replay.memory))
-    #ReplayTrain = pLib.Replay(1000000)
-    #ReplayTest = pLib.Replay(1000000)
-    #if split_buffer:
-    #    #test at the beggining of the buffer
-    #    #ReplayTrain.memory = Replay.memory[int(test_part*len(Replay.memory)):]
-    #    #ReplayTest.memory = Replay.memory[:int(test_part*len(Replay.memory))]#
 
-    #    #test at the end of the buffer
-    #    ReplayTrain.memory = Replay.memory[:int(test_part*len(Replay.memory))]
-    #    ReplayTest.memory = Replay.memory[int(test_part*len(Replay.memory)):]
     state, a, next_state, end,_ = map(list, zip(*Replay.memory))#all data
-    vec_X,vec_Y_ = envData.create_XY_1(state,a,next_state)#not normalized!
-    train_X = vec_X[:int(test_part*len(vec_X))]
-    train_Y_ = vec_Y_[:int(test_part*len(vec_X))]
+    if  scaling_type == "standard_scaler":
+        vec_X,vec_Y_ = envData.create_XY_1(state,a,next_state)#not normalized!
+        train_X = vec_X[:int(test_part*len(vec_X))]
+        train_Y_ = vec_Y_[:int(test_part*len(vec_X))]
+        test_X = vec_X[int(test_part*len(vec_X)):]
+        test_Y_ = vec_Y_[int(test_part*len(vec_X)):]
+        scalerX = preprocessing.StandardScaler().fit(train_X)
+        scalerY = preprocessing.StandardScaler().fit(train_Y_)
+        train_X = scalerX.transform(train_X)
+        train_Y_ = scalerY.transform(train_Y_)
+        test_X = scalerX.transform(test_X)
+        test_Y_ = scalerY.transform(test_Y_)
 
-    #train_X = preprocessing.scale(train_X)
-    #train_Y_ = preprocessing.scale(train_Y_)
-    scalerX = preprocessing.StandardScaler().fit(train_X)
-    scalerY = preprocessing.StandardScaler().fit(train_X)
-
-    test_X = vec_X[int(test_part*len(vec_X)):]
-    test_Y_ = vec_Y_[int(test_part*len(vec_X)):]
+    else:
+        vec_X,vec_Y_ = envData.create_XY_(state,a,next_state)#normalized!
+        train_X = vec_X[:int(test_part*len(vec_X))]
+        train_Y_ = vec_Y_[:int(test_part*len(vec_X))]
+        test_X = vec_X[int(test_part*len(vec_X)):]
+        test_Y_ = vec_Y_[int(test_part*len(vec_X)):]
 
     if restore:
         net.restore(HP.restore_file_path)
 
+    
     if train:
         train_net(HP,net,train_X,train_Y_,envData, waitFor,num_train)#ReplayTrain
 
     
-    data = [description]#data_name,train_X,train_Y, train_Y_,test_X,test_Y, test_Y_
+    
     #train_X,train_Y_,_,_ = convert_data(ReplayTrain,envData)
     train_Y = net.get_Y(train_X).tolist()
-    data.append([envData.X_to_X_dict(train_x) for train_x in train_X])
-    data.append([envData.Y_to_Y_dict(train_y) for train_y in train_Y])
-    data.append([envData.Y_to_Y_dict(train_y_) for train_y_ in train_Y_])
-    #X,Y_,end,fail = convert_data(ReplayTest,envData)
-
-    print("test loss: ",net.get_loss(test_X,test_Y_))
-    #compare one step prediction:
     test_Y = net.get_Y(test_X).tolist()
-    data.append([envData.X_to_X_dict(x) for x in test_X])
-    data.append([envData.Y_to_Y_dict(y) for y in test_Y])
-    data.append([envData.Y_to_Y_dict(y_) for y_ in test_Y_])
+    print("test loss: ",net.get_loss(test_X,test_Y_))
+    print("train loss: ",net.get_loss(train_X,train_Y_))
+    data = [description]#data_name,train_X,train_Y, train_Y_,test_X,test_Y, test_Y_
+
+    #inverse transform:
+    if scaling_type == "standard_scaler":
+        train_Y = scalerY.inverse_transform(train_Y)
+        train_Y_ = scalerY.inverse_transform(train_Y_)
+        train_X = scalerX.inverse_transform(train_X)
+
+        test_Y = scalerY.inverse_transform(test_Y)
+        test_Y_ = scalerY.inverse_transform(test_Y_)
+        test_X = scalerX.inverse_transform(test_X)
+
+        data.append([envData.X_to_X_dict(train_x) for train_x in train_X])
+        data.append([envData.Y_to_Y_dict(train_y) for train_y in train_Y])
+        data.append([envData.Y_to_Y_dict(train_y_) for train_y_ in train_Y_])
+    
+        data.append([envData.X_to_X_dict(x) for x in test_X])
+        data.append([envData.Y_to_Y_dict(y) for y in test_Y])
+        data.append([envData.Y_to_Y_dict(y_) for y_ in test_Y_])
+    else:
+
+        data.append([envData.denormalize_dict(envData.X_to_X_dict(train_x)) for train_x in train_X])
+        data.append([envData.denormalize_dict(envData.Y_to_Y_dict(train_y)) for train_y in train_Y])
+        data.append([envData.denormalize_dict(envData.Y_to_Y_dict(train_y_)) for train_y_ in train_Y_])
+    
+        data.append([envData.denormalize_dict(envData.X_to_X_dict(x)) for x in test_X])
+        data.append([envData.denormalize_dict(envData.Y_to_Y_dict(y)) for y in test_Y])
+        data.append([envData.denormalize_dict(envData.Y_to_Y_dict(y_)) for y_ in test_Y_])
+    #compare one step prediction:
     #Y = np.array(Y)
     #Y_ = np.array(Y_)
     #errors = Y - Y_
@@ -207,7 +242,7 @@ if __name__ == "__main__":
     
 
     save_data(os.getcwd()+"\\files\\train_data\\"+file_name,data)
-
+    print("data saved")
 
     ##compare n step prediction:
     #vec_Y_n =  []
@@ -238,6 +273,8 @@ if __name__ == "__main__":
     #plot_comparison(fail_Y_, fail_Y,"fails")
 
     #plot_distribution(errors[:,0],"error x")
+    test_Y_ = test_Y_[100:1100]
+    test_Y = test_Y[100:1100]
 
     for name in envData.Y_names:
         if envData.features_numbers[name] == 1:
@@ -252,6 +289,23 @@ if __name__ == "__main__":
         else:
             for i in range(envData.features_numbers[name]):
                 plot_comparison_dict(test_Y_,test_Y,name,i,plot_name = name+str(i))
+
+    train_Y_ = train_Y_[100:1100]
+    train_Y = train_Y[100:1100]
+
+    for name in envData.Y_names:
+        if envData.features_numbers[name] == 1:
+            plot_distribution_dict(train_Y_,train_Y,name,plot_name = "train"+name)
+        else:
+            for i in range(envData.features_numbers[name]):
+                plot_distribution_dict(train_Y_,train_Y,name,i,plot_name = "train"+name+str(i))
+
+    for name in envData.Y_names:
+        if envData.features_numbers[name] == 1:
+            plot_comparison_dict(train_Y_,train_Y,name,plot_name = "train"+name)
+        else:
+            for i in range(envData.features_numbers[name]):
+                plot_comparison_dict(train_Y_,train_Y,name,i,plot_name = "train"+name+str(i))
 
 
 

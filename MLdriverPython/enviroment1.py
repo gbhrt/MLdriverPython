@@ -17,7 +17,7 @@ class ObservationSpace:
 
 
 class OptimalVelocityPlannerData:
-    def __init__(self,mode = 'model_based'):#mode = 'DDPG' ,mode = 'model_based'
+    def __init__(self,mode = 'model_based',X_names = None,Y_names = None):#mode = 'DDPG' ,mode = 'model_based'
 
         self.mode = mode#'model_based' #'model_based'  'DDPG'#mode 
 
@@ -94,7 +94,7 @@ class OptimalVelocityPlannerData:
                                  'steer_action':[-self.max_steering,self.max_steering],
                                  'acc_action':[-1.0,1.0],
                                  'rel_pos_x':[-5,5],
-                                 'rel_pos_y':[-5,5],
+                                 'rel_pos_y':[0,5],
                                  'rel_pos_z':[-5,5],
                                  'rel_ang':[-1.0,1.0]
                                    }
@@ -123,13 +123,28 @@ class OptimalVelocityPlannerData:
             #self.X_names = ["vel_x","vel_y","vel_z","angular_vel","acc","angular_acc","steer","roll","steer_action","acc_action"]
             #self.Y_names = ["vel_x","vel_y","vel_z","angular_vel","acc","angular_acc","steer","roll","rel_pos","rel_ang"]#,'wheel_n_vel'
             #self.copy_Y_to_X_names = ["vel_x","vel_y","vel_z","angular_vel","acc","angular_acc","steer","roll"]
+            if X_names is None:
+                self.X_names = ["vel_y","steer","roll","steer_action","acc_action"]
+                self.Y_names = ["rel_pos_x","rel_pos_y","rel_ang","vel_y","steer","roll"]
 
-            self.X_names = ["vel_y","steer","roll","steer_action","acc_action"]
-            self.Y_names = ["rel_pos_x","rel_pos_y","rel_ang","vel_y","steer","roll"]
-            self.copy_Y_to_X_names = ["vel_y","steer","roll"]
+                self.copy_Y_to_X_names = ["vel_y","steer","roll"]
+            else:
+                self.X_names = X_names
+                self.Y_names = Y_names
 
-            #self.X_names = ["vel_x","vel_y","vel_z","angular_vel","acc","angular_acc","steer","roll","steer_action","acc_action"]
-            #self.Y_names = ["angular_vel"]
+
+            #self.X_names = ["vel_x","vel_y","vel_z",
+            #                "angular_vel_x","angular_vel_y","angular_vel_z",
+            #                "acc_x","acc_y","acc_z",
+            #                "angular_acc_x","angular_acc_y","angular_acc_z",
+            #                "steer","roll","steer_action","acc_action"]
+            #self.Y_names = ["vel_x","vel_y","vel_z",
+            #                "angular_vel_x","angular_vel_y","angular_vel_z",
+            #                "acc_x","acc_y","acc_z",
+            #                "angular_acc_x","angular_acc_y","angular_acc_z",
+            #                "steer","roll",
+            #                "rel_pos_x","rel_pos_y",
+            #                "rel_ang"]
 
 
             self.observation_space.range = []
@@ -202,6 +217,11 @@ class OptimalVelocityPlannerData:
                 norm.append(lib.normalize_value(name_val[i],self.max_min_values[name][0],self.max_min_values[name][1]))
 
         return norm
+    def denormalize_dict(self,X):
+        denorm_X = {}
+        for key,val in X.items():
+            denorm_X[key] = self.denormalize(val,key)
+        return denorm_X
     def denormalize(self,name_val, name):
         if self.features_numbers[name] == 1:
             denorm = lib.denormalize_value(name_val,self.max_min_values[name][0],self.max_min_values[name][1])
