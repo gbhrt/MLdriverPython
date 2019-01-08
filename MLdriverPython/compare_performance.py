@@ -2,6 +2,7 @@ import numpy as np
 import os
 import json
 import matplotlib.pyplot as plt
+import enviroment1
 
 def read_data(file_name):
     with open(file_name, 'r') as f:#append data to the file
@@ -35,66 +36,82 @@ def comp_var(X,Y,Y_,feature_name):
 
     error = np.array(real) - np.array(predicted)
     return np.var(error)
+if __name__ == "__main__": 
+    files = [#"small_state_standard_norm_3_layers_50_nodes.txt",
+             #"big_state_standard_norm_3_layers_50_nodes_alpha_0001.txt",
+             #"big_state_standard_norm_3_layers_50_nodes_alpha_001.txt",
+             #"big_state_standard_norm_4_layers_50_nodes_alpha_0001.txt",
+             "big_state_standard_norm_3_layers_100_nodes.txt",
+             "big_state_standard_norm_3_layers_100_nodes_L2_01.txt",
+             "big_state_standard_norm_3_layers_100_nodes_L2_05.txt"
+             ]
+    #"big_state_standard_norm_3_layers_20_nodes_alpha_0001.txt"
 
-import enviroment1
-envData = enviroment1.OptimalVelocityPlannerData('model_based')
-folder = os.getcwd()+"\\files\\train_data\\"
+    envData = enviroment1.OptimalVelocityPlannerData('model_based')
+    folder = os.getcwd()+"\\files\\train_data\\"
 
-file_name_list = [folder+"data3.txt",folder+"data4.txt"]
-data_vec = []
-for file_name in file_name_list:
-    data_vec.append(read_data(file_name))
+    file_name_list = [folder+file for file in files]
+    data_vec = []
+    for file_name in file_name_list:
+        data_vec.append(read_data(file_name))
 
-models =[]
-test_var_vec,train_var_vec = [],[]
+    models =[]
+    test_var_vec,train_var_vec = [],[]
 
-features = []
-
-for data in data_vec:
+    features = []
+    for data in data_vec:
+        for key in data[2][0]:
+            if key not in features:
+                features.append(key)
+    for data in data_vec:
     
-    test_var,train_var = [],[]
-    data_name,train_X,train_Y, train_Y_,test_X,test_Y, test_Y_ = convert(data)
-    models.append(data_name)
-    for key, value in train_Y_[0].items():
-        if key not in features:
-            features.append(key)
-    for name in features:
-        test_var.append(comp_var(test_X,test_Y, test_Y_,name))
-        train_var.append(comp_var(train_X,train_Y, train_Y_,name))
+        test_var,train_var = [],[]
+        data_name,train_X,train_Y, train_Y_,test_X,test_Y, test_Y_ = convert(data)
+        models.append(data_name)
+        keys = [key for key in train_Y_[0]]
 
-    test_var_vec.append(test_var)
-    train_var_vec.append(train_var)
-    print(test_var)
-    print(train_var)
+        for name in features:
+            if name in keys:
+                test_var.append(comp_var(test_X,test_Y, test_Y_,name))
+                train_var.append(comp_var(train_X,train_Y, train_Y_,name))
+            else:
+                test_var.append("None")
+                train_var.append("None")
 
 
-col_labels = []#"features"
-for i in range(len(models)):
-    col_labels.append("test_var "+str(i))
-    col_labels.append("train_var "+str(i))
-cell_text = []
-for i in range(len(features)):
-    row = []
-    for j in range(len(models)):
-        row.append(test_var_vec[j][i])
-        row.append(train_var_vec[j][i])
-    cell_text.append(row)
+        test_var_vec.append(test_var)
+        train_var_vec.append(train_var)
+        print(test_var)
+        print(train_var)
 
 
-fig, ax = plt.subplots(2,figsize=(10,8))
-ax[0].axis('off')
-ax[1].axis('off')
-ax[0].table(cellText=cell_text,
-                      rowLabels=features,
-                      colLabels=col_labels,
-                       loc='center'
-                      )
-cell_text = []
-for i in range(len(models)): 
-    cell_text.append([i,data_vec[i][0]])
+    col_labels = []#"features"
+    for i in range(len(models)):
+        col_labels.append("test_var "+str(i))
+        col_labels.append("train_var "+str(i))
+    cell_text = []
+    for i in range(len(features)):
+        row = []
+        for j in range(len(models)):
+            row.append(test_var_vec[j][i])
+            row.append(train_var_vec[j][i])
+        cell_text.append(row)
 
-ax[1].table(cellText=cell_text,
-                      colLabels=["model number","description"],
-                       loc='center'
-                      )
-plt.show()
+
+    fig, ax = plt.subplots(2,figsize=(15,8))
+    ax[0].axis('off')
+    ax[1].axis('off')
+    ax[0].table(cellText=cell_text,
+                          rowLabels=features,
+                          colLabels=col_labels,
+                           loc='center'
+                          )
+    cell_text = []
+    for i in range(len(models)): 
+        cell_text.append([i,data_vec[i][0]])
+
+    ax[1].table(cellText=cell_text,
+                          colLabels=["model number","description"],
+                           loc='center'
+                          )
+    plt.show()

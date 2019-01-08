@@ -93,9 +93,9 @@ class SimVehicle:#simulator class - include communication to simulator, vehicle 
             self.vehicle.angle[2] = -(2*math.pi - self.vehicle.angle[2])
        # self.vehicle.backPosition = lib.changeZtoY(self.comm.deserialize(3,float))
         self.vehicle.velocity = lib.changeZtoY(self.comm.deserialize(3,float))
-        self.vehicle.angular_velocity = self.comm.deserialize(3,float)#in radians
+        self.vehicle.angular_velocity = lib.changeZtoY(self.comm.deserialize(3,float))#in radians
         self.vehicle.acceleration = lib.changeZtoY(self.comm.deserialize(3,float))
-        self.vehicle.angular_acceleration =self.comm.deserialize(3,float)#in radians
+        self.vehicle.angular_acceleration = lib.changeZtoY(self.comm.deserialize(3,float))#in radians
         wheels_angular_vel = lib.change_to_rad(self.comm.deserialize(4,float))
         wheels_vel = self.comm.deserialize(8,float)
         j = 0
