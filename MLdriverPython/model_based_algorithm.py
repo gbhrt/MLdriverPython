@@ -13,15 +13,15 @@ import math
 import os
 
 def comp_MB_acc(net,env,state,acc):
-    roll_flag,dev_flag = False, False
+    roll_flag,dev_flag = 0, False
     n = 10
     #print("___________________new acc compution____________________________")
     predicted_values,roll_flag,dev_flag = pLib.predict_n_next(n,net,env,state,acc,1.0)#try 1.0
-    if roll_flag or dev_flag:#if not ok - try 0.0                                                   
+    if roll_flag != 0 or dev_flag:#if not ok - try 0.0                                                   
         predicted_values,roll_flag,dev_flag = pLib.predict_n_next(n,net,env,state,acc,0.0)
-        if roll_flag or dev_flag:#if not ok - try -1.0   
+        if roll_flag != 0 or dev_flag:#if not ok - try -1.0   
             predicted_values,roll_flag,dev_flag = pLib.predict_n_next(n,net,env,state,acc,-1.0,max_plan_roll = env.max_plan_roll*2)#,max_plan_deviation = 10)
-            if roll_flag or dev_flag:
+            if roll_flag != 0 or dev_flag:
                 next_acc = -1.0
             else:#-1.0 is ok
                 next_acc = -1.0
@@ -102,8 +102,11 @@ def train(env,HP,net,Replay,dataManager,trainShared,guiShared,seed = None):
                     next_acc,predicted_values,roll_flag,dev_flag = comp_MB_acc(net,env,state,acc)
                     #print("after comp_MB_acc time:",time.clock() - env.lt)
                     #print("roll_flag:",roll_flag,"dev_flag:",dev_flag)
-                    if roll_flag:
-                        next_steer = 0.0
+                    if env.stop_flag:
+                        next_acc = -1
+                    if roll_flag != 0:
+                        next_steer = math.copysign(0.7,roll_flag)
+                 
                         print("emergency steering")
                     if dev_flag:
                         fail = True #save in the Replay buffer that this episode failed

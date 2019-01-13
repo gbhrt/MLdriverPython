@@ -41,9 +41,10 @@ if __name__ == "__main__":
              #"big_state_standard_norm_3_layers_50_nodes_alpha_0001.txt",
              #"big_state_standard_norm_3_layers_50_nodes_alpha_001.txt",
              #"big_state_standard_norm_4_layers_50_nodes_alpha_0001.txt",
-             "big_state_standard_norm_3_layers_100_nodes.txt",
-             "big_state_standard_norm_3_layers_100_nodes_L2_01.txt",
-             "big_state_standard_norm_3_layers_100_nodes_L2_05.txt"
+             #"big_state_standard_norm_3_layers_100_nodes.txt",
+             #"big_state_standard_norm_3_layers_100_nodes_L2_01.txt",
+             "big_state_standard_norm_3_layers_100_nodes_L2_05.txt",
+             "small_state_standard_norm_3_layers_100_nodes_L2_05.txt"
              ]
     #"big_state_standard_norm_3_layers_20_nodes_alpha_0001.txt"
 

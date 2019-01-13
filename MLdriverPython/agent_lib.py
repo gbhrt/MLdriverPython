@@ -5,6 +5,7 @@ import json
 import library as lib
 import pathlib
 import sys
+from math import copysign
 
 import time
 
@@ -178,11 +179,11 @@ def predict_n_next(n,net,env,init_state,action,acc_try = 1.0,max_plan_roll = Non
     #print("after steer_command time:",time.clock() - env.lt)
     #print("current action: ",action, "try action: ",acc_try)
     acc_command = action# first action is already executed and known
-    dev_flag,roll_flag = False,False
+    dev_flag,roll_flag = False,0
     dev_from_path = lib.dist(init_state['path'].position[index][0],init_state['path'].position[index][1],0,0)#absolute deviation from the path
     #print("deviation:", dev_from_path)
     if abs(init_state['roll']) > max_plan_roll: #check the current roll 
-        roll_flag = True
+        roll_flag = copysign(1,init_state['roll'])
     if dev_from_path > max_plan_deviation:
         #dev_flag = True
         max_plan_deviation = 10
@@ -192,7 +193,7 @@ def predict_n_next(n,net,env,init_state,action,acc_try = 1.0,max_plan_roll = Non
     X_dict = env.X_to_X_dict(X)
     
     
-    if dev_flag == False and roll_flag == False:
+    if dev_flag == False and roll_flag == 0:
         for i in range(1,n):#n times       
             #print("before prediction time:",time.clock() - env.lt)
             X = env.dict_X_to_X(X_dict)
@@ -243,7 +244,7 @@ def predict_n_next(n,net,env,init_state,action,acc_try = 1.0,max_plan_roll = Non
             
             if abs(roll) > max_plan_roll: 
                 #print("fail rool or dev")
-                roll_flag = True
+                roll_flag = copysign(1,roll)
                 break
             if dev_from_path > max_plan_deviation:
                 dev_flag = True

@@ -20,7 +20,7 @@ class OptimalVelocityPlannerData:
     def __init__(self,mode = 'model_based',X_names = None,Y_names = None):#mode = 'DDPG' ,mode = 'model_based'
 
         self.mode = mode#'model_based' #'model_based'  'DDPG'#mode 
-
+        self.stop_flag = False
         self.analytic_feature_flag = False
         self.roll_feature_flag = False
         self.wheels_vel_feature_flag = False
@@ -126,25 +126,30 @@ class OptimalVelocityPlannerData:
             if X_names is None:
                 self.X_names = ["vel_y","steer","roll","steer_action","acc_action"]
                 self.Y_names = ["rel_pos_x","rel_pos_y","rel_ang","vel_y","steer","roll"]
-
                 self.copy_Y_to_X_names = ["vel_y","steer","roll"]
-            else:
+
+                #self.X_names = ["vel_x","vel_y","vel_z",
+                #                "angular_vel_x","angular_vel_y","angular_vel_z",
+                #                "acc_x","acc_y","acc_z",
+                #                "angular_acc_x","angular_acc_y","angular_acc_z",
+                #                "steer","roll","steer_action","acc_action"]
+                #self.Y_names = ["vel_x","vel_y","vel_z",
+                #                "angular_vel_x","angular_vel_y","angular_vel_z",
+                #                "acc_x","acc_y","acc_z",
+                #                "angular_acc_x","angular_acc_y","angular_acc_z",
+                #                "steer","roll",
+                #                "rel_pos_x","rel_pos_y",
+                #                "rel_ang"]
+                #self.copy_Y_to_X_names = ["vel_x","vel_y","vel_z",
+                #                           "angular_vel_x","angular_vel_y","angular_vel_z",
+                #                           "acc_x","acc_y","acc_z",
+                #                           "angular_acc_x","angular_acc_y","angular_acc_z",
+                #                         "steer","roll"]
+            else:                     
                 self.X_names = X_names
                 self.Y_names = Y_names
 
-
-            #self.X_names = ["vel_x","vel_y","vel_z",
-            #                "angular_vel_x","angular_vel_y","angular_vel_z",
-            #                "acc_x","acc_y","acc_z",
-            #                "angular_acc_x","angular_acc_y","angular_acc_z",
-            #                "steer","roll","steer_action","acc_action"]
-            #self.Y_names = ["vel_x","vel_y","vel_z",
-            #                "angular_vel_x","angular_vel_y","angular_vel_z",
-            #                "acc_x","acc_y","acc_z",
-            #                "angular_acc_x","angular_acc_y","angular_acc_z",
-            #                "steer","roll",
-            #                "rel_pos_x","rel_pos_y",
-            #                "rel_ang"]
+        
 
 
             self.observation_space.range = []
@@ -312,6 +317,7 @@ class OptimalVelocityPlanner(OptimalVelocityPlannerData):
              
 
     def reset(self,seed = None):
+        self.stop_flag = False
   #     self.lt = 0 #tmp
         if (self.reset_count % self.reset_every == 0 and self.reset_count > 0): 
             self.error = self.pl.simulator.reset_position()
@@ -452,10 +458,14 @@ class OptimalVelocityPlanner(OptimalVelocityPlannerData):
 
         reward = get_reward(self.pl.simulator.vehicle.velocity[1],self.max_velocity_y,mode)#,analytic_velocity = local_path.analytic_velocity[0])#
 
+        #if self.episode_steps > self.max_episode_steps:
+        #    mode = 'max_steps'
         if self.episode_steps > self.max_episode_steps:
-            mode = 'max_steps'
+            self.stop_flag = True
         #if self.pl.simulator.vehicle.velocity[1] > local_path.analytic_velocity_limit[0]:
         #    mode = 'cross'
+        if self.stop_flag and self.pl.simulator.vehicle.velocity[1] < 0.1:
+            mode = 'max_steps'
         if mode != 'ok':
             #if mode != 'path end' and mode != 'max_steps':
             #    reward = -5
@@ -464,6 +474,7 @@ class OptimalVelocityPlanner(OptimalVelocityPlannerData):
             #print("done___________________________________")
             if (mode != 'kipp' and mode != 'seen_path_end') or self.error:
                 self.pl.stop_vehicle()
+                #self.stop_flag = True
                 self.error = 0
             if  mode == 'kipp': #(i % HP.reset_every == 0 and i > 0) or
                 #self.pl.stop_vehicle()

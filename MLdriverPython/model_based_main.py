@@ -32,10 +32,10 @@ if __name__ == "__main__":
     programThread.start()
 
     #start the gui:
-    #tkinker_gui.TkGui(guiShared,dataManager)
-    while(not guiShared.exit):
-        time.sleep(1)
-        continue
+    tkinker_gui.TkGui(guiShared,dataManager)
+    #while(not guiShared.exit):
+    #    time.sleep(1)
+    #    continue
 
     
 

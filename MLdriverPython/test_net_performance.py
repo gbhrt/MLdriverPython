@@ -140,16 +140,16 @@ def compare_n_samples(net,X,end,Y_,n):
 
 
 if __name__ == "__main__": 
-    restore = True
-    train = False
+    restore = False
+    train = True
     split_buffer = True
 
     scaling_type = "standard_scaler"#standard_scaler
     test_part = 0.3
     num_train = 10000000
 
-    description = "small_state_standard_norm_3_layers_100_nodes_L2_05"
-    file_name = "small_state_standard_norm_3_layers_100_nodes_L2_05.txt"
+    description = "big_state_standard_norm_3_layers_100_nodes_L2_05"
+    file_name = "big_state_standard_norm_3_layers_100_nodes_L2_05.txt"
     #small_state_regular_norm_3_layers_50_nodes
     #small_state_standard_norm_3_layers_50_nodes
 
