@@ -37,7 +37,7 @@ class OptimalVelocityPlannerData:
         self.action_space_n = 1
         self.visualized_points = int(self.feature_points/0.05) + 10 #how many points show on the map and lenght of local path
 
-        self.max_deviation =  10 # [m] if more then maximum - end episode 
+        self.max_deviation =  5 # [m] if more then maximum - end episode 
         self.max_plan_deviation = 3
         
         self.max_velocity_x = 30
@@ -499,8 +499,8 @@ class OptimalVelocityPlanner(OptimalVelocityPlannerData):
         #self.pl.simulator.get_vehicle_data()#read data after time step from last action
        # print("after get data: ",time.time() - temp_last_time)
         local_path = self.pl.get_local_path(num_of_points = self.visualized_points)#num_of_points = visualized_points
-        v1 = local_path.analytic_velocity[0]
-        v2 = local_path.analytic_velocity[1]
+        v1 = self.pl.simulator.vehicle.velocity[1]#local_path.analytic_velocity[0]
+        v2 = local_path.analytic_velocity[1]#next velocity
         d =local_path.distance[1] - local_path.distance[0]
         
         acc = (v2**2 - v1**2 )/(2*d)#acceleration [m/s^2]

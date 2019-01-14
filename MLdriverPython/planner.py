@@ -280,17 +280,17 @@ class Planner(PathManager):#planner - get and send data to simulator. input - mi
         send_to_path.position = self.desired_path.position[0::10]
         return self.simulator.send_path(send_to_path)
         
-    def get_local_path_vehicle_on_path(self,send_path = True, num_of_points = None):#temp function
-        #local_path = comp_path(pl,main_path_trans,main_index,num_of_points)#compute local path and global path(inside the planner)
-        self.index = self.find_index_on_path(0)
-        self.main_index += self.index
-        self.desired_path = self.copy_path(self.in_vehicle_reference_path,self.main_index,num_of_points)#choose 100 next points from vehicle position
-        if send_path:
-            self.simulator.send_path(self.desired_path)
-        local_path = self.path_to_local_vehicle_on_path(self.desired_path)#translate path in vehicle reference system - asume vehicle exactly on the path
-        self.desired_path.comp_distance()
-        local_path.distance = copy.copy(self.desired_path.distance)
-        return local_path
+    #def get_local_path_vehicle_on_path(self,send_path = True, num_of_points = None):#temp function
+    #    #local_path = comp_path(pl,main_path_trans,main_index,num_of_points)#compute local path and global path(inside the planner)
+    #    self.index = self.find_index_on_path(0)
+    #    self.main_index += self.index
+    #    self.desired_path = self.copy_path(self.in_vehicle_reference_path,self.main_index,num_of_points)#choose 100 next points from vehicle position
+    #    if send_path:
+    #        self.simulator.send_path(self.desired_path)
+    #    local_path = self.path_to_local_vehicle_on_path(self.desired_path)#translate path in vehicle reference system - asume vehicle exactly on the path
+    #    self.desired_path.comp_distance()
+    #    local_path.distance = copy.copy(self.desired_path.distance)
+    #    return local_path
     def check_end(self,deviation = None,max_deviation = 4,max_roll = 0.2,max_pitch = 0.2, state = None,end_distance = None):
         #print("main index", self.main_index, "lenght: ",len(self.in_vehicle_reference_path.position))
         end_tolerance = 0.3

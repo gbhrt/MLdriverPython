@@ -20,7 +20,7 @@ def comp_MB_acc(net,env,state,acc):
     if roll_flag != 0 or dev_flag:#if not ok - try 0.0                                                   
         predicted_values,roll_flag,dev_flag = pLib.predict_n_next(n,net,env,state,acc,0.0)
         if roll_flag != 0 or dev_flag:#if not ok - try -1.0   
-            predicted_values,roll_flag,dev_flag = pLib.predict_n_next(n,net,env,state,acc,-1.0,max_plan_roll = env.max_plan_roll*2)#,max_plan_deviation = 10)
+            predicted_values,roll_flag,dev_flag = pLib.predict_n_next(n,net,env,state,acc,-1.0,max_plan_roll = env.max_plan_roll*1.3)#,max_plan_deviation = 10)
             if roll_flag != 0 or dev_flag:
                 next_acc = -1.0
             else:#-1.0 is ok
@@ -87,9 +87,11 @@ def train(env,HP,net,Replay,dataManager,trainShared,guiShared,seed = None):
             if HP.analytic_action:
                 acc = float(env.get_analytic_action()[0])#+noise
                 steer = env.comp_steer()
+                if env.stop_flag:
+                    acc = -1
                 env.command(acc,steer)
                 next_state, reward, done, info = env.step(acc)#input the estimated next actions to execute after delta t and getting next state
-
+                
             else:#not HP.analytic_action
                 trainShared.algorithmIsIn.clear()#indicates that are ready to take the lock
                 with trainShared.Lock:
@@ -105,7 +107,7 @@ def train(env,HP,net,Replay,dataManager,trainShared,guiShared,seed = None):
                     if env.stop_flag:
                         next_acc = -1
                     if roll_flag != 0:
-                        next_steer = math.copysign(0.7,roll_flag)
+                        next_steer = 0 # math.copysign(0.7,roll_flag)
                  
                         print("emergency steering")
                     if dev_flag:

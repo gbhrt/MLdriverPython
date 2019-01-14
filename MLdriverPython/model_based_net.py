@@ -49,11 +49,11 @@ class model_based_network(NetLib):
         #self.Y = tflearn.fully_connected(fc2, Y_n,regularizer='L2', weight_decay=0.01)
 
         #3 hidden layers:
-        net = tflearn.fully_connected(self.X, hidden_layer_nodes1,regularizer='L2', weight_decay=0.5)
+        net = tflearn.fully_connected(self.X, hidden_layer_nodes1,regularizer='L2', weight_decay=0.1)
         net = tflearn.activations.relu(net)
-        net = tflearn.fully_connected(net, hidden_layer_nodes2,regularizer='L2', weight_decay=0.5)
+        net = tflearn.fully_connected(net, hidden_layer_nodes2,regularizer='L2', weight_decay=0.1)
         net = tflearn.activations.relu(net)
-        net = tflearn.fully_connected(net, hidden_layer_nodes3,regularizer='L2', weight_decay=0.5)
+        net = tflearn.fully_connected(net, hidden_layer_nodes3,regularizer='L2', weight_decay=0.1)
         net = tflearn.activations.relu(net)
         #net = tflearn.fully_connected(net, hidden_layer_nodes4,regularizer='L2', weight_decay=0.01)
         #net = tflearn.activations.relu(net)

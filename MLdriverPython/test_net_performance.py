@@ -144,12 +144,12 @@ if __name__ == "__main__":
     train = True
     split_buffer = True
 
-    scaling_type = "standard_scaler"#standard_scaler
+    scaling_type = "scaler"#standard_scaler
     test_part = 0.3
     num_train = 10000000
 
-    description = "big_state_standard_norm_3_layers_100_nodes_L2_05"
-    file_name = "big_state_standard_norm_3_layers_100_nodes_L2_05.txt"
+    description = "small_state_standard_norm_3_layers_100_nodes_L2_01"
+    file_name = "small_state_standard_norm_3_layers_100_nodes_L2_01.txt"
     #small_state_regular_norm_3_layers_50_nodes
     #small_state_standard_norm_3_layers_50_nodes
 
@@ -273,8 +273,8 @@ if __name__ == "__main__":
     #plot_comparison(fail_Y_, fail_Y,"fails")
 
     #plot_distribution(errors[:,0],"error x")
-    test_Y_ = test_Y_[100:1100]
-    test_Y = test_Y[100:1100]
+    #test_Y_ = test_Y_[100:1100]
+    #test_Y = test_Y[100:1100]
 
     for name in envData.Y_names:
         if envData.features_numbers[name] == 1:
@@ -290,8 +290,8 @@ if __name__ == "__main__":
             for i in range(envData.features_numbers[name]):
                 plot_comparison_dict(test_Y_,test_Y,name,i,plot_name = name+str(i))
 
-    train_Y_ = train_Y_[100:1100]
-    train_Y = train_Y[100:1100]
+    #train_Y_ = train_Y_[100:1100]
+    #train_Y = train_Y[100:1100]
 
     for name in envData.Y_names:
         if envData.features_numbers[name] == 1:
