@@ -2,10 +2,16 @@
 #import data_manager1
 #from hyper_parameters import HyperParameters
 #from DDPG_net import DDPG_network
-#import numpy as np
+import numpy as np
 #import tensorflow as tf
 #import time
 #import collections
+import matplotlib.pyplot as plt
+planed_roll = range(10)
+plt.plot(np.arange(len(planed_roll)))
+plt.fill_between(np.arange(len(planed_roll)),np.array(planed_roll)+2,np.array(planed_roll)-2,color = "#dddddd")
+plt.show()
+
 
 #OrderedDict ={'banana': 3, 'apple': 4, 'pear': 1, 'orange': 2}
 #x = collections.OrderedDict((("a", "1"), ("c", '3'), ("b", "2")))
@@ -82,7 +88,3 @@
      
 #        time.sleep(0.5)
 
-a = [1,2,3]
-b = [4,5,6]
-c= zip(a,b)
-print(c)

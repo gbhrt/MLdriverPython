@@ -140,8 +140,8 @@ def compare_n_samples(net,X,end,Y_,n):
 
 
 if __name__ == "__main__": 
-    restore = False
-    train = True
+    restore = True
+    train = False
     split_buffer = True
 
     scaling_type = "scaler"#standard_scaler

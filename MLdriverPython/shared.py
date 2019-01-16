@@ -11,6 +11,7 @@ class guiShared:
         self.steer = None
         self.predicded_path = None
         self.steering_target = None
+        self.max_roll = 0
         #self.start_draw
         return
 

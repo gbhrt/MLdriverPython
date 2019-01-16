@@ -29,6 +29,7 @@ def plot_velocities(fig):#,path):
 
 def update_velocities(lines,path):
     max_time_ind = len(path.time)
+    
     lines[0].set_data(np.array(path.distance)[:max_time_ind],np.array(path.analytic_velocity_limit)[:max_time_ind])
     
     lines[1].set_data(np.array(path.distance)[:max_time_ind],np.array(path.analytic_velocity)[:max_time_ind])
@@ -44,11 +45,22 @@ class data_plots():
         #self.figure1 = plt.Figure(figsize=(6,5))#, dpi=100)
         #self.ax1 = self.figure1.add_subplot(111)
         #self.ax2 = self.figure1.add_subplot(121)
-        self.figure1, (self.ax1,self.ax2) = plt.subplots(2, 1,figsize=(5,4))
+        self.figure1, (self.ax1,self.ax2,self.ax3) = plt.subplots(3, 1,figsize=(5,7))#
         #self.dataManager.roll = [0,1]
+        self.ax1.set_ylim(-0.1,0.1)
+        self.ax2.set_ylim(0,25)
+        self.ax3.set_ylim(-0.2,0.2)
+        self.ax3.set_xlim(0,10)
         self.line1 = self.ax1.plot(np.array(self.dataManager.roll))[0]
-        self.lines = plot_velocities(self.ax2)#,self.dataManager)
+        self.line2 = self.ax3.plot(np.array(self.dataManager.planed_roll),color = "green")[0]
+        self.line3 = self.ax3.plot(np.array(self.dataManager.planed_roll)+0.1,color = "red")[0]
+        self.line4 = self.ax3.plot(np.array(self.dataManager.planed_roll)-0.1,color = "red")[0]
 
+        self.ax3.fill_between(np.arange(12),self.guiShared.max_roll*np.ones(12),-self.guiShared.max_roll*np.ones(12),color = "#dddddd" )
+        self.lines = plot_velocities(self.ax2)#,self.dataManager)
+        self.ax1.grid(True)
+        self.ax2.grid(True)
+        self.ax3.grid(True)
         #self.figure2, self.ax1 = plt.subplots(1, 1,figsize=(5,4))
 
 
@@ -66,14 +78,26 @@ class data_plots():
         #print("roll:",self.dataManager.roll)
         #print("len roll:",len(self.dataManager.roll))
         #print("dis:",path.distance)
+        #self.ax3.collections.clear()
+        #self.ax3.fill_between(np.arange(len(self.dataManager.planed_roll)),np.array(self.dataManager.planed_roll)+2,np.array(self.dataManager.planed_roll)-2)
+        
+            
+        self.line2.set_data(np.arange(len(self.dataManager.planed_roll)),np.array(self.dataManager.planed_roll))
+        self.line3.set_data(np.arange(len(self.dataManager.planed_roll)),np.array(self.dataManager.planed_roll)-np.array(self.dataManager.planned_roll_var))
+        self.line4.set_data(np.arange(len(self.dataManager.planed_roll)),np.array(self.dataManager.planed_roll)+np.array(self.dataManager.planned_roll_var))
+        #self.line2_fill.remove()
+
 
         if len(path.distance) > 0:
             self.ax1.set_xlim(0,path.distance[len(self.dataManager.roll)-1])
-            self.ax1.set_ylim(-0.1,0.1)
+            
             self.line1.set_data(path.distance[:len(self.dataManager.roll)],np.array(self.dataManager.roll))
+
+
+
+
             self.ax2.set_xlim(0,path.distance[len(self.dataManager.roll)-1])
-            self.ax2.set_ylim(0,25)
-        #plot_velocities(self.ax2,self.dataManager)
+
             update_velocities(self.lines,path)
         self.canvas.draw()
 

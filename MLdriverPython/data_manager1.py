@@ -87,6 +87,9 @@ class DataManager():
         self.time_stamps = []
         self.input_time = []
         self.step_times = []
+
+        self.planed_roll = []
+        self.planned_roll_var = []
         print("data manager restarted")
     def add_run_num(self,i):
         self.run_num.append(i+self.init_run_num)

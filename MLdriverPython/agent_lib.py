@@ -182,12 +182,14 @@ def predict_n_next(n,net,env,init_state,action,acc_try = 1.0,max_plan_roll = Non
     dev_flag,roll_flag = False,0
     dev_from_path = lib.dist(init_state['path'].position[index][0],init_state['path'].position[index][1],0,0)#absolute deviation from the path
     #print("deviation:", dev_from_path)
-    if abs(init_state['roll']) > max_plan_roll: #check the current roll 
+    delta_var = 0.002
+    roll_var = max_plan_roll*delta_var
+    if abs(init_state['roll'])+roll_var > max_plan_roll: #check the current roll 
         roll_flag = copysign(1,init_state['roll'])
     if dev_from_path > max_plan_deviation:
         #dev_flag = True
         max_plan_deviation = 10
-    pred_vec = [[abs_pos,abs_ang,init_state['vel_y'],init_state['roll']]]#,abs_ang,init_state['vel'],init_state['steer'],init_state['roll']]]
+    pred_vec = [[abs_pos,abs_ang,init_state['vel_y'],init_state['roll'],roll_var]]#,abs_ang,init_state['vel'],init_state['steer'],init_state['roll']]]
     X = env.create_X([init_state],[[acc_command ,steer_command]])[0]
 
     X_dict = env.X_to_X_dict(X)
@@ -206,6 +208,9 @@ def predict_n_next(n,net,env,init_state,action,acc_try = 1.0,max_plan_roll = Non
             #print("after prediction time:",time.clock() - env.lt)
             for name in env.copy_Y_to_X_names:
                 X_dict[name] = Y_dict[name]#env.normalize(Y_dict[name],name)
+
+            roll_var+=delta_var
+            print("roll_var:",roll_var)
            # print("X_dict:",X_dict,"Y_dict:",Y_dict)
             #X = copy.copy(Y[:len(Y) - 5])#copy the whole relative information (exclude commands, rel pos (2) and rel ang(1))
 
@@ -232,7 +237,7 @@ def predict_n_next(n,net,env,init_state,action,acc_try = 1.0,max_plan_roll = Non
 
             roll = env.denormalize(Y_dict["roll"],"roll")
             #print("end loop X_dict:",X_dict,"Y_dict:",Y_dict)
-            pred_vec.append([abs_pos,abs_ang,vel,roll])
+            pred_vec.append([abs_pos,abs_ang,vel,roll,roll_var])
             #if Y[1] < 2.0:
             if vel < 2.0:
                 #print("reach velocity 0")
@@ -242,7 +247,7 @@ def predict_n_next(n,net,env,init_state,action,acc_try = 1.0,max_plan_roll = Non
             #print("deviation:", dev_from_path)
             #if abs(Y[13]) > max_plan_roll: 
             
-            if abs(roll) > max_plan_roll: 
+            if abs(roll)+roll_var > max_plan_roll: 
                 #print("fail rool or dev")
                 roll_flag = copysign(1,roll)
                 break
@@ -253,8 +258,8 @@ def predict_n_next(n,net,env,init_state,action,acc_try = 1.0,max_plan_roll = Non
             
             #print("end loop time:",time.clock() - env.lt)
     #print("pred:", pred_vec)
-    #print("roll:", np.array(pred_vec)[:,3])
-    #print("vel:", np.array(pred_vec)[:,2])
+    print("roll:", np.array(pred_vec)[:,3])
+    print("vel:", np.array(pred_vec)[:,2])
    
     #print("end--------------------------")
     return pred_vec,roll_flag,dev_flag

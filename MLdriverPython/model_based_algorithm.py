@@ -15,12 +15,12 @@ import os
 def comp_MB_acc(net,env,state,acc):
     roll_flag,dev_flag = 0, False
     n = 10
-    #print("___________________new acc compution____________________________")
+    print("___________________new acc compution____________________________")
     predicted_values,roll_flag,dev_flag = pLib.predict_n_next(n,net,env,state,acc,1.0)#try 1.0
     if roll_flag != 0 or dev_flag:#if not ok - try 0.0                                                   
         predicted_values,roll_flag,dev_flag = pLib.predict_n_next(n,net,env,state,acc,0.0)
         if roll_flag != 0 or dev_flag:#if not ok - try -1.0   
-            predicted_values,roll_flag,dev_flag = pLib.predict_n_next(n,net,env,state,acc,-1.0,max_plan_roll = env.max_plan_roll*1.3)#,max_plan_deviation = 10)
+            predicted_values,roll_flag,dev_flag = pLib.predict_n_next(n,net,env,state,acc,-1.0)#,max_plan_roll = env.max_plan_roll*1.3,max_plan_deviation = 10)
             if roll_flag != 0 or dev_flag:
                 next_acc = -1.0
             else:#-1.0 is ok
@@ -62,6 +62,7 @@ def train(env,HP,net,Replay,dataManager,trainShared,guiShared,seed = None):
     seed = HP.seed
 
     lt = 0#temp
+    last_time_stamp = 0
     for i in range(HP.num_of_runs): #number of runs - run ends at the end of the main path and if vehicle deviation error is to big
         if waitFor.stop == [True] or guiShared.request_exit:
             break
@@ -102,6 +103,9 @@ def train(env,HP,net,Replay,dataManager,trainShared,guiShared,seed = None):
                     #print("vel_n:",env.pl.simulator.vehicle.wheels[0].vel_n)
                     #print("before comp_MB_acc time:",time.clock() - env.lt)
                     next_acc,predicted_values,roll_flag,dev_flag = comp_MB_acc(net,env,state,acc)
+                    dataManager.planed_roll = np.array(predicted_values)[:,3]
+                    dataManager.planned_roll_var = np.array(predicted_values)[:,4]
+                    print("next_acc:",next_acc)
                     #print("after comp_MB_acc time:",time.clock() - env.lt)
                     #print("roll_flag:",roll_flag,"dev_flag:",dev_flag)
                     if env.stop_flag:
@@ -123,7 +127,7 @@ def train(env,HP,net,Replay,dataManager,trainShared,guiShared,seed = None):
                 
                 next_state, reward, done, info = env.step(next_acc,steer = next_steer)#input the estimated next actions to execute after delta t and getting next state
                 #print("after step 2 time:",time.clock() - env.lt)
-            
+                
             reward_vec.append(reward)
             # print("after append:", time.time() - env.lt)
             #add data to replay buffer:
@@ -133,8 +137,8 @@ def train(env,HP,net,Replay,dataManager,trainShared,guiShared,seed = None):
                 fail = False
             time_step_error = info[1]
 
- 
-            if not time_step_error:#save state to the replay buffer (without the path)            
+            if abs(env.pl.simulator.vehicle.input_time - last_time_stamp-env.step_time) <0.01 and not time_step_error:
+            #if not time_step_error:#save state to the replay buffer (without the path)            
                 tmp_next_path = next_state['path']
                 #  print("after copy1:", time.time() - t1)
                 state['path'] = []
@@ -147,6 +151,9 @@ def train(env,HP,net,Replay,dataManager,trainShared,guiShared,seed = None):
 
                 next_state['path'] = tmp_next_path
                 #print("add to replay time:",time.clock() - env.lt)
+            else:
+                print("not saving to replay buffer")
+            last_time_stamp = env.pl.simulator.vehicle.input_time
             
             state = copy.deepcopy(next_state)
             #print("copy state time:",time.clock() - env.lt)
