@@ -219,7 +219,7 @@ def predict_n_next1(n,net,env,X_dict,abs_pos,abs_ang,path,acc_try = 1.0,emergenc
 
             vel = env.denormalize(X_dict['vel_y'],"vel_y")
             index = lib.find_index_on_path(path,abs_pos)
-
+           
             if emergency_flag:
                 steer_command = emergency_steer_policy()
                 acc_command = emergency_acc_policy()
