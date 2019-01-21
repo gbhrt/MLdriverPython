@@ -12,15 +12,15 @@ import agent_lib as pLib
 import math
 import os
 
-def comp_MB_acc(net,env,state,acc):
+def comp_MB_acc(net,env,state,acc,steer):
     roll_flag,dev_flag = 0, False
     n = 10
     print("___________________new acc compution____________________________")
-    predicted_values,roll_flag,dev_flag = pLib.predict_n_next(n,net,env,state,acc,1.0)#try 1.0
+    predicted_values,roll_flag,dev_flag = pLib.predict_n_next(n,net,env,state,acc,steer,1.0)#try 1.0
     if roll_flag != 0 or dev_flag:#if not ok - try 0.0                                                   
-        predicted_values,roll_flag,dev_flag = pLib.predict_n_next(n,net,env,state,acc,0.0)
+        predicted_values,roll_flag,dev_flag = pLib.predict_n_next(n,net,env,state,acc,steer,0.0)
         if roll_flag != 0 or dev_flag:#if not ok - try -1.0   
-            predicted_values,roll_flag,dev_flag = pLib.predict_n_next(n,net,env,state,acc,-1.0)#,max_plan_roll = env.max_plan_roll*1.3,max_plan_deviation = 10)
+            predicted_values,roll_flag,dev_flag = pLib.predict_n_next(n,net,env,state,acc,steer,-1.0,max_plan_roll = env.max_plan_roll*1.3)#,max_plan_roll = env.max_plan_roll*1.3,max_plan_deviation = 10)
             if roll_flag != 0 or dev_flag:
                 next_acc = -1.0
             else:#-1.0 is ok
@@ -102,7 +102,7 @@ def train(env,HP,net,Replay,dataManager,trainShared,guiShared,seed = None):
                     next_steer = pLib.comp_steer_from_next_state(net,env,state,steer,acc)
                     #print("vel_n:",env.pl.simulator.vehicle.wheels[0].vel_n)
                     #print("before comp_MB_acc time:",time.clock() - env.lt)
-                    next_acc,predicted_values,roll_flag,dev_flag = comp_MB_acc(net,env,state,acc)
+                    next_acc,predicted_values,roll_flag,dev_flag = comp_MB_acc(net,env,state,acc,steer)
                     dataManager.planed_roll = np.array(predicted_values)[:,3]
                     dataManager.planned_roll_var = np.array(predicted_values)[:,4]
                     print("next_acc:",next_acc)
@@ -148,9 +148,9 @@ def train(env,HP,net,Replay,dataManager,trainShared,guiShared,seed = None):
                 with trainShared.Lock:
                     trainShared.algorithmIsIn.set()
                     
-                    dict_X,dict_Y_ =env.create_XY_(state,next_state,[acc,steer])
-                    dict_X = env.X_to_X_dict(X)
-                    dict_Y_ = env.Y_to_Y_dict(Y_)
+                    X,Y_ =env.create_XY_([state],[[acc,steer]],[next_state])#normalized data
+                    dict_X = env.X_to_X_dict(X[0])
+                    dict_Y_ = env.Y_to_Y_dict(Y_[0])
                     for name in env.copy_Y_to_X_names:
                         dict_Y_[name] -= dict_X[name]
                     X = env.dict_X_to_X(dict_X)

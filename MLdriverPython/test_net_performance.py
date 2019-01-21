@@ -140,8 +140,8 @@ def compare_n_samples(net,X,end,Y_,n):
 
 
 if __name__ == "__main__": 
-    restore = False
-    train = True
+    restore = True
+    train = False
     split_buffer = True
 
     scaling_type = "scaler"#standard_scaler
@@ -171,8 +171,9 @@ if __name__ == "__main__":
     #Replay.memory = Replay.memory[:10000]
     print("lenght of buffer: ",len(Replay.memory))
 
-    state, a, next_state, end,_ = map(list, zip(*Replay.memory))#all data
-    if  scaling_type == "standard_scaler":
+    #state, a, next_state, end,_ = map(list, zip(*Replay.memory))#all data
+    vec_X, vec_Y_, end,_ = map(list, zip(*Replay.memory))
+    if  scaling_type == "standard_scaler":#replay buffer is now already normalized, hence this does not work now
         vec_X,vec_Y_ = envData.create_XY_1(state,a,next_state)#not normalized!
         train_X = vec_X[:int(test_part*len(vec_X))]
         train_Y_ = vec_Y_[:int(test_part*len(vec_X))]
@@ -186,7 +187,7 @@ if __name__ == "__main__":
         test_Y_ = scalerY.transform(test_Y_)
 
     else:
-        vec_X,vec_Y_ = envData.create_XY_(state,a,next_state)#normalized!
+        #vec_X,vec_Y_ = envData.create_XY_(state,a,next_state)#normalized!
         train_X = vec_X[:int(test_part*len(vec_X))]
         train_Y_ = vec_Y_[:int(test_part*len(vec_X))]
         test_X = vec_X[int(test_part*len(vec_X)):]
@@ -202,10 +203,26 @@ if __name__ == "__main__":
     
     
     #train_X,train_Y_,_,_ = convert_data(ReplayTrain,envData)
-    train_Y = net.get_Y(train_X).tolist()
-    test_Y = net.get_Y(test_X).tolist()
+
     print("test loss: ",net.get_loss(test_X,test_Y_))
     print("train loss: ",net.get_loss(train_X,train_Y_))
+
+    train_Y = net.get_Y(train_X).tolist()
+    #for i in range(len(train_Y)):
+    #    Y_dict = envData.Y_to_Y_dict(train_Y[i])
+    #    X_dict = envData.X_to_X_dict(train_X[i])
+    #    for name in envData.copy_Y_to_X_names:
+    #        Y_dict[name] += X_dict[name]
+    #    train_Y[i] = envData.dict_Y_to_Y(Y_dict)
+
+    test_Y = net.get_Y(test_X).tolist()
+    #for i in range(len(test_Y)):
+    #    Y_dict = envData.Y_to_Y_dict(test_Y[i])
+    #    X_dict = envData.X_to_X_dict(test_X[i])
+    #    for name in envData.copy_Y_to_X_names:
+    #        Y_dict[name] += X_dict[name]
+    #    test_Y[i] = envData.dict_Y_to_Y(Y_dict)
+
     data = [description]#data_name,train_X,train_Y, train_Y_,test_X,test_Y, test_Y_
 
     #inverse transform:
