@@ -9,8 +9,8 @@ from net_lib import NetLib
 
 
 class model_based_network(NetLib):
-    def __init__(self,X_n,Y_n,alpha,norm_vec):
-        self.X_norm_vec = norm_vec
+    def __init__(self,X_n,Y_n,alpha):
+
         tf.reset_default_graph()   
         #hidden_layer_nodes1 = 200
         #hidden_layer_nodes2 = 100
@@ -21,6 +21,7 @@ class model_based_network(NetLib):
 
         self.alpha = alpha#0.001
 
+        self.keep_prob = tf.placeholder(tf.float32)
         self.X=tf.placeholder(tf.float32, [None,X_n])
         self.Y_=tf.placeholder(tf.float32,[None,Y_n])
 
@@ -49,17 +50,33 @@ class model_based_network(NetLib):
         #self.Y = tflearn.fully_connected(fc2, Y_n,regularizer='L2', weight_decay=0.01)
 
         #3 hidden layers:
+        #net = tflearn.fully_connected(self.X, hidden_layer_nodes1,regularizer='L2', weight_decay=0.1)
+        #net = tflearn.activations.relu(net)
+        #net = tflearn.fully_connected(net, hidden_layer_nodes2,regularizer='L2', weight_decay=0.1)
+        #net = tflearn.activations.relu(net)
+        #net = tflearn.fully_connected(net, hidden_layer_nodes3,regularizer='L2', weight_decay=0.1)
+        #net = tflearn.activations.relu(net)
+        ##net = tflearn.fully_connected(net, hidden_layer_nodes4,regularizer='L2', weight_decay=0.01)
+        ##net = tflearn.activations.relu(net)
+        #self.Y = tflearn.fully_connected(net, Y_n,regularizer='L2', weight_decay=0.1)
+
+        #dropout:
+
         net = tflearn.fully_connected(self.X, hidden_layer_nodes1,regularizer='L2', weight_decay=0.1)
         net = tflearn.activations.relu(net)
+        net = tf.nn.dropout (net, self.keep_prob, noise_shape=None)
         net = tflearn.fully_connected(net, hidden_layer_nodes2,regularizer='L2', weight_decay=0.1)
         net = tflearn.activations.relu(net)
+        net = tflearn.layers.core.dropout (net, self.keep_prob, noise_shape=None)
+        net = tf.nn.dropout (net, self.keep_prob, noise_shape=None)
         net = tflearn.fully_connected(net, hidden_layer_nodes3,regularizer='L2', weight_decay=0.1)
         net = tflearn.activations.relu(net)
         #net = tflearn.fully_connected(net, hidden_layer_nodes4,regularizer='L2', weight_decay=0.01)
         #net = tflearn.activations.relu(net)
+        net = tf.nn.dropout (net, self.keep_prob, noise_shape=None)
+        #net = tflearn.layers.core.dropout (net, self.keep_prob, noise_shape=None)
         self.Y = tflearn.fully_connected(net, Y_n,regularizer='L2', weight_decay=0.1)
-
-
+        
 
         self.loss=tf.reduce_mean(tf.squared_difference(self.Y,self.Y_))
         self.update=tf.train.AdamOptimizer(alpha).minimize(self.loss)
@@ -106,20 +123,20 @@ class model_based_network(NetLib):
 
         
 
-    def update_network(self,X,Y_):
+    def update_network(self,X,Y_,keep_prob = 1.0):
         #self.sess.run(self.update, feed_dict={self.X: lib.normalize(X,self.X_norm_vec) ,self.Y_: Y_})# 
-        self.sess.run(self.update, feed_dict={self.X: X ,self.Y_: Y_})
+        self.sess.run(self.update, feed_dict={self.X: X ,self.Y_: Y_,self.keep_prob: keep_prob})
         return 
-    def get_loss(self,X,Y_):
+    def get_loss(self,X,Y_,keep_prob = 1.0):
         #return self.sess.run(self.loss, feed_dict= {self.X: lib.normalize(X,self.X_norm_vec) ,self.Y_: Y_})# 
-        return self.sess.run(self.loss, feed_dict= {self.X: X ,self.Y_: Y_})# 
-    def get_Y_1(self,X):
-        Y = self.sess.run(self.Y, feed_dict= {self.X: lib.normalize(X,self.X_norm_vec)})
-        #Y = self.sess.run(self.Y, feed_dict= {self.X: X})
-        return Y
-    def get_Y(self,X):
+        return self.sess.run(self.loss, feed_dict= {self.X: X ,self.Y_: Y_,self.keep_prob: keep_prob})# 
+    #def get_Y_1(self,X):
+    #    Y = self.sess.run(self.Y, feed_dict= {self.X: lib.normalize(X,self.X_norm_vec)})
+    #    #Y = self.sess.run(self.Y, feed_dict= {self.X: X})
+    #    return Y
+    def get_Y(self,X,keep_prob = 1.0):
         #norm_X = lib.normalize(X,self.X_norm_vec)
         #print("norm x:",norm_X)
         #Y = self.sess.run(self.Y, feed_dict= {self.X: lib.normalize(X,self.X_norm_vec)})
-        Y = self.sess.run(self.Y, feed_dict= {self.X:X})
+        Y = self.sess.run(self.Y, feed_dict= {self.X:X,self.keep_prob: keep_prob})
         return Y

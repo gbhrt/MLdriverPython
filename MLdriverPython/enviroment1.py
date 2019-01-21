@@ -212,7 +212,12 @@ class OptimalVelocityPlannerData:
                 for i in range(num):
                     X.append(X_dict[name][i])
         return X
-
+    def dict_Y_to_Y(self,Y_dict):
+        Y = []
+        for name in self.Y_names:
+            Yi = []
+            Y.append(X_dict[name])
+        return Y
     def normalize(self,name_val, name):
         if self.features_numbers[name] == 1:
             norm = lib.normalize_value(name_val,self.max_min_values[name][0],self.max_min_values[name][1])

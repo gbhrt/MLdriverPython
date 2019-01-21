@@ -34,7 +34,7 @@ def run(guiShared,HP,dataManager):
     #    HP.alpha_actor,HP.alpha_critic,HP.alpha_analytic_actor,HP.alpha_analytic_critic,tau = HP.tau,seed = HP.seed,feature_data_n = envData.feature_data_num, conv_flag = HP.conv_flag)  
 
    # net = model_based_network(envData.observation_space.shape[0],6,HP.alpha,envData.observation_space.range)
-    net = model_based_network(envData.X_n,envData.Y_n,HP.alpha,envData.observation_space.range)
+    net = model_based_network(envData.X_n,envData.Y_n,HP.alpha)
 
     if HP.restore_flag:
         net.restore(HP.restore_file_path)

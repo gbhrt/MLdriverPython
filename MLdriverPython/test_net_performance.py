@@ -140,8 +140,8 @@ def compare_n_samples(net,X,end,Y_,n):
 
 
 if __name__ == "__main__": 
-    restore = True
-    train = False
+    restore = False
+    train = True
     split_buffer = True
 
     scaling_type = "scaler"#standard_scaler
@@ -163,7 +163,7 @@ if __name__ == "__main__":
     waitFor = lib.waitFor()
     HP = hyper_parameters.ModelBasedHyperParameters()
     envData = enviroment1.OptimalVelocityPlannerData('model_based')
-    net = model_based_network(envData.X_n,envData.Y_n,HP.alpha,envData.observation_space.range)
+    net = model_based_network(envData.X_n,envData.Y_n,HP.alpha)
 
     Replay = pLib.Replay(1000000)
     #velocity, steering angle, steering action, acceleration action,  rel x, rel y, rel ang, velocity next, steering next, roll

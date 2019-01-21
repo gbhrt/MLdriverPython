@@ -139,17 +139,26 @@ def train(env,HP,net,Replay,dataManager,trainShared,guiShared,seed = None):
 
             if abs(env.pl.simulator.vehicle.input_time - last_time_stamp-env.step_time) <0.01 and not time_step_error:
             #if not time_step_error:#save state to the replay buffer (without the path)            
-                tmp_next_path = next_state['path']
-                #  print("after copy1:", time.time() - t1)
-                state['path'] = []
-                next_state['path'] = []
+                #tmp_next_path = next_state['path']
+                ##  print("after copy1:", time.time() - t1)
+                #state['path'] = []
+                #next_state['path'] = []
 
                 trainShared.algorithmIsIn.clear()#indicates that are ready to take the lock
                 with trainShared.Lock:
                     trainShared.algorithmIsIn.set()
-                    Replay.add(copy.deepcopy((state,[acc,steer],next_state,done,fail)))#  
+                    
+                    dict_X,dict_Y_ =env.create_XY_(state,next_state,[acc,steer])
+                    dict_X = env.X_to_X_dict(X)
+                    dict_Y_ = env.Y_to_Y_dict(Y_)
+                    for name in env.copy_Y_to_X_names:
+                        dict_Y_[name] -= dict_X[name]
+                    X = env.dict_X_to_X(dict_X)
+                    Y_ = env.dict_Y_to_Y(dict_Y_)
+                    Replay.add(copy.deepcopy((X,Y_,done,fail)))# 
+                    #Replay.add(copy.deepcopy((state,[acc,steer],next_state,done,fail)))#  
 
-                next_state['path'] = tmp_next_path
+                #next_state['path'] = tmp_next_path
                 #print("add to replay time:",time.clock() - env.lt)
             else:
                 print("not saving to replay buffer")

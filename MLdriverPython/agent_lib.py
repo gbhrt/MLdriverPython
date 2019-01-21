@@ -156,7 +156,7 @@ def comp_abs_pos_ang(rel_pos,rel_ang,abs_pos,abs_ang):
 #    return next_state
 def comp_steer_from_next_state(net,env,state,steer_command,acc_command):
     X = env.create_X([state],[[acc_command,steer_command]])
-    Y = net.get_Y(X)[0]
+    Y = net.get_Y(X)[0]#not using copy X to Y features, therefore no need to add X
     Y_dict = env.Y_to_Y_dict(Y)
     #abs_pos,abs_ang = comp_abs_pos_ang(Y[0:2],Y[2],[0,0],0)
     rel_pos = [env.denormalize(Y_dict["rel_pos_x"],"rel_pos_x"),env.denormalize(Y_dict["rel_pos_y"],"rel_pos_y")]
@@ -207,6 +207,7 @@ def predict_n_next(n,net,env,init_state,action,acc_try = 1.0,max_plan_roll = Non
             Y_dict = env.Y_to_Y_dict(Y)
             #print("after prediction time:",time.clock() - env.lt)
             for name in env.copy_Y_to_X_names:
+                Y_dict[name] += X_dict[name]
                 X_dict[name] = Y_dict[name]#env.normalize(Y_dict[name],name)
 
             roll_var+=delta_var
