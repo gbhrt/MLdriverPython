@@ -12,6 +12,82 @@ import agent_lib as pLib
 import math
 import os
 
+def comp_MB_action(net,env,state,acc,steer):
+    print("___________________new acc compution____________________________")
+    X_dict,abs_pos,abs_ang = pLib.initilize_prediction(env,state,acc,steer)
+    pred_vec = [[abs_pos,abs_ang,state['vel_y'],state['roll'],0]]
+    delta_var = 0.0#0.002
+    max_plan_roll = env.max_plan_roll
+    roll_var = delta_var
+    #stability at the current state:
+    roll_flag,dev_flag = pLib.check_stability(env,state['path'],0,abs_pos,X_dict['roll'],roll_var = roll_var,max_plan_roll = max_plan_roll,max_plan_deviation = env.max_plan_deviation)
+    if roll_flag == 0 and not dev_flag:
+        #predict the next unavoidable state (actions already done):
+        X_dict,abs_pos,abs_ang = pLib.predict_one_step(net,env,copy.copy(X_dict),abs_pos,abs_ang)
+        roll_var +=delta_var
+        vel = env.denormalize(X_dict['vel_y'],"vel_y")
+        index = lib.find_index_on_path(state['path'],abs_pos)    
+        steer = pLib.steer_policy(abs_pos,abs_ang,state['path'],index,vel)
+        X_dict["steer_action"] = env.normalize(steer,"steer_action")
+        roll = env.denormalize(X_dict["roll"],"roll")
+        pred_vec.append([abs_pos,abs_ang,vel,roll,roll_var])
+        #stability at the next state (unavoidable state):
+        roll_flag,dev_flag = pLib.check_stability(env,state['path'],index,abs_pos,X_dict['roll'],roll_var = roll_var,max_plan_roll = max_plan_roll)
+        
+        if roll_flag == 0 and not dev_flag:#first step was Ok
+            #integration on the next n steps:
+            n = 10
+            acc_to_try =[1.0,0.0,-1.0]
+            for i,try_acc in enumerate(acc_to_try):
+                X_dict["acc_action"] = try_acc
+                if i == len(acc_to_try)-1:
+                    max_plan_roll = env.max_plan_roll*1.3
+                print("try acc:",try_acc)
+
+                pred_vec_n,roll_flag,dev_flag = pLib.predict_n_next1(n,net,env,copy.copy(X_dict),abs_pos,abs_ang,state['path'],max_plan_roll = max_plan_roll,roll_var = roll_var,delta_var = delta_var)
+                print("roll_flag:",roll_flag,"dev_flag",dev_flag)
+                if (roll_flag == 0 and not dev_flag) or i == len(acc_to_try)-1:
+                    #check if the emergency policy is save after applying the action on the first step
+                    emergency_pred_vec_n,emergency_roll_flag,emergency_dev_flag = pLib.predict_n_next1(n,net,env,copy.copy(X_dict),abs_pos,abs_ang,state['path'],emergency_flag = True,max_plan_roll = max_plan_roll,roll_var = roll_var,delta_var = delta_var)
+                    if emergency_roll_flag == 0 and not emergency_dev_flag:#regular policy and emergency policy are ok:
+                        next_acc = try_acc
+                        next_steer = steer
+                        break
+                #if (roll_flag == 0 and not dev_flag):
+                #    next_acc = try_acc
+                #    next_steer = steer
+                #    break
+                #else the tried action wasn't ok, and must try again
+            emergency_pred_vec = pred_vec+emergency_pred_vec_n
+            pred_vec+=pred_vec_n
+            if (emergency_roll_flag != 0 or emergency_dev_flag) and (roll_flag != 0 or dev_flag):#both regular and emergency failed:
+                print("no solution! will fail!!!")
+
+            if (emergency_roll_flag != 0 or emergency_dev_flag) and (roll_flag == 0 and not dev_flag):
+                print("solution only for the regular policy - emergency fail")
+                next_acc = acc_to_try[-1]#can only be the last
+                next_steer = steer
+
+        else:# first step will cause fail
+            print("unavoidable fail - after first step")
+            emergency_pred_vec = pred_vec#save just initial state and sirst step
+
+    else:#initial state is already unstable
+        print("already failed - before first step")
+        emergency_pred_vec = pred_vec#save just initial state
+        #emergency_roll_flag,emergency_dev_flag = True,True#for the case that already failed
+
+    if (roll_flag != 0 or dev_flag):# and (emergency_roll_flag == 0 and not emergency_dev_flag):#if just emergency is OK:
+        next_steer = pLib.emergency_steer_policy()# steering from the next state, send it to the vehicle at the next state
+        next_acc = pLib.emergency_acc_policy()
+        print("emergency policy is executed!")
+
+
+
+
+    
+    return next_acc,next_steer,pred_vec,emergency_pred_vec,roll_flag,dev_flag
+
 def comp_MB_acc(net,env,state,acc,steer):
     roll_flag,dev_flag = 0, False
     n = 10
@@ -82,6 +158,7 @@ def train(env,HP,net,Replay,dataManager,trainShared,guiShared,seed = None):
         #episode_start_time = time.time()
         steer = 0
         acc = 1.0
+        env.pl.init_timer()
         while  waitFor.stop != [True] and guiShared.request_exit == False:#while not stoped, the loop break if reached the end or the deviation is to big          
             step_count+=1
             #choose and make action:
@@ -99,28 +176,32 @@ def train(env,HP,net,Replay,dataManager,trainShared,guiShared,seed = None):
                     trainShared.algorithmIsIn.set()
                     #net and Replay are shared
                     #print("time after Lock:",time.clock()-env.lt)
-                    next_steer = pLib.comp_steer_from_next_state(net,env,state,steer,acc)
+                    #next_steer = pLib.comp_steer_from_next_state(net,env,state,steer,acc)
                     #print("vel_n:",env.pl.simulator.vehicle.wheels[0].vel_n)
                     #print("before comp_MB_acc time:",time.clock() - env.lt)
-                    next_acc,predicted_values,roll_flag,dev_flag = comp_MB_acc(net,env,state,acc,steer)
-                    dataManager.planed_roll = np.array(predicted_values)[:,3]
-                    dataManager.planned_roll_var = np.array(predicted_values)[:,4]
+                    next_acc,next_steer,pred_vec,emergency_pred_vec,roll_flag,dev_flag = comp_MB_action(net,env,state,acc,steer)
+                    dataManager.planed_roll = np.array(pred_vec)[:,3]
+                    dataManager.planned_roll_var = np.array(pred_vec)[:,4]
+
+                    dataManager.emergency_planed_roll = np.array(emergency_pred_vec)[:,3]
+                    dataManager.emergency_planned_roll_var = np.array(emergency_pred_vec)[:,4]
                     print("next_acc:",next_acc)
                     #print("after comp_MB_acc time:",time.clock() - env.lt)
                     #print("roll_flag:",roll_flag,"dev_flag:",dev_flag)
                     if env.stop_flag:
                         next_acc = -1
-                    if roll_flag != 0:
-                        next_steer = 0 # math.copysign(0.7,roll_flag)
+                    #if roll_flag != 0:
+                    #    next_steer = 0 # math.copysign(0.7,roll_flag)
                  
-                        print("emergency steering")
+                    #    print("emergency steering")
                     if dev_flag:
                         fail = True #save in the Replay buffer that this episode failed
                         done = True #break
 
                 #t= time.clock()
                 with guiShared.Lock:
-                    guiShared.predicded_path = [pred[0] for pred in predicted_values]
+                    guiShared.predicded_path = [pred[0] for pred in pred_vec]
+                    guiShared.emergency_predicded_path = [pred[0] for pred in emergency_pred_vec]
                     guiShared.state = copy.deepcopy(state)
                     guiShared.steer = steer
                 #print("update gui time:",time.clock() - t)

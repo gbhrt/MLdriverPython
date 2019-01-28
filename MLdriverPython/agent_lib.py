@@ -158,23 +158,20 @@ def steer_policy(abs_pos,abs_ang,path,index,vel):
     return lib.comp_steer_general(path,index,abs_pos,abs_ang,vel)
 def emergency_steer_policy():
     return 0.0
-def acc_policy(i,acc_try):
-    if i==0:#the first time determent by the current given action
-        return acc_try
+def acc_policy():
+    return -1.0
+def emergency_acc_policy():
     return -1.0
 
-def check_stability(env,path,index,abs_pos,roll,roll_var = None,delta_var = 0.0,max_plan_roll = None,max_plan_deviation = None):
-    if roll_var is None:
-        max_plan_roll*delta_var
+def check_stability(env,path,index,abs_pos,roll,roll_var = 0.0,max_plan_roll = None,max_plan_deviation = None):
+
     if max_plan_roll is None:
         max_plan_roll = env.max_plan_roll
     if max_plan_deviation is None:
         max_plan_deviation = env.max_plan_deviation
     dev_flag,roll_flag = False,0
     dev_from_path = lib.dist(path.position[index][0],path.position[index][1],abs_pos[0],abs_pos[1])#absolute deviation from the path
-    #print("deviation:", dev_from_path)
-    delta_var = 0.0#0.002
-    roll_var = max_plan_roll*delta_var
+
 
     if abs(env.denormalize(roll,'roll'))+roll_var > max_plan_roll: #check the current roll 
         roll_flag = copysign(1,roll)
@@ -204,19 +201,15 @@ def predict_one_step(net,env,X_dict,abs_pos,abs_ang):
     return X_dict,abs_pos,abs_ang
 #input: X dict
 #output: X dict after one step
-def predict_n_next1(n,net,env,X_dict,abs_pos,abs_ang,path,acc_try = 1.0,emergency_flag = False,max_plan_roll = None,max_plan_deviation = None,delta_var = 0.0):
+def predict_n_next1(n,net,env,X_dict,abs_pos,abs_ang,path,emergency_flag = False,max_plan_roll = None,max_plan_deviation = None,roll_var = 0,delta_var = 0.0):
     dev_flag,roll_flag = False,0
     pred_vec = []
-    roll_var = max_plan_roll*delta_var
-    dev_flag,roll_flag = check_stability(env,path,0,abs_pos,X_dict['roll'],roll_var = roll_var,delta_var = 0.0,max_plan_roll = max_plan_roll,max_plan_deviation = max_plan_deviation)
+    roll_flag,dev_flag = check_stability(env,path,0,abs_pos,X_dict['roll'],roll_var = roll_var,max_plan_roll = max_plan_roll,max_plan_deviation = max_plan_deviation)
     if dev_flag == False and roll_flag == 0:
         for i in range(0,n):#n times       
             X_dict,abs_pos,abs_ang = predict_one_step(net,env,X_dict,abs_pos,abs_ang)
-
             roll_var+=delta_var
             #print("roll_var:",roll_var)
-
-
             vel = env.denormalize(X_dict['vel_y'],"vel_y")
             index = lib.find_index_on_path(path,abs_pos)
            
@@ -225,7 +218,7 @@ def predict_n_next1(n,net,env,X_dict,abs_pos,abs_ang,path,acc_try = 1.0,emergenc
                 acc_command = emergency_acc_policy()
             else:
                 steer_command = steer_policy(abs_pos,abs_ang,path,index,vel)
-                acc_command = acc_policy(i,acc_try)
+                acc_command = acc_policy()#always -1
 
             X_dict["steer_action"] = env.normalize(steer_command,"steer_action")
             X_dict["acc_action"] = acc_command
@@ -236,7 +229,7 @@ def predict_n_next1(n,net,env,X_dict,abs_pos,abs_ang,path,acc_try = 1.0,emergenc
 
             if vel < 2.0:
                 break
-            dev_flag,roll_flag = check_stability(env,path,index,abs_pos,X_dict['roll'],roll_var = roll_var,delta_var = 0.0,max_plan_roll = max_plan_roll,max_plan_deviation = max_plan_deviation)
+            roll_flag,dev_flag = check_stability(env,path,index,abs_pos,X_dict['roll'],roll_var = roll_var,max_plan_roll = max_plan_roll,max_plan_deviation = max_plan_deviation)
             
             if roll_flag != 0 or dev_flag:
                 break
@@ -260,7 +253,7 @@ def predict_n_next(n,net,env,init_state,acc_command,steer_command,acc_try = 1.0,
 
     X_dict,abs_pos,abs_ang = initilize_prediction(env,init_state,acc_command,steer_command)
     pred_vec = [[abs_pos,abs_ang,init_state['vel_y'],init_state['roll'],0]]
-    pred_vec_n,roll_flag,dev_flag = predict_n_next1(n,net,env,X_dict,abs_pos,abs_ang,init_state['path'],acc_try = 1.0,emergency_flag = emergency_flag,max_plan_roll = max_plan_roll,max_plan_deviation = max_plan_deviation,delta_var = 0.0)
+    pred_vec_n,roll_flag,dev_flag = predict_n_next1(n,net,env,X_dict,abs_pos,abs_ang,init_state['path'],acc_try = 1.0,emergency_flag = emergency_flag,max_plan_roll = max_plan_roll,max_plan_deviation = max_plan_deviation,roll_var = roll_var,delta_var = 0.0)
     pred_vec+=pred_vec_n
     return pred_vec,roll_flag,dev_flag
 

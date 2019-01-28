@@ -24,17 +24,20 @@ def plot_velocities(fig):#,path):
     lines.append(fig.plot(x,y,label = "velocity limit")[0])
     lines.append(fig.plot(x,y,label = "analytic velocity")[0])
     lines.append(fig.plot(x,y,label = "vehicle velocity")[0])
-    plt.legend()
+    #plt.legend()
     return lines
 
 def update_velocities(lines,path):
     max_time_ind = len(path.time)
     
-    lines[0].set_data(np.array(path.distance)[:max_time_ind],np.array(path.analytic_velocity_limit)[:max_time_ind])
+    #lines[0].set_data(np.array(path.distance)[:max_time_ind],np.array(path.analytic_velocity_limit)[:max_time_ind])
     
-    lines[1].set_data(np.array(path.distance)[:max_time_ind],np.array(path.analytic_velocity)[:max_time_ind])
-    lines[2].set_data(path.distance,path.velocity)
-
+    #lines[1].set_data(np.array(path.distance)[:max_time_ind],np.array(path.analytic_velocity)[:max_time_ind])
+    #lines[2].set_data(path.distance,path.velocity)
+    lines[0].set_data(np.array(path.time)[:max_time_ind],np.array(path.analytic_velocity_limit)[:max_time_ind])
+    
+    lines[1].set_data(np.array(path.time)[:max_time_ind],np.array(path.analytic_velocity)[:max_time_ind])
+    lines[2].set_data(path.time,path.velocity)
 class data_plots():
     def __init__(self,root,guiShared,dataManager):
         self.guiShared = guiShared
@@ -45,18 +48,28 @@ class data_plots():
         #self.figure1 = plt.Figure(figsize=(6,5))#, dpi=100)
         #self.ax1 = self.figure1.add_subplot(111)
         #self.ax2 = self.figure1.add_subplot(121)
-        self.figure1, (self.ax1,self.ax2,self.ax3) = plt.subplots(3, 1,figsize=(5,7))#
+        #self.figure1, (self.ax1,self.ax2,self.ax3) = plt.subplots(3, 1,figsize=(5,7))#
+        self.figure1, (self.ax1,self.ax2,self.ax3) = plt.subplots(3, 1,figsize=(5,4))#
+
         #self.dataManager.roll = [0,1]
         self.ax1.set_ylim(-0.1,0.1)
+        self.ax1.set_xlim(0,self.guiShared.max_time)
         self.ax2.set_ylim(0,25)
+        self.ax2.set_xlim(0,self.guiShared.max_time)
         self.ax3.set_ylim(-0.2,0.2)
-        self.ax3.set_xlim(0,10)
+        self.ax3.set_xlim(0,12)
+        
         self.line1 = self.ax1.plot(np.array(self.dataManager.roll))[0]
-        self.line2 = self.ax3.plot(np.array(self.dataManager.planed_roll),color = "green")[0]
-        self.line3 = self.ax3.plot(np.array(self.dataManager.planed_roll)+0.1,color = "red")[0]
-        self.line4 = self.ax3.plot(np.array(self.dataManager.planed_roll)-0.1,color = "red")[0]
+        
+        self.line_roll_var1 = self.ax3.plot(np.array(self.dataManager.planed_roll)+0.1,color = "red")[0]
+        self.line_roll_var2 = self.ax3.plot(np.array(self.dataManager.planed_roll)-0.1,color = "red")[0]
+        self.line_roll_mean = self.ax3.plot(np.array(self.dataManager.planed_roll),color = "green",label = "roll")[0]
+        self.line_emergency_roll_var1 = self.ax3.plot(np.array(self.dataManager.emergency_planed_roll)+0.1,color = "red")[0]
+        self.line_emergency_roll_var2 = self.ax3.plot(np.array(self.dataManager.emergency_planed_roll)-0.1,color = "red")[0]
+        self.line_emergency_roll_mean = self.ax3.plot(np.array(self.dataManager.emergency_planed_roll),color = "blue",label = "emergency roll")[0]
+        self.ax3.fill_between(np.arange(15),self.guiShared.max_roll*np.ones(15),-self.guiShared.max_roll*np.ones(15),color = "#dddddd" )
 
-        self.ax3.fill_between(np.arange(12),self.guiShared.max_roll*np.ones(12),-self.guiShared.max_roll*np.ones(12),color = "#dddddd" )
+        #self.ax3.legend()
         self.lines = plot_velocities(self.ax2)#,self.dataManager)
         self.ax1.grid(True)
         self.ax2.grid(True)
@@ -82,21 +95,27 @@ class data_plots():
         #self.ax3.fill_between(np.arange(len(self.dataManager.planed_roll)),np.array(self.dataManager.planed_roll)+2,np.array(self.dataManager.planed_roll)-2)
         
             
-        self.line2.set_data(np.arange(len(self.dataManager.planed_roll)),np.array(self.dataManager.planed_roll))
-        self.line3.set_data(np.arange(len(self.dataManager.planed_roll)),np.array(self.dataManager.planed_roll)-np.array(self.dataManager.planned_roll_var))
-        self.line4.set_data(np.arange(len(self.dataManager.planed_roll)),np.array(self.dataManager.planed_roll)+np.array(self.dataManager.planned_roll_var))
-        #self.line2_fill.remove()
+        self.line_roll_mean.set_data(np.arange(len(self.dataManager.planed_roll)),np.array(self.dataManager.planed_roll))
+        self.line_roll_var1.set_data(np.arange(len(self.dataManager.planed_roll)),np.array(self.dataManager.planed_roll)-np.array(self.dataManager.planned_roll_var))
+        self.line_roll_var2.set_data(np.arange(len(self.dataManager.planed_roll)),np.array(self.dataManager.planed_roll)+np.array(self.dataManager.planned_roll_var))
+        
+        self.line_emergency_roll_mean.set_data(np.arange(len(self.dataManager.emergency_planed_roll)),np.array(self.dataManager.emergency_planed_roll))
+        self.line_emergency_roll_var1.set_data(np.arange(len(self.dataManager.emergency_planed_roll)),np.array(self.dataManager.emergency_planed_roll)-np.array(self.dataManager.emergency_planned_roll_var))
+        self.line_emergency_roll_var2.set_data(np.arange(len(self.dataManager.emergency_planed_roll)),np.array(self.dataManager.emergency_planed_roll)+np.array(self.dataManager.emergency_planned_roll_var))
+        
 
 
         if len(path.distance) > 0:
-            self.ax1.set_xlim(0,path.distance[len(self.dataManager.roll)-1])
+            #self.ax1.set_xlim(0,path.distance[len(self.dataManager.roll)-1])
             
-            self.line1.set_data(path.distance[:len(self.dataManager.roll)],np.array(self.dataManager.roll))
+            #self.line1.set_data(path.distance[:len(self.dataManager.roll)],np.array(self.dataManager.roll))
+            self.line1.set_data(path.time[:len(self.dataManager.roll)],np.array(self.dataManager.roll))
 
 
 
 
-            self.ax2.set_xlim(0,path.distance[len(self.dataManager.roll)-1])
+
+            #self.ax2.set_xlim(0,path.distance[len(self.dataManager.roll)-1])
 
             update_velocities(self.lines,path)
         self.canvas.draw()
@@ -141,6 +160,8 @@ class draw_state:
                 self.draw_path(self.guiShared.state['path'].position,color = "red")
             if len(self.guiShared.predicded_path)>1:
                 self.draw_path(self.guiShared.predicded_path,color = "green")
+            if len(self.guiShared.emergency_predicded_path)>1:
+                self.draw_path(self.guiShared.emergency_predicded_path,color = "blue")
 
         self.root.after(1,self.draw)
         #self.draw_vehicle(0.5)

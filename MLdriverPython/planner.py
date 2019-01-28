@@ -75,7 +75,7 @@ class Planner(PathManager):#planner - get and send data to simulator. input - mi
         #self.stop_vehicle()#canceled 3.6.18
         self.init_timer()
         print("restart\n")
-        v = Vehicle()
+        #v = Vehicle()
         self.init_state = copy.copy(self.simulator.vehicle)#save initial state of the vehicle(local reference system)
         
 

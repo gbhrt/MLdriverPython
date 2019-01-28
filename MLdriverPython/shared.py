@@ -10,8 +10,10 @@ class guiShared:
         self.state = None
         self.steer = None
         self.predicded_path = None
+        self.emergency_predicded_path = None
         self.steering_target = None
         self.max_roll = 0
+        self.max_time = 100
         #self.start_draw
         return
 

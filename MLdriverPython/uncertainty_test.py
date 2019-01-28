@@ -35,33 +35,34 @@ if __name__ == "__main__":
     X_n = 1
     Y_n = 1
     alpha = 0.0001
-    keep_prob = 0.7
+    keep_prob = 0.9
 
 
     n = 50
-    mu, sigma1,sigma2 = 0, 0.01, 0.4 # mean and standard deviation
+    #mu, sigma1,sigma2 = 0, 0.01, 0.4 # mean and standard deviation
+    mu, sigma1,sigma2 = 0, 0.0, 0.0 # mean and standard deviation
     noise = np.append(np.random.normal(mu, sigma1, int(n/2)),np.random.normal(mu, sigma2, int(n/2)))
     x =  np.linspace(0, 10, n)
     Xtrain = x
     ytrain_ = np.sin(Xtrain)+noise
 
-    for i in range(10):
-        noise = np.append(np.random.normal(mu, sigma1, int(n/2)),np.random.normal(mu, sigma2, int(n/2)))
-        Xtrain = np.append(Xtrain,x)
-        ytrain_ = np.append(ytrain_, np.sin(x)+noise )
+    #for i in range(10):
+    #    noise = np.append(np.random.normal(mu, sigma1, int(n/2)),np.random.normal(mu, sigma2, int(n/2)))
+    #    Xtrain = np.append(Xtrain,x)
+    #    ytrain_ = np.append(ytrain_, np.sin(x)+noise )
 
-    noise = np.append(np.random.normal(mu, sigma1, int(n/2)),np.random.normal(mu, sigma2, int(n/2)))
-    x =  np.linspace(20, 30, n)
-    Xtrain1 = x
-    ytrain_1 = np.sin(Xtrain1)+noise
+    #noise = np.append(np.random.normal(mu, sigma1, int(n/2)),np.random.normal(mu, sigma2, int(n/2)))
+    #x =  np.linspace(20, 30, n)
+    #Xtrain1 = x
+    #ytrain_1 = np.sin(Xtrain1)+noise
 
-    for i in range(10):
-        noise = np.append(np.random.normal(mu, sigma1, int(n/2)),np.random.normal(mu, sigma2, int(n/2)))
-        Xtrain1 = np.append(Xtrain1,x)
-        ytrain_1 = np.append(ytrain_1, np.sin(x)+noise )
+    #for i in range(10):
+    #    noise = np.append(np.random.normal(mu, sigma1, int(n/2)),np.random.normal(mu, sigma2, int(n/2)))
+    #    Xtrain1 = np.append(Xtrain1,x)
+    #    ytrain_1 = np.append(ytrain_1, np.sin(x)+noise )
 
-    Xtrain = np.append(Xtrain, Xtrain1)
-    ytrain_ = np.append(ytrain_, ytrain_1)
+    #Xtrain = np.append(Xtrain, Xtrain1)
+    #ytrain_ = np.append(ytrain_, ytrain_1)
 
     Xtrain = Xtrain.reshape(-1,1)
     ytrain_ = ytrain_.reshape(-1,1)
@@ -94,9 +95,10 @@ if __name__ == "__main__":
 
     plt.plot(Xtrain, ytrain,"o",label = "y train")
     plt.plot(Xtrain, ytrain_,"o",label = "y_ train")
+    plt.plot(Xtest, ytest_, label = "y_ test")
     for i in range(T):
         ytest = (net.get_Y(Xtest,keep_prob = keep_prob))
         plt.plot(Xtest, ytest, label = "y test",alpha = 0.7)
-    plt.plot(Xtest, ytest_, label = "y_ test")
+    
     plt.legend()
     plt.show()

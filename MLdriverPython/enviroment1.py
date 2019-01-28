@@ -37,8 +37,8 @@ class OptimalVelocityPlannerData:
         self.action_space_n = 1
         self.visualized_points = int(self.feature_points/0.05) + 10 #how many points show on the map and lenght of local path
 
-        self.max_deviation =  5 # [m] if more then maximum - end episode 
-        self.max_plan_deviation = 3
+        self.max_deviation =  10 # [m] if more then maximum - end episode 
+        self.max_plan_deviation = 10
         
         self.max_velocity_x = 30
         self.max_velocity_y = 30

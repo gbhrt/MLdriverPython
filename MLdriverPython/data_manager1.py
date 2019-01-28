@@ -90,6 +90,8 @@ class DataManager():
 
         self.planed_roll = []
         self.planned_roll_var = []
+        self.emergency_planed_roll = []
+        self.emergency_planned_roll_var = []
         print("data manager restarted")
     def add_run_num(self,i):
         self.run_num.append(i+self.init_run_num)
