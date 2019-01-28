@@ -43,37 +43,39 @@ class model_based_network(NetLib):
         #self.Y = tflearn.fully_connected(fc2, Y_n,weights_init = init,bias_init = tf.constant(0.1, shape=[Y_n]))
 
         #2 hidden layers:
+        #hidden_layer_nodes1 = 400
+        #hidden_layer_nodes2 = 300
         #fc1 = tflearn.fully_connected(self.X, hidden_layer_nodes1,regularizer='L2', weight_decay=0.01)
         #fc1 = tflearn.activations.relu(fc1)
         #fc2 = tflearn.fully_connected(fc1, hidden_layer_nodes2,regularizer='L2', weight_decay=0.01)
         #fc2 = tflearn.activations.relu(fc2)
         #self.Y = tflearn.fully_connected(fc2, Y_n,regularizer='L2', weight_decay=0.01)
 
-        #3 hidden layers:
-        #net = tflearn.fully_connected(self.X, hidden_layer_nodes1,regularizer='L2', weight_decay=0.1)
-        #net = tflearn.activations.relu(net)
-        #net = tflearn.fully_connected(net, hidden_layer_nodes2,regularizer='L2', weight_decay=0.1)
-        #net = tflearn.activations.relu(net)
-        #net = tflearn.fully_connected(net, hidden_layer_nodes3,regularizer='L2', weight_decay=0.1)
-        #net = tflearn.activations.relu(net)
-        ##net = tflearn.fully_connected(net, hidden_layer_nodes4,regularizer='L2', weight_decay=0.01)
-        ##net = tflearn.activations.relu(net)
-        #self.Y = tflearn.fully_connected(net, Y_n,regularizer='L2', weight_decay=0.1)
-
-        #dropout:
-
-        net = tflearn.fully_connected(self.X, hidden_layer_nodes1)#,regularizer='L2', weight_decay=0.1)
+        ##3 hidden layers:
+        net = tflearn.fully_connected(self.X, hidden_layer_nodes1,regularizer='L2', weight_decay=0.1)
         net = tflearn.activations.relu(net)
-        net = tf.nn.dropout (net, self.keep_prob, noise_shape=None)
-        net = tflearn.fully_connected(net, hidden_layer_nodes2)#,regularizer='L2', weight_decay=0.1)
+        net = tflearn.fully_connected(net, hidden_layer_nodes2,regularizer='L2', weight_decay=0.1)
         net = tflearn.activations.relu(net)
-        net = tf.nn.dropout (net, self.keep_prob, noise_shape=None)
-        net = tflearn.fully_connected(net, hidden_layer_nodes3)#,regularizer='L2', weight_decay=0.1)
+        net = tflearn.fully_connected(net, hidden_layer_nodes3,regularizer='L2', weight_decay=0.1)
         net = tflearn.activations.relu(net)
         #net = tflearn.fully_connected(net, hidden_layer_nodes4,regularizer='L2', weight_decay=0.01)
         #net = tflearn.activations.relu(net)
-        net = tf.nn.dropout (net, self.keep_prob, noise_shape=None)
-        self.Y = tflearn.fully_connected(net, Y_n)#,regularizer='L2', weight_decay=0.1)
+        self.Y = tflearn.fully_connected(net, Y_n,regularizer='L2', weight_decay=0.1)
+
+        #dropout:
+
+        #net = tflearn.fully_connected(self.X, hidden_layer_nodes1)#,regularizer='L2', weight_decay=0.1)
+        #net = tflearn.activations.relu(net)
+        #net = tf.nn.dropout (net, self.keep_prob, noise_shape=None)
+        #net = tflearn.fully_connected(net, hidden_layer_nodes2)#,regularizer='L2', weight_decay=0.1)
+        #net = tflearn.activations.relu(net)
+        #net = tf.nn.dropout (net, self.keep_prob, noise_shape=None)
+        #net = tflearn.fully_connected(net, hidden_layer_nodes3)#,regularizer='L2', weight_decay=0.1)
+        #net = tflearn.activations.relu(net)
+        ##net = tflearn.fully_connected(net, hidden_layer_nodes4,regularizer='L2', weight_decay=0.01)
+        ##net = tflearn.activations.relu(net)
+        #net = tf.nn.dropout (net, self.keep_prob, noise_shape=None)
+        #self.Y = tflearn.fully_connected(net, Y_n)#,regularizer='L2', weight_decay=0.1)
 
         #init = tflearn.initializations.truncated_normal(stddev = 0.1)
 
