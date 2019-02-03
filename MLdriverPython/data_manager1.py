@@ -46,20 +46,7 @@ class DataManager():
 
         #reset every episode:
         self.restart()
-        #self.Qa = []
-        #self.Q0 = []
-        #self.Q1 = []
-        #self.Qneg1 = []
-        #self.Qa_target = [] 
-        #self.Q0_target = [] 
-        #self.Q1_target = [] 
-        #self.Qneg1_target = []
-        #self.roll = []
-        #self.noise = []
-        #self.acc = []
-        #self.acc_target = []
-        #self.wheels_vel = []
-        #self.time_stamps = []
+
         ###############################
         
         if restore_flag:
@@ -88,11 +75,16 @@ class DataManager():
         self.input_time = []
         self.step_times = []
 
-        self.planed_roll = []
-        self.planned_roll_var = []
-        self.emergency_planed_roll = []
-        self.emergency_planned_roll_var = []
+        #self.planned_roll[-1] = []
+        #self.planned_roll_var = []
+        #self.emergency_planned_roll = []
+        #self.emergency_planned_roll_var = []
+        self.vec_planned_roll = []
+        self.vec_planned_roll_var = []
+        self.vec_emergency_planned_roll = []
+        self.vec_emergency_planned_roll_var = []
         print("data manager restarted")
+
     def add_run_num(self,i):
         self.run_num.append(i+self.init_run_num)
     def add_train_num(self,i):

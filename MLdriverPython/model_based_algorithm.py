@@ -2,7 +2,7 @@
 import time
 import numpy as np
 import library as lib
-from classes import Path
+import classes
 import copy
 import random
 
@@ -15,7 +15,7 @@ import os
 def comp_MB_action(net,env,state,acc,steer):
     print("___________________new acc compution____________________________")
     X_dict,abs_pos,abs_ang = pLib.initilize_prediction(env,state,acc,steer)
-    pred_vec = [[abs_pos,abs_ang,state['vel_y'],state['roll'],0]]
+    pred_vec = [[abs_pos,abs_ang,state['vel_y'],state['roll'],0,steer,acc]]
     delta_var = 0.0#0.002
     max_plan_roll = env.max_plan_roll
     max_plan_deviation = env.max_plan_deviation
@@ -31,7 +31,7 @@ def comp_MB_action(net,env,state,acc,steer):
         steer = pLib.steer_policy(abs_pos,abs_ang,state['path'],index,vel)
         X_dict["steer_action"] = env.normalize(steer,"steer_action")
         roll = env.denormalize(X_dict["roll"],"roll")
-        pred_vec.append([abs_pos,abs_ang,vel,roll,roll_var])
+        #pred_vec.append([abs_pos,abs_ang,vel,roll,roll_var,steer,acc])#acc is not updated
         #stability at the next state (unavoidable state):
         roll_flag,dev_flag = pLib.check_stability(env,state['path'],index,abs_pos,X_dict['roll'],roll_var = roll_var,max_plan_roll = max_plan_roll,max_plan_deviation = max_plan_deviation)
         
@@ -47,22 +47,24 @@ def comp_MB_action(net,env,state,acc,steer):
 
                 pred_vec_n,roll_flag,dev_flag = pLib.predict_n_next1(n,net,env,copy.copy(X_dict),abs_pos,abs_ang,state['path'],max_plan_roll = max_plan_roll,roll_var = roll_var,delta_var = delta_var,max_plan_deviation = max_plan_deviation)
                 print("roll_flag:",roll_flag,"dev_flag",dev_flag)
-                #if (roll_flag == 0 and not dev_flag) or i == len(acc_to_try)-1:
-                #    #check if the emergency policy is save after applying the action on the first step
-                #    emergency_pred_vec_n,emergency_roll_flag,emergency_dev_flag = pLib.predict_n_next1(n,net,env,copy.copy(X_dict),abs_pos,abs_ang,state['path'],emergency_flag = True,max_plan_roll = max_plan_roll,roll_var = roll_var,delta_var = delta_var,max_plan_deviation = max_plan_deviation)
-                #    if emergency_roll_flag == 0 and not emergency_dev_flag:#regular policy and emergency policy are ok:
-                #        next_acc = try_acc
-                #        next_steer = steer
-                #        break
-                emergency_pred_vec_n,emergency_roll_flag,emergency_dev_flag = [],0,False
-                if (roll_flag == 0 and not dev_flag):
+                if (roll_flag == 0 and not dev_flag) or i == len(acc_to_try)-1:
+                    #check if the emergency policy is save after applying the action on the first step
+                    emergency_pred_vec_n,emergency_roll_flag,emergency_dev_flag = pLib.predict_n_next1(n,net,env,copy.copy(X_dict),abs_pos,abs_ang,state['path'],emergency_flag = True,max_plan_roll = max_plan_roll,roll_var = roll_var,delta_var = delta_var,max_plan_deviation = max_plan_deviation)
+                    if emergency_roll_flag == 0 and not emergency_dev_flag:#regular policy and emergency policy are ok:
+                        next_acc = try_acc
+                        next_steer = steer
+                        emergency_action = False
+                        break
+                #emergency_pred_vec_n,emergency_roll_flag,emergency_dev_flag = [],0,False
+                #if (roll_flag == 0 and not dev_flag):
                     
-                    next_acc = try_acc
-                    next_steer = steer
-                    break
+                #    next_acc = try_acc
+                #    next_steer = steer
+                #    break
                 #else the tried action wasn't ok, and must try again
-            emergency_pred_vec = pred_vec+emergency_pred_vec_n
-            pred_vec+=pred_vec_n
+            #pred_vec.append([abs_pos,abs_ang,vel,roll,roll_var,next_steer,next_acc])#the second prediction, the first is the initial state
+            #emergency_pred_vec = pred_vec+emergency_pred_vec_n
+            #pred_vec+=pred_vec_n
             if (emergency_roll_flag != 0 or emergency_dev_flag) and (roll_flag != 0 or dev_flag):#both regular and emergency failed:
                 print("no solution! will fail!!!")
 
@@ -70,22 +72,58 @@ def comp_MB_action(net,env,state,acc,steer):
                 print("solution only for the regular policy - emergency fail")
                 next_acc = acc_to_try[-1]#can only be the last
                 next_steer = steer
+                emergency_action = False
 
         else:# first step will cause fail
             print("unavoidable fail - after first step")
-            emergency_pred_vec = pred_vec#save just initial state and sirst step
+            #emergency_pred_vec = pred_vec#save just initial state and sirst step
+            emergency_pred_vec_n = []
+            pred_vec_n = []
+
+
+        #emergency_roll_flag,emergency_dev_flag = True,True#for the case that already failed
+
+        if (roll_flag != 0 or dev_flag):# and (emergency_roll_flag == 0 and not emergency_dev_flag):#if just emergency is OK:
+            next_steer = pLib.emergency_steer_policy()# steering from the next state, send it to the vehicle at the next state
+            next_acc = pLib.emergency_acc_policy()
+            emergency_action = True
+            print("emergency policy is executed!")
+
+        pred_vec.append([abs_pos,abs_ang,vel,roll,roll_var,next_steer,next_acc])#the second prediction, the first is the initial state
+        emergency_pred_vec = pred_vec+emergency_pred_vec_n
+        pred_vec+=pred_vec_n
 
     else:#initial state is already unstable
         print("already failed - before first step")
-        emergency_pred_vec = pred_vec#save just initial state
-        #emergency_roll_flag,emergency_dev_flag = True,True#for the case that already failed
-
-    if (roll_flag != 0 or dev_flag):# and (emergency_roll_flag == 0 and not emergency_dev_flag):#if just emergency is OK:
+        #emergency_pred_vec = pred_vec#save just initial state
         next_steer = pLib.emergency_steer_policy()# steering from the next state, send it to the vehicle at the next state
         next_acc = pLib.emergency_acc_policy()
-        print("emergency policy is executed!")
+        emergency_action = True
+        emergency_pred_vec = pred_vec
 
-    return next_acc,next_steer,pred_vec,emergency_pred_vec,roll_flag,dev_flag
+    planningData = classes.planningData()
+    np_pred_vec = np.array(pred_vec)
+    np_emergency_pred_vec = np.array(emergency_pred_vec)
+
+    planningData.vec_planned_roll.append(np_pred_vec[:,3])
+    planningData.vec_planned_roll_var.append(np_pred_vec[:,4])
+    planningData.vec_emergency_planned_roll.append(np_emergency_pred_vec[:,3])
+    planningData.vec_emergency_planned_roll_var.append(np_emergency_pred_vec[:,4])
+    planningData.vec_planned_vel.append(np_pred_vec[:,2])
+    planningData.vec_emergency_planned_vel.append(np_emergency_pred_vec[:,2])
+    planningData.vec_planned_acc.append(np_pred_vec[:,6])
+    planningData.vec_planned_steer.append(np_pred_vec[:,5])
+    planningData.vec_emergency_planned_acc.append(np_emergency_pred_vec[:,6])
+    planningData.vec_emergency_planned_steer.append(np_emergency_pred_vec[:,5])
+    planningData.vec_emergency_action.append(emergency_action)
+
+
+    planningData.vec_path.append(state['path'])
+    planningData.vec_predicded_path.append(np_pred_vec[:,0])
+    planningData.vec_emergency_predicded_path.append(np_emergency_pred_vec[:,0])
+
+    #return next_acc,next_steer,pred_vec,emergency_pred_vec,roll_flag,dev_flag,emergency_action
+    return next_acc,next_steer,planningData,roll_flag,dev_flag
 
 def comp_MB_acc(net,env,state,acc,steer):
     roll_flag,dev_flag = 0, False
@@ -152,6 +190,7 @@ def train(env,HP,net,Replay,dataManager,trainShared,guiShared,seed = None):
         t1 = 0
 
         state = env.reset(seed = seed)   
+        guiShared.restart()
         if env.error:
             i-=1
             continue
@@ -179,33 +218,48 @@ def train(env,HP,net,Replay,dataManager,trainShared,guiShared,seed = None):
                     
                     #print("vel_n:",env.pl.simulator.vehicle.wheels[0].vel_n)
                     #print("before comp_MB_acc time:",time.clock() - env.lt)
-                    next_acc,next_steer,pred_vec,emergency_pred_vec,roll_flag,dev_flag = comp_MB_action(net,env,state,acc,steer)
+                    #next_acc,next_steer,pred_vec,emergency_pred_vec,roll_flag,dev_flag,emergency_action = comp_MB_action(net,env,state,acc,steer)
+                    next_acc,next_steer,planningData,roll_flag,dev_flag = comp_MB_action(net,env,state,acc,steer)
                     #next_steer = pLib.comp_steer_from_next_state(net,env,state,steer,acc)
                     #next_acc,pred_vec,emergency_pred_vec,roll_flag,dev_flag = comp_MB_acc(net,env,state,acc,steer)
                     #if roll_flag != 0:
                     #    next_steer = 0 # math.copysign(0.7,roll_flag)
-                    dataManager.planed_roll = np.array(pred_vec)[:,3]
-                    dataManager.planned_roll_var = np.array(pred_vec)[:,4]
+                    #print("emergency steering")
+                    #dataManager.vec_planned_roll.append(np.array(pred_vec)[:,3])
+                    #dataManager.vec_planned_roll_var.append(np.array(pred_vec)[:,4])
 
-                    dataManager.emergency_planed_roll = np.array(emergency_pred_vec)[:,3]
-                    dataManager.emergency_planned_roll_var = np.array(emergency_pred_vec)[:,4]
-                    print("next_acc:",next_acc)
+                    #dataManager.vec_emergency_planned_roll.append(np.array(emergency_pred_vec)[:,3])
+                    #dataManager.vec_emergency_planned_roll_var.append(np.array(emergency_pred_vec)[:,4])
+                    #print("next_acc:",next_acc)
                     #print("after comp_MB_acc time:",time.clock() - env.lt)
                     #print("roll_flag:",roll_flag,"dev_flag:",dev_flag)
                     if env.stop_flag:
                         next_acc = -1
                  
                  
-                        print("emergency steering")
+                        
                     if dev_flag:
                         fail = True #save in the Replay buffer that this episode failed
                         done = True #break
 
                 #t= time.clock()
                 with guiShared.Lock:
-                    guiShared.predicded_path = [pred[0] for pred in pred_vec]
-                    guiShared.emergency_predicded_path = [pred[0] for pred in emergency_pred_vec]
-                    guiShared.state = copy.deepcopy(state)
+                    #guiShared.planningData.vec_planned_roll.append(copy.copy(np.array(pred_vec)[:,3]))
+                    #guiShared.planningData.vec_planned_roll_var.append(copy.copy(np.array(pred_vec)[:,4]))
+                    #guiShared.planningData.vec_emergency_planned_roll.append(copy.copy(np.array(emergency_pred_vec)[:,3]))
+                    #guiShared.planningData.vec_emergency_planned_roll_var.append(copy.copy(np.array(emergency_pred_vec)[:,4]))
+                    #guiShared.planningData.vec_planned_vel.append(copy.copy(np.array(pred_vec)[:,2]))
+                    #guiShared.planningData.vec_emergency_planned_vel.append(copy.copy(np.array(emergency_pred_vec)[:,2]))
+
+                    #guiShared.planningData.vec_emergency_action.append(emergency_action)
+                    guiShared.planningData.append(planningData)
+                    guiShared.roll = copy.copy(dataManager.roll)
+                    guiShared.real_path = copy.deepcopy(dataManager.real_path)
+
+                    #guiShared.vec_path.append(copy.deepcopy(state['path']))
+                    #guiShared.planningData.vec_predicded_path.append([pred[0] for pred in pred_vec])
+                    #guiShared.vec_emergency_predicded_path.append([pred[0] for pred in emergency_pred_vec])
+                   # guiShared.state = copy.deepcopy(state)
                     guiShared.steer = steer
                 #print("update gui time:",time.clock() - t)
                 

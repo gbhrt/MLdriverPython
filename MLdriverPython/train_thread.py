@@ -25,10 +25,10 @@ def train(net,Replay,HP,env,trainShared):
             net.update_network(batch_X,batch_Y_)
             train_count+=1
 
-            if train_count % 100 == 0:
-                print("train:",train_count)
-                #X,Y_ = env.create_XY_(rand_state, rand_a, rand_next_state)
-                print("loss:",float(net.get_loss(batch_X,batch_Y_)))
+            #if train_count % 5000 == 0:
+            #    print("train:",train_count)
+            #    #X,Y_ = env.create_XY_(rand_state, rand_a, rand_next_state)
+            #    print("loss:",float(net.get_loss(batch_X,batch_Y_)))
                 #print("loss:",float(net.get_loss(X,Y_)))
             if time.time() - last_save_time > HP.save_every_time*60:
                 net.save_model(HP.save_file_path)

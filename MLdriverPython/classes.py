@@ -35,7 +35,7 @@ class Path:
         self.backPosition = []
         self.angle = []
         self.curvature = []
-        self.velocity = [] #real velocity for a real path and planed velocity for a planned path
+        self.velocity = [] #real velocity for a real path and planned velocity for a planned path
         self.steering = []
         self.distance = []
         self.time = []
@@ -192,3 +192,34 @@ class PathManager:#
         return path
 
 
+class planningData:
+    def __init__(self):
+        self.vec_path = []
+        self.vec_predicded_path = []
+        self.vec_emergency_predicded_path = []
+        self.vec_planned_roll= []
+        self.vec_emergency_planned_roll= []
+        self.vec_planned_roll_var= []
+        self.vec_emergency_planned_roll_var= []
+        self.vec_planned_vel = []
+        self.vec_emergency_planned_vel = []
+        self.vec_emergency_action = []
+        self.vec_planned_acc = []
+        self.vec_planned_steer = []
+        self.vec_emergency_planned_acc = []
+        self.vec_emergency_planned_steer = []
+    def append(self,data):
+        self.vec_path.append(data.vec_path[0])
+        self.vec_predicded_path.append(data.vec_predicded_path[0])
+        self.vec_emergency_predicded_path.append(data.vec_emergency_predicded_path[0])
+        self.vec_planned_roll.append(data.vec_planned_roll[0])
+        self.vec_emergency_planned_roll.append(data.vec_emergency_planned_roll[0])
+        self.vec_planned_roll_var.append(data.vec_planned_roll_var[0])
+        self.vec_emergency_planned_roll_var.append(data.vec_emergency_planned_roll_var[0])
+        self.vec_planned_vel.append(data.vec_planned_vel[0])
+        self.vec_emergency_planned_vel.append(data.vec_emergency_planned_vel[0])
+        self.vec_emergency_action.append(data.vec_emergency_action[0])
+        self.vec_planned_acc.append(data.vec_planned_acc[0])
+        self.vec_planned_steer.append(data.vec_planned_steer[0])
+        self.vec_emergency_planned_acc.append(data.vec_emergency_planned_acc[0])
+        self.vec_emergency_planned_steer.append(data.vec_emergency_planned_steer[0])

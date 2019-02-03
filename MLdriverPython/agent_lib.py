@@ -213,12 +213,13 @@ def predict_n_next1(n,net,env,X_dict,abs_pos,abs_ang,path,emergency_flag = False
                 steer_command = steer_policy(abs_pos,abs_ang,path,index,vel)
                 acc_command = acc_policy()#always -1
 
+
             X_dict["steer_action"] = env.normalize(steer_command,"steer_action")
             X_dict["acc_action"] = acc_command
 
             roll = env.denormalize(X_dict["roll"],"roll")
 
-            pred_vec.append([abs_pos,abs_ang,vel,roll,roll_var])
+            pred_vec.append([abs_pos,abs_ang,vel,roll,roll_var,steer_command,acc_command])
 
             if vel < 2.0:
                 break

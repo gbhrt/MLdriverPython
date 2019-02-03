@@ -7,9 +7,9 @@ import numpy as np
 #import time
 #import collections
 import matplotlib.pyplot as plt
-planed_roll = range(10)
-plt.plot(np.arange(len(planed_roll)))
-plt.fill_between(np.arange(len(planed_roll)),np.array(planed_roll)+2,np.array(planed_roll)-2,color = "#dddddd")
+planned_roll = range(10)
+plt.plot(np.arange(len(planned_roll)))
+plt.fill_between(np.arange(len(planned_roll)),np.array(planned_roll)+2,np.array(planned_roll)-2,color = "#dddddd")
 plt.show()
 
 

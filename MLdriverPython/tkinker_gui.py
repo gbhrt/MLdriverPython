@@ -17,39 +17,43 @@ def plot_velocities(fig):#,path):
     #max_time_ind = len(path.time)
     #fig.clear()
     lines = []
-    #lines.append(fig.plot(np.array(path.distance)[:max_time_ind],np.array(path.analytic_velocity_limit)[:max_time_ind],label = "velocity limit")[0])
-    #lines.append(fig.plot(np.array(path.distance)[:max_time_ind],np.array(path.analytic_velocity)[:max_time_ind],label = "analytic velocity")[0])
-    #lines.append(fig.plot(path.distance,path.velocity,'o', label = "vehicle velocity")[0])
-    x,y = [],[]
-    lines.append(fig.plot(x,y,label = "velocity limit")[0])
-    lines.append(fig.plot(x,y,label = "analytic velocity")[0])
-    lines.append(fig.plot(x,y,label = "vehicle velocity")[0])
+
+    lines.append(fig.plot([],[],label = "velocity limit")[0])
+    lines.append(fig.plot([],[],label = "analytic velocity")[0])
+    lines.append(fig.plot([],[],label = "vehicle velocity")[0])
+    lines.append(fig.plot([],[],'.',color = 'red',label = "emergency action")[0])
     #plt.legend()
     return lines
 
-def update_velocities(lines,path):
-    max_time_ind = len(path.time)
+def update_velocities(lines,path,vec_emergency_action,index):
+    #lines[0].set_data(np.array(path.distance)[:index],np.array(path.analytic_velocity_limit)[:index])
     
-    #lines[0].set_data(np.array(path.distance)[:max_time_ind],np.array(path.analytic_velocity_limit)[:max_time_ind])
-    
-    #lines[1].set_data(np.array(path.distance)[:max_time_ind],np.array(path.analytic_velocity)[:max_time_ind])
+    #lines[1].set_data(np.array(path.distance)[:index],np.array(path.analytic_velocity)[:index])
     #lines[2].set_data(path.distance,path.velocity)
-    lines[0].set_data(np.array(path.time)[:max_time_ind],np.array(path.analytic_velocity_limit)[:max_time_ind])
-    
-    lines[1].set_data(np.array(path.time)[:max_time_ind],np.array(path.analytic_velocity)[:max_time_ind])
-    lines[2].set_data(path.time,path.velocity)
-class data_plots():
-    def __init__(self,root,guiShared,dataManager):
-        self.guiShared = guiShared
-        self.dataManager = dataManager
-        self.root = root
+    lines[0].set_data(np.array(path.time)[:index],np.array(path.analytic_velocity_limit)[:index])   
+    lines[1].set_data(np.array(path.time)[:index],np.array(path.analytic_velocity)[:index])
+    lines[2].set_data(path.time[:index],path.velocity[:index])
+    x,y=[],[]
+    for t,emergency_a in zip(path.time,vec_emergency_action):
+        if emergency_a:
+            x.append(t)
+            y.append(0)
+    #lines[3].set_data(x[:index],y[:index])
+    lines[3].set_data(x,y)
 
+class data_plots():
+    def __init__(self,root,spinBox,guiShared,index):
+        self.guiShared = guiShared
+        self.root = root
+        self.spinBox = spinBox
+        self.index = index
+        self.last_index = -1
 
         #self.figure1 = plt.Figure(figsize=(6,5))#, dpi=100)
         #self.ax1 = self.figure1.add_subplot(111)
         #self.ax2 = self.figure1.add_subplot(121)
         #self.figure1, (self.ax1,self.ax2,self.ax3) = plt.subplots(3, 1,figsize=(5,7))#
-        self.figure1, (self.ax1,self.ax2,self.ax3) = plt.subplots(3, 1,figsize=(5,4))#
+        self.figure1, (self.ax1,self.ax2,self.ax3) = plt.subplots(3, 1,figsize=(5,3))#
 
         #self.dataManager.roll = [0,1]
         self.ax1.set_ylim(-0.1,0.1)
@@ -59,14 +63,25 @@ class data_plots():
         self.ax3.set_ylim(-0.2,0.2)
         self.ax3.set_xlim(0,12)
         
-        self.line1 = self.ax1.plot(np.array(self.dataManager.roll))[0]
         
-        self.line_roll_var1 = self.ax3.plot(np.array(self.dataManager.planed_roll)+0.1,color = "red")[0]
-        self.line_roll_var2 = self.ax3.plot(np.array(self.dataManager.planed_roll)-0.1,color = "red")[0]
-        self.line_roll_mean = self.ax3.plot(np.array(self.dataManager.planed_roll),color = "green",label = "roll")[0]
-        self.line_emergency_roll_var1 = self.ax3.plot(np.array(self.dataManager.emergency_planed_roll)+0.1,color = "red")[0]
-        self.line_emergency_roll_var2 = self.ax3.plot(np.array(self.dataManager.emergency_planed_roll)-0.1,color = "red")[0]
-        self.line_emergency_roll_mean = self.ax3.plot(np.array(self.dataManager.emergency_planed_roll),color = "blue",label = "emergency roll")[0]
+        #self.line1 = self.ax1.plot(np.array(self.dataManager.roll))[0]
+        
+        #self.line_roll_var1 = self.ax3.plot(np.array(self.dataManager.vec_planned_roll[-1])+0.1,color = "red")[0]
+        #self.line_roll_var2 = self.ax3.plot(np.array(self.dataManager.vec_planned_roll[-1])-0.1,color = "red")[0]
+        #self.line_roll_mean = self.ax3.plot(np.array(self.dataManager.vec_planned_roll[-1]),color = "green",label = "roll")[0]
+        #self.line_emergency_roll_var1 = self.ax3.plot(np.array(self.dataManager.vec_emergency_planned_roll[-1])+0.1,color = "red")[0]
+        #self.line_emergency_roll_var2 = self.ax3.plot(np.array(self.dataManager.vec_emergency_planned_roll[-1])-0.1,color = "red")[0]
+        #self.line_emergency_roll_mean = self.ax3.plot(np.array(self.dataManager.vec_emergency_planned_roll[-1]),color = "blue",label = "emergency roll")[0]
+        #self.ax3.fill_between(np.arange(15),self.guiShared.max_roll*np.ones(15),-self.guiShared.max_roll*np.ones(15),color = "#dddddd" )
+
+        self.line1 = self.ax1.plot([])[0]
+        
+        self.line_roll_var1 = self.ax3.plot([],color = "red")[0]
+        self.line_roll_var2 = self.ax3.plot([],color = "red")[0]
+        self.line_roll_mean = self.ax3.plot([],color = "green",label = "roll")[0]
+        self.line_emergency_roll_var1 = self.ax3.plot([],color = "red")[0]
+        self.line_emergency_roll_var2 = self.ax3.plot([],color = "red")[0]
+        self.line_emergency_roll_mean = self.ax3.plot([],color = "blue",label = "emergency roll")[0]
         self.ax3.fill_between(np.arange(15),self.guiShared.max_roll*np.ones(15),-self.guiShared.max_roll*np.ones(15),color = "#dddddd" )
 
         #self.ax3.legend()
@@ -80,62 +95,75 @@ class data_plots():
         self.canvas = FigureCanvasTkAgg(self.figure1, master= root)
         #self.canvas.get_tk_widget().pack()#side=tk.LEFT, fill=tk.BOTH)
         self.canvas.get_tk_widget().grid(row = 0,column = 0, columnspan=2)
+        
         self.plot_data()
 
     def plot_data(self):
-        path = self.dataManager.real_path
-        #self.dataManager.roll = [1,3,2]
-        #plt.cla()
-        #self.ax1.clear()
-        #self.ax1.plot(self.dataManager.roll)
-        #print("roll:",self.dataManager.roll)
-        #print("len roll:",len(self.dataManager.roll))
-        #print("dis:",path.distance)
-        #self.ax3.collections.clear()
-        #self.ax3.fill_between(np.arange(len(self.dataManager.planed_roll)),np.array(self.dataManager.planed_roll)+2,np.array(self.dataManager.planed_roll)-2)
-        
+        if len(self.guiShared.planningData.vec_planned_roll)>0:
+            path = self.guiShared.real_path
+            #self.dataManager.roll = [1,3,2]
+            #plt.cla()
+            #self.ax1.clear()
+            #self.ax1.plot(self.dataManager.roll)
+            #print("roll:",self.dataManager.roll)
+            #print("len roll:",len(self.dataManager.roll))
+            #print("dis:",path.distance)
+            #self.ax3.collections.clear()
+            #self.ax3.fill_between(np.arange(len(self.dataManager.planned_roll)),np.array(self.dataManager.planned_roll)+2,np.array(self.guiShared.planned_roll)-2)
+            if self.index[0] >=0:
+                self.index[0] = min(int(self.spinBox.get()),len(self.guiShared.roll)-1)
+
+            if self.index[0]!=self.last_index:
+                
+                print("-------------------------------------------------")
+                print("index: ",self.index[0])
+                if self.guiShared.planningData.vec_emergency_action[self.index[0]]:
+                    print("emergency action")
+                print("planned roll:\n",self.guiShared.planningData.vec_planned_roll[self.index[0]])
+                print("emergency planned roll:\n",self.guiShared.planningData.vec_emergency_planned_roll[self.index[0]])
+                print("planned velocity:\n",self.guiShared.planningData.vec_planned_vel[self.index[0]])
+                print("emergency planned velocity:\n",self.guiShared.planningData.vec_emergency_planned_vel[self.index[0]])
+                print("planned steer:\n",self.guiShared.planningData.vec_planned_steer[self.index[0]])
+                print("emergency planned steer:\n",self.guiShared.planningData.vec_emergency_planned_steer[self.index[0]])
+                print("planned acc:\n",self.guiShared.planningData.vec_planned_acc[self.index[0]])
+                print("emergency planned acc:\n",self.guiShared.planningData.vec_emergency_planned_acc[self.index[0]])
+                self.last_index = self.index[0]
+
             
-        self.line_roll_mean.set_data(np.arange(len(self.dataManager.planed_roll)),np.array(self.dataManager.planed_roll))
-        self.line_roll_var1.set_data(np.arange(len(self.dataManager.planed_roll)),np.array(self.dataManager.planed_roll)-np.array(self.dataManager.planned_roll_var))
-        self.line_roll_var2.set_data(np.arange(len(self.dataManager.planed_roll)),np.array(self.dataManager.planed_roll)+np.array(self.dataManager.planned_roll_var))
+
+                
+
+
+            self.line_roll_mean.set_data(np.arange(len(self.guiShared.planningData.vec_planned_roll[self.index[0]])),np.array(self.guiShared.planningData.vec_planned_roll[self.index[0]]))
+            self.line_roll_var1.set_data(np.arange(len(self.guiShared.planningData.vec_planned_roll[self.index[0]])),np.array(self.guiShared.planningData.vec_planned_roll[self.index[0]])-np.array(self.guiShared.planningData.vec_planned_roll_var[self.index[0]]))
+            self.line_roll_var2.set_data(np.arange(len(self.guiShared.planningData.vec_planned_roll[self.index[0]])),np.array(self.guiShared.planningData.vec_planned_roll[self.index[0]])+np.array(self.guiShared.planningData.vec_planned_roll_var[self.index[0]]))
         
-        self.line_emergency_roll_mean.set_data(np.arange(len(self.dataManager.emergency_planed_roll)),np.array(self.dataManager.emergency_planed_roll))
-        self.line_emergency_roll_var1.set_data(np.arange(len(self.dataManager.emergency_planed_roll)),np.array(self.dataManager.emergency_planed_roll)-np.array(self.dataManager.emergency_planned_roll_var))
-        self.line_emergency_roll_var2.set_data(np.arange(len(self.dataManager.emergency_planed_roll)),np.array(self.dataManager.emergency_planed_roll)+np.array(self.dataManager.emergency_planned_roll_var))
+            self.line_emergency_roll_mean.set_data(np.arange(len(self.guiShared.planningData.vec_emergency_planned_roll[self.index[0]])),np.array(self.guiShared.planningData.vec_emergency_planned_roll[self.index[0]]))
+            self.line_emergency_roll_var1.set_data(np.arange(len(self.guiShared.planningData.vec_emergency_planned_roll[self.index[0]])),np.array(self.guiShared.planningData.vec_emergency_planned_roll[self.index[0]])-np.array(self.guiShared.planningData.vec_emergency_planned_roll_var[self.index[0]]))
+            self.line_emergency_roll_var2.set_data(np.arange(len(self.guiShared.planningData.vec_emergency_planned_roll[self.index[0]])),np.array(self.guiShared.planningData.vec_emergency_planned_roll[self.index[0]])+np.array(self.guiShared.planningData.vec_emergency_planned_roll_var[self.index[0]]))
         
 
 
-        if len(path.distance) > 0:
-            #self.ax1.set_xlim(0,path.distance[len(self.dataManager.roll)-1])
-            
-            #self.line1.set_data(path.distance[:len(self.dataManager.roll)],np.array(self.dataManager.roll))
-            self.line1.set_data(path.time[:len(self.dataManager.roll)],np.array(self.dataManager.roll))
+            if len(path.distance) > 0:
+                #if self.index[0] == -1:
+                #    max_time_ind = len(path.time)
+                #else:
+                #    max_time_ind = self.index[0]
+                max_time_ind = len(path.time) if self.index[0] == -1 else self.index[0]
+                self.line1.set_data(path.time[:max_time_ind],self.guiShared.roll[:max_time_ind])
 
+                update_velocities(self.lines,path,self.guiShared.planningData.vec_emergency_action,self.index[0])
+                self.canvas.draw()
 
+        self.root.after(50,self.plot_data)
 
-
-
-            #self.ax2.set_xlim(0,path.distance[len(self.dataManager.roll)-1])
-
-            update_velocities(self.lines,path)
-        self.canvas.draw()
-
-        self.root.after(1,self.plot_data)
-
-#class cordinates:
-#    def __init__(self):
-#        self.origin = np.array([0.0,0.0])
-#    def translated(self,cords):
-#        return list(np.array(cords) + self.origin)
-#    def translate(self,delta_cords):
-#        self.origin += np.array(delta_cords)
-
-#        return
 class draw_state:
-    def __init__(self,root,guiShared,dataManager):
+    def __init__(self,root,spinBox,guiShared,index):
         self.guiShared = guiShared
-        self.dataManager = dataManager
+        
+        self.index = index
         self.root = root
+        self.spinBox = spinBox
         
         
         self.scale = 5
@@ -152,18 +180,23 @@ class draw_state:
 
         
     def draw(self):
+        if self.index[0] >=0:
+            self.index[0] = min(int(self.spinBox.get()),len(self.guiShared.planningData.vec_planned_roll)-1)
         self.canvas.delete("all")
         if self.guiShared.steer is not None:
             self.draw_vehicle(self.guiShared.steer)
-        if self.guiShared.state is not None:
-            if len(self.guiShared.state['path'].position)>1:
-                self.draw_path(self.guiShared.state['path'].position,color = "red")
-            if len(self.guiShared.predicded_path)>1:
-                self.draw_path(self.guiShared.predicded_path,color = "green")
-            if len(self.guiShared.emergency_predicded_path)>1:
-                self.draw_path(self.guiShared.emergency_predicded_path,color = "blue")
+        if len(self.guiShared.planningData.vec_path)>0:
+            if len(self.guiShared.planningData.vec_path[self.index[0]].position)>1:
+                self.draw_path(self.guiShared.planningData.vec_path[self.index[0]].position,color = "red")
+            if len(self.guiShared.planningData.vec_predicded_path[self.index[0]])>1:
+                self.draw_path(self.guiShared.planningData.vec_predicded_path[self.index[0]],color = "green")
+            if len(self.guiShared.planningData.vec_emergency_predicded_path)==0:
+                print("error - self.guiShared.vec_emergency_predicded_path:",self.guiShared.planningData.vec_emergency_predicded_path)
+            else:
+                if len(self.guiShared.planningData.vec_emergency_predicded_path[self.index[0]])>1:
+                    self.draw_path(self.guiShared.planningData.vec_emergency_predicded_path[self.index[0]],color = "blue")
 
-        self.root.after(1,self.draw)
+        self.root.after(50,self.draw)
         #self.draw_vehicle(0.5)
         #test_path = [[0,0],[1,1],[2,4],[5,7],[7,7]]
         #self.draw_path(test_path)
@@ -217,23 +250,33 @@ class draw_state:
         self.canvas.create_line(flat_path,fill = color)
 
 class TkGui():
-    def __init__(self,guiShared,dataManager):
+    def __init__(self,guiShared):
         self.guiShared = guiShared
-        self.dataManager = dataManager
+        self.index = [-1]
+        
         self.root= tk.Tk() 
         screenwidth = self.root.winfo_screenwidth()
         screenheight = self.root.winfo_screenheight()
         self.root.geometry('%dx%d+%d+%d' % (screenwidth*0.4,screenheight*0.9,0,0))#(w, h, x, y)
         self.root.wm_title("Gui")
-        data_plots(self.root,guiShared,dataManager)
-        draw_state(self.root,guiShared,dataManager)
+
+        
+        self.spinBox = tk.Spinbox(self.root, from_=0, to= 120)
+        self.spinBox.grid(row = 4, column=1)
+        data_plots(self.root,self.spinBox,guiShared,self.index)
+        draw_state(self.root,self.spinBox,guiShared,self.index)
 
         #tk.Button(self.root, text="Quit", command=self.quit).pack()
         tk.Button(self.root, text="Quit", command=self.quit).grid(row = 1,column =1)
 
-        self.btn_text = tk.StringVar()
-        tk.Button(self.root,  textvariable = self.btn_text, command=self.pause_after_episode).grid(row = 2, column=1)
-        self.btn_text.set("Pause")
+        self.pause_btn_text = tk.StringVar()
+        tk.Button(self.root,  textvariable = self.pause_btn_text, command=self.pause_after_episode).grid(row = 2, column=1)
+        self.pause_btn_text.set("Pause")
+
+        self.replay_btn_text = tk.StringVar()
+        tk.Button(self.root,  textvariable = self.replay_btn_text, command=self.replay_mode).grid(row = 3, column=1)
+        self.replay_btn_text.set("Set Replay Mode")
+
         self.root.mainloop()
 
     def quit(self):
@@ -242,20 +285,27 @@ class TkGui():
             time.sleep(0.1)
         self.root.destroy()
     def pause_after_episode(self):
+        print("pause at the end of the episode")
         if self.guiShared.pause_after_episode_flag:
             self.guiShared.pause_after_episode_flag = False
-            self.btn_text.set("Pause")
+            self.pause_btn_text.set("Pause")
         else:
             self.guiShared.pause_after_episode_flag = True
-            self.btn_text.set("Continue")
-            
-        
+            self.pause_btn_text.set("Continue")
 
-        
+    def replay_mode(self):
+        #print("insert index___________________________________________________________________:")
+        #inp = input()
+        if self.index[0] == -1:
+            self.replay_btn_text.set("Exit Replay Mode")
 
-        #self.draw_graph()
-        #self.root.mainloop()
+            self.index[0] = 0#
+            self.spinBox.config(to =len(self.guiShared.roll)-1) 
+        else:
+            self.index[0] = -1
+            self.replay_btn_text.set("Set Replay Mode")
         return
+
     
 
     #def draw_graph(self):

@@ -5,7 +5,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>67d1be9f-78bf-410b-b3ad-9001facbb70e</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>model_based_main.py</StartupFile>
+    <StartupFile>test_unity_performance.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -57,6 +57,9 @@
     <Compile Include="manual_testing.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="replay_data.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="shared.py">
       <SubType>Code</SubType>
     </Compile>
@@ -71,6 +74,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="test_net_performance.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="test_unity_performance.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="tkinker_gui.py">
