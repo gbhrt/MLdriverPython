@@ -23,7 +23,7 @@ commands = [[1.0,0.1]]*5+[[1.0,-0.1]]*5+[[-1.0,0.1]]*5+[[-1.0,-0.1]]*5
 pl = planner.Planner(mode = "torque")
 
 step_time = 0.2
-N = 10
+N = 5
 vec_vehicle_data = []
 vec_t = []
 for j in range(N):

@@ -51,18 +51,18 @@ class ModelBasedHyperParameters:
         self.train_num = 100# how many times to train in every step
         self.run_random_num = 'inf'
         #########################
-        self.train_flag = True
-        self.noise_flag = True
-        self.always_no_noise_flag = False
+        self.train_flag = False
+        #self.noise_flag = True
+        #self.always_no_noise_flag = False
         self.analytic_action = False
-        self.zero_noise_every = 1
+       # self.zero_noise_every = 1
         self.test_same_path = False
         self.run_same_path = False
-        self.conv_flag = False
+       # self.conv_flag = False
         self.gym_flag = False
         self.render_flag = True
         self.plot_flag = True
-        self.restore_flag = False
+        self.restore_flag = True
         self.skip_run = False
         self.reset_every = 3
         self.save_every = 100
@@ -73,5 +73,5 @@ class ModelBasedHyperParameters:
         self.restore_name = "collect_data_relative1"#
         self.restore_file_path = os.getcwd()+ "\\files\\models\\model_based\\"+self.restore_name+"\\"
 
-        if self.always_no_noise_flag:
-            self.noise_flag = False
+        #if self.always_no_noise_flag:
+        #    self.noise_flag = False

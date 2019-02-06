@@ -16,12 +16,12 @@ def comp_MB_action(net,env,state,acc,steer):
     print("___________________new acc compution____________________________")
     X_dict,abs_pos,abs_ang = pLib.initilize_prediction(env,state,acc,steer)
     pred_vec = [[abs_pos,abs_ang,state['vel_y'],state['roll'],0,steer,acc]]
-    delta_var = 0.0#0.002
+    delta_var = 0.002
     max_plan_roll = env.max_plan_roll
     max_plan_deviation = env.max_plan_deviation
     roll_var = delta_var
     #stability at the current state:
-    roll_flag,dev_flag = pLib.check_stability(env,state['path'],0,abs_pos,X_dict['roll'],roll_var = roll_var,max_plan_roll = max_plan_roll,max_plan_deviation = max_plan_deviation)
+    roll_flag,dev_flag = pLib.check_stability(env,state['path'],0,abs_pos,X_dict['roll'],roll_var = roll_var,max_plan_roll = max_plan_roll*2,max_plan_deviation = max_plan_deviation)
     if roll_flag == 0 and not dev_flag:
         #predict the next unavoidable state (actions already done):
         X_dict,abs_pos,abs_ang = pLib.predict_one_step(net,env,copy.copy(X_dict),abs_pos,abs_ang)
@@ -31,9 +31,9 @@ def comp_MB_action(net,env,state,acc,steer):
         steer = pLib.steer_policy(abs_pos,abs_ang,state['path'],index,vel)
         X_dict["steer_action"] = env.normalize(steer,"steer_action")
         roll = env.denormalize(X_dict["roll"],"roll")
-        #pred_vec.append([abs_pos,abs_ang,vel,roll,roll_var,steer,acc])#acc is not updated
+        #pred_vec.append([abs_pos,abs_ang,vel,roll,roll_var,steer,acc])
         #stability at the next state (unavoidable state):
-        roll_flag,dev_flag = pLib.check_stability(env,state['path'],index,abs_pos,X_dict['roll'],roll_var = roll_var,max_plan_roll = max_plan_roll,max_plan_deviation = max_plan_deviation)
+        roll_flag,dev_flag = pLib.check_stability(env,state['path'],index,abs_pos,X_dict['roll'],roll_var = roll_var,max_plan_roll = max_plan_roll*2,max_plan_deviation = max_plan_deviation)
         
         if roll_flag == 0 and not dev_flag:#first step was Ok
             #integration on the next n steps:
@@ -42,7 +42,7 @@ def comp_MB_action(net,env,state,acc,steer):
             for i,try_acc in enumerate(acc_to_try):
                 X_dict["acc_action"] = try_acc
                 if i == len(acc_to_try)-1:
-                    max_plan_roll = env.max_plan_roll#*2.0
+                    max_plan_roll = env.max_plan_roll*2.0
                 print("try acc:",try_acc)
 
                 pred_vec_n,roll_flag,dev_flag = pLib.predict_n_next1(n,net,env,copy.copy(X_dict),abs_pos,abs_ang,state['path'],max_plan_roll = max_plan_roll,roll_var = roll_var,delta_var = delta_var,max_plan_deviation = max_plan_deviation)
@@ -314,7 +314,7 @@ def train(env,HP,net,Replay,dataManager,trainShared,guiShared,seed = None):
 
         #after episode end:
         total_reward = sum(reward_vec)
-        if not HP.gym_flag and not HP.noise_flag:
+        if not HP.gym_flag: #and not HP.noise_flag:
             dataManager.episode_end_mode.append(info[0])
             dataManager.rewards.append(total_reward)
             dataManager.lenght.append(step_count)
@@ -323,7 +323,7 @@ def train(env,HP,net,Replay,dataManager,trainShared,guiShared,seed = None):
             dataManager.path_seed.append(env.path_seed)#current used seed (for paths)
             dataManager.update_relative_rewards_and_paths()
             
-            HP.noise_flag =True
+            #HP.noise_flag =True
         print("episode: ", i, " total reward: ", total_reward, "episode steps: ",step_count)
         
         if not HP.run_same_path:
@@ -331,10 +331,10 @@ def train(env,HP,net,Replay,dataManager,trainShared,guiShared,seed = None):
         else:#not needed 
             seed = HP.seed
 
-        if (i % HP.zero_noise_every == 0 and i > 0) or HP.always_no_noise_flag:
-            HP.noise_flag = False
-            if HP.test_same_path:
-                seed = HP.seed
+        #if (i % HP.zero_noise_every == 0 and i > 0) or HP.always_no_noise_flag:
+        #    HP.noise_flag = False
+        #    if HP.test_same_path:
+        #        seed = HP.seed
 
         if (i % HP.save_every == 0 and i > 0): 
             dataManager.save_data()
