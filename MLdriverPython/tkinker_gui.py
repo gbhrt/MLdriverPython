@@ -185,16 +185,12 @@ class draw_state:
         self.canvas.delete("all")
         if self.guiShared.steer is not None:
             self.draw_vehicle(self.guiShared.steer)
-        if len(self.guiShared.planningData.vec_path)>0:
-            if len(self.guiShared.planningData.vec_path[self.index[0]].position)>1:
-                self.draw_path(self.guiShared.planningData.vec_path[self.index[0]].position,color = "red")
-            if len(self.guiShared.planningData.vec_predicded_path[self.index[0]])>1:
-                self.draw_path(self.guiShared.planningData.vec_predicded_path[self.index[0]],color = "green")
-            if len(self.guiShared.planningData.vec_emergency_predicded_path)==0:
-                print("error - self.guiShared.vec_emergency_predicded_path:",self.guiShared.planningData.vec_emergency_predicded_path)
-            else:
-                if len(self.guiShared.planningData.vec_emergency_predicded_path[self.index[0]])>1:
-                    self.draw_path(self.guiShared.planningData.vec_emergency_predicded_path[self.index[0]],color = "blue")
+        if len(self.guiShared.planningData.vec_path)>0 and len(self.guiShared.planningData.vec_path[self.index[0]].position)>1:
+            self.draw_path(self.guiShared.planningData.vec_path[self.index[0]].position,color = "red")
+        if len(self.guiShared.planningData.vec_predicded_path) > 0 and len(self.guiShared.planningData.vec_predicded_path[self.index[0]])>1:
+            self.draw_path(self.guiShared.planningData.vec_predicded_path[self.index[0]],color = "green")
+        if len(self.guiShared.planningData.vec_emergency_predicded_path) > 0 and len(self.guiShared.planningData.vec_emergency_predicded_path[self.index[0]])>1:
+            self.draw_path(self.guiShared.planningData.vec_emergency_predicded_path[self.index[0]],color = "blue")
 
         self.root.after(50,self.draw)
         #self.draw_vehicle(0.5)

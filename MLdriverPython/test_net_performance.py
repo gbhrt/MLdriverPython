@@ -144,7 +144,7 @@ if __name__ == "__main__":
     train = False
     split_buffer = True
 
-    scaling_type = "scaler"#standard_scaler
+    scaling_type ="scaler" # "scaler"#standard_scaler
     test_part = 0.3
     num_train = 10000000
 
@@ -174,13 +174,15 @@ if __name__ == "__main__":
     #state, a, next_state, end,_ = map(list, zip(*Replay.memory))#all data
     vec_X, vec_Y_, end,_ = map(list, zip(*Replay.memory))
     if  scaling_type == "standard_scaler":#replay buffer is now already normalized, hence this does not work now
-        vec_X,vec_Y_ = envData.create_XY_1(state,a,next_state)#not normalized!
+        #vec_X,vec_Y_ = envData.create_XY_1(state,a,next_state)#not normalized!
         train_X = vec_X[:int(test_part*len(vec_X))]
         train_Y_ = vec_Y_[:int(test_part*len(vec_X))]
         test_X = vec_X[int(test_part*len(vec_X)):]
         test_Y_ = vec_Y_[int(test_part*len(vec_X)):]
         scalerX = preprocessing.StandardScaler().fit(train_X)
         scalerY = preprocessing.StandardScaler().fit(train_Y_)
+        print("scalerX:",scalerX.get_params())
+        print("scalerY:",scalerY.get_params())
         train_X = scalerX.transform(train_X)
         train_Y_ = scalerY.transform(train_Y_)
         test_X = scalerX.transform(test_X)

@@ -244,22 +244,9 @@ def train(env,HP,net,Replay,dataManager,trainShared,guiShared,seed = None):
 
                 #t= time.clock()
                 with guiShared.Lock:
-                    #guiShared.planningData.vec_planned_roll.append(copy.copy(np.array(pred_vec)[:,3]))
-                    #guiShared.planningData.vec_planned_roll_var.append(copy.copy(np.array(pred_vec)[:,4]))
-                    #guiShared.planningData.vec_emergency_planned_roll.append(copy.copy(np.array(emergency_pred_vec)[:,3]))
-                    #guiShared.planningData.vec_emergency_planned_roll_var.append(copy.copy(np.array(emergency_pred_vec)[:,4]))
-                    #guiShared.planningData.vec_planned_vel.append(copy.copy(np.array(pred_vec)[:,2]))
-                    #guiShared.planningData.vec_emergency_planned_vel.append(copy.copy(np.array(emergency_pred_vec)[:,2]))
-
-                    #guiShared.planningData.vec_emergency_action.append(emergency_action)
                     guiShared.planningData.append(planningData)
                     guiShared.roll = copy.copy(dataManager.roll)
                     guiShared.real_path = copy.deepcopy(dataManager.real_path)
-
-                    #guiShared.vec_path.append(copy.deepcopy(state['path']))
-                    #guiShared.planningData.vec_predicded_path.append([pred[0] for pred in pred_vec])
-                    #guiShared.vec_emergency_predicded_path.append([pred[0] for pred in emergency_pred_vec])
-                   # guiShared.state = copy.deepcopy(state)
                     guiShared.steer = steer
                 #print("update gui time:",time.clock() - t)
                 

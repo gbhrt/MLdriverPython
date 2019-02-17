@@ -25,7 +25,7 @@ if __name__ == "__main__":
     
     envData.analytic_feature_flag = False
     HP.add_feature_to_action  = False
-    HP.analytic_action = False
+    HP.analytic_action = True
     HP.restore_flag = False 
 
     names = ["RL_actor_critic_800_600_400"]#"test_sep_replay_2"
@@ -53,6 +53,7 @@ if __name__ == "__main__":
         dataManager = data_manager1.DataManager(HP.save_file_path,HP.restore_file_path,HP.restore_flag)#HP.restore_flag
         dataManager.run_data = run_data
         dataManager.save_run_data()
+
         net = DDPG_network(envData.observation_space.shape[0],envData.action_space.shape[0],envData.action_space.high[0],\
             HP.alpha_actor,HP.alpha_critic,HP.alpha_analytic_actor,HP.alpha_analytic_critic,tau = HP.tau,seed = HP.seed[0],feature_data_n = envData.feature_data_num, conv_flag = HP.conv_flag)  
         if HP.restore_flag:

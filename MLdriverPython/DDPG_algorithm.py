@@ -104,7 +104,7 @@ def train(env,HP,net,dataManager,seed = None):
                 vel = state[0]
             
             a = net.get_actions(np.reshape(state, (1, env.observation_space.shape[0])))#[[action]] batch, action list
-            print("action:",a)#,"analytic_action:",analytic_action)
+            
             noise = actionNoise() * noise_range
             #noise = random.uniform(-1, 1)* noise_range
             
@@ -130,12 +130,15 @@ def train(env,HP,net,dataManager,seed = None):
 
             if HP.analytic_action:# and HP.noise_flag:
                 state[0] = state[0]*(1.0- HP.reduce_vel)
-                a = [env.comp_analytic_acceleration(state)]#env.analytic_feature_flag must be false
+                #a = [env.comp_analytic_acceleration(state)]#env.analytic_feature_flag must be false
+                a = env.get_analytic_action()
+            if env.stop_flag:
+                a[0] = -1#stop after max steps
                 #print("acc:",a)
            # print("state:", state)
             #a = env.get_analytic_action()
             #print("action: ", a)#,"noise: ",noise)
-           
+            print("action:",a)#,"analytic_action:",analytic_action)
             if not HP.gym_flag:
                 env.command(a[0])
             #print("time from get state to execute action:",time.time() - env.lt)

@@ -17,7 +17,7 @@ class ObservationSpace:
 
 
 class OptimalVelocityPlannerData:
-    def __init__(self,mode = 'model_based',X_names = None,Y_names = None):#mode = 'DDPG' ,mode = 'model_based'
+    def __init__(self,mode = 'model_based',X_names = None,Y_names = None):#mode = 'DDPG' ,mode = 'model_based' 'model_based'
 
         self.mode = mode#'model_based' #'model_based'  'DDPG'#mode 
         self.stop_flag = False
@@ -59,6 +59,7 @@ class OptimalVelocityPlannerData:
         self.max_plan_slip = 0.1
         self.max_plan_roll = 0.05
         self.max_steering = 0.7
+        self.max_d_steering = 0.1
         self.max_wheel_vel = 60# rad/sec. in unity limited to 5720 deg/sec 
         self.torque_reduce = 1.0 # 0.2
         self.reduce_factor = 1.0
@@ -75,9 +76,11 @@ class OptimalVelocityPlannerData:
                                 [-self.max_roll,self.max_roll],
                                 [-self.max_steering,self.max_steering],
                                 [-1.0,1.0]]#vel,steer,roll,steer_comand,acc_comand
+            self.observation_space.shape = [self.X_n]
         if self.mode == 'model_based':
             self.max_min_values = {'vel_x':[0,self.max_velocity_x],
-                                 'vel_y':[0,self.max_velocity_y],
+                                 #'vel_y':[0,self.max_velocity_y],
+                                 'vel_y':[-self.max_acc_y,self.max_acc_y],
                                  'vel_z':[0,self.max_velocity_z],
                                  'vel':[0,self.max_velocity_y],#max, min, number
                                  'angular_vel_x':[-self.max_angular_velocity_x,self.max_angular_velocity_x],
@@ -89,7 +92,8 @@ class OptimalVelocityPlannerData:
                                  'angular_acc_x':[-self.max_angular_acc_x,self.max_angular_acc_x],
                                  'angular_acc_y':[-self.max_angular_acc_y,self.max_angular_acc_y],
                                  'angular_acc_z':[-self.max_angular_acc_z,self.max_angular_acc_z],
-                                 'steer':[-self.max_steering,self.max_steering],
+                                 #'steer':[-self.max_steering,self.max_steering],
+                                 'steer':[-self.max_d_steering,self.max_d_steering],
                                  'roll':[-self.max_roll,self.max_roll],
                                  'steer_action':[-self.max_steering,self.max_steering],
                                  'acc_action':[-1.0,1.0],

@@ -17,10 +17,10 @@ class HyperParameters:
         #########################
         self.reduce_vel = 0.0
         self.add_feature_to_action  = False
-        self.analytic_action = False
+        self.analytic_action = True
         self.train_flag =True
         self.noise_flag = True
-        self.always_no_noise_flag = False
+        self.always_no_noise_flag = True
         self.evaluation_every = 10
         self.test_same_path = True
         self.run_same_path = False
@@ -51,10 +51,10 @@ class ModelBasedHyperParameters:
         self.train_num = 100# how many times to train in every step
         self.run_random_num = 'inf'
         #########################
-        self.train_flag = False
+        self.train_flag = True
         #self.noise_flag = True
         #self.always_no_noise_flag = False
-        self.analytic_action = False
+        self.analytic_action = True
        # self.zero_noise_every = 1
         self.test_same_path = False
         self.run_same_path = False
