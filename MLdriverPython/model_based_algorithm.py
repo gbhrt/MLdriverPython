@@ -15,17 +15,20 @@ import os
 def comp_MB_action(net,env,state,acc,steer):
     print("___________________new acc compution____________________________")
     X_dict,abs_pos,abs_ang = pLib.initilize_prediction(env,state,acc,steer)
-    pred_vec = [[abs_pos,abs_ang,state['vel_y'],state['roll'],0,steer,acc]]
-    delta_var = 0.002
+    
+    #delta_var = 0.002
+    init_var = 0.0#uncertainty of the roll measurment
+    const_var = 0.05#roll variance at the future states
     max_plan_roll = env.max_plan_roll
     max_plan_deviation = env.max_plan_deviation
-    roll_var = delta_var
+    roll_var = init_var
+    pred_vec = [[abs_pos,abs_ang,state['vel_y'],state['roll'],init_var,steer,acc]]
     #stability at the current state:
-    roll_flag,dev_flag = pLib.check_stability(env,state['path'],0,abs_pos,X_dict['roll'],roll_var = roll_var,max_plan_roll = max_plan_roll*2,max_plan_deviation = max_plan_deviation)
+    roll_flag,dev_flag = pLib.check_stability(env,state['path'],0,abs_pos,X_dict['roll'],roll_var = roll_var,max_plan_roll = max_plan_roll,max_plan_deviation = max_plan_deviation)
     if roll_flag == 0 and not dev_flag:
         #predict the next unavoidable state (actions already done):
         X_dict,abs_pos,abs_ang = pLib.predict_one_step(net,env,copy.copy(X_dict),abs_pos,abs_ang)
-        roll_var +=delta_var
+        
         vel = env.denormalize(X_dict['vel_y'],"vel_y")
         index = lib.find_index_on_path(state['path'],abs_pos)    
         steer = pLib.steer_policy(abs_pos,abs_ang,state['path'],index,vel)
@@ -33,23 +36,26 @@ def comp_MB_action(net,env,state,acc,steer):
         roll = env.denormalize(X_dict["roll"],"roll")
         #pred_vec.append([abs_pos,abs_ang,vel,roll,roll_var,steer,acc])
         #stability at the next state (unavoidable state):
-        roll_flag,dev_flag = pLib.check_stability(env,state['path'],index,abs_pos,X_dict['roll'],roll_var = roll_var,max_plan_roll = max_plan_roll*2,max_plan_deviation = max_plan_deviation)
+        roll_flag,dev_flag = pLib.check_stability(env,state['path'],index,abs_pos,X_dict['roll'],roll_var = roll_var,max_plan_roll = max_plan_roll,max_plan_deviation = max_plan_deviation)
         
         if roll_flag == 0 and not dev_flag:#first step was Ok
+            #max_plan_roll = env.max_plan_roll
+            roll_var += const_var
             #integration on the next n steps:
             n = 10
             acc_to_try =[1.0,0.0,-1.0]
             for i,try_acc in enumerate(acc_to_try):
                 X_dict["acc_action"] = try_acc
                 if i == len(acc_to_try)-1:
-                    max_plan_roll = env.max_plan_roll*2.0
+                    #max_plan_roll = env.max_plan_roll*1.3
+                    roll_var = 0.0
                 print("try acc:",try_acc)
 
-                pred_vec_n,roll_flag,dev_flag = pLib.predict_n_next1(n,net,env,copy.copy(X_dict),abs_pos,abs_ang,state['path'],max_plan_roll = max_plan_roll,roll_var = roll_var,delta_var = delta_var,max_plan_deviation = max_plan_deviation)
+                pred_vec_n,roll_flag,dev_flag = pLib.predict_n_next1(n,net,env,copy.copy(X_dict),abs_pos,abs_ang,state['path'],max_plan_roll = max_plan_roll,roll_var = roll_var,max_plan_deviation = max_plan_deviation)
                 print("roll_flag:",roll_flag,"dev_flag",dev_flag)
                 if (roll_flag == 0 and not dev_flag) or i == len(acc_to_try)-1:
                     #check if the emergency policy is save after applying the action on the first step
-                    emergency_pred_vec_n,emergency_roll_flag,emergency_dev_flag = pLib.predict_n_next1(n,net,env,copy.copy(X_dict),abs_pos,abs_ang,state['path'],emergency_flag = True,max_plan_roll = max_plan_roll,roll_var = roll_var,delta_var = delta_var,max_plan_deviation = max_plan_deviation)
+                    emergency_pred_vec_n,emergency_roll_flag,emergency_dev_flag = pLib.predict_n_next1(n,net,env,copy.copy(X_dict),abs_pos,abs_ang,state['path'],emergency_flag = True,max_plan_roll = max_plan_roll,roll_var = roll_var,max_plan_deviation = max_plan_deviation)
                     if emergency_roll_flag == 0 and not emergency_dev_flag:#regular policy and emergency policy are ok:
                         next_acc = try_acc
                         next_steer = steer
@@ -89,7 +95,7 @@ def comp_MB_action(net,env,state,acc,steer):
             emergency_action = True
             print("emergency policy is executed!")
 
-        pred_vec.append([abs_pos,abs_ang,vel,roll,roll_var,next_steer,next_acc])#the second prediction, the first is the initial state
+        pred_vec.append([abs_pos,abs_ang,vel,roll,init_var,next_steer,next_acc])#the second prediction, the first is the initial state
         emergency_pred_vec = pred_vec+emergency_pred_vec_n
         pred_vec+=pred_vec_n
 
@@ -235,6 +241,12 @@ def train(env,HP,net,Replay,dataManager,trainShared,guiShared,seed = None):
                     #print("roll_flag:",roll_flag,"dev_flag:",dev_flag)
                     if env.stop_flag:
                         next_acc = -1
+                    else:
+                        last_ind = env.pl.main_index
+                        if len(dataManager.real_path.time)>0:
+                            last_tim = dataManager.real_path.time[-1]
+                        else:
+                            last_tim = 0
                  
                  
                         
@@ -309,6 +321,17 @@ def train(env,HP,net,Replay,dataManager,trainShared,guiShared,seed = None):
             dataManager.add_train_num(global_train_count)
             dataManager.path_seed.append(env.path_seed)#current used seed (for paths)
             dataManager.update_relative_rewards_and_paths()
+            relative_reward = dataManager.comp_relative_reward1(env.pl.in_vehicle_reference_path,last_ind,last_tim)
+            with guiShared.Lock:
+                guiShared.episodes_data.append(relative_reward)
+                #print("planningData.vec_emergency_action:",planningData.vec_emergency_action,'info[0]:',info[0])
+                if info[0] == 'kipp' or info[0] == 'deviate':
+                    guiShared.episodes_fails.append(1)
+                elif any(guiShared.planningData.vec_emergency_action):
+                    guiShared.episodes_fails.append(2)
+                else:
+                    guiShared.episodes_fails.append(0)
+                guiShared.update_episodes_flag = True
             
             #HP.noise_flag =True
         print("episode: ", i, " total reward: ", total_reward, "episode steps: ",step_count)

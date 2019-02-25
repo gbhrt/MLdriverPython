@@ -333,7 +333,7 @@ if __name__ == "__main__":
     #names2 = ["REVO_F_again_1","REVO_F_again_2","REVO_F_again_3","REVO_F_again_4","REVO_F_again_5"]#
     #names3 = ["acvo_1","acvo_2","acvo_3","acvo_4","acvo_5"]
     #names4 = ["bevo_1","bevo_2","bevo_3","bevo_4","bevo_5"]#,"bevo4"
-    names1 = ["collect_data_relative1"]#,"MB_2","MB_3","MB_4"]#,collect_data_caution
+    names1 = ["MB_good2"]#,"MB_2","MB_3","MB_4"]#,collect_data_caution
     #names1= ["MB_1_003_max02"]
              #"analytic_check_2",
              #"analytic_check_3",

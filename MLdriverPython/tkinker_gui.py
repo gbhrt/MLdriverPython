@@ -53,7 +53,7 @@ class data_plots():
         #self.ax1 = self.figure1.add_subplot(111)
         #self.ax2 = self.figure1.add_subplot(121)
         #self.figure1, (self.ax1,self.ax2,self.ax3) = plt.subplots(3, 1,figsize=(5,7))#
-        self.figure1, (self.ax1,self.ax2,self.ax3) = plt.subplots(3, 1,figsize=(5,3))#
+        self.figure1, (self.ax1,self.ax2,self.ax3,self.ax_episodes) = plt.subplots(4, 1,figsize=(7,5))#
 
         #self.dataManager.roll = [0,1]
         self.ax1.set_ylim(-0.1,0.1)
@@ -84,12 +84,13 @@ class data_plots():
         self.line_emergency_roll_mean = self.ax3.plot([],color = "blue",label = "emergency roll")[0]
         self.ax3.fill_between(np.arange(15),self.guiShared.max_roll*np.ones(15),-self.guiShared.max_roll*np.ones(15),color = "#dddddd" )
 
+        
         #self.ax3.legend()
-        self.lines = plot_velocities(self.ax2)#,self.dataManager)
+        self.lines = plot_velocities(self.ax2)
         self.ax1.grid(True)
         self.ax2.grid(True)
         self.ax3.grid(True)
-        #self.figure2, self.ax1 = plt.subplots(1, 1,figsize=(5,4))
+        
 
 
         self.canvas = FigureCanvasTkAgg(self.figure1, master= root)
@@ -135,12 +136,12 @@ class data_plots():
 
 
             self.line_roll_mean.set_data(np.arange(len(self.guiShared.planningData.vec_planned_roll[self.index[0]])),np.array(self.guiShared.planningData.vec_planned_roll[self.index[0]]))
-            self.line_roll_var1.set_data(np.arange(len(self.guiShared.planningData.vec_planned_roll[self.index[0]])),np.array(self.guiShared.planningData.vec_planned_roll[self.index[0]])-np.array(self.guiShared.planningData.vec_planned_roll_var[self.index[0]]))
-            self.line_roll_var2.set_data(np.arange(len(self.guiShared.planningData.vec_planned_roll[self.index[0]])),np.array(self.guiShared.planningData.vec_planned_roll[self.index[0]])+np.array(self.guiShared.planningData.vec_planned_roll_var[self.index[0]]))
+            #self.line_roll_var1.set_data(np.arange(len(self.guiShared.planningData.vec_planned_roll[self.index[0]])),np.array(self.guiShared.planningData.vec_planned_roll[self.index[0]])-np.array(self.guiShared.planningData.vec_planned_roll_var[self.index[0]]))
+            #self.line_roll_var2.set_data(np.arange(len(self.guiShared.planningData.vec_planned_roll[self.index[0]])),np.array(self.guiShared.planningData.vec_planned_roll[self.index[0]])+np.array(self.guiShared.planningData.vec_planned_roll_var[self.index[0]]))
         
             self.line_emergency_roll_mean.set_data(np.arange(len(self.guiShared.planningData.vec_emergency_planned_roll[self.index[0]])),np.array(self.guiShared.planningData.vec_emergency_planned_roll[self.index[0]]))
-            self.line_emergency_roll_var1.set_data(np.arange(len(self.guiShared.planningData.vec_emergency_planned_roll[self.index[0]])),np.array(self.guiShared.planningData.vec_emergency_planned_roll[self.index[0]])-np.array(self.guiShared.planningData.vec_emergency_planned_roll_var[self.index[0]]))
-            self.line_emergency_roll_var2.set_data(np.arange(len(self.guiShared.planningData.vec_emergency_planned_roll[self.index[0]])),np.array(self.guiShared.planningData.vec_emergency_planned_roll[self.index[0]])+np.array(self.guiShared.planningData.vec_emergency_planned_roll_var[self.index[0]]))
+            #self.line_emergency_roll_var1.set_data(np.arange(len(self.guiShared.planningData.vec_emergency_planned_roll[self.index[0]])),np.array(self.guiShared.planningData.vec_emergency_planned_roll[self.index[0]])-np.array(self.guiShared.planningData.vec_emergency_planned_roll_var[self.index[0]]))
+            #self.line_emergency_roll_var2.set_data(np.arange(len(self.guiShared.planningData.vec_emergency_planned_roll[self.index[0]])),np.array(self.guiShared.planningData.vec_emergency_planned_roll[self.index[0]])+np.array(self.guiShared.planningData.vec_emergency_planned_roll_var[self.index[0]]))
         
 
 
@@ -154,7 +155,20 @@ class data_plots():
 
                 update_velocities(self.lines,path,self.guiShared.planningData.vec_emergency_action,self.index[0])
                 self.canvas.draw()
-
+        
+        if self.guiShared.update_episodes_flag:
+            c = []
+            for num in self.guiShared.episodes_fails:
+                if num == 1:#failed
+                    c.append('red')
+                elif num == 2:#emergency
+                    c.append('blue')
+                else:#ok
+                    c.append('green')
+            self.ax_episodes.clear()
+            self.ax_episodes.plot([0,len(self.guiShared.episodes_data)],[1,1],color = 'black')
+            self.ax_episodes.scatter(list(range(len(self.guiShared.episodes_data))),self.guiShared.episodes_data,marker='o',color = c)
+            self.guiShared.update_episodes_flag = False
         self.root.after(50,self.plot_data)
 
 class draw_state:
@@ -253,7 +267,8 @@ class TkGui():
         self.root= tk.Tk() 
         screenwidth = self.root.winfo_screenwidth()
         screenheight = self.root.winfo_screenheight()
-        self.root.geometry('%dx%d+%d+%d' % (screenwidth*0.4,screenheight*0.9,0,0))#(w, h, x, y)
+        #self.root.geometry('%dx%d+%d+%d' % (screenwidth*0.4,screenheight*0.9,0,0))#(w, h, x, y)
+        self.root.geometry('%dx%d+%d+%d' % (screenwidth*0.3,screenheight*0.9,0,0))#(w, h, x, y)
         self.root.wm_title("Gui")
 
         

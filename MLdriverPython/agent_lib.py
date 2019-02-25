@@ -201,7 +201,7 @@ def predict_n_next1(n,net,env,X_dict,abs_pos,abs_ang,path,emergency_flag = False
     if dev_flag == False and roll_flag == 0:
         for i in range(0,n):#n times       
             X_dict,abs_pos,abs_ang = predict_one_step(net,env,X_dict,abs_pos,abs_ang)
-            roll_var+=delta_var
+            #roll_var+=delta_var
             #print("roll_var:",roll_var)
             vel = env.denormalize(X_dict['vel_y'],"vel_y")
             index = lib.find_index_on_path(path,abs_pos)

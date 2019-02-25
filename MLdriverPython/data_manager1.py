@@ -283,6 +283,7 @@ class DataManager():
         if self.episode_end_mode[-1] == 'kipp' or self.episode_end_mode[-1] == 'deviate' or len(self.real_path.distance) == 0:
             return None
         #dist = sum(self.real_path.velocity)*0.2
+        
         dist = self.real_path.distance[-1]
         print("dist",dist)
         path = classes.Path()
@@ -300,6 +301,32 @@ class DataManager():
         print("analytic_dist",analytic_dist)
         print(dist/analytic_dist)
         return dist/analytic_dist
+
+    def comp_relative_reward1(self,nominal_path,last_index,last_time):
+        #print("relative reward seed:",self.real_path.seed)
+        if self.episode_end_mode[-1] == 'kipp' or self.episode_end_mode[-1] == 'deviate' or len(self.real_path.distance) == 0:
+            return 0
+        #dist = sum(self.real_path.velocity)*0.2
+        dist = nominal_path.distance[last_index]#distance along the nominal path
+        #dist = self.real_path.distance[-1]
+        
+        #path = classes.Path()
+        #path.position = lib.create_random_path(9000,0.05,seed = self.real_path.seed)
+        #nominal_path.position = nominal_path.position[:index]#remove the end of the path for computing the velocity with 0 at the end
+        #lib.comp_velocity_limit_and_velocity(path,skip = 10,reduce_factor = 1.0)
+        max_time_ind = 0
+        for i,tim in enumerate (nominal_path.analytic_time):
+            if tim > last_time:
+                max_time_ind = i
+                break
+        analytic_dist = nominal_path.distance[max_time_ind]
+        if analytic_dist> 1e-5:
+            relative_reward = dist/analytic_dist
+        else:
+            relative_reward = 0
+            print( 'nominal_path.distance:', nominal_path.distance,'nominal_path.analytic_time:',nominal_path.analytic_time,'max_time_ind:',max_time_ind,'last_time:',last_time)
+        print("analytic_dist",analytic_dist,"real dist",dist,"relative:",relative_reward)
+        return relative_reward
 
     def update_relative_rewards_and_paths(self):
         self.relative_reward.append(self.comp_relative_reward())
