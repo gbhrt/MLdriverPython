@@ -35,21 +35,21 @@ if __name__ == "__main__":
     X_n = 1
     Y_n = 1
     alpha = 0.0001
-    keep_prob = 0.9
+    keep_prob = 0.8
 
 
     n = 50
     #mu, sigma1,sigma2 = 0, 0.01, 0.4 # mean and standard deviation
     mu, sigma1,sigma2 = 0, 0.0, 0.0 # mean and standard deviation
-    noise = np.append(np.random.normal(mu, sigma1, int(n/2)),np.random.normal(mu, sigma2, int(n/2)))
+    #noise = np.append(np.random.normal(mu, sigma1, int(n/2)),np.random.normal(mu, sigma2, int(n/2)))
     x =  np.linspace(0, 10, n)
     Xtrain = x
     ytrain_ = np.sin(Xtrain)+noise
 
-    #for i in range(10):
-    #    noise = np.append(np.random.normal(mu, sigma1, int(n/2)),np.random.normal(mu, sigma2, int(n/2)))
-    #    Xtrain = np.append(Xtrain,x)
-    #    ytrain_ = np.append(ytrain_, np.sin(x)+noise )
+    for i in range(10):
+        noise = np.append(np.random.normal(mu, sigma1, int(n/2)),np.random.normal(mu, sigma2, int(n/2)))
+        Xtrain = np.append(Xtrain,x)
+        ytrain_ = np.append(ytrain_, np.sin(x)+noise)
 
     #noise = np.append(np.random.normal(mu, sigma1, int(n/2)),np.random.normal(mu, sigma2, int(n/2)))
     #x =  np.linspace(20, 30, n)
@@ -80,7 +80,7 @@ if __name__ == "__main__":
     ytest_ = scalerY.transform(ytest_)
     from model_based_net import model_based_network
 
-    net = model_based_network(X_n,Y_n,alpha)
+    net = model_based_network(X_n,Y_n,alpha)#,dropout_flag = True
 
     if restore_flag:
         net.restore(os.getcwd()+"\\files\\",name = save_name)
@@ -89,7 +89,7 @@ if __name__ == "__main__":
     ytest = []
 
     
-    T = 100
+    T = 10
 
     ytrain = (net.get_Y(Xtrain))
 

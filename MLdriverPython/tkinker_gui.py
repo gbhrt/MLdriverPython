@@ -52,8 +52,8 @@ class data_plots():
         #self.figure1 = plt.Figure(figsize=(6,5))#, dpi=100)
         #self.ax1 = self.figure1.add_subplot(111)
         #self.ax2 = self.figure1.add_subplot(121)
-        #self.figure1, (self.ax1,self.ax2,self.ax3) = plt.subplots(3, 1,figsize=(5,7))#
-        self.figure1, (self.ax1,self.ax2,self.ax3,self.ax_episodes) = plt.subplots(4, 1,figsize=(7,5))#
+        self.figure1, (self.ax1,self.ax2,self.ax3,self.ax_episodes) = plt.subplots(4, 1,figsize=(5,3.8))#
+        #self.figure1, (self.ax1,self.ax2,self.ax3,self.ax_episodes) = plt.subplots(4, 1,figsize=(7,5))#
 
         #self.dataManager.roll = [0,1]
         self.ax1.set_ylim(-0.1,0.1)
@@ -267,8 +267,8 @@ class TkGui():
         self.root= tk.Tk() 
         screenwidth = self.root.winfo_screenwidth()
         screenheight = self.root.winfo_screenheight()
-        #self.root.geometry('%dx%d+%d+%d' % (screenwidth*0.4,screenheight*0.9,0,0))#(w, h, x, y)
-        self.root.geometry('%dx%d+%d+%d' % (screenwidth*0.3,screenheight*0.9,0,0))#(w, h, x, y)
+        self.root.geometry('%dx%d+%d+%d' % (screenwidth*0.4,screenheight*0.9,0,0))#(w, h, x, y)
+        #self.root.geometry('%dx%d+%d+%d' % (screenwidth*0.3,screenheight*0.9,0,0))#(w, h, x, y)
         self.root.wm_title("Gui")
 
         

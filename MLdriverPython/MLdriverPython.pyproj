@@ -57,6 +57,10 @@
     <Compile Include="manual_testing.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="MDN.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="model_based_net - Copy.py" />
     <Compile Include="replay_data.py">
       <SubType>Code</SubType>
     </Compile>
@@ -164,6 +168,7 @@
     <Compile Include="train_without_sim.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="uncertainty_test1.py" />
     <Compile Include="uncertainty_test.py">
       <SubType>Code</SubType>
     </Compile>

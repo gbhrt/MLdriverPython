@@ -71,8 +71,10 @@ def train_net(HP,net,vec_X,vec_Y_,envData,waitFor,num_train):#Replay
     plt.ion()
 
     XandY_  = [[X,Y_] for X,Y_ in zip(vec_X,vec_Y_)]
+    fig, axes = plt.subplots(net.Y_n, 1)
     for i in range(num_train):
         if waitFor.stop == [True]:
+            plt.close('all')
             break
         #with trainShared.Lock:
         #rand_state, rand_a, rand_next_state, rand_end,_ = Replay.sample(HP.batch_size)
@@ -86,15 +88,22 @@ def train_net(HP,net,vec_X,vec_Y_,envData,waitFor,num_train):#Replay
         #X,Y_ = envData.create_XY_(rand_state, rand_a, rand_next_state)
         net.update_network(X,Y_)
         train_count+=1
+        
         if train_count % 500 == 0:
             #X,Y_,end,fail = convert_data(ReplayTest)
-            loss = float(net.get_loss(X,Y_))
-            if loss > 10:
-                print("what??")
+            loss = net.get_loss(X,Y_)
+            #if loss > 10:
+            #    print("what??")
             losses.append(loss)
-            plt.cla()
-            plt.plot(losses)
-            plt.plot(lib.running_average(losses,50))
+            #plt.cla()
+            
+            tr_losses = np.array(losses).transpose()
+                       
+            
+            for i,tr_loss in enumerate(tr_losses):
+                axes[i].clear()
+                axes[i].plot(tr_loss)
+                axes[i].plot(lib.running_average(tr_loss,50))
             plt.draw()
             plt.pause(0.0001)
             print("train:",train_count, "loss:",loss)
@@ -140,8 +149,8 @@ def compare_n_samples(net,X,end,Y_,n):
 
 
 if __name__ == "__main__": 
-    restore = True
-    train = False
+    restore = False
+    train = True
     split_buffer = True
 
     scaling_type ="scaler" # "scaler"#standard_scaler
@@ -210,20 +219,11 @@ if __name__ == "__main__":
     print("train loss: ",net.get_loss(train_X,train_Y_))
 
     train_Y = net.get_Y(train_X).tolist()
-    #for i in range(len(train_Y)):
-    #    Y_dict = envData.Y_to_Y_dict(train_Y[i])
-    #    X_dict = envData.X_to_X_dict(train_X[i])
-    #    for name in envData.copy_Y_to_X_names:
-    #        Y_dict[name] += X_dict[name]
-    #    train_Y[i] = envData.dict_Y_to_Y(Y_dict)
-
     test_Y = net.get_Y(test_X).tolist()
-    #for i in range(len(test_Y)):
-    #    Y_dict = envData.Y_to_Y_dict(test_Y[i])
-    #    X_dict = envData.X_to_X_dict(test_X[i])
-    #    for name in envData.copy_Y_to_X_names:
-    #        Y_dict[name] += X_dict[name]
-    #    test_Y[i] = envData.dict_Y_to_Y(Y_dict)
+
+    #train_Y, train_sig = net.get_Y_sigma(train_X).tolist()
+    #test_Y,test_sig = net.get_Y_sigma(test_X).tolist()
+
 
     data = [description]#data_name,train_X,train_Y, train_Y_,test_X,test_Y, test_Y_
 

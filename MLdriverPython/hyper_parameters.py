@@ -51,7 +51,7 @@ class ModelBasedHyperParameters:
         self.train_num = 100# how many times to train in every step
         self.run_random_num = 'inf'
         #########################
-        self.train_flag = True
+        self.train_flag = False
         #self.noise_flag = True
         #self.always_no_noise_flag = False
         self.analytic_action = False
@@ -68,9 +68,9 @@ class ModelBasedHyperParameters:
         self.save_every = 100
         self.save_every_time = 5000 #minutes
         self.seed = 1111
-        self.save_name = "MB_good3"
+        self.save_name = "collect_data_1"
         self.save_file_path = os.getcwd()+ "\\files\\models\\model_based\\"+self.save_name+"\\"
-        self.restore_name = "MB_good3"#
+        self.restore_name = "collect_data_1"#
         self.restore_file_path = os.getcwd()+ "\\files\\models\\model_based\\"+self.restore_name+"\\"
 
         #if self.always_no_noise_flag:
