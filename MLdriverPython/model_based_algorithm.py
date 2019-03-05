@@ -18,7 +18,7 @@ def comp_MB_action(net,env,state,acc,steer):
     
     #delta_var = 0.002
     init_var = 0.0#uncertainty of the roll measurment
-    const_var = 0.05#roll variance at the future states
+    const_var = 0.07#roll variance at the future states
     max_plan_roll = env.max_plan_roll
     max_plan_deviation = env.max_plan_deviation
     roll_var = init_var
@@ -212,7 +212,20 @@ def train(env,HP,net,Replay,dataManager,trainShared,guiShared,seed = None):
                 steer = env.comp_steer()
                 if env.stop_flag:
                     acc = -1
+                else:
+                    last_ind = env.pl.main_index
+                    if len(dataManager.real_path.time)>0:
+                        last_tim = dataManager.real_path.time[-1]
+                    else:
+                        last_tim = 0
                 env.command(acc,steer)
+
+                with guiShared.Lock:
+                    #guiShared.planningData.append(planningData)
+                    guiShared.roll = copy.copy(dataManager.roll)
+                    guiShared.real_path = copy.deepcopy(dataManager.real_path)
+                    guiShared.update_data_flag = True
+
                 next_state, reward, done, info = env.step(acc)#input the estimated next actions to execute after delta t and getting next state
                 
             else:#not HP.analytic_action
@@ -260,6 +273,7 @@ def train(env,HP,net,Replay,dataManager,trainShared,guiShared,seed = None):
                     guiShared.roll = copy.copy(dataManager.roll)
                     guiShared.real_path = copy.deepcopy(dataManager.real_path)
                     guiShared.steer = steer
+                    guiShared.update_data_flag = True
                 #print("update gui time:",time.clock() - t)
                 
                 next_state, reward, done, info = env.step(next_acc,steer = next_steer)#input the estimated next actions to execute after delta t and getting next state

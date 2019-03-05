@@ -100,50 +100,51 @@ class data_plots():
         self.plot_data()
 
     def plot_data(self):
-        if len(self.guiShared.planningData.vec_planned_roll)>0:
-            path = self.guiShared.real_path
-            #self.dataManager.roll = [1,3,2]
-            #plt.cla()
-            #self.ax1.clear()
-            #self.ax1.plot(self.dataManager.roll)
-            #print("roll:",self.dataManager.roll)
-            #print("len roll:",len(self.dataManager.roll))
-            #print("dis:",path.distance)
-            #self.ax3.collections.clear()
-            #self.ax3.fill_between(np.arange(len(self.dataManager.planned_roll)),np.array(self.dataManager.planned_roll)+2,np.array(self.guiShared.planned_roll)-2)
-            if self.index[0] >=0:
-                self.index[0] = min(int(self.spinBox.get()),len(self.guiShared.roll)-1)
+        if self.guiShared.update_data_flag:
+            if len(self.guiShared.planningData.vec_planned_roll)>0:
+                #self.dataManager.roll = [1,3,2]
+                #plt.cla()
+                #self.ax1.clear()
+                #self.ax1.plot(self.dataManager.roll)
+                #print("roll:",self.dataManager.roll)
+                #print("len roll:",len(self.dataManager.roll))
+                #print("dis:",path.distance)
+                #self.ax3.collections.clear()
+                #self.ax3.fill_between(np.arange(len(self.dataManager.planned_roll)),np.array(self.dataManager.planned_roll)+2,np.array(self.guiShared.planned_roll)-2)
+                if self.index[0] >=0:
+                    self.index[0] = min(int(self.spinBox.get()),len(self.guiShared.roll)-1)
 
-            if self.index[0]!=self.last_index:
+                if self.index[0]!=self.last_index:
                 
-                print("-------------------------------------------------")
-                print("index: ",self.index[0])
-                if self.guiShared.planningData.vec_emergency_action[self.index[0]]:
-                    print("emergency action")
-                print("planned roll:\n",self.guiShared.planningData.vec_planned_roll[self.index[0]])
-                print("emergency planned roll:\n",self.guiShared.planningData.vec_emergency_planned_roll[self.index[0]])
-                print("planned velocity:\n",self.guiShared.planningData.vec_planned_vel[self.index[0]])
-                print("emergency planned velocity:\n",self.guiShared.planningData.vec_emergency_planned_vel[self.index[0]])
-                print("planned steer:\n",self.guiShared.planningData.vec_planned_steer[self.index[0]])
-                print("emergency planned steer:\n",self.guiShared.planningData.vec_emergency_planned_steer[self.index[0]])
-                print("planned acc:\n",self.guiShared.planningData.vec_planned_acc[self.index[0]])
-                print("emergency planned acc:\n",self.guiShared.planningData.vec_emergency_planned_acc[self.index[0]])
-                self.last_index = self.index[0]
+                    print("-------------------------------------------------")
+                    print("index: ",self.index[0])
+                    if self.guiShared.planningData.vec_emergency_action[self.index[0]]:
+                        print("emergency action")
+                    print("planned roll:\n",self.guiShared.planningData.vec_planned_roll[self.index[0]])
+                    print("emergency planned roll:\n",self.guiShared.planningData.vec_emergency_planned_roll[self.index[0]])
+                    print("planned velocity:\n",self.guiShared.planningData.vec_planned_vel[self.index[0]])
+                    print("emergency planned velocity:\n",self.guiShared.planningData.vec_emergency_planned_vel[self.index[0]])
+                    print("planned steer:\n",self.guiShared.planningData.vec_planned_steer[self.index[0]])
+                    print("emergency planned steer:\n",self.guiShared.planningData.vec_emergency_planned_steer[self.index[0]])
+                    print("planned acc:\n",self.guiShared.planningData.vec_planned_acc[self.index[0]])
+                    print("emergency planned acc:\n",self.guiShared.planningData.vec_emergency_planned_acc[self.index[0]])
+                    self.last_index = self.index[0]
 
             
 
                 
 
 
-            self.line_roll_mean.set_data(np.arange(len(self.guiShared.planningData.vec_planned_roll[self.index[0]])),np.array(self.guiShared.planningData.vec_planned_roll[self.index[0]]))
-            #self.line_roll_var1.set_data(np.arange(len(self.guiShared.planningData.vec_planned_roll[self.index[0]])),np.array(self.guiShared.planningData.vec_planned_roll[self.index[0]])-np.array(self.guiShared.planningData.vec_planned_roll_var[self.index[0]]))
-            #self.line_roll_var2.set_data(np.arange(len(self.guiShared.planningData.vec_planned_roll[self.index[0]])),np.array(self.guiShared.planningData.vec_planned_roll[self.index[0]])+np.array(self.guiShared.planningData.vec_planned_roll_var[self.index[0]]))
+                self.line_roll_mean.set_data(np.arange(len(self.guiShared.planningData.vec_planned_roll[self.index[0]])),np.array(self.guiShared.planningData.vec_planned_roll[self.index[0]]))
+                #self.line_roll_var1.set_data(np.arange(len(self.guiShared.planningData.vec_planned_roll[self.index[0]])),np.array(self.guiShared.planningData.vec_planned_roll[self.index[0]])-np.array(self.guiShared.planningData.vec_planned_roll_var[self.index[0]]))
+                #self.line_roll_var2.set_data(np.arange(len(self.guiShared.planningData.vec_planned_roll[self.index[0]])),np.array(self.guiShared.planningData.vec_planned_roll[self.index[0]])+np.array(self.guiShared.planningData.vec_planned_roll_var[self.index[0]]))
         
-            self.line_emergency_roll_mean.set_data(np.arange(len(self.guiShared.planningData.vec_emergency_planned_roll[self.index[0]])),np.array(self.guiShared.planningData.vec_emergency_planned_roll[self.index[0]]))
-            #self.line_emergency_roll_var1.set_data(np.arange(len(self.guiShared.planningData.vec_emergency_planned_roll[self.index[0]])),np.array(self.guiShared.planningData.vec_emergency_planned_roll[self.index[0]])-np.array(self.guiShared.planningData.vec_emergency_planned_roll_var[self.index[0]]))
-            #self.line_emergency_roll_var2.set_data(np.arange(len(self.guiShared.planningData.vec_emergency_planned_roll[self.index[0]])),np.array(self.guiShared.planningData.vec_emergency_planned_roll[self.index[0]])+np.array(self.guiShared.planningData.vec_emergency_planned_roll_var[self.index[0]]))
+                self.line_emergency_roll_mean.set_data(np.arange(len(self.guiShared.planningData.vec_emergency_planned_roll[self.index[0]])),np.array(self.guiShared.planningData.vec_emergency_planned_roll[self.index[0]]))
+                #self.line_emergency_roll_var1.set_data(np.arange(len(self.guiShared.planningData.vec_emergency_planned_roll[self.index[0]])),np.array(self.guiShared.planningData.vec_emergency_planned_roll[self.index[0]])-np.array(self.guiShared.planningData.vec_emergency_planned_roll_var[self.index[0]]))
+                #self.line_emergency_roll_var2.set_data(np.arange(len(self.guiShared.planningData.vec_emergency_planned_roll[self.index[0]])),np.array(self.guiShared.planningData.vec_emergency_planned_roll[self.index[0]])+np.array(self.guiShared.planningData.vec_emergency_planned_roll_var[self.index[0]]))
         
-
+        
+            path = self.guiShared.real_path
 
             if len(path.distance) > 0:
                 #if self.index[0] == -1:
@@ -155,6 +156,7 @@ class data_plots():
 
                 update_velocities(self.lines,path,self.guiShared.planningData.vec_emergency_action,self.index[0])
                 self.canvas.draw()
+                self.guiShared.update_data_flag = False
         
         if self.guiShared.update_episodes_flag:
             c = []

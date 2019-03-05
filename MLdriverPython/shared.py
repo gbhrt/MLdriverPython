@@ -23,6 +23,7 @@ class guiShared():#classes.planningData
         self.episodes_data = []#reward for each episode
         self.episodes_fails = []#final states - 0 ok, 1 failed, 2 emergency activated
         self.update_episodes_flag = False
+        self.update_data_flag = False
         self.restart()
         return
 

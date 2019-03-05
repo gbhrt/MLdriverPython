@@ -43,9 +43,10 @@ if __name__ == "__main__":
              #"big_state_standard_norm_4_layers_50_nodes_alpha_0001.txt",
              #"big_state_standard_norm_3_layers_100_nodes.txt",
              #"big_state_standard_norm_3_layers_100_nodes_L2_01.txt",
-             "big_state_standard_norm_3_layers_100_nodes_L2_05.txt",
-             "small_state_standard_norm_3_layers_100_nodes_L2_05.txt"
+             "small_state_one_net.txt",
+             "small_state_separate_net.txt"
              ]
+    #small_state_separate_net
     #"big_state_standard_norm_3_layers_20_nodes_alpha_0001.txt"
 
     envData = enviroment1.OptimalVelocityPlannerData('model_based')
