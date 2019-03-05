@@ -60,8 +60,8 @@
     <Compile Include="MDN.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="model_based_net2.py" />
     <Compile Include="model_based_net.py" />
+    <Compile Include="model_based_net_var.py" />
     <Compile Include="replay_data.py">
       <SubType>Code</SubType>
     </Compile>

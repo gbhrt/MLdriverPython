@@ -18,7 +18,7 @@ def comp_MB_action(net,env,state,acc,steer):
     
     #delta_var = 0.002
     init_var = 0.0#uncertainty of the roll measurment
-    const_var = 0.07#roll variance at the future states
+    const_var = 0.05#roll variance at the future states
     max_plan_roll = env.max_plan_roll
     max_plan_deviation = env.max_plan_deviation
     roll_var = init_var
