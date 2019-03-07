@@ -7,9 +7,23 @@ import numpy as np
 #import time
 #import collections
 import matplotlib.pyplot as plt
-planned_roll = range(10)
-plt.plot(np.arange(len(planned_roll)))
-plt.fill_between(np.arange(len(planned_roll)),np.array(planned_roll)+2,np.array(planned_roll)-2,color = "#dddddd")
+
+
+#input_list = [{'x':100,'y':200,'radius':100, 'color':(0.1,0.2,0.3)}]    
+#output_list = []   
+#for point in input_list:
+#    output_list.append(plt.Circle((point['x'], point['y']), point['radius'], color=point['color'], fill=True))
+
+
+#ax = plt.gca(aspect='equal')
+#ax.cla()
+#ax.set_xlim((0, 1000))
+#ax.set_ylim((0, 1000))
+#for circle in output_list:    
+#   ax.add_artist(circle)
+
+
+plt.add_artist(plt.Circle((100,100),50,color = 'red',fill = True))
 plt.show()
 
 

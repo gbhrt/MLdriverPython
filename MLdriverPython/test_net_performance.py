@@ -9,6 +9,7 @@ import json
 import os
 import random
 from sklearn import preprocessing
+import timeit
 def save_data(file_name,data):
     with open(file_name, 'w') as f:#append data to the file
         json.dump(data,f)
@@ -56,22 +57,23 @@ def plot_comparison_dict(Y_, Y,feature,index = None,plot_name=" "):
     plt.plot(predicted,'o')
 
 def plot_comparison_dict_var(Y_, Y,var, feature,index = None,plot_name=" "):
-    plt.figure(plot_name)
-    real,predicted = [],[]
 
-    for y_,y in zip(Y_,Y):
+    fig, ax = plt.subplots(figsize=(10,10))#name =plot_name
+    real,predicted,var_list = [],[],[]
+
+    for y_,y,v in zip(Y_,Y,var):
         y_dict_ = envData.Y_to_Y_dict(y_)
         y_dict = envData.Y_to_Y_dict(y)
-        if index is None:
-            real.append(y_dict_[feature])
-            predicted.append(y_dict[feature])
-        else:
-            real.append(y_dict_[feature][index])
-            predicted.append(y_dict[feature][index])
+        var_dict = envData.Y_to_Y_dict(v)
+
+        real.append(y_dict_[feature])
+        predicted.append(y_dict[feature])
+        var_list.append(var_dict[feature])
 
    
-    plt.plot(real,'o')
-    plt.plot(predicted,'o')
+    ax.plot(real,'o')
+    ax.plot(predicted,'o')
+    ax.errorbar(list(range(len(predicted))),predicted,yerr=np.absolute(var_list),c='r',ls='None',marker='.',ms=10,label='predicted distributions')
 
 
 def convert_data(Replay,envData):
@@ -168,11 +170,11 @@ def compare_n_samples(net,X,end,Y_,n):
 
 
 if __name__ == "__main__": 
-    restore = False
+    restore = True
     train = True
     split_buffer = True
     separate_nets = True
-    variance_mode = False
+    variance_mode = True
 
     scaling_type ="scaler" # "scaler"#standard_scaler
     test_part = 0.3
@@ -241,6 +243,7 @@ if __name__ == "__main__":
 
 
     if not variance_mode:
+        net.check_time()
         train_Y = net.get_Y(train_X).tolist()
         test_Y = net.get_Y(test_X).tolist()
 
@@ -346,17 +349,20 @@ if __name__ == "__main__":
         plt.show()
 
     else:#variance_mode
-        train_Y,train_var = net.get_Y(train_X).tolist()
-        test_Y,test_var = net.get_Y(test_X).tolist()
+        train_Y,train_var = net.get_Y_and_var(train_X)
+        test_Y,test_var = net.get_Y_and_var(test_X)
 
         #denormalize:
-        data.append([envData.denormalize_dict(envData.X_to_X_dict(train_x)) for train_x in train_X])
-        data.append([envData.denormalize_dict(envData.Y_to_Y_dict(train_y)) for train_y in train_Y])
-        data.append([envData.denormalize_dict(envData.Y_to_Y_dict(train_y_)) for train_y_ in train_Y_])
+        #data.append([envData.denormalize_dict(envData.X_to_X_dict(train_x)) for train_x in train_X])
+        #data.append([envData.denormalize_dict(envData.Y_to_Y_dict(train_y)) for train_y in train_Y])
+        #data.append([envData.denormalize_dict(envData.Y_to_Y_dict(train_y_)) for train_y_ in train_Y_])
     
-        data.append([envData.denormalize_dict(envData.X_to_X_dict(x)) for x in test_X])
-        data.append([envData.denormalize_dict(envData.Y_to_Y_dict(y)) for y in test_Y])
-        data.append([envData.denormalize_dict(envData.Y_to_Y_dict(y_)) for y_ in test_Y_])
+        #data.append([envData.denormalize_dict(envData.X_to_X_dict(x)) for x in test_X])
+        #data.append([envData.denormalize_dict(envData.Y_to_Y_dict(y)) for y in test_Y])
+        #data.append([envData.denormalize_dict(envData.Y_to_Y_dict(y_)) for y_ in test_Y_])
 
+
+        
         for name in envData.Y_names:
-            plot_comparison_dict_var(test_Y_,test_Y,name,plot_name = name)
+            plot_comparison_dict_var(test_Y_,test_Y,train_var,name,plot_name = name)
+        plt.show()

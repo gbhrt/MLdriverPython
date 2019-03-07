@@ -34,30 +34,23 @@ class model_based_network(NetLib):
 
         self.optimizers = []
         self.Y = []
+        self.var = []
         self.loss = []
         for i in range(self.Y_n):#create Y_n nets:
             net = self.X
             for layer_size in layer_sizes:
                 net = tf.layers.dense(inputs=net, units=layer_size, activation=tf.nn.tanh)
-            self.Y.append(tf.layers.dense(inputs=net, units=1))#output from 1 net
-            self.loss.append(tf.reduce_mean(tf.squared_difference(self.Y[i],self.Y_[i])))
+            self.Y.append(tf.layers.dense(inputs=net, units=1))
+            self.var.append(tf.layers.dense(inputs=net, units=1, activation = lambda x: tf.nn.elu(x) + 1))
+
+            distribution = tf.distributions.Normal(loc=self.Y[i], scale = self.var[i])
+            self.loss.append(tf.reduce_mean(-distribution.log_prob(self.Y_[i])))
+
             self.optimizers.append(tf.train.AdamOptimizer(alpha).minimize(self.loss[i]))
 
 
         
-        #if net_type == 0:
-        #    ##3 hidden layers:
-        #    net = tflearn.fully_connected(self.X, hidden_layer_nodes1,regularizer='L2', weight_decay=0.1)
-        #    net = tflearn.activations.relu(net)
-        #    net = tflearn.fully_connected(net, hidden_layer_nodes2,regularizer='L2', weight_decay=0.1)
-        #    net = tflearn.activations.relu(net)
-        #    net = tflearn.fully_connected(net, hidden_layer_nodes3,regularizer='L2', weight_decay=0.1)
-        #    net = tflearn.activations.relu(net)
-        #    #net = tflearn.fully_connected(net, hidden_layer_nodes4,regularizer='L2', weight_decay=0.01)
-        #    #net = tflearn.activations.relu(net)
-        #    self.Y = tflearn.fully_connected(net, Y_n,regularizer='L2', weight_decay=0.1)
-        #    self.loss=tf.reduce_mean(tf.squared_difference(self.Y,self.Y_))
-        #else:
+
         #    layer_sizes = [hidden_layer_nodes1,hidden_layer_nodes2,hidden_layer_nodes3]
         #    layer = self.X
         #    for layer_size in layer_sizes:
@@ -112,6 +105,8 @@ class model_based_network(NetLib):
     #    norm_prediction = lib.denormalize([prediction],self.norm_vec[self.features_num:])[0]
     #    return norm_prediction
 
+
+
         
 
     def update_network(self,X,Y_,keep_prob = 1.0):
@@ -144,6 +139,10 @@ class model_based_network(NetLib):
         #Y = np.array(self.sess.run(self.Y, feed_dict= {self.X:X}))
         return np.array(Y).transpose()
 
-    def get_Y_sigma(self,X,keep_prob = 1.0):
-        Y,sigma = self.sess.run([self.Y,self.sigma], feed_dict= {self.X:X,self.keep_prob: keep_prob})
-        return Y,sigma
+    def get_Y_and_var(self,X,keep_prob = 1.0):
+        Y,Var = [],[]
+        for i in range(self.Y_n):#Y_n
+            y,var = self.sess.run([self.Y[i],self.var[i]], feed_dict= {self.X:X,self.keep_prob: keep_prob})
+            Y.append(y.flatten().tolist())
+            Var.append(var.flatten().tolist())
+        return np.array(Y).transpose(),np.array(Var).transpose()
