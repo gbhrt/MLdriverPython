@@ -100,6 +100,14 @@ class data_plots():
         self.plot_data()
 
     def plot_data(self):
+        print_debug_data = False
+        if self.index[0] >=0:#update data if spin box changed.
+            self.index[0] = min(int(self.spinBox.get()),len(self.guiShared.roll)-1)
+            if self.index[0]!=self.last_index:
+                self.guiShared.update_data_flag = True
+                print_debug_data = True
+                self.last_index = self.index[0]
+
         if self.guiShared.update_data_flag:
             if len(self.guiShared.planningData.vec_planned_roll)>0:
                 #self.dataManager.roll = [1,3,2]
@@ -111,11 +119,7 @@ class data_plots():
                 #print("dis:",path.distance)
                 #self.ax3.collections.clear()
                 #self.ax3.fill_between(np.arange(len(self.dataManager.planned_roll)),np.array(self.dataManager.planned_roll)+2,np.array(self.guiShared.planned_roll)-2)
-                if self.index[0] >=0:
-                    self.index[0] = min(int(self.spinBox.get()),len(self.guiShared.roll)-1)
-
-                if self.index[0]!=self.last_index:
-                
+                if print_debug_data:
                     print("-------------------------------------------------")
                     print("index: ",self.index[0])
                     if self.guiShared.planningData.vec_emergency_action[self.index[0]]:
@@ -128,13 +132,9 @@ class data_plots():
                     print("emergency planned steer:\n",self.guiShared.planningData.vec_emergency_planned_steer[self.index[0]])
                     print("planned acc:\n",self.guiShared.planningData.vec_planned_acc[self.index[0]])
                     print("emergency planned acc:\n",self.guiShared.planningData.vec_emergency_planned_acc[self.index[0]])
-                    self.last_index = self.index[0]
+                    
 
-            
-
-                
-
-
+       
                 self.line_roll_mean.set_data(np.arange(len(self.guiShared.planningData.vec_planned_roll[self.index[0]])),np.array(self.guiShared.planningData.vec_planned_roll[self.index[0]]))
                 #self.line_roll_var1.set_data(np.arange(len(self.guiShared.planningData.vec_planned_roll[self.index[0]])),np.array(self.guiShared.planningData.vec_planned_roll[self.index[0]])-np.array(self.guiShared.planningData.vec_planned_roll_var[self.index[0]]))
                 #self.line_roll_var2.set_data(np.arange(len(self.guiShared.planningData.vec_planned_roll[self.index[0]])),np.array(self.guiShared.planningData.vec_planned_roll[self.index[0]])+np.array(self.guiShared.planningData.vec_planned_roll_var[self.index[0]]))
@@ -142,7 +142,7 @@ class data_plots():
                 self.line_emergency_roll_mean.set_data(np.arange(len(self.guiShared.planningData.vec_emergency_planned_roll[self.index[0]])),np.array(self.guiShared.planningData.vec_emergency_planned_roll[self.index[0]]))
                 #self.line_emergency_roll_var1.set_data(np.arange(len(self.guiShared.planningData.vec_emergency_planned_roll[self.index[0]])),np.array(self.guiShared.planningData.vec_emergency_planned_roll[self.index[0]])-np.array(self.guiShared.planningData.vec_emergency_planned_roll_var[self.index[0]]))
                 #self.line_emergency_roll_var2.set_data(np.arange(len(self.guiShared.planningData.vec_emergency_planned_roll[self.index[0]])),np.array(self.guiShared.planningData.vec_emergency_planned_roll[self.index[0]])+np.array(self.guiShared.planningData.vec_emergency_planned_roll_var[self.index[0]]))
-        
+                self.guiShared.update_data_flag = False
         
             path = self.guiShared.real_path
 
@@ -171,6 +171,7 @@ class data_plots():
             self.ax_episodes.plot([0,len(self.guiShared.episodes_data)],[1,1],color = 'black')
             self.ax_episodes.scatter(list(range(len(self.guiShared.episodes_data))),self.guiShared.episodes_data,marker='o',color = c)
             self.guiShared.update_episodes_flag = False
+
         self.root.after(50,self.plot_data)
 
 class draw_state:

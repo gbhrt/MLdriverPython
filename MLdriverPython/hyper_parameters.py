@@ -51,7 +51,7 @@ class ModelBasedHyperParameters:
         self.train_num = 100# how many times to train in every step
         self.run_random_num = 'inf'
         #########################
-        self.train_flag = True
+        self.train_flag = False
         #self.noise_flag = True
         #self.always_no_noise_flag = False
         self.analytic_action = False
@@ -62,16 +62,15 @@ class ModelBasedHyperParameters:
         self.gym_flag = False
         self.render_flag = True
         self.plot_flag = True
-        self.restore_flag = False
+        self.restore_flag = True
         self.skip_run = False
         self.reset_every = 3
         self.save_every = 100
         self.save_every_time = 5000 #minutes
         self.seed = 1111
-        self.save_name = "collect_data_1"#"collect_data_007_var"
+        self.save_name = "collect_data_2"#"collect_data_007_var"
         self.save_file_path = os.getcwd()+ "\\files\\models\\model_based\\"+self.save_name+"\\"
-        self.restore_name = "collect_data_1"#
+        self.restore_name = "collect_data_2"#
         self.restore_file_path = os.getcwd()+ "\\files\\models\\model_based\\"+self.restore_name+"\\"
 
-        #if self.always_no_noise_flag:
-        #    self.noise_flag = False
+        #"collect_data_1"  4000 points of good data
