@@ -30,8 +30,8 @@ if __name__ == "__main__":
     waitFor = lib.waitFor()
 
     save_name = "uncertainty1"
-    restore_flag = False
-    train_flag = True
+    restore_flag = True
+    train_flag = False
     X_n = 1
     Y_n = 1
     alpha = 0.0001
@@ -39,9 +39,9 @@ if __name__ == "__main__":
 
 
     n = 50
-    #mu, sigma1,sigma2 = 0, 0.01, 0.4 # mean and standard deviation
-    mu, sigma1,sigma2 = 0, 0.0, 0.0 # mean and standard deviation
-    #noise = np.append(np.random.normal(mu, sigma1, int(n/2)),np.random.normal(mu, sigma2, int(n/2)))
+    mu, sigma1,sigma2 = 0, 0.01, 0.2 # mean and standard deviation
+    #mu, sigma1,sigma2 = 0, 0.0, 0.0 # mean and standard deviation
+    noise = np.append(np.random.normal(mu, sigma1, int(n/2)),np.random.normal(mu, sigma2, int(n/2)))
     x =  np.linspace(0, 10, n)
     Xtrain = x
     ytrain_ = np.sin(Xtrain)+noise
@@ -51,18 +51,9 @@ if __name__ == "__main__":
         Xtrain = np.append(Xtrain,x)
         ytrain_ = np.append(ytrain_, np.sin(x)+noise)
 
-    #noise = np.append(np.random.normal(mu, sigma1, int(n/2)),np.random.normal(mu, sigma2, int(n/2)))
-    #x =  np.linspace(20, 30, n)
-    #Xtrain1 = x
-    #ytrain_1 = np.sin(Xtrain1)+noise
-
-    #for i in range(10):
-    #    noise = np.append(np.random.normal(mu, sigma1, int(n/2)),np.random.normal(mu, sigma2, int(n/2)))
-    #    Xtrain1 = np.append(Xtrain1,x)
-    #    ytrain_1 = np.append(ytrain_1, np.sin(x)+noise )
-
-    #Xtrain = np.append(Xtrain, Xtrain1)
-    #ytrain_ = np.append(ytrain_, ytrain_1)
+    plt.figure(1)
+    plt.plot(Xtrain, ytrain_,"o",label = "y_ train")
+    plt.show()  
 
     Xtrain = Xtrain.reshape(-1,1)
     ytrain_ = ytrain_.reshape(-1,1)
@@ -80,7 +71,7 @@ if __name__ == "__main__":
     ytest_ = scalerY.transform(ytest_)
     from model_based_net import model_based_network
 
-    net = model_based_network(X_n,Y_n,alpha)#,dropout_flag = True
+    net = model_based_network(X_n,Y_n,alpha,net_type = 2)#,dropout_flag = True
 
     if restore_flag:
         net.restore(os.getcwd()+"\\files\\",name = save_name)

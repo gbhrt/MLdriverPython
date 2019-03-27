@@ -1,14 +1,15 @@
 
 import agent_lib as pLib
+import hyper_parameters
 import matplotlib.pyplot as plt
 import numpy as np
 import library as lib
-#import environment1 
+import environment1 
 import json
 import os
 import random
-#from sklearn import preprocessing
-import time
+from sklearn import preprocessing
+import timeit
 
 def save_data(file_name,data):
     with open(file_name, 'w') as f:#append data to the file
@@ -197,10 +198,11 @@ def scale_and_split_data(scaling_type,test_part,vec_X,vec_Y_):
 
     return train_X,train_Y_,test_X,test_Y_
 
-def test_net(Agent): 
+if __name__ == "__main__": 
+    restore = True
     train = True
     split_buffer = True
-    separate_nets = False
+    separate_nets = True
     variance_mode = False
 
     scaling_type ="scaler" # "scaler"#standard_scaler
@@ -220,128 +222,83 @@ def test_net(Agent):
     #big_state_standard_norm_3_layers_20_nodes_L2_01
 
     waitFor = lib.waitFor()
-    #envData = environment1.OptimalVelocityPlannerData('model_based')
+    HP = hyper_parameters.ModelBasedHyperParameters()
+    envData = environment1.OptimalVelocityPlannerData('model_based')
 
-    #if separate_nets:
-    #    from model_based_net_sep import model_based_network
-    #else:
-    #    from model_based_net import model_based_network
+    if separate_nets:
+        from model_based_net_sep import model_based_network
+    else:
+        from model_based_net import model_based_network
         
 
-    #net = model_based_network(envData.X_n,envData.Y_n,HP.alpha)
+    net = model_based_network(envData.X_n,envData.Y_n,HP.alpha)
 
-
-    
+    Replay = pLib.Replay(1000000)
     #velocity, steering angle, steering action, acceleration action,  rel x, rel y, rel ang, velocity next, steering next, roll
-    if not Agent.HP.restore_flag:#restore anyway
-        Agent.Replay.restore(Agent.HP.restore_file_path)
+    Replay.restore(HP.restore_file_path)
     #Replay.memory = Replay.memory[:10000]
-    print("lenght of buffer: ",len(Agent.Replay.memory))
-    if Agent.HP.restore_flag:
-        Agent.nets.restore_all(Agent.HP.restore_file_path)
+    print("lenght of buffer: ",len(Replay.memory))
+
+    #state, a, next_state, end,_ = map(list, zip(*Replay.memory))#all data
+    vec_X, vec_Y_, end,_ = map(list, zip(*Replay.memory))
     
-    full_replay_memory = Agent.Replay.memory
-    train_replay_memory = full_replay_memory[int(test_part*len(full_replay_memory)):]
-    test_replay_memory = full_replay_memory[:int(test_part*len(full_replay_memory))]
+    train_X,train_Y_,test_X,test_Y_ = scale_and_split_data(scaling_type,test_part,vec_X,vec_Y_)
 
-    Agent.Replay.memory = train_replay_memory#replace the replay memory with the train part
-
-
-   
-
-
-    #vec_X, vec_Y_, end,_ = map(list, zip(*Replay.memory))
-    
-    #train_X,train_Y_,test_X,test_Y_ = scale_and_split_data(scaling_type,test_part,vec_X,vec_Y_)
-
-
+    if restore:
+        net.restore(HP.restore_file_path)
 
     
     if train:
-        Agent.start_training()
-
-        while waitFor.stop == [False]:
-            Agent.trainShared.algorithmIsIn.clear()#indicates that are ready to take the lock
-            with Agent.trainShared.Lock:
-                Agent.trainShared.algorithmIsIn.set()
-            time.sleep(1)
-
-        Agent.stop_training()
-
-    Agent.Replay.memory = full_replay_memory
-    Agent.save()
-
-    replay_memory = test_replay_memory
-    
-    TransNet_X,TransNet_Y_ = [],[]
-    AccNet_X,AccNet_Y_ = [],[]
-    SteerNet_X,SteerNet_Y_ = [],[]
-
-    for ind in range(len(replay_memory)-1):
-        if replay_memory[ind][3] == True: # done flag
-            continue
-        vehicle_state = replay_memory[ind][0]
-        action = replay_memory[ind][2]
-        vehicle_state_next = replay_memory[ind+1][0]
-        rel_pos = replay_memory[ind+1][1]
-
-
-        TransNet_X.append(vehicle_state+action)
-        TransNet_Y_.append([vehicle_state_next[i] - vehicle_state[i] for i in range(len(vehicle_state_next))] +rel_pos)
+        train_net(HP,net,train_X,train_Y_,envData, waitFor,num_train,separate_nets)#ReplayTrain
 
     
-    print(Agent.nets.TransNet.evaluate(np.array(TransNet_X),np.array(TransNet_Y_)))
-
-    TransNet_Y = Agent.nets.TransNet.predict(np.array(TransNet_X))
-
-    vehicle_state_vec,action_vec,vehicle_state_next_vec,rel_pos_vec,vehicle_state_next_pred_vec,rel_pos_pred_vec = [],[],[],[],[],[]
-    for x,y_,y in zip(TransNet_X,TransNet_Y_,TransNet_Y):
-        vehicle_state_vec.append( x[:len(Agent.trainHP.vehicle_ind_data)])
-        action_vec.append(x[len(Agent.trainHP.vehicle_ind_data):])
-        vehicle_state_next = y_[:len(Agent.trainHP.vehicle_ind_data)]
-        vehicle_state_next_vec.append([vehicle_state_next[i] + vehicle_state_vec[-1][i] for i in range(len(vehicle_state_next))])
-        rel_pos_vec.append(y_[len(Agent.trainHP.vehicle_ind_data):])
-        vehicle_state_next_pred = y[:len(Agent.trainHP.vehicle_ind_data)]
-        vehicle_state_next_pred_vec.append([vehicle_state_next_pred[i] + vehicle_state_vec[-1][i] for i in range(len(vehicle_state_next))])
-        rel_pos_pred_vec.append(y[len(Agent.trainHP.vehicle_ind_data):])
     
-
-    for feature,ind in Agent.trainHP.vehicle_ind_data.items():
-        plot_comparison(np.array(vehicle_state_next_vec)[:,ind], np.array(vehicle_state_next_pred_vec)[:,ind],feature)
-
-    for ind,feature in enumerate(["dx","dy","dang"]):
-        plot_comparison(np.array(rel_pos_vec)[:,ind], np.array(rel_pos_pred_vec)[:,ind],feature)
-
-    plt.show()
     #train_X,train_Y_,_,_ = convert_data(ReplayTrain,envData)
 
-    #print("test loss: ",net.get_loss(test_X,test_Y_))
-    #print("train loss: ",net.get_loss(train_X,train_Y_))
+    print("test loss: ",net.get_loss(test_X,test_Y_))
+    print("train loss: ",net.get_loss(train_X,train_Y_))
 
 
-    #if not variance_mode:
-        #train_Y = net.get_Y(train_X).tolist()
-        #test_Y = net.get_Y(test_X).tolist()
+    if not variance_mode:
+        train_Y = net.get_Y(train_X).tolist()
+        test_Y = net.get_Y(test_X).tolist()
 
         #train_Y, train_sig = net.get_Y_sigma(train_X).tolist()
         #test_Y,test_sig = net.get_Y_sigma(test_X).tolist()
 
 
-        #data = [description]#data_name,train_X,train_Y, train_Y_,test_X,test_Y, test_Y_
+        data = [description]#data_name,train_X,train_Y, train_Y_,test_X,test_Y, test_Y_
 
+        #inverse transform:
+        if scaling_type == "standard_scaler":
+            train_Y = scalerY.inverse_transform(train_Y)
+            train_Y_ = scalerY.inverse_transform(train_Y_)
+            train_X = scalerX.inverse_transform(train_X)
 
+            test_Y = scalerY.inverse_transform(test_Y)
+            test_Y_ = scalerY.inverse_transform(test_Y_)
+            test_X = scalerX.inverse_transform(test_X)
 
-        #data.append([envData.denormalize_dict(envData.X_to_X_dict(train_x)) for train_x in train_X])
-        #data.append([envData.denormalize_dict(envData.Y_to_Y_dict(train_y)) for train_y in train_Y])
-        #data.append([envData.denormalize_dict(envData.Y_to_Y_dict(train_y_)) for train_y_ in train_Y_])
+            data.append([envData.X_to_X_dict(train_x) for train_x in train_X])
+            data.append([envData.Y_to_Y_dict(train_y) for train_y in train_Y])
+            data.append([envData.Y_to_Y_dict(train_y_) for train_y_ in train_Y_])
     
-        #data.append([envData.denormalize_dict(envData.X_to_X_dict(x)) for x in test_X])
-        #data.append([envData.denormalize_dict(envData.Y_to_Y_dict(y)) for y in test_Y])
-        #data.append([envData.denormalize_dict(envData.Y_to_Y_dict(y_)) for y_ in test_Y_])
+            data.append([envData.X_to_X_dict(x) for x in test_X])
+            data.append([envData.Y_to_Y_dict(y) for y in test_Y])
+            data.append([envData.Y_to_Y_dict(y_) for y_ in test_Y_])
+        else:
+
+            data.append([envData.denormalize_dict(envData.X_to_X_dict(train_x)) for train_x in train_X])
+            data.append([envData.denormalize_dict(envData.Y_to_Y_dict(train_y)) for train_y in train_Y])
+            data.append([envData.denormalize_dict(envData.Y_to_Y_dict(train_y_)) for train_y_ in train_Y_])
+    
+            data.append([envData.denormalize_dict(envData.X_to_X_dict(x)) for x in test_X])
+            data.append([envData.denormalize_dict(envData.Y_to_Y_dict(y)) for y in test_Y])
+            data.append([envData.denormalize_dict(envData.Y_to_Y_dict(y_)) for y_ in test_Y_])
 
     
-        #save_data(os.getcwd()+"\\files\\train_data\\"+file_name,data)
-        #print("data saved")
+        save_data(os.getcwd()+"\\files\\train_data\\"+file_name,data)
+        print("data saved")
 
         ##compare n step prediction:
         #vec_Y_n =  []
@@ -375,53 +332,53 @@ def test_net(Agent):
         #test_Y_ = test_Y_[100:1100]
         #test_Y = test_Y[100:1100]
 
-        #for name in envData.Y_names:
-        #    if envData.features_numbers[name] == 1:
-        #        plot_distribution_dict(test_Y_,test_Y,name,plot_name = name)
-        #    else:
-        #        for i in range(envData.features_numbers[name]):
-        #            plot_distribution_dict(test_Y_,test_Y,name,i,plot_name = name+str(i))
+        for name in envData.Y_names:
+            if envData.features_numbers[name] == 1:
+                plot_distribution_dict(test_Y_,test_Y,name,plot_name = name)
+            else:
+                for i in range(envData.features_numbers[name]):
+                    plot_distribution_dict(test_Y_,test_Y,name,i,plot_name = name+str(i))
 
-        #for name in envData.Y_names:
-        #    plot_comparison_dict(test_Y_,test_Y,name,plot_name = name)
-
-
-        ##train_Y_ = train_Y_[100:1100]
-        ##train_Y = train_Y[100:1100]
-
-        #for name in envData.Y_names:
-        #    if envData.features_numbers[name] == 1:
-        #        plot_distribution_dict(train_Y_,train_Y,name,plot_name = "train"+name)
-        #    else:
-        #        for i in range(envData.features_numbers[name]):
-        #            plot_distribution_dict(train_Y_,train_Y,name,i,plot_name = "train"+name+str(i))
-
-        #for name in envData.Y_names:
-        #    if envData.features_numbers[name] == 1:
-        #        plot_comparison_dict(train_Y_,train_Y,name,plot_name = "train"+name)
-        #    else:
-        #        for i in range(envData.features_numbers[name]):
-        #            plot_comparison_dict(train_Y_,train_Y,name,i,plot_name = "train"+name+str(i))
+        for name in envData.Y_names:
+            plot_comparison_dict(test_Y_,test_Y,name,plot_name = name)
 
 
+        #train_Y_ = train_Y_[100:1100]
+        #train_Y = train_Y[100:1100]
 
-        #plt.show()
+        for name in envData.Y_names:
+            if envData.features_numbers[name] == 1:
+                plot_distribution_dict(train_Y_,train_Y,name,plot_name = "train"+name)
+            else:
+                for i in range(envData.features_numbers[name]):
+                    plot_distribution_dict(train_Y_,train_Y,name,i,plot_name = "train"+name+str(i))
 
-    #else:#variance_mode
-    #    train_Y,train_var = net.get_Y_and_var(train_X)
-    #    test_Y,test_var = net.get_Y_and_var(test_X)
+        for name in envData.Y_names:
+            if envData.features_numbers[name] == 1:
+                plot_comparison_dict(train_Y_,train_Y,name,plot_name = "train"+name)
+            else:
+                for i in range(envData.features_numbers[name]):
+                    plot_comparison_dict(train_Y_,train_Y,name,i,plot_name = "train"+name+str(i))
 
-    #    #denormalize:
-    #    #data.append([envData.denormalize_dict(envData.X_to_X_dict(train_x)) for train_x in train_X])
-    #    #data.append([envData.denormalize_dict(envData.Y_to_Y_dict(train_y)) for train_y in train_Y])
-    #    #data.append([envData.denormalize_dict(envData.Y_to_Y_dict(train_y_)) for train_y_ in train_Y_])
+
+
+        plt.show()
+
+    else:#variance_mode
+        train_Y,train_var = net.get_Y_and_var(train_X)
+        test_Y,test_var = net.get_Y_and_var(test_X)
+
+        #denormalize:
+        #data.append([envData.denormalize_dict(envData.X_to_X_dict(train_x)) for train_x in train_X])
+        #data.append([envData.denormalize_dict(envData.Y_to_Y_dict(train_y)) for train_y in train_Y])
+        #data.append([envData.denormalize_dict(envData.Y_to_Y_dict(train_y_)) for train_y_ in train_Y_])
     
-    #    #data.append([envData.denormalize_dict(envData.X_to_X_dict(x)) for x in test_X])
-    #    #data.append([envData.denormalize_dict(envData.Y_to_Y_dict(y)) for y in test_Y])
-    #    #data.append([envData.denormalize_dict(envData.Y_to_Y_dict(y_)) for y_ in test_Y_])
+        #data.append([envData.denormalize_dict(envData.X_to_X_dict(x)) for x in test_X])
+        #data.append([envData.denormalize_dict(envData.Y_to_Y_dict(y)) for y in test_Y])
+        #data.append([envData.denormalize_dict(envData.Y_to_Y_dict(y_)) for y_ in test_Y_])
 
 
         
-    #    for name in envData.Y_names:
-    #        plot_comparison_dict_var(test_Y_,test_Y,train_var,name,plot_name = name)
-    #    plt.show()
+        for name in envData.Y_names:
+            plot_comparison_dict_var(test_Y_,test_Y,train_var,name,plot_name = name)
+        plt.show()

@@ -2,7 +2,7 @@ import numpy as np
 import os
 import json
 import matplotlib.pyplot as plt
-import enviroment1
+import environment1
 
 def read_data(file_name):
     with open(file_name, 'r') as f:#append data to the file
@@ -49,7 +49,7 @@ if __name__ == "__main__":
     #small_state_separate_net
     #"big_state_standard_norm_3_layers_20_nodes_alpha_0001.txt"
 
-    envData = enviroment1.OptimalVelocityPlannerData('model_based')
+    envData = environment1.OptimalVelocityPlannerData('model_based')
     folder = os.getcwd()+"\\files\\train_data\\"
 
     file_name_list = [folder+file for file in files]

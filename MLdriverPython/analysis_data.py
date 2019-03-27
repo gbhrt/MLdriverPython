@@ -4,7 +4,7 @@ import data_manager1
 from hyper_parameters import HyperParameters
 import os
 
-import enviroment1
+import environment1
 import classes
 import library as lib
     
@@ -13,7 +13,7 @@ import library as lib
 
 def correct_rewards(name):
     HP = HyperParameters()
-    envData = enviroment1.OptimalVelocityPlannerData(mode = "DDPG")
+    envData = environment1.OptimalVelocityPlannerData(mode = "DDPG")
     HP.restore_name = name
     HP.save_name = name
     save_path = os.getcwd()+ "\\files\\models\\final1\\"+HP.save_name+"\\"

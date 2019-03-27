@@ -1,31 +1,27 @@
-#import enviroment1
+#import environment1
 #import data_manager1
 #from hyper_parameters import HyperParameters
 #from DDPG_net import DDPG_network
 import numpy as np
-#import tensorflow as tf
+import tensorflow as tf
 #import time
 #import collections
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
+#input_dim=2
+model = tf.keras.models.Sequential([
+    tf.keras.layers.Dense(20, activation=tf.keras.activations.relu,input_shape = (2,) ),
+    tf.keras.layers.Dense(20, activation=tf.keras.activations.relu),
+    tf.keras.layers.Dense(20, activation=tf.keras.activations.relu),
+    tf.keras.layers.Dense(1)
+    ])
 
-
-#input_list = [{'x':100,'y':200,'radius':100, 'color':(0.1,0.2,0.3)}]    
-#output_list = []   
-#for point in input_list:
-#    output_list.append(plt.Circle((point['x'], point['y']), point['radius'], color=point['color'], fill=True))
-
-
-#ax = plt.gca(aspect='equal')
-#ax.cla()
-#ax.set_xlim((0, 1000))
-#ax.set_ylim((0, 1000))
-#for circle in output_list:    
-#   ax.add_artist(circle)
-
-
-plt.add_artist(plt.Circle((100,100),50,color = 'red',fill = True))
-plt.show()
-
+model.compile(optimizer=tf.keras.optimizers.Adam(),
+        loss=tf.keras.losses.mean_squared_error,
+        metrics=['accuracy'])
+model.summary()
+print(model.evaluate(np.array([[1,2],[2,4]]),np.array([1,2])))
+#model.train_on_batch(np.array([[1,2],[2,4]]),np.array([1,2]))
+#print(model.predict(np.array([[1,2],[2,4]]),batch_size = 2))#
 
 #OrderedDict ={'banana': 3, 'apple': 4, 'pear': 1, 'orange': 2}
 #x = collections.OrderedDict((("a", "1"), ("c", '3'), ("b", "2")))
@@ -101,4 +97,3 @@ plt.show()
             
      
 #        time.sleep(0.5)
-

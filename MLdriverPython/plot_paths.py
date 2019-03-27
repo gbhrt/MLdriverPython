@@ -4,12 +4,12 @@ import data_manager1
 from hyper_parameters import HyperParameters
 import os
 import library as lib
-import enviroment1
+import environment1
 import classes
 
 def show_path(name):
     HP = HyperParameters()
-    envData = enviroment1.OptimalVelocityPlannerData(mode = "DDPG")
+    envData = environment1.OptimalVelocityPlannerData(mode = "DDPG")
     HP.restore_name = name
     HP.save_name = name
     save_path = os.getcwd()+ "\\files\\models\\no_friction_hard\\"+HP.save_name+"\\"

@@ -28,7 +28,7 @@ class NetLib:
         try:
                 path1 = path +name+"\\"
                 pathlib.Path(path1).mkdir(parents=True, exist_ok=True) 
-                file_name =  path1+name+".ckpt " #/media/windows-share/MLdriverPython/MLdriverPython/
+                file_name =  path1+name+".ckpt "
                 saver = tf.train.Saver()
                 save_path = saver.save(self.sess, file_name)
                 print("Model saved in file: %s" % save_path)
@@ -40,10 +40,6 @@ class NetLib:
 
     def restore(self,path,name = "tf_model"):
         try:
-            #name = "model3" #.ckpt
-            #if len(args) > 0:
-            #    name = args[0]
-            #path = os.getcwd()+ "\\models\\policy\\"+name+"\\"#
             path = path +name+"\\"
             file_name =  path+name+".ckpt " #/media/windows-share/MLdriverPython/MLdriverPython/
             # Restore variables from disk.

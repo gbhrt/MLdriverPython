@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 #import gym
 #import pybullet_envs
-import enviroment1
+import environment1
 import data_manager1
 from hyper_parameters import HyperParameters
 from DDPG_net import DDPG_network
@@ -25,7 +25,7 @@ if __name__ == "__main__":
     HP.restore_file_path = os.getcwd()+ "\\files\\models\\no_friction_hard\\"+HP.restore_name+"\\"
     #dataManager = data_manager.DataManager(total_data_names = ['total_reward'], special = 1, file = HP.save_name+".txt")#episode_data_names = ['limit_curve','velocity']
     dataManager = data_manager1.DataManager(HP.save_file_path,HP.restore_file_path,HP.restore_flag)
-    envData = enviroment1.OptimalVelocityPlannerData(mode = "DDPG")
+    envData = environment1.OptimalVelocityPlannerData(mode = "DDPG")
     net = DDPG_network(envData.observation_space.shape[0],envData.action_space.shape[0],envData.action_space.high[0],\
         HP.alpha_actor,HP.alpha_critic,HP.alpha_analytic_actor,HP.alpha_analytic_critic,tau = HP.tau,seed = HP.seed[0],feature_data_n = envData.feature_data_num, conv_flag = HP.conv_flag)   
     if HP.restore_flag:

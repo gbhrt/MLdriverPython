@@ -7,7 +7,7 @@ import random
 import os
 import time
 #import coll
-from enviroment_lib import *
+from environment_lib import *
 class ActionSpace:
     shape = []
     high = []
@@ -16,16 +16,16 @@ class ObservationSpace:
     range = []
 
 
+#this classes includes the defenition of the environment, vehicle, path, number of steps, start stop...
+#not containing policy, and information regarding it
+#not containing information regarding the learned model.
 class OptimalVelocityPlannerData:
     def __init__(self,mode = 'model_based',X_names = None,Y_names = None):#mode = 'DDPG' ,mode = 'model_based' 'model_based'
 
         self.mode = mode#'model_based' #'model_based'  'DDPG'#mode 
         self.stop_flag = False
-        self.analytic_feature_flag = False
-        self.roll_feature_flag = False
-        self.wheels_vel_feature_flag = False
+      
         self.end_indication_flag = False
-        self.lower_bound_flag = False
         self.update_max_roll_flag = False
         self.roll_vec=[]#save all roll angles during one episode
         self.max_episode_steps = 50#100#200#

@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 #import gym
 #import pybullet_envs
-import enviroment1
+import environment1
 import data_manager1
 from hyper_parameters import HyperParameters
 from DDPG_net import DDPG_network
@@ -21,7 +21,7 @@ if __name__ == "__main__":
 
     #env  = gym.make("HalfCheetahBulletEnv-v0")
     HP = HyperParameters()
-    envData = enviroment1.OptimalVelocityPlannerData(mode = "DDPG")
+    envData = environment1.OptimalVelocityPlannerData(mode = "DDPG")
     
     envData.analytic_feature_flag = False
     HP.add_feature_to_action  = False
@@ -59,7 +59,7 @@ if __name__ == "__main__":
         if HP.restore_flag:
             net.restore(HP.restore_file_path)
         #train agent on simulator
-        env = enviroment1.OptimalVelocityPlanner(dataManager,mode="DDPG")
+        env = environment1.OptimalVelocityPlanner(dataManager,mode="DDPG")
         if env.opened:     
             DDPG_algorithm.train(env,HP,net,dataManager)
         #HP.reduce_vel +=0.05

@@ -22,6 +22,12 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="actions.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="agent.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="analysis_data.py">
       <SubType>Code</SubType>
     </Compile>
@@ -48,20 +54,33 @@
     <Compile Include="drive_test.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="environment2.py" />
     <Compile Include="gui.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="inverse_net.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="ion_graph.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="keras_model.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="manual_testing.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="MB_model.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="MDN.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="model_based_net1.py" />
+    <Compile Include="model_based_net_sep.py" />
     <Compile Include="model_based_net_var.py" />
+    <Compile Include="predict_lib.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="replay_data.py">
       <SubType>Code</SubType>
     </Compile>
@@ -78,6 +97,16 @@
     <Compile Include="simulator_thread.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="MB_action_lib.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="steering_lib.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="test_actions.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="test_net_performance - Copy.py" />
     <Compile Include="test_net_performance.py">
       <SubType>Code</SubType>
     </Compile>
@@ -100,10 +129,10 @@
     <Compile Include="DQN_net.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="enviroment1.py">
+    <Compile Include="environment1.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="enviroment_lib.py">
+    <Compile Include="environment_lib.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="gym\gym_tests.py">

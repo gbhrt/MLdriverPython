@@ -2,7 +2,7 @@ import library as lib
 import agent_lib as a_lib
 import classes
 import planner
-import enviroment_lib as env_lib
+import environment_lib as env_lib
 import numpy as np
 import matplotlib.pyplot as plt
 import random

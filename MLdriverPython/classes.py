@@ -52,8 +52,8 @@ class Path:
             return math.sqrt(tmp)
         else:
             return 0.
+
     def comp_curvature(self):
-       
         for i in range ( len(self.position)-2):#start from 0 up to end - 2
             pnt1 = np.array([self.position[i][0],self.position[i][1],self.position[i][2]])
             pnt2 = np.array([self.position[i+1][0],self.position[i+1][1],self.position[i+1][2]])
@@ -208,6 +208,9 @@ class planningData:
         self.vec_planned_steer = []
         self.vec_emergency_planned_acc = []
         self.vec_emergency_planned_steer = []
+
+        self.target_points = []
+
     def append(self,data):
         self.vec_path.append(data.vec_path[0])
         self.vec_predicded_path.append(data.vec_predicded_path[0])

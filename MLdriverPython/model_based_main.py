@@ -31,8 +31,9 @@ if __name__ == "__main__":
     programThread = programThread(guiShared,HP,dataManager)
     programThread.start()
 
-    #start the gui:
-    tkinker_gui.TkGui(guiShared)
+    if HP.gui_flag:
+        #start the gui:
+        tkinker_gui.TkGui(guiShared)
     #while(not guiShared.exit):
     #    time.sleep(1)
     #    continue

@@ -29,7 +29,7 @@ def train(env,HP,net,dataManager,seed = None):
     ###################
     total_step_count = 0
     evaluation_flag = False
-    #env = enviroment1.OptimalVelocityPlanner(HP)
+    #env = environment1.OptimalVelocityPlanner(HP)
     #env  = gym.make("HalfCheetahBulletEnv-v0")
     np.random.seed(HP.seed[0])
     random.seed(HP.seed[0])

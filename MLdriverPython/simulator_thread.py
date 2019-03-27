@@ -4,9 +4,10 @@ import shared
 import threading
 import time
 import copy
+
 class SimVehicle:#simulator class - include communication to simulator, vehicle state and world state (recived states).
                  #
-                 #also additional objects there like drawed path
+                 #also additional objects like drawed path
 
     def __init__(self):
         self.UDP_IP = "127.0.0.1"
@@ -131,16 +132,6 @@ class SimVehicle:#simulator class - include communication to simulator, vehicle 
         return error
 
 
-def copy_vehicle(vehicle2):#copy 2 to 1
-        vehicle1 = Vehicle()
-        vehicle1 = copy.deepcopy(vehicle2)
-        return vehicle1
-
-def copy_path(path2):
-    path1 = Path()
-    path1 = copy.deepcopy(path2)
-    return path1
-
 def communication_loop(simulatorShared):
     print("loop")
     simulator = SimVehicle()   
@@ -156,7 +147,7 @@ def communication_loop(simulatorShared):
     while not simulatorShared.exit:
         simulator.get_vehicle_data()#update vehicle data continuesly
         with simulatorShared.Lock:
-            simulatorShared.vehicle = copy_vehicle(simulator.vehicle)#save last data in the shared resorce
+            simulatorShared.vehicle = copy.deepcopy(simulator.vehicle)#save last data in the shared resorce
         if simulatorShared.send_commands_flag:
             with simulatorShared.Lock:
                 steering = simulatorShared.commands[1]
@@ -166,7 +157,7 @@ def communication_loop(simulatorShared):
 
         if simulatorShared.send_path_flag:
             with simulatorShared.Lock:
-                path = copy_path(simulatorShared.path)
+                path = copy.deepcopy(simulatorShared.path)
             simulator.send_path(path)
             simulatorShared.send_path_flag = False
         if simulatorShared.reset_position_flag:
@@ -192,7 +183,7 @@ class LocalSimulator:#a local instance of the data in the simVehicle class.
         self.vehicle = Vehicle()
     def get_vehicle_data(self):
         with self.simulatorShared.Lock:
-            self.vehicle = copy_vehicle(self.simulatorShared.vehicle)
+            self.vehicle = copy.deepcopy(self.simulatorShared.vehicle)
 
     def send_drive_commands(self,velocity,steering):#send drive commands to simulator
         with self.simulatorShared.Lock:
@@ -202,7 +193,7 @@ class LocalSimulator:#a local instance of the data in the simVehicle class.
 
     def send_path(self,path):
         with self.simulatorShared.Lock:
-            self.simulatorShared.path = copy_path(path)
+            self.simulatorShared.path = copy.deepcopy(path)
             self.simulatorShared.send_path_flag = True
     def reset_position(self):
         self.simulatorShared.reset_position_flag = True
