@@ -32,7 +32,7 @@ def train(nets,Replay,trainHP,HP,trainShared,transgraph):
             max_cnt = 0
             while cnt < trainHP.batch_size and max_cnt < 100:#cliped_batch_size:
                 ind = random.randint(0,len(Replay.memory) - 2)
-                if Replay.memory[ind][3] == True: # done flag
+                if Replay.memory[ind][3] or Replay.memory[ind+1][4] : # done flag, time_error
                     max_cnt+=1#if every
                     continue
                 #print("ind:",ind)
@@ -62,6 +62,7 @@ def train(nets,Replay,trainHP,HP,trainShared,transgraph):
                 if train_count % 1000 == 0:
                     print("train:",train_count)
                     print(nets.TransNet.evaluate(np.array(TransNet_X),np.array(TransNet_Y_)))
+                    print(nets.SteerNet.evaluate(np.array(SteerNet_X),np.array(SteerNet_Y_)))
             #    #X,Y_ = env.create_XY_(rand_state, rand_a, rand_next_state)
             #    print("loss:",float(net.get_loss(batch_X,batch_Y_)))
                 #print("loss:",float(net.get_loss(X,Y_)))

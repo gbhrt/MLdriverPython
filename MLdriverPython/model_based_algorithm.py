@@ -99,7 +99,7 @@ def train(env,HP,Agent,dataManager,guiShared,seed = None):
                 acc = float(env.get_analytic_action()[0])#+noise
                 steer = env.comp_steer()
                 if env.stop_flag:
-                    acc = -1
+                    acc = -1.0
                 else:
                     last_ind = env.pl.main_index
                     if len(dataManager.real_path.time)>0:
@@ -131,7 +131,7 @@ def train(env,HP,Agent,dataManager,guiShared,seed = None):
                 #    next_acc,next_steer,planningData,roll_flag,dev_flag = comp_MB_action(net,env,state,acc,steer)
            
                 if env.stop_flag:
-                    acc = -1
+                    acc = -1.0
                 else:
                     last_ind = env.pl.main_index
                     if len(dataManager.real_path.time)>0:
@@ -167,9 +167,11 @@ def train(env,HP,Agent,dataManager,guiShared,seed = None):
             time_step_error = info[1]
 
             if abs(env.pl.simulator.vehicle.input_time - last_time_stamp-env.step_time) <0.01 and not time_step_error:
-                Agent.add_to_replay(state,acc,steer,done,fail)#env is temp
+                time_error = False
             else:
-                print("not saving to replay buffer")
+                time_error = True
+
+            Agent.add_to_replay(state,acc,steer,done,time_error,fail)#env is temp
             last_time_stamp = env.pl.simulator.vehicle.input_time
             
             #state = copy.deepcopy(next_state)

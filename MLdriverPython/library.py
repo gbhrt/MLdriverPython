@@ -103,27 +103,31 @@ def rotateVec(vec,ang):
     rvec[1] = math.sin(ang)*vec[0] + math.cos(ang)*vec[1]
     if len(vec) == 3:
         rvec[2] = vec[2]
-    return rvec
+        return rvec
+    else: 
+        return rvec[:2]
 
 def to_local(pos, init_pos, init_ang):#pos given in global reference system, convert it to local reference system (located at init_pos in init_ang)
-    if len(pos) == 2:
-        #pos.append(0)
-        pos = np.append(pos,[0])
-    if len(init_pos) == 2:
-        #pos.append(0)
-        init_pos = np.append(init_pos,[0])
+    if len(pos) == 3 or len(init_pos) == 3:
+        if len(pos) == 2:
+            #pos.append(0)
+            pos = np.append(pos,[0])
+        if len(init_pos) == 2:
+            #pos.append(0)
+            init_pos = np.append(init_pos,[0])
     local_pos = np.array(pos) -  np.array(init_pos)
     local_pos = rotateVec(local_pos, init_ang)
     return local_pos.tolist()
 
 def to_global(pos, init_pos, init_ang):#pos given in local reference system (located at init_pos in init_ang), convert it to global reference system 
-    if len(pos) == 2:
-        #pos.append(0)
-        pos = np.append(pos,[0])
+    if len(pos) == 3 or len(init_pos) == 3:
+        if len(pos) == 2:
+            #pos.append(0)
+            pos = np.append(pos,[0])
 
-    if len(init_pos) == 2:
-        #pos.append(0)
-        init_pos = np.append(init_pos,[0])
+        if len(init_pos) == 2:
+            #pos.append(0)
+            init_pos = np.append(init_pos,[0])
         
     local_rot = rotateVec(pos, -init_ang)
     global_pos = np.array(init_pos) + np.array(local_rot)

@@ -175,6 +175,7 @@ class Nets:#define the input and outputs to networks, and the nets itself.
         self.AccNet.load_weights(file_name)
         file_name =  path + "SteerNet.ckpt"
         self.SteerNet.load_weights(file_name)
+        print("networks restored")
 
     def save_all(self,save_file_path):
         #self.TransNet.save_model(save_file_path)
@@ -243,12 +244,12 @@ class Agent:# includes the networks, policies, replay buffer, learning hyper par
             return comp_MB_action(self.nets.TransNet,env,state,acc,steer)
 
 
-    def add_to_replay(self,state,acc,steer,done,fail):
+    def add_to_replay(self,state,acc,steer,done,time_error,fail):
         self.trainShared.algorithmIsIn.clear()#indicates that are ready to take the lock
         with self.trainShared.Lock:
             self.trainShared.algorithmIsIn.set()
             #replay memory: [vehicle-state, rel_pos,action,done]
-            self.Replay.add(copy.deepcopy((state.Vehicle.values,state.Vehicle.rel_pos+[state.Vehicle.rel_ang],[acc,steer],done,fail)))#      
+            self.Replay.add(copy.deepcopy((state.Vehicle.values,state.Vehicle.rel_pos+[state.Vehicle.rel_ang],[acc,steer],done,time_error,fail)))#      
               
             #X,Y_ =env.create_XY_([state],[[acc,steer]],[next_state])#normalized data
             #dict_X = env.X_to_X_dict(X[0])
