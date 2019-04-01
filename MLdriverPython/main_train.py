@@ -21,7 +21,7 @@ if __name__ == "__main__":
 
     #env  = gym.make("HalfCheetahBulletEnv-v0")
     HP = HyperParameters()
-    envData = environment1.OptimalVelocityPlannerData(mode = "DDPG")
+    envData = environment1.OptimalVelocityPlannerData(env_mode = "DDPG")
     
     envData.analytic_feature_flag = False
     HP.add_feature_to_action  = False
@@ -59,7 +59,7 @@ if __name__ == "__main__":
         if HP.restore_flag:
             net.restore(HP.restore_file_path)
         #train agent on simulator
-        env = environment1.OptimalVelocityPlanner(dataManager,mode="DDPG")
+        env = environment1.OptimalVelocityPlanner(dataManager,env_mode="DDPG")
         if env.opened:     
             DDPG_algorithm.train(env,HP,net,dataManager)
         #HP.reduce_vel +=0.05
