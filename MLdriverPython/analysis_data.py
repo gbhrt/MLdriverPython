@@ -13,7 +13,7 @@ import library as lib
 
 def correct_rewards(name):
     HP = HyperParameters()
-    envData = environment1.OptimalVelocityPlannerData(mode = "DDPG")
+    envData = environment1.OptimalVelocityPlannerData(env_mode = "DDPG")
     HP.restore_name = name
     HP.save_name = name
     save_path = os.getcwd()+ "\\files\\models\\final1\\"+HP.save_name+"\\"

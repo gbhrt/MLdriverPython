@@ -171,7 +171,8 @@ def train(env,HP,Agent,dataManager,guiShared,seed = None):
             else:
                 time_error = True
 
-            Agent.add_to_replay(state,acc,steer,done,time_error,fail)#env is temp
+            Agent.add_to_replay(state,acc,steer,done,time_error,time_step_error)# fail
+            print("replay:",Agent.Replay.memory[-1])
             last_time_stamp = env.pl.simulator.vehicle.input_time
             
             #state = copy.deepcopy(next_state)
@@ -186,6 +187,7 @@ def train(env,HP,Agent,dataManager,guiShared,seed = None):
         #end while
 
         #after episode end:
+        env.stop_vehicle_complete()
         total_reward = sum(reward_vec)
         if not HP.gym_flag: #and not HP.noise_flag:
             dataManager.episode_end_mode.append(info[0])

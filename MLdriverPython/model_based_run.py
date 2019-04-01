@@ -49,7 +49,7 @@ def run(guiShared,HP,dataManager):
     if HP.program_mode == "train_in_env":
         #initialize environment:
         envData = environment1.OptimalVelocityPlannerData('model_based')
-        env = environment1.OptimalVelocityPlanner(dataManager,mode = "model_based")
+        env = environment1.OptimalVelocityPlanner(dataManager,env_mode = "model_based")
 
         guiShared.max_roll = envData.max_plan_roll
         guiShared.max_time = envData.step_time*envData.max_episode_steps+5#add time for braking

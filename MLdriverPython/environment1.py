@@ -17,9 +17,9 @@ class ObservationSpace:
 
 
 class OptimalVelocityPlannerData:
-    def __init__(self,mode = 'model_based',X_names = None,Y_names = None):#mode = 'DDPG' ,mode = 'model_based' 'model_based'
+    def __init__(self,env_mode = 'model_based',X_names = None,Y_names = None):#env_mode = 'DDPG' ,env_mode = 'model_based' 'model_based'
 
-        self.mode = mode#'model_based' #'model_based'  'DDPG'#mode 
+        self.env_mode = env_mode#'model_based' #'model_based'  'DDPG'#env_mode 
         self.stop_flag = False
 
         self.analytic_feature_flag = False
@@ -71,7 +71,7 @@ class OptimalVelocityPlannerData:
         self.action_space.high = [1.0]#self.acc*self.step_time] #, torque in Nm
         self.observation_space = ObservationSpace()
         
-        if self.mode == 'DDPG':
+        if self.env_mode == 'DDPG':
             self.X_n = self.feature_data_num +  2*self.feature_points #vehicle state points on the path (distance)
             self.observation_space.range = [[0,self.max_velocity_y],
                                 [-self.max_steering,self.max_steering],
@@ -79,7 +79,7 @@ class OptimalVelocityPlannerData:
                                 [-self.max_steering,self.max_steering],
                                 [-1.0,1.0]]#vel,steer,roll,steer_comand,acc_comand
             self.observation_space.shape = [self.X_n]
-        if self.mode == 'model_based':
+        if self.env_mode == 'model_based':
             self.max_min_values = {'vel_x':[0,self.max_velocity_x],
                                  #'vel_y':[0,self.max_velocity_y],
                                  'vel_y':[-self.max_acc_y,self.max_acc_y],
@@ -307,9 +307,9 @@ class OptimalVelocityPlannerData:
         
 
 class OptimalVelocityPlanner(OptimalVelocityPlannerData):
-    def __init__(self,dataManager,mode="model_based"):
+    def __init__(self,dataManager,env_mode="model_based"):
         
-        super().__init__(mode = mode)
+        super().__init__(env_mode = env_mode)
         self.dataManager = dataManager
        
         ####
@@ -372,7 +372,7 @@ class OptimalVelocityPlanner(OptimalVelocityPlannerData):
         self.error = self.pl.send_desired_path()
         if self.error:
             return "error"
-        if self.mode == 'DDPG':
+        if self.env_mode == 'DDPG':
             
             state = get_ddpg_state(self.pl,local_path,self.feature_points,self.distance_between_points,self.max_velocity_y,self.max_curvature)
             if self.roll_feature_flag:
@@ -383,7 +383,7 @@ class OptimalVelocityPlanner(OptimalVelocityPlannerData):
             if self.analytic_feature_flag:
                 analytic_a = [self.comp_analytic_acceleration(state)]
                 state = analytic_a + state
-        if self.mode == 'model_based':
+        if self.env_mode == 'model_based':
             self.last_pos = self.pl.simulator.vehicle.position#first time init abs position and angle - updated in the function
             self.last_ang = self.pl.simulator.vehicle.angle
             state = get_model_based_state(self.pl,self.last_pos,self.last_ang,local_path)
@@ -417,18 +417,20 @@ class OptimalVelocityPlanner(OptimalVelocityPlannerData):
 
         #print("step begin time:",time.clock() - self.lt)
         time_step_error = lib.wait_until_end_step(self.last_time,self.step_time)
+        print("time_step_error,wait_until_end_step:",time_step_error)
         self.lt = time.clock()
         #get next state:
         self.error = self.pl.simulator.get_vehicle_data()#read data after time step from last action
+        print("error,get_vehicle_data:",self.error)
         #print("get data time: ",time.clock() - self.lt)
-        if self.mode == "model_based" and steer is not None:
+        if self.env_mode == "model_based" and steer is not None:
             self.command(action,steer)#send action immidetlly after get state data. this action is based upon the estimation of the current state
         # that is estimated from the previus state
         #print("command time: ",time.clock() - self.lt)
 
         local_path = self.pl.get_local_path(num_of_points = self.visualized_points)#num_of_points = visualized_points
 
-        if self.mode == 'DDPG':
+        if self.env_mode == 'DDPG':
             #local_path = self.pl.get_local_path_vehicle_on_path(send_path = False,num_of_points = self.visualized_points)#num_of_points = visualized_points
        
             next_state = get_ddpg_state(self.pl,local_path,self.feature_points,self.distance_between_points,self.max_velocity_y,self.max_curvature)
@@ -442,7 +444,7 @@ class OptimalVelocityPlanner(OptimalVelocityPlannerData):
                 next_state = analytic_a + next_state
                 self.dataManager.update_real_path(pl = self.pl,velocity_limit = local_path.analytic_velocity_limit[0],analytic_vel = local_path.analytic_velocity[0]\
                     ,curvature = local_path.curvature[0],seed = self.path_seed)
-        if self.mode == 'model_based':
+        if self.env_mode == 'model_based':
            # print("before get_model_based_state: ",time.time() - self.last_time[0])
             next_state = get_model_based_state(self.pl,self.last_pos,self.last_ang,local_path)
             self.roll_vec.append(self.pl.simulator.vehicle.angle[2])
@@ -455,7 +457,7 @@ class OptimalVelocityPlanner(OptimalVelocityPlannerData):
         else:
             end_distance = None
         #print("before check end: ",time.time() - self.last_time[0])
-        mode = self.pl.check_end(deviation = lib.dist(local_path.position[0][0],local_path.position[0][1],0,0),
+        self.mode = self.pl.check_end(deviation = lib.dist(local_path.position[0][0],local_path.position[0][1],0,0),
             max_deviation = self.max_deviation,max_roll = self.max_roll,max_pitch = self.max_pitch,end_distance = end_distance)#check if end of the episode 
         #print("roll:",self.pl.simulator.vehicle.angle)
         self.dataManager.roll.append(self.pl.simulator.vehicle.angle[2])
@@ -464,41 +466,33 @@ class OptimalVelocityPlanner(OptimalVelocityPlannerData):
         self.dataManager.input_time.append(self.pl.simulator.vehicle.input_time) 
         self.dataManager.step_times.append(self.lt)
         #get reward:
-        if self.lower_bound_flag:
-            analytic_vel = self.comp_analytic_velocity(next_state)
-            reward = get_reward(self.pl.simulator.vehicle.velocity[1],self.max_velocity_y,mode,lower_bound = analytic_vel)
+        reward = get_reward(self.pl.simulator.vehicle.velocity[1],self.max_velocity_y,self.mode)#,analytic_velocity = local_path.analytic_velocity[0])#
 
-        reward = get_reward(self.pl.simulator.vehicle.velocity[1],self.max_velocity_y,mode)#,analytic_velocity = local_path.analytic_velocity[0])#
-
-        #if self.episode_steps > self.max_episode_steps:
-        #    mode = 'max_steps'
         if self.episode_steps > self.max_episode_steps:
             self.stop_flag = True
         #if self.pl.simulator.vehicle.velocity[1] > local_path.analytic_velocity_limit[0]:
-        #    mode = 'cross'
+        #    self.mode = 'cross'
         if self.stop_flag and self.pl.simulator.vehicle.velocity[1] < 0.1:
-            mode = 'max_steps'
-        if mode != 'ok':
-            #if mode != 'path end' and mode != 'max_steps':
-            #    reward = -5
-            
+            self.mode = 'max_steps'
+        if self.mode != 'ok':        
             done = True
-            #print("done___________________________________")
-            if (mode != 'kipp' and mode != 'seen_path_end') or self.error:
-                self.pl.stop_vehicle()
-                #self.stop_flag = True
-                self.error = 0
-            if  mode == 'kipp': #(i % HP.reset_every == 0 and i > 0) or
-                #self.pl.stop_vehicle()
-                self.pl.simulator.reset_position()
-                self.pl.stop_vehicle()
         else:
             done = False
         #print("reward", reward, "velocity: ", self.pl.simulator.vehicle.velocity, "mode:", mode)
-        info = [mode,time_step_error or self.error]
-
+        info = [self.mode,time_step_error or self.error != 0]
+        print("info:",info)
         #print("end step time: ",time.clock() - self.lt)
         return next_state, reward, done, info
+
+    def stop_vehicle_complete(self):
+        if (self.mode != 'kipp' and self.mode != 'seen_path_end') or self.error != 0:
+            self.pl.stop_vehicle()
+            #self.stop_flag = True
+            self.error = 0
+        if  self.mode == 'kipp': #(i % HP.reset_every == 0 and i > 0) or
+            #self.pl.stop_vehicle()
+            self.pl.simulator.reset_position()
+            self.pl.stop_vehicle()
 
     def seed(self,seed_int):
         return#TODO set seed in unity

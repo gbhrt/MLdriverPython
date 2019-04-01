@@ -9,7 +9,7 @@ import classes
 
 def show_path(name):
     HP = HyperParameters()
-    envData = environment1.OptimalVelocityPlannerData(mode = "DDPG")
+    envData = environment1.OptimalVelocityPlannerData(env_mode = "DDPG")
     HP.restore_name = name
     HP.save_name = name
     save_path = os.getcwd()+ "\\files\\models\\no_friction_hard\\"+HP.save_name+"\\"
