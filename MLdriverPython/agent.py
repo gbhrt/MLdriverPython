@@ -157,14 +157,14 @@ class Nets:#define the input and outputs to networks, and the nets itself.
         Y_n = len(trainHP.vehicle_ind_data) + 3 #+dx, dy, dang
         #self.TransNet = model_based_network(X_n,Y_n,trainHP.alpha)
         self.TransNet,self.transgraph = keras_model.create_model(X_n,Y_n,trainHP.alpha)
-
+        self.TransNet._make_predict_function()
         X_n = len(trainHP.vehicle_ind_data) + 2 # + steer-action, desired roll
         Y_n = 1 #acc
-        self.AccNet,_ = keras_model.create_model(X_n,Y_n,trainHP.alpha)#model_based_network(X_n,Y_n,trainHP.alpha)
+        #self.AccNet,_ = keras_model.create_model(X_n,Y_n,trainHP.alpha)#model_based_network(X_n,Y_n,trainHP.alpha)
 
         X_n = len(trainHP.vehicle_ind_data) + 2 # + acc-action, desired roll
         Y_n = 1#steer
-        self.SteerNet,_ = keras_model.create_model(X_n,Y_n,trainHP.alpha)
+        #self.SteerNet,_ = keras_model.create_model(X_n,Y_n,trainHP.alpha)
 
     def restore_all(self,restore_file_path):
         name = "tf_model"

@@ -57,12 +57,12 @@ def train(nets,Replay,trainHP,HP,trainShared,transgraph):
             #pLib.model_based_update(rand_state, rand_a, rand_next_state,rand_end,net,HP,env
             with transgraph.as_default():
                 nets.TransNet.train_on_batch(np.array(TransNet_X),np.array(TransNet_Y_))
-                nets.SteerNet.train_on_batch(np.array(SteerNet_X),np.array(SteerNet_Y_))
+                #nets.SteerNet.train_on_batch(np.array(SteerNet_X),np.array(SteerNet_Y_))
                 #nets.AccNet.train_on_batch(np.array(AccNet_X),np.array(AccNet_Y_))
                 if train_count % 1000 == 0:
                     print("train:",train_count)
                     print(nets.TransNet.evaluate(np.array(TransNet_X),np.array(TransNet_Y_)))
-                    print(nets.SteerNet.evaluate(np.array(SteerNet_X),np.array(SteerNet_Y_)))
+                    #print(nets.SteerNet.evaluate(np.array(SteerNet_X),np.array(SteerNet_Y_)))
             #    #X,Y_ = env.create_XY_(rand_state, rand_a, rand_next_state)
             #    print("loss:",float(net.get_loss(batch_X,batch_Y_)))
                 #print("loss:",float(net.get_loss(X,Y_)))

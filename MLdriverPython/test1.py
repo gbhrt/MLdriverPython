@@ -3,36 +3,38 @@
 #from hyper_parameters import HyperParameters
 #from DDPG_net import DDPG_network
 import numpy as np
-#import tensorflow as tf
+import tensorflow as tf
 #import time
 #import collections
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 #input_dim=2
-
-an = np.linspace(0, 2 * np.pi, 100)
-fig, ax = plt.subplots()
-
-ax.plot(3 * np.cos(an), 3 * np.sin(an))
-ax.axis('equal')
-ax.set_title('equal, looks like circle', fontsize=10)
+import threading
 
 
-plt.show()
 
-#model = tf.keras.models.Sequential([
-#    tf.keras.layers.Dense(20, activation=tf.keras.activations.relu,input_shape = (2,) ),
-#    tf.keras.layers.Dense(20, activation=tf.keras.activations.relu),
-#    tf.keras.layers.Dense(20, activation=tf.keras.activations.relu),
-#    tf.keras.layers.Dense(1)
-#    ])
+model = tf.keras.models.Sequential([
+    tf.keras.layers.Dense(20, activation=tf.keras.activations.relu,input_shape = (2,) ),
+    tf.keras.layers.Dense(20, activation=tf.keras.activations.relu),
+    tf.keras.layers.Dense(20, activation=tf.keras.activations.relu),
+    tf.keras.layers.Dense(1)
+    ])
 
-#model.compile(optimizer=tf.keras.optimizers.Adam(),
-#        loss=tf.keras.losses.mean_squared_error,
-#        metrics=['accuracy'])
-#model.summary()
-#print(model.evaluate(np.array([[1,2],[2,4]]),np.array([1,2])))
-#model.train_on_batch(np.array([[1,2],[2,4]]),np.array([1,2]))
-#print(model.predict(np.array([[1,2],[2,4]]),batch_size = 2))#
+model.compile(optimizer=tf.keras.optimizers.Adam(),
+        loss=tf.keras.losses.mean_squared_error,
+        metrics=['accuracy'])
+model.summary()
+print(model.evaluate(np.array([[1,2],[2,4]]),np.array([1,2])))
+model.train_on_batch(np.array([[1,2],[2,4]]),np.array([1,2]))
+print(model.predict(np.array([[1,2],[2,4]]),batch_size = 2))#
+
+
+def train():
+    model.train_on_batch(np.array([[1,2],[2,4]]),np.array([1,2]))
+    print("train model")
+
+
+t = threading.Thread(target=train)
+t.start()
 
 #OrderedDict ={'banana': 3, 'apple': 4, 'pear': 1, 'orange': 2}
 #x = collections.OrderedDict((("a", "1"), ("c", '3'), ("b", "2")))
