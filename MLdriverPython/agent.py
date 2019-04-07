@@ -12,6 +12,7 @@ import classes
 import predict_lib
 import library as lib
 import numpy as np
+import actions
 
 def comp_MB_action(net,env,state,acc,steer):
     print("___________________new acc compution____________________________")
@@ -160,11 +161,11 @@ class Nets:#define the input and outputs to networks, and the nets itself.
         self.TransNet._make_predict_function()
         X_n = len(trainHP.vehicle_ind_data) + 2 # + steer-action, desired roll
         Y_n = 1 #acc
-        #self.AccNet,_ = keras_model.create_model(X_n,Y_n,trainHP.alpha)#model_based_network(X_n,Y_n,trainHP.alpha)
+        self.AccNet,_ = keras_model.create_model(X_n,Y_n,trainHP.alpha)#model_based_network(X_n,Y_n,trainHP.alpha)
 
         X_n = len(trainHP.vehicle_ind_data) + 2 # + acc-action, desired roll
         Y_n = 1#steer
-        #self.SteerNet,_ = keras_model.create_model(X_n,Y_n,trainHP.alpha)
+        self.SteerNet,_ = keras_model.create_model(X_n,Y_n,trainHP.alpha)
 
     def restore_all(self,restore_file_path):
         name = "tf_model"
@@ -201,6 +202,7 @@ class TrainHyperParameters:
         self.train_num = 100# how many times to train in every step
         self.run_random_num = 'inf'
         self.vehicle_ind_data = OrderedDict([('vel_y',0),('steer',1), ('roll',2)])  
+        self.plan_roll = 0.03
 
 class Agent:# includes the networks, policies, replay buffer, learning hyper parameters
     def __init__(self,HP):
@@ -241,8 +243,8 @@ class Agent:# includes the networks, policies, replay buffer, learning hyper par
         self.trainShared.algorithmIsIn.clear()#indicates that are ready to take the lock
         with self.trainShared.Lock:
             self.trainShared.algorithmIsIn.set()
-            return comp_MB_action(self.nets.TransNet,env,state,acc,steer)
-
+            #return comp_MB_action(self.nets.TransNet,env,state,acc,steer)
+            return actions.comp_action_from_next_step
 
     def add_to_replay(self,state,acc,steer,done,time_error,fail):
         self.trainShared.algorithmIsIn.clear()#indicates that are ready to take the lock

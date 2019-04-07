@@ -339,7 +339,7 @@ class OptimalVelocityPlanner(OptimalVelocityPlannerData):
             self.pl.stop_vehicle()
           #  print("after stop")
         self.episode_steps = 0
-        self.last_time = [0]
+        self.last_time = [time.clock()]
         self.pl.restart()#not sure
        # print("after restart")
         self.error = self.pl.simulator.get_vehicle_data()#read data after time step from last action

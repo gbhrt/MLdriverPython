@@ -18,7 +18,13 @@ class Planner(PathManager):#planner - get and send data to simulator. input - mi
         
         #self.simulator = simulator_thread.start_simulator_connection()#start thread for connection with the simulator 
         self.simulator = simulator_thread.SimVehicle()
-        self.simulator.connect()
+        while(1):
+            try:
+                self.simulator.connect()
+                break
+            except:
+                print("cannot connect to the simulator, open the simulator and press any key")
+                input()
         self.start_time = 0
         self.index = 0
         self.main_index = 0

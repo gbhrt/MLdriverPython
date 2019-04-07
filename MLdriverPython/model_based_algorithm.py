@@ -117,7 +117,10 @@ def train(env,HP,Agent,dataManager,guiShared,seed = None):
                 next_state, reward, done, info = env.step(acc)#input the estimated next actions to execute after delta t and getting next state
                 
             else:#not HP.analytic_action
-                acc,steer,planningData,roll_flag,dev_flag = Agent.comp_action(env_state,acc,steer,env)#env is temp 
+                #acc,steer,planningData,roll_flag,dev_flag = Agent.comp_action(env_state,acc,steer,env)#env is temp 
+                
+                acc,steer,_,_ = Agent.comp_action(Agent.nets,state,Agent.trainHP,targetPoint,acc,steer,stop_flag = False)
+
 
                 #trainShared.algorithmIsIn.clear()#indicates that are ready to take the lock
                 #with trainShared.Lock:
@@ -144,12 +147,12 @@ def train(env,HP,Agent,dataManager,guiShared,seed = None):
                     done = True #break
 
                 #t= time.clock()
-                with guiShared.Lock:
-                    guiShared.planningData.append(planningData)
-                    guiShared.roll = copy.copy(dataManager.roll)
-                    guiShared.real_path = copy.deepcopy(dataManager.real_path)
-                    guiShared.steer = steer
-                    guiShared.update_data_flag = True
+                #with guiShared.Lock:
+                #    guiShared.planningData.append(planningData)
+                #    guiShared.roll = copy.copy(dataManager.roll)
+                #    guiShared.real_path = copy.deepcopy(dataManager.real_path)
+                #    guiShared.steer = steer
+                #    guiShared.update_data_flag = True
                 #print("update gui time:",time.clock() - t)
                 
                 env_state, reward, done, info = env.step(acc,steer = steer)#input the estimated next actions to execute after delta t and getting next state
