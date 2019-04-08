@@ -4,17 +4,18 @@
 #from DDPG_net import DDPG_network
 import numpy as np
 import tensorflow as tf
+import json
 #import time
 #import collections
 #import matplotlib.pyplot as plt
 #input_dim=2
-import agent
-S = agent.State()
-S.Vehicle.abs_ang = 0.5
-print(S.vehicle.abs_ang)
+
+a = np.clip(5.0,1.0,3.0)
 #import threading
 
-
+file_name = "aa.txt"
+with open(file_name, 'w') as f:
+    json.dump(a,f)
 
 #model = tf.keras.models.Sequential([
 #    tf.keras.layers.Dense(20, activation=tf.keras.activations.relu,input_shape = (2,) ),

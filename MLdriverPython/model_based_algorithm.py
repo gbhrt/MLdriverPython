@@ -89,8 +89,9 @@ def train(env,HP,Agent,dataManager,guiShared,seed = None):
             i-=1
             continue
         #episode_start_time = time.time()
-        steer = 0
-        acc = 1.0
+        acc,steer = 0.0,0.0
+        acc,steer,planningData,roll_flag,dev_flag = Agent.comp_action(state,acc,steer)#for the first time (required because the first time is longer)
+
         env.pl.init_timer()
         while  waitFor.stop != [True] and guiShared.request_exit == False:#while not stoped, the loop break if reached the end or the deviation is to big          
             step_count+=1
@@ -119,7 +120,7 @@ def train(env,HP,Agent,dataManager,guiShared,seed = None):
             else:#not HP.analytic_action
                 #acc,steer,planningData,roll_flag,dev_flag = Agent.comp_action(env_state,acc,steer,env)#env is temp 
                 
-                acc,steer,_,_ = Agent.comp_action(Agent.nets,state,Agent.trainHP,targetPoint,acc,steer,stop_flag = False)
+                acc,steer,planningData,roll_flag,dev_flag = Agent.comp_action(state,acc,steer)
 
 
                 #trainShared.algorithmIsIn.clear()#indicates that are ready to take the lock
@@ -147,12 +148,12 @@ def train(env,HP,Agent,dataManager,guiShared,seed = None):
                     done = True #break
 
                 #t= time.clock()
-                #with guiShared.Lock:
-                #    guiShared.planningData.append(planningData)
-                #    guiShared.roll = copy.copy(dataManager.roll)
-                #    guiShared.real_path = copy.deepcopy(dataManager.real_path)
-                #    guiShared.steer = steer
-                #    guiShared.update_data_flag = True
+                with guiShared.Lock:
+                    guiShared.planningData.append(planningData)
+                    guiShared.roll = copy.copy(dataManager.roll)
+                    guiShared.real_path = copy.deepcopy(dataManager.real_path)
+                    guiShared.steer = steer
+                    guiShared.update_data_flag = True
                 #print("update gui time:",time.clock() - t)
                 
                 env_state, reward, done, info = env.step(acc,steer = steer)#input the estimated next actions to execute after delta t and getting next state
@@ -175,7 +176,7 @@ def train(env,HP,Agent,dataManager,guiShared,seed = None):
                 time_error = True
 
             Agent.add_to_replay(state,acc,steer,done,time_error,time_step_error)# fail
-            print("replay:",Agent.Replay.memory[-1])
+            #print("replay:",Agent.Replay.memory[-1])
             last_time_stamp = env.pl.simulator.vehicle.input_time
             
             #state = copy.deepcopy(next_state)

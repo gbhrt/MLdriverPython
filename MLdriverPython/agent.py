@@ -12,7 +12,7 @@ import classes
 import predict_lib
 import library as lib
 import numpy as np
-import actions
+import target_point
 
 def comp_MB_action(net,env,state,acc,steer):
     print("___________________new acc compution____________________________")
@@ -208,6 +208,7 @@ class Agent:# includes the networks, policies, replay buffer, learning hyper par
     def __init__(self,HP):
         self.HP = HP
         self.trainHP = TrainHyperParameters()
+        
 
         self.Replay = agent_lib.Replay(self.trainHP.replay_memory_size)
         if self.HP.restore_flag:
@@ -233,18 +234,32 @@ class Agent:# includes the networks, policies, replay buffer, learning hyper par
         self.trainShared.train = False
         time.sleep(1.0)
         self.trainShared.request_exit = True
-        while not self.trainShared.exit:
-            print("waiting for exit train thread")
-            time.sleep(0.1)
+        #while not self.trainShared.exit:
+        #    print("waiting for exit train thread")
+        #    time.sleep(0.1)
         print("exit from train thread")
 
 
-    def comp_action(self,state,acc,steer,env):
+    def convert_to_planningData(self,state,StateVehicle_vec,targetPoint_vec):
+        planningData = classes.planningData()
+      
+        planningData.vec_path.append(state.env)
+        #print("state.env:",state.env.position)
+        planningData.vec_predicded_path.append([StateVehicle.abs_pos for StateVehicle in StateVehicle_vec])
+        planningData.vec_planned_roll.append([StateVehicle.values[2] for StateVehicle in StateVehicle_vec])
+        #planningData..append([StateVehicle.values[2] for StateVehicle in StateVehicle_vec ])
+        planningData.vec_target_points.append(targetPoint_vec)
+        return planningData
+
+    def comp_action(self,state,acc,steer):#env
         self.trainShared.algorithmIsIn.clear()#indicates that are ready to take the lock
         with self.trainShared.Lock:
             self.trainShared.algorithmIsIn.set()
             #return comp_MB_action(self.nets.TransNet,env,state,acc,steer)
-            return actions.comp_action_from_next_step
+            acc,steer,StateVehicle_vec,targetPoint_vec = target_point.comp_actions_from_next_step(self.nets,state,self.trainHP,acc,steer)
+            planningData = self.convert_to_planningData(state,StateVehicle_vec,targetPoint_vec)
+            dev_flag,roll_flag = 0,0
+            return acc,steer,planningData,roll_flag,dev_flag
 
     def add_to_replay(self,state,acc,steer,done,time_error,fail):
         self.trainShared.algorithmIsIn.clear()#indicates that are ready to take the lock
@@ -267,6 +282,8 @@ class Agent:# includes the networks, policies, replay buffer, learning hyper par
         S.env = env_state['path']#local path
         S.Vehicle.rel_pos = [env_state['rel_pos_x'],env_state['rel_pos_y']]
         S.Vehicle.rel_ang = env_state['rel_ang']
+        S.Vehicle.abs_pos = [0.0,0.0]
+        S.Vehicle.abs_ang = 0.0
         S.Vehicle.values = []
         for feature in self.trainHP.vehicle_ind_data.keys():
             S.Vehicle.values.append(env_state[feature])

@@ -41,10 +41,10 @@ def train(nets,Replay,trainHP,HP,trainShared,transgraph):
                 vehicle_state_next = Replay.memory[ind+1][0]
                 rel_pos = Replay.memory[ind+1][1]
 
-
                 TransNet_X.append(vehicle_state+action)
                 TransNet_Y_.append([vehicle_state_next[i] - vehicle_state[i] for i in range(len(vehicle_state_next))] +rel_pos)
 
+                
                 AccNet_X.append(vehicle_state+[action[1]]+[vehicle_state_next[trainHP.vehicle_ind_data['roll']]])
                 AccNet_Y_.append(action[0])
 
@@ -56,7 +56,11 @@ def train(nets,Replay,trainHP,HP,trainShared,transgraph):
             #update neural networs:
             #pLib.model_based_update(rand_state, rand_a, rand_next_state,rand_end,net,HP,env
             with transgraph.as_default():
+                #
+                #try:
                 nets.TransNet.train_on_batch(np.array(TransNet_X),np.array(TransNet_Y_))
+                #except:
+                #    print("TransNet_Y_:",TransNet_Y_)
                 nets.SteerNet.train_on_batch(np.array(SteerNet_X),np.array(SteerNet_Y_))
                 #nets.AccNet.train_on_batch(np.array(AccNet_X),np.array(AccNet_Y_))
                 if train_count % 1000 == 0:

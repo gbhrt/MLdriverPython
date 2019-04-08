@@ -68,9 +68,9 @@ class ModelBasedHyperParameters:#global settings of the program.
         self.save_every = 100
         self.save_every_time = 5000 #minutes
         self.seed = 1111
-        self.save_name = "collect_data_1"
+        self.save_name = "collect_data_2"
         self.save_file_path = os.getcwd()+ "\\files\\models\\model_based\\"+self.save_name+"\\"
-        self.restore_name = "collect_data_1"#
+        self.restore_name = "collect_data_2"#
         self.restore_file_path = os.getcwd()+ "\\files\\models\\model_based\\"+self.restore_name+"\\"
 
        

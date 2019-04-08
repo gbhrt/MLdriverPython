@@ -28,17 +28,17 @@ class Replay:
 
     def save(self,path,name = "replay_memory"):
         print("save replay buffer...")
-        try:
-            path += "replay_memory\\"
-            pathlib.Path(path).mkdir(parents=True, exist_ok=True) 
-            file_name = path + name + ".txt"
-            with open(file_name, 'w') as f:
-                json.dump(self.memory,f)
-            print("done.")
+        #try:
+        path += "replay_memory\\"
+        pathlib.Path(path).mkdir(parents=True, exist_ok=True) 
+        file_name = path + name + ".txt"
+        with open(file_name, 'w') as f:
+            json.dump(self.memory,f)
+        print("done.")
 
-        except:
-            print("cannot save replay buffer:", sys.exc_info()[0])
-            return
+        #except:
+        #    print("cannot save replay buffer:", sys.exc_info()[0])
+        #    return
 
 
 

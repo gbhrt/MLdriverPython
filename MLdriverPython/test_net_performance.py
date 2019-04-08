@@ -244,6 +244,7 @@ def test_net(Agent):
     train_replay_memory = full_replay_memory[int(test_part*len(full_replay_memory)):]
     test_replay_memory = full_replay_memory[:int(test_part*len(full_replay_memory))]
 
+
     Agent.Replay.memory = train_replay_memory#replace the replay memory with the train part
 
 

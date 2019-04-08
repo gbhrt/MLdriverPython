@@ -15,7 +15,7 @@ class guiShared():#classes.planningData
 
         self.steering_target = None
         self.max_roll = 0
-        self.max_time = 100
+        self.max_time = 30
 
         self.roll = []
         self.real_path= []

@@ -17,12 +17,12 @@ def test():
     Agent = agent.Agent(HP)
     targetPoint = target_point.TargetPoint()
     S = agent.State()
-    S.Vehicle.values = [0.0,0.0,0.0]#v,steer,roll
+    S.Vehicle.values = [4.0,0.0,0.0]#v,steer,roll
     #S.Vehicle.rel_pos = np.array([0.0,0.0])
     #S.Vehicle.rel_ang = 0.0
     #S.Vehicle.abs_pos = np.array([0.0,0.0])
-    S.Vehicle.abs_pos = np.array([113.0,26.0])
-    S.Vehicle.abs_ang = 0.78
+    S.Vehicle.abs_pos = np.array([0.0,0.0])
+    S.Vehicle.abs_ang = 0.0
 
     #targetPoint.abs_pos = np.array([-5.0,7.0]) #x,y
     #targetPoint = actions.target_to_vehicle(targetPoint,S.Vehicle)
@@ -213,5 +213,5 @@ def sim_action_test():
     plt.show()
 
 if __name__ == "__main__":
-    #test()
-    sim_action_test()
+    test()
+    #sim_action_test()

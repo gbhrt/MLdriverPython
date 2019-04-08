@@ -133,12 +133,12 @@ class data_plots():
                     print("planned acc:\n",self.guiShared.planningData.vec_planned_acc[self.index[0]])
                     print("emergency planned acc:\n",self.guiShared.planningData.vec_emergency_planned_acc[self.index[0]])
                     
-
-                self.line_roll_mean.set_data(np.arange(len(self.guiShared.planningData.vec_planned_roll[self.index[0]])),np.array(self.guiShared.planningData.vec_planned_roll[self.index[0]]))
+                if len(self.guiShared.planningData.vec_planned_roll[self.index[0]])>0:
+                    self.line_roll_mean.set_data(np.arange(len(self.guiShared.planningData.vec_planned_roll[self.index[0]])),np.array(self.guiShared.planningData.vec_planned_roll[self.index[0]]))
                 #self.line_roll_var1.set_data(np.arange(len(self.guiShared.planningData.vec_planned_roll[self.index[0]])),np.array(self.guiShared.planningData.vec_planned_roll[self.index[0]])-np.array(self.guiShared.planningData.vec_planned_roll_var[self.index[0]]))
                 #self.line_roll_var2.set_data(np.arange(len(self.guiShared.planningData.vec_planned_roll[self.index[0]])),np.array(self.guiShared.planningData.vec_planned_roll[self.index[0]])+np.array(self.guiShared.planningData.vec_planned_roll_var[self.index[0]]))
-        
-                self.line_emergency_roll_mean.set_data(np.arange(len(self.guiShared.planningData.vec_emergency_planned_roll[self.index[0]])),np.array(self.guiShared.planningData.vec_emergency_planned_roll[self.index[0]]))
+                if len(self.guiShared.planningData.vec_emergency_planned_roll[self.index[0]])>0:
+                    self.line_emergency_roll_mean.set_data(np.arange(len(self.guiShared.planningData.vec_emergency_planned_roll[self.index[0]])),np.array(self.guiShared.planningData.vec_emergency_planned_roll[self.index[0]]))
                 #self.line_emergency_roll_var1.set_data(np.arange(len(self.guiShared.planningData.vec_emergency_planned_roll[self.index[0]])),np.array(self.guiShared.planningData.vec_emergency_planned_roll[self.index[0]])-np.array(self.guiShared.planningData.vec_emergency_planned_roll_var[self.index[0]]))
                 #self.line_emergency_roll_var2.set_data(np.arange(len(self.guiShared.planningData.vec_emergency_planned_roll[self.index[0]])),np.array(self.guiShared.planningData.vec_emergency_planned_roll[self.index[0]])+np.array(self.guiShared.planningData.vec_emergency_planned_roll_var[self.index[0]]))
                 self.guiShared.update_data_flag = False
@@ -201,17 +201,29 @@ class draw_state:
         self.canvas.delete("all")
         if self.guiShared.steer is not None:
             self.draw_vehicle(self.guiShared.steer)
-        if len(self.guiShared.planningData.vec_path)>0 and len(self.guiShared.planningData.vec_path[self.index[0]].position)>1:
-            self.draw_path(self.guiShared.planningData.vec_path[self.index[0]].position,color = "red")
-        if len(self.guiShared.planningData.vec_predicded_path) > 0 and len(self.guiShared.planningData.vec_predicded_path[self.index[0]])>1:
-            self.draw_path(self.guiShared.planningData.vec_predicded_path[self.index[0]],color = "green")
-        if len(self.guiShared.planningData.vec_emergency_predicded_path) > 0 and len(self.guiShared.planningData.vec_emergency_predicded_path[self.index[0]])>1:
-            self.draw_path(self.guiShared.planningData.vec_emergency_predicded_path[self.index[0]],color = "blue")
-
+        if len(self.guiShared.planningData.vec_path)>self.index[0]+1:
+            if len(self.guiShared.planningData.vec_path[self.index[0]].position)>1:
+                self.draw_path(self.guiShared.planningData.vec_path[self.index[0]].position,color = "red")
+        if len(self.guiShared.planningData.vec_predicded_path) > self.index[0]+1:
+            if len(self.guiShared.planningData.vec_predicded_path[self.index[0]])>1:
+                self.draw_path(self.guiShared.planningData.vec_predicded_path[self.index[0]],color = "green")
+        if len(self.guiShared.planningData.vec_emergency_predicded_path) > self.index[0]+1:
+            if len(self.guiShared.planningData.vec_emergency_predicded_path[self.index[0]])>1:
+                self.draw_path(self.guiShared.planningData.vec_emergency_predicded_path[self.index[0]],color = "blue")
+        #draw target points:
+        if len(self.guiShared.planningData.vec_target_points) > self.index[0]+1:
+            for target_point in self.guiShared.planningData.vec_target_points[self.index[0]]:
+                self.draw_target_point(target_point)
         self.root.after(50,self.draw)
         #self.draw_vehicle(0.5)
         #test_path = [[0,0],[1,1],[2,4],[5,7],[7,7]]
         #self.draw_path(test_path)
+
+    def draw_target_point(self,targetPoint):
+        r = 0.5*self.scale
+        x,y = self.vehicle_pos[0]+targetPoint.abs_pos[0]*self.scale ,self.vehicle_pos[1]-targetPoint.abs_pos[1]*self.scale 
+        self.canvas.create_oval(x-r, y-r, x+r, y+r,fill = "black")
+
     def draw_vehicle(self,ang):
         width = 2.08*self.scale
         length = 4.0*self.scale

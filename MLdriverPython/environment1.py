@@ -21,6 +21,7 @@ class OptimalVelocityPlannerData:
 
         self.env_mode = env_mode#'model_based' #'model_based'  'DDPG'#env_mode 
         self.stop_flag = False
+        self.mode = 'ok'
 
         self.analytic_feature_flag = False
         self.roll_feature_flag = False
@@ -417,11 +418,10 @@ class OptimalVelocityPlanner(OptimalVelocityPlannerData):
 
         #print("step begin time:",time.clock() - self.lt)
         time_step_error = lib.wait_until_end_step(self.last_time,self.step_time)
-        print("time_step_error,wait_until_end_step:",time_step_error)
         self.lt = time.clock()
         #get next state:
         self.error = self.pl.simulator.get_vehicle_data()#read data after time step from last action
-        print("error,get_vehicle_data:",self.error)
+        #print("error,get_vehicle_data:",self.error)
         #print("get data time: ",time.clock() - self.lt)
         if self.env_mode == "model_based" and steer is not None:
             self.command(action,steer)#send action immidetlly after get state data. this action is based upon the estimation of the current state
@@ -480,7 +480,6 @@ class OptimalVelocityPlanner(OptimalVelocityPlannerData):
             done = False
         #print("reward", reward, "velocity: ", self.pl.simulator.vehicle.velocity, "mode:", mode)
         info = [self.mode,time_step_error or self.error != 0]
-        print("info:",info)
         #print("end step time: ",time.clock() - self.lt)
         return next_state, reward, done, info
 
