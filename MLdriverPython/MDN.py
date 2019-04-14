@@ -90,7 +90,7 @@ def mdn_cost(mu, sigma, y):
 epochs = 1000
 batch_size = 50
 learning_rate = 0.0003
-display_step = 50
+display_step = 1
 batch_num = int(len(x_arr) / batch_size)
 
 tf.reset_default_graph()
@@ -108,6 +108,9 @@ cost = mdn_cost(mu, sigma, y)
 optimizer = tf.train.AdamOptimizer(learning_rate).minimize(cost)
 x_batches = np.array_split(x_arr, batch_num)
 y_batches = np.array_split(y_arr, batch_num)
+fig, ax = plt.subplots(figsize=(10,10))
+plt.grid(True)
+plt.ion()
 with tf.Session() as sess:
     sess.run(tf.global_variables_initializer())
     for epoch in range(epochs):
@@ -121,8 +124,9 @@ with tf.Session() as sess:
         if epoch % display_step == 0:
             print('Epoch {0} | cost = {1:.4f}'.format(epoch,avg_cost))
             mu_pred, sigma_pred = sess.run([mu,sigma],feed_dict={x:np.expand_dims(x_test,axis=1)})
-            fig, ax = plt.subplots(figsize=(10,10))
-            plt.grid(True)
+
+            
+            ax.clear()
             plt.xlabel('x')
             plt.ylabel('y')
             ax.errorbar(x_test,mu_pred,yerr=np.absolute(sigma_pred),c='r',ls='None',marker='.',ms=10,label='predicted distributions')
@@ -130,8 +134,11 @@ with tf.Session() as sess:
             ax.errorbar(x_vals,list(map(f,x_vals)),yerr=list(map(lambda x: sigma_0*x if x<5 else 0,x_vals)),c='b',lw=2,ls='None',marker='.',ms=10,label='true distributions')
             ax.plot(x_vals,list(map(f,x_vals)),c='m',label='f(x)')
             ax.legend(loc='upper center',fontsize='large',shadow=True)
-            plt.show()
+            #plt.show()
+            plt.draw()
+            plt.pause(0.00001)
 
-    
+    plt.ioff()
+    plt.show()
     print('Final cost: {0:.4f}'.format(avg_cost))
 

@@ -8,16 +8,17 @@ import target_point
 import agent
 import hyper_parameters
 import planner
-import steering_lib
 import library as lib
 
 
 def test():
     HP = hyper_parameters.ModelBasedHyperParameters()
     Agent = agent.Agent(HP)
-    targetPoint = target_point.TargetPoint()
+    fig,ax = plt.subplots(1)
+    ax.axis('equal')
+    plt.ion()
     S = agent.State()
-    S.Vehicle.values = [4.0,0.0,0.0]#v,steer,roll
+    S.Vehicle.values = [7.0,0.0,0.0]#v,steer,roll
     #S.Vehicle.rel_pos = np.array([0.0,0.0])
     #S.Vehicle.rel_ang = 0.0
     #S.Vehicle.abs_pos = np.array([0.0,0.0])
@@ -27,7 +28,10 @@ def test():
     #targetPoint.abs_pos = np.array([-5.0,7.0]) #x,y
     #targetPoint = actions.target_to_vehicle(targetPoint,S.Vehicle)
 
+    targetPoint = target_point.TargetPoint()
     targetPoint.vel = 2.0
+    targetPoint.rel_pos = [20,10]
+    targetPoint = actions.comp_abs_target(targetPoint,S.Vehicle)
     #for _ in range(100):
     #    try:
     #        x = float(input("insert taget x:"))
@@ -41,22 +45,22 @@ def test():
     #targetPoint.abs_pos = np.array([x,y]) #x,y
     #targetPoint = actions.comp_rel_target(targetPoint,S.Vehicle)
     stop_flag = False
-
-    targetPoint.rel_pos = [10,10]
-    targetPoint = actions.comp_abs_target(targetPoint,S.Vehicle)  
-        
-
-    if actions.plot_states_flag: actions.draw_target(targetPoint)
+    
+    if actions.plot_states_flag: actions.draw_target(targetPoint,ax)
     StateVehicle_vec = [copy.deepcopy(S.Vehicle)]
     while targetPoint.rel_pos[1] > 0:
         t = time.clock()
-        acc,steer,_,_ = actions.comp_action(Agent.nets,S,Agent.trainHP,targetPoint,stop_flag)
+        acc,steer,_,_ = actions.comp_action(Agent.nets,S.Vehicle,Agent.trainHP,targetPoint,stop_flag,ax)
+        
+
         print("comp actions time:",time.clock() - t)
         S.Vehicle = actions.step(S.Vehicle,acc,steer,Agent.nets.TransNet,Agent.trainHP)
         targetPoint = actions.comp_rel_target(targetPoint,S.Vehicle)
 
         StateVehicle_vec.append(copy.deepcopy(S.Vehicle))
-
+        ax.clear()
+        actions.plot_target(targetPoint,ax)
+        actions.plot_state_vec(StateVehicle_vec,ax)
     #actions.plot_state_vec(StateVehicle_vec)
     #plt.show()
     if actions.plot_states_flag:
@@ -105,9 +109,10 @@ def sim_action_test():
 
     acc = 1.0
     dir = -1
-
+    fig,ax = plt.subplots(1)
+    ax.axis('equal')
     for targetPoint in targetPoint_vec:
-        actions.plot_target(targetPoint)
+        actions.plot_target(targetPoint,ax)
     #if actions.plot_states_flag: actions.draw_target(targetPoint)
 
     last_time = [time.clock()]
@@ -150,7 +155,7 @@ def sim_action_test():
         StateVehicle_vec.append(copy.deepcopy(S.Vehicle))
         #targetPoint_vec.append(copy.deepcopy(targetPoint))
 
-        acc,steer,sPedVec,_ = actions.comp_action_from_next_step(Agent.nets,copy.deepcopy(S),Agent.trainHP,targetPoint,acc,steer,stop_flag)
+        acc,steer,sPedVec,_ = actions.comp_action_from_next_step(Agent.nets,copy.deepcopy(S),Agent.trainHP,targetPoint,acc,steer,stop_flag,ax)
         predic_sVehicle.append(copy.deepcopy(sPedVec[0]))
 
         
@@ -187,8 +192,8 @@ def sim_action_test():
     actions.plot_target(targetPoint)
     StateVehicle_vec.pop(0)
     
-    actions.plot_state_vec(StateVehicle_vec)
-    actions.plot_state_vec(predic_sVehicle)
+    actions.plot_state_vec(StateVehicle_vec,ax)
+    actions.plot_state_vec(predic_sVehicle,ax)
     for i in range(len(StateVehicle_vec)):
         print("------------i:",i)
         print("real")

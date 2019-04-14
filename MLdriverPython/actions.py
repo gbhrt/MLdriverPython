@@ -1,6 +1,5 @@
 import library as lib
 import numpy as np
-import steering_lib
 import agent
 import matplotlib.pyplot as plt
 import copy
@@ -9,18 +8,21 @@ import math
 import predict_lib
 
 #debug settings:
-print_flag = False
-plot_local_steer_comp_flag = False
-plot_action_comp_flag = False
+print_flag = True
+plot_local_steer_comp_flag = True
+plot_action_comp_flag = True
+plot_check_reachability_flag = True
 plot_states_flag = True
-pause_by_user_flag = False
+
+pause_by_user_flag = True
 
 #fig,[ax_abs,ax_rel] = plt.subplots(2)
 #ax_rel.axis('equal')
-fig,ax_abs = plt.subplots(1)
-ax_abs.axis('equal')
-if plot_states_flag or plot_action_comp_flag or plot_local_steer_comp_flag:
-    plt.ion()
+
+#if plot_states_flag or plot_action_comp_flag or plot_local_steer_comp_flag:
+    #fig,ax_abs = plt.subplots(1)
+    #ax_abs.axis('equal')
+    #plt.ion()
 
 
 
@@ -29,30 +31,31 @@ if plot_states_flag or plot_action_comp_flag or plot_local_steer_comp_flag:
 def print_stateVehicle(StateVehicle):
     print("abs_pos:",StateVehicle.abs_pos,"abs_ang:",StateVehicle.abs_ang,"\n values:",StateVehicle.values)
 
-def plot_state(StateVehicle,line = None):
+def plot_state(StateVehicle,ax,line = None):
     if line is None:
-        line, = ax_abs.plot([StateVehicle.abs_pos[0]],[StateVehicle.abs_pos[1]],'.')
+        line, = ax.plot([StateVehicle.abs_pos[0]],[StateVehicle.abs_pos[1]],'.')
 
     else:
-        ax_abs.plot([StateVehicle.abs_pos[0]],[StateVehicle.abs_pos[1]],'.',color = line.get_color())
-    ax_abs.plot([StateVehicle.abs_pos[0],StateVehicle.abs_pos[0]+math.sin(StateVehicle.abs_ang)],[StateVehicle.abs_pos[1],StateVehicle.abs_pos[1]+math.cos(StateVehicle.abs_ang)],color = line.get_color())
+        ax.plot([StateVehicle.abs_pos[0]],[StateVehicle.abs_pos[1]],'.',color = line.get_color())
+    ax.plot([StateVehicle.abs_pos[0],StateVehicle.abs_pos[0]+math.sin(StateVehicle.abs_ang)],[StateVehicle.abs_pos[1],StateVehicle.abs_pos[1]+math.cos(StateVehicle.abs_ang)],color = line.get_color())
     
-def draw_state(StateVehicle,line = None):
-    plot_state(StateVehicle,line = line)
+def draw_state(StateVehicle,ax,line = None):
+    plot_state(StateVehicle,ax,line = line)
     plt.draw()
     plt.pause(0.0001)
     return line
 
-def plot_target(targetPoint):
-    ax_abs.plot([targetPoint.abs_pos[0]],[targetPoint.abs_pos[1]],'x')
-def draw_target(targetPoint):
-    plot_target(targetPoint)
+def plot_target(targetPoint,ax):
+    ax.plot([targetPoint.abs_pos[0]],[targetPoint.abs_pos[1]],'x')
+
+def draw_target(targetPoint,ax):
+    plot_target(targetPoint,ax)
     plt.draw()
     plt.pause(0.0001)
 
-def plot_state_vec(StateVehicle_vec):
+def plot_state_vec(StateVehicle_vec,ax):
     for StateVehicle in StateVehicle_vec:
-        plot_state(StateVehicle)
+        plot_state(StateVehicle,ax)
 
 
 
@@ -74,24 +77,79 @@ def comp_max_acc(accNet,state_vehicle_values,dsteer,acc_flag,planPar):
     X = state_vehicle_values+[dsteer]+[planPar.max_roll]
     return accNet.get_Y(X)
 
-def get_dsteer_max(SteerNet,state_vehicle,acc, direction,trainHP):#get maximum change in steering in a given state
-    current_roll = state_vehicle[2]
+
+
+
+def get_dsteer_max(SteerNet,StateVehicle,acc, direction,trainHP):#get maximum change in steering in a given state
+    current_roll = StateVehicle[2]
     des_roll = -trainHP.plan_roll*direction
     #droll = des_roll - current_roll
     #print("droll:",des_roll)
-    steer_max = SteerNet.predict(np.array([state_vehicle+[acc,des_roll]]))[0][0]
+    steer_max = SteerNet.predict(np.array([StateVehicle+[acc,des_roll]]))[0][0]
     return np.clip(steer_max,-0.7,0.7).item()
 
 def comp_steer_direction(targetPoint):
     return math.copysign(1.0, -targetPoint.rel_pos[0])
 
-def comp_distance_from_target_after_zeroing(nets,StateVehicle,targetPoint,acc,steer,trainHP,stop_flag):#get state and actions, return the x of relative distance to target point
-    #col=np.random.rand(3,)
-    StateVehicle = step(StateVehicle,acc,steer,nets.TransNet,trainHP)
-    #StateVehicle1 = step(StateVehicle,1.0,steer,nets.TransNet,trainHP)
+def comp_max_steer_radius(TransNet,dir,trainHP):
+    StateVehicle = agent.State().Vehicle
+    steer = 0.7*dir
+    StateVehicle.values = [0.0,steer,0.0]
+    StateVehicle.abs_ang = 0.0
+    StateVehicle.abs_pos = [0.0,0.0]
+    acc = 1.0
+    StateVehicle = step(StateVehicle,acc,steer,TransNet,trainHP)
+    dang = abs(StateVehicle.rel_ang)
+    d = math.sqrt(StateVehicle.rel_pos[0]**2+StateVehicle.rel_pos[1]**2)#
+    tmp = math.sin(dang)
+    if abs(tmp)>1e-6:
+        r = d*math.sin((math.pi-dang)/2)/tmp
+    else:
+        r = d
+    return abs(r)
+
+def check_quasistatic_reachability(TransNet,targetPoint,trainHP):
+    r = comp_max_steer_radius(TransNet,comp_steer_direction(targetPoint),trainHP)
+    print("radius =",r)
+    dis_to_target = math.sqrt(targetPoint.rel_pos[0]**2+targetPoint.rel_pos[1]**2)
+    return dis_to_target > r
+
+def check_reachability(nets,StateVehicle,targetPoint,trainHP,stop_flag,ax = None):
+    #try to turn as much as possible until stop, then continue quasistatic turn (max curvature of the vehicle at (near to) zero velocity)
+    if print_flag: print("check_reachability:")
+    if plot_check_reachability_flag: line = draw_state(StateVehicle,ax)
+    targetPoint = comp_rel_target(targetPoint,StateVehicle)
+    init_dir = comp_steer_direction(targetPoint)
+    
+    acc = -1.0#0.0
+    cnt = 0
+    while StateVehicle.values[0] > 0 and not stop_flag:#target in front of the vehicle
+        dir = comp_steer_direction(targetPoint)
+        if dir != init_dir:
+            return True
+        steer = get_dsteer_max(nets.SteerNet,StateVehicle.values,acc,dir,trainHP)
+        StateVehicle = step(StateVehicle,acc,steer,nets.TransNet,trainHP)
+        if plot_check_reachability_flag: draw_state(StateVehicle,ax,line = line)
+        if print_flag: print_stateVehicle(StateVehicle)
+        targetPoint = comp_rel_target(targetPoint,StateVehicle)#update the relative to the vehicle position of the target 
+        cnt+=1
+        if cnt>100:
+            print("error, cannot compute check_reachability")
+            break
+        #if reached the target line before stopping
+        if targetPoint.rel_pos[1]<0:
+            if targetPoint.rel_pos[0]< trainHP.min_dis:
+                return True
+            else:
+                 return False
+        
+    return check_quasistatic_reachability(nets.TransNet,targetPoint,trainHP)
+
+def comp_distance_from_target_after_zeroing(nets,StateVehicle,targetPoint,trainHP,stop_flag,ax = None):#get state and actions, return the x of relative distance to target point
+    targetPoint = comp_rel_target(targetPoint,StateVehicle)#update the relative to the vehicle position of the target 
     if print_flag: print("******compute zeroing**********")
 
-    if plot_local_steer_comp_flag: line = draw_state(StateVehicle)
+    if plot_local_steer_comp_flag: line = draw_state(StateVehicle,ax)
 
     if print_flag: print_stateVehicle(StateVehicle)
     steer = 0.0
@@ -100,7 +158,7 @@ def comp_distance_from_target_after_zeroing(nets,StateVehicle,targetPoint,acc,st
     while abs(StateVehicle.values[1]) > 0.01 and targetPoint.rel_pos[1]>0 and StateVehicle.values[0] > 0 and not stop_flag:#steering > 0 and target in front of the vehicle
         #print("while - comp_distance_from_target_after_zeroing. stop_flag:",stop_flag)
         StateVehicle = step(StateVehicle,acc,steer,nets.TransNet,trainHP)
-        if plot_local_steer_comp_flag: draw_state(StateVehicle,line = line)
+        if plot_local_steer_comp_flag: draw_state(StateVehicle,ax,line = line)
 
         if print_flag: print_stateVehicle(StateVehicle)
         targetPoint = comp_rel_target(targetPoint,StateVehicle)#update the relative to the vehicle position of the target 
@@ -113,32 +171,34 @@ def comp_distance_from_target_after_zeroing(nets,StateVehicle,targetPoint,acc,st
     return -targetPoint.rel_pos[0]
 
 
-def comp_local_steer(nets,StateVehicle,targetPoint,trainHP,stop_flag):#return steer such that applying it the first step and then zeroing the steering results at the minimum distance from the target.
+def comp_local_steer(nets,StateVehicle,targetPoint,trainHP,stop_flag,ax = None):#return steer such that applying it the first step and then zeroing the steering results at the minimum distance from the target.
     #algorithm:
     #check dis at max steering
     #if stays at the same side as at the beginning - return max steering
     #else - find a dis from the same side, assume the zero steering is enongh
-    #while dis < tolerance:
+    #while dis < trainHP.target_tolerance:
     #compute new steering according to the gradient and get the distance
     #chosse 
 
-    tolerance = 0.05
+    
     acc = 1.0#0
     init_dir = comp_steer_direction(targetPoint)
     #first guess the maximum dsteer - if distance is positive (cannot reach the point at none steering) return. 
     steer_max = get_dsteer_max(nets.SteerNet,StateVehicle.values,acc,init_dir,trainHP)
-    dis_max = comp_distance_from_target_after_zeroing(nets,StateVehicle,targetPoint,acc,steer_max,trainHP,stop_flag)
+    StateVehicle = step(StateVehicle,acc,steer_max,nets.TransNet,trainHP)
+    dis_max = comp_distance_from_target_after_zeroing(nets,StateVehicle,targetPoint,trainHP,stop_flag,ax)
     if print_flag: print("dis_max:",dis_max,"steer_max:",steer_max)
     if pause_by_user_flag: input("press to continue")
     if math.copysign(1,dis_max) == init_dir:#cannot reach the point with just the first point
         if print_flag: print("one step - dis_max:",dis_max,"steer_max:",steer_max)
-        return steer_max
+        return  steer_max,False
     else:#turn too sharp, hence can reach the point exactly
         steer_same =  0.0#steer_min
-        dis_same = comp_distance_from_target_after_zeroing(nets,StateVehicle,targetPoint,acc,steer_same,trainHP,stop_flag)
+        StateVehicle = step(StateVehicle,acc,steer_same,nets.TransNet,trainHP)
+        dis_same = comp_distance_from_target_after_zeroing(nets,StateVehicle,targetPoint,trainHP,stop_flag,ax)
         if math.copysign(1,dis_same) != init_dir:#cannot reach the point at all
             if print_flag: print("cannot reach target point, dis_min:",dis_same,"steer_min:",steer_same)
-            return steer_same
+            return steer_same,True
         steer_not_same = steer_max
         dis_not_same = dis_max
 
@@ -146,7 +206,7 @@ def comp_local_steer(nets,StateVehicle,targetPoint,trainHP,stop_flag):#return st
         steer = steer_same#for the case that not going into the while loop
         dist_to_target = math.sqrt(targetPoint.rel_pos[0]**2+targetPoint.rel_pos[1]**2)
         cnt = 0
-        while abs(dis) > max(dist_to_target*tolerance,tolerance) and not stop_flag:
+        while abs(dis) > max(dist_to_target*trainHP.target_tolerance,trainHP.target_tolerance) and not stop_flag:
             #print("while -comp_local_steer. stop_flag:",stop_flag)
             tmp = (dis_not_same - dis_same)
             if abs(tmp) < 1e-8:
@@ -156,7 +216,8 @@ def comp_local_steer(nets,StateVehicle,targetPoint,trainHP,stop_flag):#return st
                 steer = (steer_not_same - steer_same)/tmp*(-dis_same) + steer_same
                 
                 steer =np.clip(steer,-0.7,0.7).item()
-                dis = comp_distance_from_target_after_zeroing(nets,StateVehicle,targetPoint,acc,steer,trainHP,stop_flag)
+                StateVehicle = step(StateVehicle,acc,steer,nets.TransNet,trainHP)
+                dis = comp_distance_from_target_after_zeroing(nets,StateVehicle,targetPoint,trainHP,stop_flag,ax)
                 if print_flag: print("compute new steer:\n steer_not_same:",steer_not_same,"dis_not_same:",dis_not_same,"steer_same:",
                       steer_same,"dis_same:",dis_same,"steer:",steer,"dis:",dis)
 
@@ -175,7 +236,7 @@ def comp_local_steer(nets,StateVehicle,targetPoint,trainHP,stop_flag):#return st
                     print("error, cannot compute local steering")
                     break
 
-        return steer
+        return steer,True
 
 
 def step(stateVehicle,acc,steer,TransNet,trainHP):#get a state and actions, return next state
@@ -190,7 +251,7 @@ def step(stateVehicle,acc,steer,TransNet,trainHP):#get a state and actions, retu
     nextState.Vehicle.abs_pos,nextState.Vehicle.abs_ang = predict_lib.comp_abs_pos_ang(nextState.Vehicle.rel_pos,nextState.Vehicle.rel_ang,stateVehicle.abs_pos,stateVehicle.abs_ang)
     return nextState.Vehicle
 
-def comp_steer(nets,StateVehicle,targetPoint,acc_flag,trainHP,stop_flag):
+def stop_toward_target(nets,StateVehicle,targetPoint,acc_flag,trainHP,stop_flag,ax = None):
     line = None
     first_flag = True
     StateVehicle_vec = [copy.deepcopy(StateVehicle)]
@@ -205,51 +266,87 @@ def comp_steer(nets,StateVehicle,targetPoint,acc_flag,trainHP,stop_flag):
         
 
         
-        steer = comp_local_steer(nets,StateVehicle,targetPoint,trainHP,stop_flag)#compute the steering independly of the acceleration
+        steer,reach_flag = comp_local_steer(nets,StateVehicle,targetPoint,trainHP,stop_flag,ax)#compute the steering independly of the acceleration
         if print_flag: print("computed steer:",steer)
         acc = 1.0 if acc_flag else -1.0 #tmp, in general case, from the AccNet
         if first_flag: first_steer,first_acc = steer,acc
 
         StateVehicle = step(StateVehicle,acc,steer,nets.TransNet,trainHP)
         targetPoint = comp_rel_target(targetPoint,StateVehicle)#update the relative to the vehicle position of the target
+
         StateVehicle_vec.append(copy.deepcopy(StateVehicle))
         targetPoint_vec.append(copy.deepcopy(targetPoint))
 
+        if pause_by_user_flag: input("press to continue")
+
         acc_flag = False
 
-        if plot_action_comp_flag: line = draw_state(StateVehicle,line = line)
+        if plot_action_comp_flag: line = draw_state(StateVehicle,ax,line = line)
 
         if print_flag: print_stateVehicle(StateVehicle)
          
 
         first_flag = False
 
-        failed_flag = True if targetPoint.rel_pos[1] < 0 and StateVehicle.values[0]>targetPoint.vel else False # the vehicle will pass the target with too high velocity
         if cnt>100:
             print("error, cannot compute steering")
             break
+
+    #end while
+
+    if not reach_flag:
+        reach_flag =  check_reachability(nets,StateVehicle,targetPoint,trainHP,stop_flag,ax)
+        if not reach_flag:
+            print("cannot reach target")
+    if pause_by_user_flag: input("press to continue")
+
+    failed_flag = True if (targetPoint.rel_pos[1] < 0 and StateVehicle.values[0]>targetPoint.vel) or not reach_flag else False # the vehicle will pass the target with too high velocity
+    print("failed_flag:",failed_flag)
     return failed_flag,first_acc,first_steer,StateVehicle_vec,targetPoint_vec
 
-def comp_action(nets,state,trainHP,targetPoint,stop_flag):#compute the actions (and path) given the target point(s)
+
+def comp_abs_dsteer(nets,StateVehicle,targetPoint,trainHP,stop_flag,ax = None):
+    steer,reach_flag = comp_local_steer(nets,StateVehicle,targetPoint,trainHP,stop_flag,ax)
+    current_steer = StateVehicle.values[1]
+    acc = -1.0#maybe 1.0
+    StateVehicle = step(StateVehicle,acc,steer,nets.TransNet,trainHP)
+    next_steer = StateVehicle.values[1]
+
+    return abs(next_steer) - abs(current_steer)
+
+def comp_action(nets,StateVehicle,trainHP,targetPoint,stop_flag,ax = None):#compute the actions (and path) given the target point(s)
     #rel_pos of the vehicle - relative to last position (at last time step)
     #rel_pos of targetPoint - relative to the vehicle
     #abs_pos - relative to the initial pos, a new one at every time step.
     
 
-    StateVehicle = state.Vehicle
-
     #vehicle_states = []
     if print_flag: print_stateVehicle(StateVehicle)
 
     #while dist_to_target < last_dist_to_target:#not always the right condition
-    if plot_states_flag: draw_state(StateVehicle)
+    if plot_states_flag: draw_state(StateVehicle,ax)
         
-    #check if it is possible to accelerate
-    acc_flag = True
-    failed_flag,acc,steer,StateVehicle_vec,targetPoint_vec = comp_steer(nets,StateVehicle,targetPoint,acc_flag,trainHP,stop_flag)
-    if failed_flag:
+    abs_dsteer = comp_abs_dsteer(nets,StateVehicle,targetPoint,trainHP,stop_flag,ax)
+    print("abs_dsteer:",abs_dsteer)
+    if abs_dsteer > 0:
         acc_flag = False
-        failed_flag,acc,steer,StateVehicle_vec,targetPoint_vec = comp_steer(nets,StateVehicle,targetPoint,acc_flag,trainHP,stop_flag)
+    else:
+        #check if it is possible to accelerate at the first step and not exceed the target velocity:
+        acc_flag = True
+        failed_flag,acc,steer,StateVehicle_vec,targetPoint_vec = stop_toward_target(nets,StateVehicle,targetPoint,acc_flag,trainHP,stop_flag,ax)
+        if failed_flag: acc_flag = False
+
+    if not acc_flag:
+        failed_flag,acc,steer,StateVehicle_vec,targetPoint_vec = stop_toward_target(nets,StateVehicle,targetPoint,acc_flag,trainHP,stop_flag,ax)
+    print("acc:",acc,"steer:",steer)
+
+
+    #check if it is possible to accelerate
+    #acc_flag = True
+    #failed_flag,acc,steer,StateVehicle_vec,targetPoint_vec = stop_toward_target(nets,StateVehicle,targetPoint,acc_flag,trainHP,stop_flag,ax)
+    #if failed_flag:
+    #    acc_flag = False
+    #    failed_flag,acc,steer,StateVehicle_vec,targetPoint_vec = stop_toward_target(nets,StateVehicle,targetPoint,acc_flag,trainHP,stop_flag,ax)
     #print("acc:",acc,"steer:",steer)
 
     #input("press")
@@ -259,9 +356,9 @@ def comp_action(nets,state,trainHP,targetPoint,stop_flag):#compute the actions (
     #plt.show()
     return acc, steer,StateVehicle_vec,targetPoint_vec
 
-def comp_action_from_next_step(nets,state,trainHP,targetPoint,acc,steer,stop_flag = False):
+def comp_action_from_next_step(nets,state,trainHP,targetPoint,acc,steer,stop_flag = False,ax = None):
     
     state.Vehicle = step(state.Vehicle,acc,steer,nets.TransNet,trainHP)
     targetPoint = comp_rel_target(targetPoint,state.Vehicle)#update the relative to the vehicle position of the target
-    acc,steer,StateVehicle_vec,targetPoint_vec = comp_action(nets,state,trainHP,targetPoint,stop_flag)
+    acc,steer,StateVehicle_vec,targetPoint_vec = comp_action(nets,state.Vehicle,trainHP,targetPoint,stop_flag,ax)
     return acc,steer,StateVehicle_vec,targetPoint_vec

@@ -55,6 +55,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="environment2.py" />
+    <Compile Include="go_to_target.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="gui.py">
       <SubType>Code</SubType>
     </Compile>
@@ -98,9 +101,6 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="MB_action_lib.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="steering_lib.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="target_point.py">

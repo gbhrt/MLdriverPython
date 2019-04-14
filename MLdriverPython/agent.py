@@ -203,6 +203,8 @@ class TrainHyperParameters:
         self.run_random_num = 'inf'
         self.vehicle_ind_data = OrderedDict([('vel_y',0),('steer',1), ('roll',2)])  
         self.plan_roll = 0.03
+        self.target_tolerance = 0.05
+        self.min_dis = 0.5#or precentage
 
 class Agent:# includes the networks, policies, replay buffer, learning hyper parameters
     def __init__(self,HP):

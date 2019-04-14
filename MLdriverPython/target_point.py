@@ -14,9 +14,9 @@ def comp_targetPoint(nets,state,trainHP):# a simple function, a point on the pat
     targetPoint.vel = 0.5
     return targetPoint
 
-def comp_actions_from_next_step(nets,state,trainHP,acc,steer,stop_flag = False):
+def comp_actions_from_next_step(nets,state,trainHP,acc,steer,stop_flag = False,ax=None):
     state.Vehicle = actions.step(state.Vehicle,acc,steer,nets.TransNet,trainHP)
 
     targetPoint = comp_targetPoint(nets,state,trainHP)
 
-    return actions.comp_action(nets,state,trainHP,targetPoint,stop_flag)
+    return actions.comp_action(nets,state.Vehicle,trainHP,targetPoint,stop_flag,ax)
