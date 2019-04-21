@@ -200,8 +200,9 @@ def train(env,HP,Agent,dataManager,guiShared,seed = None):
             dataManager.add_run_num(i)
             dataManager.add_train_num(global_train_count)
             dataManager.path_seed.append(env.path_seed)#current used seed (for paths)
-            dataManager.update_relative_rewards_and_paths()
+            dataManager.update_paths()
             relative_reward = dataManager.comp_relative_reward1(env.pl.in_vehicle_reference_path,last_ind,last_tim)
+            dataManager.relative_reward.append(relative_reward)
             with guiShared.Lock:
                 guiShared.episodes_data.append(relative_reward)
                 #print("planningData.vec_emergency_action:",planningData.vec_emergency_action,'info[0]:',info[0])

@@ -2,7 +2,6 @@
 import tkinker_gui
 import threading
 import time
-import main_program
 import model_based_run
 import shared
 import hyper_parameters

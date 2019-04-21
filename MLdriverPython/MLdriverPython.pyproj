@@ -5,7 +5,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>67d1be9f-78bf-410b-b3ad-9001facbb70e</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>test_actions.py</StartupFile>
+    <StartupFile>DDPG_main.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -64,9 +64,6 @@
     <Compile Include="inverse_net.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="ion_graph.py">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="keras_model.py">
       <SubType>Code</SubType>
     </Compile>
@@ -81,6 +78,7 @@
     </Compile>
     <Compile Include="model_based_net_sep.py" />
     <Compile Include="model_based_net_var.py" />
+    <Compile Include="plot_data1.py" />
     <Compile Include="predict_lib.py">
       <SubType>Code</SubType>
     </Compile>
@@ -91,9 +89,6 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="model_based_main.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="main_program.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="model_based_run.py" />
@@ -151,7 +146,7 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="main_init.py" />
-    <Compile Include="main_train.py">
+    <Compile Include="DDPG_main.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="model_based_net.py">

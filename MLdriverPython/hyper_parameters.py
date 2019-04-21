@@ -15,29 +15,31 @@ class HyperParameters:
         self.train_num = 2# how many times to train in every step
         self.sample_ratio = 1.0
         #########################
+        self.evaluation_flag = False
         self.reduce_vel = 0.0
         self.add_feature_to_action  = False
-        self.analytic_action = True
+        self.analytic_action = False
         self.train_flag =True
         self.noise_flag = True
-        self.always_no_noise_flag = True
-        self.evaluation_every = 10
-        self.test_same_path = True
+        self.always_no_noise_flag = False
+        self.evaluation_every = 1000000
+        self.test_same_path = False
         self.run_same_path = False
         self.conv_flag = False
         self.gym_flag = False
         self.render_flag = True
         self.plot_flag = True
-        self.restore_flag = True
+        self.restore_flag = False
         self.skip_run = False
         self.reset_every = 3
-        self.save_every = 100
+        self.save_every = 50
+        self.save_every_train_number = 10000
         self.seed = [1111,1112,1113,1114,1115]
-        self.save_name ="test1"
-        self.save_file_path = os.getcwd()+ "\\files\\models\\final4\\"+self.save_name+"\\"
+        self.save_name ="REVO"
+        self.save_file_path = os.getcwd()+ "\\files\\models\\paper_fix\\"+self.save_name+"\\"
 
-        self.restore_name = "test1"
-        self.restore_file_path = os.getcwd()+ "\\files\\models\\final4\\"+self.restore_name+"\\"
+        self.restore_name = "REVO"
+        self.restore_file_path = os.getcwd()+ "\\files\\models\\paper_fix\\"+self.restore_name+"\\"
 
         if self.always_no_noise_flag:
             self.noise_flag = False

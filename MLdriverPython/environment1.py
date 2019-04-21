@@ -31,7 +31,7 @@ class OptimalVelocityPlannerData:
 
         self.update_max_roll_flag = False
         self.roll_vec=[]#save all roll angles during one episode
-        self.max_episode_steps = 50#100#200#
+        self.max_episode_steps = 100#100#200#
         self.feature_points = 25#60 # number of points on the path in the state +(1*self.end_indication_flag)
         self.feature_data_num = 1  + (1*self.analytic_feature_flag)+ (1*self.roll_feature_flag) + (5*self.wheels_vel_feature_flag)# number of data in state (vehicle velocity, analytic data...)
         self.distance_between_points = 1.0 #meter 1.0
@@ -57,7 +57,7 @@ class OptimalVelocityPlannerData:
         self.max_angular_acc_z = 100
 
         self.max_pitch = 0.3#0.3
-        self.max_roll = 0.2#0.05#0.3# last 0.2
+        self.max_roll = 0.1#0.05#0.3# last 0.2
         self.max_slip = 10
         self.max_plan_slip = 0.1
         self.max_plan_roll = 0.1#0.05

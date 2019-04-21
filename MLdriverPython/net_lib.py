@@ -46,6 +46,8 @@ class NetLib:
             saver = tf.train.Saver()
             saver.restore(self.sess, file_name)
             print("Model restored.")
+            return False
         except:
             print('cannot restore net',sys.exc_info()[0])
             #raise
+            return True

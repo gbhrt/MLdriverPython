@@ -62,12 +62,12 @@ class DDPG_network(NetLib):
 
             #############################################################
             #for analytic initialize:
-            self.analytic_action = tf.placeholder( dtype=tf.float32, shape=[None,action_space_n] )
-            self.analytic_actor_loss = tf.reduce_mean( tf.squared_difference(self.action_out,self.analytic_action))#
-            self.update_analytic_actor = tf.train.AdamOptimizer(alpha_analytic_actor).minimize(self.analytic_actor_loss)
+            #self.analytic_action = tf.placeholder( dtype=tf.float32, shape=[None,action_space_n] )
+            #self.analytic_actor_loss = tf.reduce_mean( tf.squared_difference(self.action_out,self.analytic_action))#
+            #self.update_analytic_actor = tf.train.AdamOptimizer(alpha_analytic_actor).minimize(self.analytic_actor_loss)
 
-            self.copy_actor_target_vec = self.copy_target_init(tau,self.actor_params,self.target_actor_params)#update targrt networks immediately
-            self.copy_critic_target_vec = self.copy_target_init(tau,self.critic_params,self.target_critic_params)
+            #self.copy_actor_target_vec = self.copy_target_init(tau,self.actor_params,self.target_actor_params)#update targrt networks immediately
+            #self.copy_critic_target_vec = self.copy_target_init(tau,self.critic_params,self.target_critic_params)
             #############################################################
             #self.Pia = tf.reduce_sum(tf.multiply(self.Pi, self.actions_one_hot),axis=1)#Pi on action a at the feeded state
 
@@ -86,12 +86,12 @@ class DDPG_network(NetLib):
             print("Network ready")
         return
     def continues_actor(self,action_n,action_limit,state,state_n,feature_data_n = 1,conv_flag = True): #define a net - input: state (and dimentions) - output: a continues action ,
-        hidden_layer_nodes1 = 800#400
-        hidden_layer_nodes2 = 600#300
+        hidden_layer_nodes1 = 400#400
+        hidden_layer_nodes2 = 300#300
         #hidden_layer_nodes1 = 40#400
         #hidden_layer_nodes2 = 30#300
 
-        hidden_layer_nodes3 = 400
+        hidden_layer_nodes3 = 200
 
         ##hidden layer 1:
         #theta1 = tf.Variable(tf.truncated_normal([state_n,hidden_layer_nodes1], stddev=0.02),name = "P_th1")

@@ -12,9 +12,10 @@ import sys
 
 
 class DataManager():
-    def __init__(self,save_path = None, restore_path = None,restore_flag = False):
+    def __init__(self,save_path = None, restore_path = None,restore_flag = False,save_name = "data_manager",restore_name = "data_manager"):
+        self.error = False
         if save_path != None:
-            save_path += "data_manager\\"
+            save_path += save_name+'\\'
             pathlib.Path(save_path).mkdir(parents=True, exist_ok=True) 
             self.save_name = save_path+"data.txt"
             self.save_readable_data_name = save_path+"readable_data.txt"
@@ -22,7 +23,7 @@ class DataManager():
         else:
             self.save_name ="data.txt"
         if restore_path != None:
-            self.restore_name = restore_path+"data_manager\\data.txt"
+            self.restore_name = restore_path+restore_name+"\\data.txt"
         else:
             self.restore_name = "data.txt"
         
@@ -48,9 +49,8 @@ class DataManager():
         self.restart()
 
         ###############################
-        
         if restore_flag:
-            self.load_data()
+            self.error = self.load_data()
         if len(self.run_num) > 0:
             self.init_run_num = self.run_num[-1]
         if len(self.train_num) > 0:
@@ -328,8 +328,7 @@ class DataManager():
         print("analytic_dist",analytic_dist,"real dist",dist,"relative:",relative_reward)
         return relative_reward
 
-    def update_relative_rewards_and_paths(self):
-        self.relative_reward.append(self.comp_relative_reward())
+    def update_paths(self):
         self.paths.append([self.real_path.velocity,self.real_path.distance])
 
     def save_run_data(self):
@@ -359,7 +358,9 @@ class DataManager():
             with open(self.restore_name, 'r') as f:
                 self.run_num,self.train_num,self.rewards,self.lenght,self.relative_reward, self.episode_end_mode,self.path_seed,self.paths = json.load(f)#,self.paths
             print("data manager restored")
+            return False
         except:
             print ("cannot restore data manager:", sys.exc_info()[0])
+            return True
             #raise
     
