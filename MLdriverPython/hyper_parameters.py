@@ -14,6 +14,7 @@ class HyperParameters:
         self.replay_memory_size = 1000000
         self.train_num = 2# how many times to train in every step
         self.sample_ratio = 1.0
+        self.epsilon = 0.1
         #########################
         self.evaluation_flag = False
         self.reduce_vel = 0.0
@@ -33,8 +34,8 @@ class HyperParameters:
         self.skip_run = False
         self.reset_every = 3
         self.save_every = 50
-        self.save_every_train_number = 10000
-        self.seed = [1111,1112,1113,1114,1115]
+        self.save_every_train_number = 2500
+        self.seed = [1111]#,1112,1113,1114,1115]
         self.save_name ="REVO"
         self.save_file_path = os.getcwd()+ "\\files\\models\\paper_fix\\"+self.save_name+"\\"
 

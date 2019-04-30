@@ -44,7 +44,7 @@ final_conv_analytic_new_reward_4 - new relative reward >200
 
 def plot_rewards(folder,names,shape=None,color=None,label = None,vod_label = None,max_train_iterations = 1000000):
     N = 1#80
-    episodes_num = 50
+    episodes_num = 80
     dataManager_vec = []
     relative_rewards_changed_vec = []
     for i in range(len(names)):
@@ -326,7 +326,7 @@ if __name__ == "__main__":
     #no_friction_hard:
     #final:
     folder = "paper_fix"#"no_friction_hard"#"paper_fix"
-    names1 = ["REVO4"]
+    names1 = ["same_REVO1"]
     #names1 = ["REVO_1","REVO_2","REVO_3","REVO_4","REVO_5"]#
     #names2 = ["REVO_size_200_150_1","REVO_size_200_150_2","REVO_3","REVO_size_200_150_4","REVO_size_200_150_5"]#
     #names2 = ["REVO_F_1","REVO_F_2","REVO_F_3","REVO_F_4","REVO_F_5"]#
@@ -355,7 +355,7 @@ if __name__ == "__main__":
     #names2 = [ "bevo1","bevo2","bevo3"]#,"bevo4"  "bevo6"
 
     #folder = "no_friction_tests"
-    plot_rewards(folder,names1,'.','g',max_train_iterations = 20000,label = "Model-based",vod_label = "VOD")#'b' 'tab:purple'
+    plot_rewards(folder,names1,'.','g',label = "Model-based",vod_label = "VOD")#'b' 'tab:purple' ,max_train_iterations = 20000
     #plot_rewards(folder,names2,'.','b',max_train_iterations = 20000,label = "REVO+F")
     #plot_rewards(folder,names3,'.',(0.0,0.0,0.0),max_train_iterations = 20000,label = "REVO+A")
     #plot_rewards(folder,names4,'.',"orange",max_train_iterations = 20000,label = "REVO+FA")#(1.0,1.0,0.0)

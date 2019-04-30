@@ -469,11 +469,11 @@ class OptimalVelocityPlanner(OptimalVelocityPlannerData):
         reward = get_reward(self.pl.simulator.vehicle.velocity[1],self.max_velocity_y,self.mode)#,analytic_velocity = local_path.analytic_velocity[0])#
 
         if self.episode_steps > self.max_episode_steps:
-            self.stop_flag = True
-        #if self.pl.simulator.vehicle.velocity[1] > local_path.analytic_velocity_limit[0]:
-        #    self.mode = 'cross'
-        if self.stop_flag and self.pl.simulator.vehicle.velocity[1] < 0.1:
             self.mode = 'max_steps'
+        #    self.stop_flag = True
+        
+        #if self.stop_flag and self.pl.simulator.vehicle.velocity[1] < 0.1:
+        #    self.mode = 'max_steps'
         if self.mode != 'ok':        
             done = True
         else:

@@ -28,7 +28,9 @@ def train(env,HP,net,dataManager,seed = None):
         HP.seed[0] = seed
     ###################
     total_step_count = 0
-    evaluation_flag = False
+
+    evaluation_flag = HP.evaluation_flag
+
     #env = environment1.OptimalVelocityPlanner(HP)
     #env  = gym.make("HalfCheetahBulletEnv-v0")
     np.random.seed(HP.seed[0])
@@ -49,7 +51,7 @@ def train(env,HP,net,dataManager,seed = None):
     #if HP.restore_flag:
     #    Replay_fails.restore(HP.restore_file_path,name = "replay_fails")
     Replay = pLib.Replay(HP.replay_memory_size)
-    if HP.restore_flag:
+    if HP.restore_flag and not HP.evaluation_flag:
         Replay.restore(HP.restore_file_path)
         
 
@@ -80,7 +82,7 @@ def train(env,HP,net,dataManager,seed = None):
         #state = env.reset(path_num = 1234)####################################################################
 
         state = env.reset(seed = seed)   
-        
+        print("seed:",seed)
         if state == 'error':
             print("reset error")
             i = min(0,i-1)
@@ -111,6 +113,10 @@ def train(env,HP,net,dataManager,seed = None):
             a = net.get_actions(np.reshape(state, (1, env.observation_space.shape[0])))#[[action]] batch, action list
             
             noise = actionNoise() * noise_range
+            #if random.random() < HP.epsilon:
+            #    noise = random.uniform(-1.0, 1.0)
+            #else:
+            #     noise = 0;
             #noise = random.uniform(-1, 1)* noise_range
             
 
@@ -137,14 +143,14 @@ def train(env,HP,net,dataManager,seed = None):
                 state[0] = state[0]*(1.0- HP.reduce_vel)
                 #a = [env.comp_analytic_acceleration(state)]#env.analytic_feature_flag must be false
                 a = env.get_analytic_action()
-            if env.stop_flag:
-                a[0] = -1#stop after max steps
+            #if env.stop_flag:
+            #    a[0] = -1#stop after max steps
+            #else:
+            last_ind = env.pl.main_index
+            if len(dataManager.real_path.time)>0:
+                last_tim = dataManager.real_path.time[-1]
             else:
-                last_ind = env.pl.main_index
-                if len(dataManager.real_path.time)>0:
-                    last_tim = dataManager.real_path.time[-1]
-                else:
-                    last_tim = 0
+                last_tim = 0
                 #print("acc:",a)
            # print("state:", state)
             #a = env.get_analytic_action()
@@ -244,6 +250,7 @@ def train(env,HP,net,dataManager,seed = None):
             if not evaluation_flag:
                 time_step_error = info[1]
                 if not time_step_error:
+                    print('reward:',reward)
                     Replay.add((state,a,reward,next_state,done))# 
                 #if done == True and HP.sample_ratio != 1.0:
                 #    Replay_fails.add((state,a,reward,next_state,done))# 
@@ -258,6 +265,8 @@ def train(env,HP,net,dataManager,seed = None):
                 
             #end if time
         #end while
+        #if info[0] == 'kipp':
+        #    time.sleep(5)
         env.stop_vehicle_complete()
         #after episode end:
         total_reward = 0
@@ -285,7 +294,7 @@ def train(env,HP,net,dataManager,seed = None):
             relative_reward = dataManager.comp_relative_reward1(env.pl.in_vehicle_reference_path,last_ind,last_tim)
             print("relative_reward: ", relative_reward)
             dataManager.relative_reward.append(relative_reward)
-            evaluation_flag = False
+            evaluation_flag = HP.evaluation_flag
            # HP.noise_flag =True
         #print("episode time:",time.time()-episode_start_time)
         print("episode:", i, "episode steps:",step_count,"file name:",HP.save_file_path)

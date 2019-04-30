@@ -44,59 +44,81 @@ if __name__ == "__main__":
     #cd C:\Users\gavri\Desktop\sim_14_1_19
     #sim_14_1_19.exe -quit -batchmode -nographics
 
+    #sim_28_4_19.exe -quit -batchmode -nographics
+
     #cd C:\Users\gavri\Desktop\thesis\ArielUnity - learning2\sim_spring0.25
     #sim_spring0.25.exe -quit -batchmode -nographics 
+
 
     #env  = gym.make("HalfCheetahBulletEnv-v0")
     HP = HyperParameters()
     envData = environment1.OptimalVelocityPlannerData(env_mode = "DDPG")
     
+    HP.train_flag = True
     envData.analytic_feature_flag = False
     HP.add_feature_to_action  = False
     HP.analytic_action = False
-    HP.restore_flag = True
+    HP.restore_flag = False
 
-    HP.train_flag = False
-    HP.always_no_noise_flag = True
-    HP.num_of_runs = 1000
-    names = ["REVO4"]#,"REVO3","REVO4","REVO5"]#['REVO6',"REVO7","REVO8","REVO9","REVO10"]#
-    description = "run without evaluation 15.4.19" 
+    HP.test_same_path = True
+    HP.run_same_path = True
+    HP.evaluation_every = 10
+    HP.save_every_train_number = 10000000
+
+    HP.always_no_noise_flag = False
+    HP.num_of_runs = 700
+    seeds = [1111,1112,1113,1114,1115]
+    #seeds = [1546]
+    names =["same_REVO1","same_REVO2","same_REVO3","same_REVO4","same_REVO5"]# ['REVO6',"REVO7","REVO8","REVO9","REVO10"]#
+
+    description = "run without evaluation, epsilon noise" 
     HP.evaluation_flag = True
+
     if HP.evaluation_flag:
         HP.train_flag = False
         HP.always_no_noise_flag = True
         HP.restore_flag = True
         HP.num_of_runs = 100
-        HP.save_every_train_number = 10000#saved at every 500, evaluate on a diffferent number
+        HP.save_every_train_number = 5000#saved at every 500, evaluate on a diffferent number
 
     #with_features_new_desing_conv - not good, max 0.8 to many fails
     #not at all
     #low_acc_diff_path no so good, with wheel vel
     #low_acc_diff_path_regular regular features, not work
-    HP.reduce_vel = 0.0
+        HP.reduce_vel = 0.0
     
-    for name in names:
-
+    for name,seed in zip(names,seeds):
+        HP.seed = [seed]
         run_data = ["envData.analytic_feature_flag: "+str(envData.analytic_feature_flag), 
                 "HP.add_feature_to_action: "+str(HP.add_feature_to_action),
                 "roll_feature_flag: "+str(envData.roll_feature_flag),
                 "alpha_actor: "+str(HP.alpha_actor),
                 "reduce_vel: "+str(HP.reduce_vel),
+                "seed: "+str(HP.seed),
                 description]
+        
         HP.restore_name = name
         HP.restore_file_path = os.getcwd()+ "\\files\\models\\paper_fix\\"+HP.restore_name+"\\"
-        HP.save_name = name
+        HP.save_name = name#"save_movie"#
         HP.save_file_path = os.getcwd()+ "\\files\\models\\paper_fix\\"+HP.save_name+"\\"
         if HP.evaluation_flag:
-            #nums = [HP.save_every_train_number*j for j in range(1,101)]
+            run_train(HP)
+            #if name == "REVO9":
+            #    nums = [HP.save_every_train_number*j for j in range(13,101)]
+            #else:
+            #    nums = [HP.save_every_train_number*j for j in range(1,101)]
+            ##nums = [0,5000,10000,20000,50000,75000]
+            ##nums = [75000]
             #for i in nums:
+            #    print("num:",i)
             #    if run_train(HP,i):
-            if run_train(HP,22500):
-                    break
+            #        break
+                
+                #HP.restore_flag = True
         else:
             run_train(HP)
 
-        #HP.reduce_vel +=0.05
+    #HP.reduce_vel +=0.05
     time.sleep(3)
 
 
