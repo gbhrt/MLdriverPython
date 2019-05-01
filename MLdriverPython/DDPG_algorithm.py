@@ -109,40 +109,42 @@ def train(env,HP,net,dataManager,seed = None):
             else:
                 noise_range = env.action_space.high[0]
                 vel = state[0]
-            
-            a = net.get_actions(np.reshape(state, (1, env.observation_space.shape[0])))#[[action]] batch, action list
-            
-            noise = actionNoise() * noise_range
-            #if random.random() < HP.epsilon:
-            #    noise = random.uniform(-1.0, 1.0)
-            #else:
-            #     noise = 0;
-            #noise = random.uniform(-1, 1)* noise_range
-            
-
-            a = a[0]
-            if not evaluation_flag:# HP.noise_flag:
-                if vel <0.02:
-                    noise = abs(noise)
-                a +=  noise#np vectors##########################################################
-                dataManager.noise.append(noise)
-                print("noise:",noise)
-            a = list(np.clip(a,-env.action_space.high[0],env.action_space.high[0]))  
-            
-            a = [float(a[k]) for k in range(len(a))]   
-            #a = [1.0]
-            
-            #a = [state[0]]# 
-            #if HP.noise_flag:
-
-
-            if HP.add_feature_to_action:
-                a[0] += analytic_action
 
             if HP.analytic_action:# and HP.noise_flag:
                 state[0] = state[0]*(1.0- HP.reduce_vel)
-                #a = [env.comp_analytic_acceleration(state)]#env.analytic_feature_flag must be false
-                a = env.get_analytic_action()
+                a = [env.comp_analytic_acceleration(state)]#env.analytic_feature_flag must be false
+                #a = env.get_analytic_action()
+            else:
+                a = net.get_actions(np.reshape(state, (1, env.observation_space.shape[0])))#[[action]] batch, action list
+            
+                noise = actionNoise() * noise_range
+                #if random.random() < HP.epsilon:
+                #    noise = random.uniform(-1.0, 1.0)
+                #else:
+                #     noise = 0;
+                #noise = random.uniform(-1, 1)* noise_range
+            
+
+                a = a[0]
+                if not evaluation_flag:# HP.noise_flag:
+                    if vel <0.02:
+                        noise = abs(noise)
+                    a +=  noise#np vectors##########################################################
+                    dataManager.noise.append(noise)
+                    print("noise:",noise)
+                a = list(np.clip(a,-env.action_space.high[0],env.action_space.high[0]))  
+            
+                a = [float(a[k]) for k in range(len(a))]   
+                #a = [1.0]
+            
+                #a = [state[0]]# 
+                #if HP.noise_flag:
+
+
+                if HP.add_feature_to_action:
+                    a[0] += analytic_action
+
+
             #if env.stop_flag:
             #    a[0] = -1#stop after max steps
             #else:
