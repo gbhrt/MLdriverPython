@@ -13,7 +13,7 @@ import math
 import os
 
 
-def train(env,HP,net,dataManager,seed = None):
+def train(env,HP,net,dataManager,seed = None,global_train_count = 0):
     
 
     #"""
@@ -61,7 +61,7 @@ def train(env,HP,net,dataManager,seed = None):
     #        stop = [1]
       
     test_path_ind = 0
-    global_train_count = 0
+    
     seed = HP.seed[0]
     reduce_vel = 0.0
     for i in range(HP.num_of_runs): #number of runs - run end at the end of the main path and if vehicle deviation error is to big
@@ -234,7 +234,8 @@ def train(env,HP,net,dataManager,seed = None):
                     #pLib.DDQN(rand_state, rand_a, rand_reward, rand_next_state,net,HP)
                     pLib.DDPG(rand_state, rand_a, rand_reward, rand_next_state,rand_end,net,HP)
 
-
+            if global_train_count > 100000:
+                break
                     
                 
 
@@ -266,6 +267,7 @@ def train(env,HP,net,dataManager,seed = None):
                 break
                 
             #end if time
+
         #end while
         #if info[0] == 'kipp':
         #    time.sleep(5)
@@ -293,7 +295,7 @@ def train(env,HP,net,dataManager,seed = None):
             dataManager.add_train_num(global_train_count)
             dataManager.path_seed.append(env.path_seed)#current used seed (for paths)
             dataManager.update_paths()
-            relative_reward = dataManager.comp_relative_reward1(env.pl.in_vehicle_reference_path,last_ind,last_tim)
+            relative_reward = dataManager.comp_relative_reward1(env.pl.in_vehicle_reference_path,last_ind,step_count*env.step_time)
             print("relative_reward: ", relative_reward)
             dataManager.relative_reward.append(relative_reward)
             evaluation_flag = HP.evaluation_flag
@@ -336,6 +338,9 @@ def train(env,HP,net,dataManager,seed = None):
             #dataManager.plot.plot_path(dataManager.real_path,block = True)
         #dataManager.save_readeable_data()
         dataManager.restart()
+
+        if global_train_count > 100000:
+            break
         #try:
         #    dataManager.comp_rewards(path_num-1,HP.gamma)
         #    dataManager.print_data()

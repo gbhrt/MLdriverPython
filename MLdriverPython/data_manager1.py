@@ -306,6 +306,9 @@ class DataManager():
         #print("relative reward seed:",self.real_path.seed)
         if self.episode_end_mode[-1] == 'kipp' or self.episode_end_mode[-1] == 'deviate' or len(self.real_path.distance) == 0:
             return 0
+        #print("last_time from timer:",last_time)
+        #last_time = last_index*0.2
+        #print("last_time:",last_time)
         #dist = sum(self.real_path.velocity)*0.2
         dist = nominal_path.distance[last_index]#distance along the nominal path
         #dist = self.real_path.distance[-1]
