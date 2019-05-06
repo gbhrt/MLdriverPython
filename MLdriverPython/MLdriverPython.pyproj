@@ -79,6 +79,7 @@
     <Compile Include="model_based_net_sep.py" />
     <Compile Include="model_based_net_var.py" />
     <Compile Include="plot_data1.py" />
+    <Compile Include="plot_paths _movie.py" />
     <Compile Include="predict_lib.py">
       <SubType>Code</SubType>
     </Compile>
@@ -96,6 +97,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="MB_action_lib.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="statistic_t_test.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="target_point.py">

@@ -22,7 +22,7 @@ def show_path(folder,name,train_num,plot_VOD = True,alpha = 1.0):
     #    self.real_path.time[0] = 0.0
     #    path = compute_analytic_path(self.path_seed[-1])
 
-    plt.figure(name)
+    plt.figure(1)
     size = 15
     #analytic_path = lib.compute_analytic_path(1111)
     #max_dis_ind = 0
@@ -67,8 +67,8 @@ def show_path(folder,name,train_num,plot_VOD = True,alpha = 1.0):
 
 if __name__ == "__main__":
     folder = "paper_fix" 
-    name1 = "same_REVO+F5"#bevo_1"#"add_analytic_feature_random_2"#"final_1"  "final_random_1" - final_analytic_random_1 not clear
-    name2 = "same_REVO5"
+    name = "save_movie"#bevo_1"#"add_analytic_feature_random_2"#"final_1"  "final_random_1" - final_analytic_random_1 not clear
+
     #name = 'REVO+FA1'
     nums = [5000,10000,20000,50000,75000]
 
@@ -76,9 +76,7 @@ if __name__ == "__main__":
         plot_VOD = True
         for i in nums[:j]:
 
-            show_path(folder,name1,i,plot_VOD = plot_VOD,alpha = 0.5 if nums.index(i)<j-1 else 1.0)
-
-            show_path(folder,name2,i,plot_VOD = plot_VOD,alpha = 0.5 if nums.index(i)<j-1 else 1.0)
+            show_path(folder,name,i,plot_VOD = plot_VOD,alpha = 0.5 if nums.index(i)<j-1 else 1.0)
             plot_VOD = False
 
         plt.legend()

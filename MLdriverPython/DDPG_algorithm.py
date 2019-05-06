@@ -68,6 +68,7 @@ def train(env,HP,net,dataManager,seed = None,global_train_count = 0):
         if waitFor.stop == [True]:
             break
         # initialize every episode:
+        dataManager.restart()
         #reduce_vel+=0.01
         #print("reduce_vel: ",reduce_vel)
         step_count = 0
@@ -337,10 +338,13 @@ def train(env,HP,net,dataManager,seed = None,global_train_count = 0):
             #dataManager.plot.plot_path_with_features(dataManager,env.distance_between_points,block = True)
             #dataManager.plot.plot_path(dataManager.real_path,block = True)
         #dataManager.save_readeable_data()
-        dataManager.restart()
 
         if global_train_count > 100000:
             break
+
+        
+
+        
         #try:
         #    dataManager.comp_rewards(path_num-1,HP.gamma)
         #    dataManager.print_data()

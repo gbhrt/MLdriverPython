@@ -36,7 +36,7 @@ def run_train(HP,i = 0):
                 if not net.restore(HP.restore_file_path,name = 'tf_model_'+str(i)):
                     found_flag = True
                 elif found_flag:
-                    global_train_count = i
+                    global_train_count = i-HP.save_every_train_number
                     break
             print("train,global_train_count:",global_train_count)
                 
@@ -73,12 +73,12 @@ if __name__ == "__main__":
     and then, run evaluation, if exist - pass
     """
     names_vec = []
-    #names_vec.append([['REVO6','REVO7','REVO8','REVO9','REVO10'],'REVO'])
+    names_vec.append([['REVO6','REVO7','REVO8','REVO9','REVO10'],'REVO'])#
     #names_vec.append([['REVO+A1','REVO+A2','REVO+A3','REVO+A4','REVO+A5'],'REVO+A'])
     #names_vec.append([['REVO+F1','REVO+F2','REVO+F3','REVO+F4','REVO+F5'],'REVO+F'])
     #names_vec.append([['REVO+FA1','REVO+FA2','REVO+FA3','REVO+FA4','REVO+FA5'],'REVO+FA'])
 
-    names_vec.append(["VOD_01","VOD"])#["VOD_00","VOD_002","VOD_004","VOD_006","VOD_008","VOD_01","VOD_012","VOD_014","VOD_016","VOD_018"]
+    #names_vec.append([['VOD_0175'],"VOD"])#["VOD_00","VOD_002","VOD_004","VOD_006","VOD_008","VOD_01","VOD_012","VOD_014","VOD_016","VOD_018"]
 
     for names,method in names_vec:
         HP.analytic_action = False
@@ -99,19 +99,26 @@ if __name__ == "__main__":
             envData.analytic_feature_flag = False
             HP.add_feature_to_action  = False
             HP.analytic_action = True
-            #HP.evaluation_flag = True
+            HP.evaluation_flag = True
             #reduce_vec = [0.02*i for i in range(1,10)]
-            reduce_vec = [0.1]
+            reduce_vec = [0.175]
             HP.train_flag = False
             HP.always_no_noise_flag = True
             HP.restore_flag = False
             HP.num_of_runs = 100
             HP.save_every_train_number = 500000000
+            
             for name,reduce in zip(names,reduce_vec):
+                HP.restore_name = name
+                HP.restore_file_path = os.getcwd()+ "\\files\\models\\paper_fix\\"+HP.restore_name+"\\"
+                HP.save_name = name#"save_movie"#
+                HP.save_file_path = os.getcwd()+ "\\files\\models\\paper_fix\\"+HP.save_name+"\\"
                 HP.reduce_vel = reduce
                 run_data = []
                 run_train(HP)
+            #break
 
+        description = method 
         run_data = ["envData.analytic_feature_flag: "+str(envData.analytic_feature_flag), 
             "HP.add_feature_to_action: "+str(HP.add_feature_to_action),
             "reduce_vel: "+str(HP.reduce_vel),
@@ -121,9 +128,9 @@ if __name__ == "__main__":
 
 
         
-        description = method 
+        
 
-        for evalutaion_flag in (False,True):   
+        for evalutaion_flag in [True]:  #(False,True) 
             
 
 
@@ -167,22 +174,25 @@ if __name__ == "__main__":
                 HP.restore_file_path = os.getcwd()+ "\\files\\models\\paper_fix\\"+HP.restore_name+"\\"
                 HP.save_name = name#"save_movie"#
                 HP.save_file_path = os.getcwd()+ "\\files\\models\\paper_fix\\"+HP.save_name+"\\"
+
                 if HP.evaluation_flag:
                     #run_train(HP)
 
                     nums = [HP.save_every_train_number*j for j in range(1,50)]
                     #nums = [0]
-                    found_flag = False
                     for i in nums:
                         print("num:",i)
+                        
                         dataManager_tmp = data_manager1.DataManager(HP.save_file_path,HP.restore_file_path,restore_flag = True,restore_name = 'data_manager_'+str(i))
-                        if not dataManager_tmp.error and len(dataManager_tmp.episode_end_mode) >= HP.num_of_runs-1:
-                            print(name,'data_manager_'+str(i)+'exist')
+                        if not dataManager_tmp.error and len(dataManager_tmp.episode_end_mode) >= HP.num_of_runs-10:
+                            
+                            print(name,'data_manager_'+str(i)+' exist')
                             continue
+                        print("HP.num_of_runs:",HP.num_of_runs)
                         print("evaluation on episode:",i)
                         if run_train(HP,i):
                             print(name,"cannot restore:",'tf_model_'+str(i))
-                            break
+                            continue
                 
                         #HP.restore_flag = True
                 else:

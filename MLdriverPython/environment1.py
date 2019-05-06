@@ -541,7 +541,7 @@ class OptimalVelocityPlanner(OptimalVelocityPlannerData):
             
             v2 = state_path.analytic_velocity[i]
             d = state_path.distance[i]# - path.distance[0]
-            print("i:",i, "time:",state_path.analytic_time[i],"v2:",v2,"d:",d)
+            #print("i:",i, "time:",state_path.analytic_time[i],"v2:",v2,"d:",d)
             if d < 0.01:
                 print("_____________________________________________________________________________")
             acc = (v2**2 - v1**2 )/(2*d)#acceleration [m/s^2]
@@ -551,21 +551,21 @@ class OptimalVelocityPlanner(OptimalVelocityPlannerData):
             return np.clip(acc/max_acc,-1,1)
             #return np.clip(acc/8,-1,1)
         else:
-            print("vels",pos_state[0]*self.max_velocity_y,state_path.analytic_velocity_limit[0])
+            #print("vels",pos_state[0]*self.max_velocity_y,state_path.analytic_velocity_limit[0])
             if pos_state[0]*self.max_velocity_y > state_path.analytic_velocity_limit[0]:
-                print("crossed limit")
+                #print("crossed limit")
                 v1 = pos_state[0]*self.max_velocity_y
                 d = v1*self.step_time
-                print("v1:",v1,"d:",d)
+                #print("v1:",v1,"d:",d)
                 for i in range(len (state_path.distance)):
                     if state_path.distance[i] > d:
                         break
 
                 v2 = state_path.analytic_velocity_limit[i]
-                print("i:",i,"v2:",v2)
+                #print("i:",i,"v2:",v2)
                 acc = (v2**2 - v1**2 )/(2*d)
                 return np.clip(acc/max_acc,-1,1)
-            print("cannot compute analytic velocity")
+            #print("cannot compute analytic velocity")
             return -1.0
         
 

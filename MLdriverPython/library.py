@@ -215,26 +215,26 @@ def comp_steer_general(path,index,pos,ang,vel):#nearest index on path
     return steer
 
 
-def comp_steer_learn_local(local_target):
-    local_target = local_target[0:2]
-    invert_flag = False
-    if local_target[0] > 0:
-        invert_flag = True
-        local_target[0]*=-1
-    local_target.append(local_target[0]**2/25)
-    local_target.append(local_target[1]**2/25)
-    local_target.append(local_target[0]**3/10000)
-    local_target.append(local_target[1]**3/10000)
-    local_target.append(local_target[0]**4/100000)
-    local_target.append(local_target[1]**4/100000)
-    W = np.array([-0.03772359,-0.03060057,-0.0382355,0.01177276,-0.03024748,0.02575669 ,0.02876469,-0.00775899])#from linear regression
-    #W = np.array([0.00068105,-0.012659 ])#from linear regression
-    b = np.array([0.39522606])
-    steer_ang = np.matmul(local_target, W) + b
-    #steer_ang = local_target[0]*W[0] + local_target[1]*W[1] + b
-    if invert_flag:
-        steer_ang*=-1
-    return steer_ang[0]
+#def comp_steer_learn_local(local_target):
+#    local_target = local_target[0:2]
+#    invert_flag = False
+#    if local_target[0] > 0:
+#        invert_flag = True
+#        local_target[0]*=-1
+#    local_target.append(local_target[0]**2/25)
+#    local_target.append(local_target[1]**2/25)
+#    local_target.append(local_target[0]**3/10000)
+#    local_target.append(local_target[1]**3/10000)
+#    local_target.append(local_target[0]**4/100000)
+#    local_target.append(local_target[1]**4/100000)
+#    W = np.array([-0.03772359,-0.03060057,-0.0382355,0.01177276,-0.03024748,0.02575669 ,0.02876469,-0.00775899])#from linear regression
+#    #W = np.array([0.00068105,-0.012659 ])#from linear regression
+#    b = np.array([0.39522606])
+#    steer_ang = np.matmul(local_target, W) + b
+#    #steer_ang = local_target[0]*W[0] + local_target[1]*W[1] + b
+#    if invert_flag:
+#        steer_ang*=-1
+#    return steer_ang[0]
 
 def comp_steer_learn(vehicle,target):
     local_target = to_local(np.asarray(target),np.asarray(vehicle.position),vehicle.angle[1])#compute target in vehicle reference system
