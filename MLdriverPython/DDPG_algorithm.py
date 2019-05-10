@@ -81,14 +81,14 @@ def train(env,HP,net,dataManager,seed = None,global_train_count = 0):
         #    #state = env.reset(path_num = len(dataManager.path_seed) - 1)
         #    state = env.reset(path_num = 1)
         #state = env.reset(path_num = 1234)####################################################################
-
+       
         state = env.reset(seed = seed)   
         print("seed:",seed)
         if state == 'error':
             print("reset error")
             i = min(0,i-1)
             continue
-        if i == 0:
+        if i == 0 and not evaluation_flag:
             print("update nets first time")
             pLib.DDPG([state], [[0]], [0], [state],[False],net,HP)
         #episode_start_time = time.time()
@@ -312,11 +312,10 @@ def train(env,HP,net,dataManager,seed = None,global_train_count = 0):
         if (i % HP.evaluation_every == 0 and i > 0) or test_path_ind != 0 or HP.always_no_noise_flag:
             #HP.noise_flag = False
             evaluation_flag = True
-            
             if HP.test_same_path:
+                test_path_ind +=1
                 seed = HP.seed[test_path_ind]
                 print("seed:",seed)
-                test_path_ind +=1
                 if test_path_ind >= len(HP.seed):
                     test_path_ind = 0
 

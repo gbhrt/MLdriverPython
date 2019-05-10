@@ -11,6 +11,7 @@ import init_nets
 #import threading
 import os
 import time
+import random
 
 def run_train(HP,i = 0):
     global_train_count = 0
@@ -73,14 +74,21 @@ if __name__ == "__main__":
     and then, run evaluation, if exist - pass
     """
     names_vec = []
-    names_vec.append([['REVO6','REVO7','REVO8','REVO9','REVO10'],'REVO'])#
+    #REVO10 85k - 0 fails, 1.13 reward 
+
+    names_vec.append([['REVO+F5'],'REVO+F',70000])
+    names_vec.append([['REVO+A3'],'REVO+A',90000])
+    names_vec.append([['REVO10'],'REVO',85000])
+    names_vec.append([['VOD_long2'],"VOD",0])
+
+    #names_vec.append([['REVO6','REVO7','REVO8','REVO9','REVO10'],'REVO'])#
     #names_vec.append([['REVO+A1','REVO+A2','REVO+A3','REVO+A4','REVO+A5'],'REVO+A'])
     #names_vec.append([['REVO+F1','REVO+F2','REVO+F3','REVO+F4','REVO+F5'],'REVO+F'])
     #names_vec.append([['REVO+FA1','REVO+FA2','REVO+FA3','REVO+FA4','REVO+FA5'],'REVO+FA'])
 
     #names_vec.append([['VOD_0175'],"VOD"])#["VOD_00","VOD_002","VOD_004","VOD_006","VOD_008","VOD_01","VOD_012","VOD_014","VOD_016","VOD_018"]
 
-    for names,method in names_vec:
+    for names,method,training_num in names_vec:
         HP.analytic_action = False
         if method =='REVO':
             envData.analytic_feature_flag = False
@@ -126,9 +134,11 @@ if __name__ == "__main__":
             description]
 
 
-
-        
-        
+        random.seed(12)
+        HP.seed = random.sample(range(1000),1000)
+        #print("seed",HP.seed)
+        HP.always_no_noise_flag = True
+        HP.test_same_path = True
 
         for evalutaion_flag in [True]:  #(False,True) 
             
@@ -155,7 +165,7 @@ if __name__ == "__main__":
                 HP.train_flag = False
                 HP.always_no_noise_flag = True
                 HP.restore_flag = True
-                HP.num_of_runs = 100
+                HP.num_of_runs = 1000
                 HP.save_every_train_number = 5000#saved at every 500, evaluate on a different number
             else:
                 HP.train_flag = True
@@ -177,17 +187,18 @@ if __name__ == "__main__":
 
                 if HP.evaluation_flag:
                     #run_train(HP)
-
-                    nums = [HP.save_every_train_number*j for j in range(1,50)]
-                    #nums = [0]
+                    if training_num is  None:
+                        nums = [HP.save_every_train_number*j for j in range(1,50)]
+                    else:
+                        nums = [training_num]
                     for i in nums:
                         print("num:",i)
                         
                         dataManager_tmp = data_manager1.DataManager(HP.save_file_path,HP.restore_file_path,restore_flag = True,restore_name = 'data_manager_'+str(i))
-                        if not dataManager_tmp.error and len(dataManager_tmp.episode_end_mode) >= HP.num_of_runs-10:
+                        #if not dataManager_tmp.error and len(dataManager_tmp.episode_end_mode) >= HP.num_of_runs-10:
                             
-                            print(name,'data_manager_'+str(i)+' exist')
-                            continue
+                        #    print(name,'data_manager_'+str(i)+' exist')
+                        #    continue
                         print("HP.num_of_runs:",HP.num_of_runs)
                         print("evaluation on episode:",i)
                         if run_train(HP,i):
