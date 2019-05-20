@@ -76,10 +76,12 @@ if __name__ == "__main__":
     names_vec = []
     #REVO10 85k - 0 fails, 1.13 reward 
 
-    names_vec.append([['REVO+F5'],'REVO+F',70000])
-    names_vec.append([['REVO+A3'],'REVO+A',90000])
-    names_vec.append([['REVO10'],'REVO',85000])
-    names_vec.append([['VOD_long2'],"VOD",0])
+    #names_vec.append([['REVO+F5'],'REVO+F',70000])
+    #names_vec.append([['REVO+A3'],'REVO+A',90000])
+    #names_vec.append([['REVO10'],'REVO',85000])
+    #names_vec.append([['VOD_long2'],"VOD",0])
+
+    names_vec.append([['REVO+A1'],'REVO+A',15000])
 
     #names_vec.append([['REVO6','REVO7','REVO8','REVO9','REVO10'],'REVO'])#
     #names_vec.append([['REVO+A1','REVO+A2','REVO+A3','REVO+A4','REVO+A5'],'REVO+A'])
@@ -87,6 +89,10 @@ if __name__ == "__main__":
     #names_vec.append([['REVO+FA1','REVO+FA2','REVO+FA3','REVO+FA4','REVO+FA5'],'REVO+FA'])
 
     #names_vec.append([['VOD_0175'],"VOD"])#["VOD_00","VOD_002","VOD_004","VOD_006","VOD_008","VOD_01","VOD_012","VOD_014","VOD_016","VOD_018"]
+    #random.seed(12)
+    #HP.seed = random.sample(range(1000),1000)
+    #print("seed",HP.seed)
+    #HP.test_same_path = True
 
     for names,method,training_num in names_vec:
         HP.analytic_action = False
@@ -134,11 +140,7 @@ if __name__ == "__main__":
             description]
 
 
-        random.seed(12)
-        HP.seed = random.sample(range(1000),1000)
-        #print("seed",HP.seed)
-        HP.always_no_noise_flag = True
-        HP.test_same_path = True
+
 
         for evalutaion_flag in [True]:  #(False,True) 
             
@@ -165,7 +167,7 @@ if __name__ == "__main__":
                 HP.train_flag = False
                 HP.always_no_noise_flag = True
                 HP.restore_flag = True
-                HP.num_of_runs = 1000
+                HP.num_of_runs = 100
                 HP.save_every_train_number = 5000#saved at every 500, evaluate on a different number
             else:
                 HP.train_flag = True

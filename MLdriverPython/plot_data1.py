@@ -68,9 +68,10 @@ def get_relative_reward(dataManager):
 
 def get_avg_reward(dataManager):
     filtered_reward = [value for value in dataManager.relative_reward if value != -1]
+    #filtered_reward = [value for value in dataManager.relative_reward if value != 0]
     if len(filtered_reward)>0:
         return sum(filtered_reward)/len(filtered_reward),np.sqrt(np.var(filtered_reward))
-    return -1
+    return -1,0
 
 def correct_relative_reward(folder,names_vec):
     HP = HyperParameters()
@@ -105,7 +106,7 @@ def get_data(folder,names_vec):
     HP = HyperParameters()
 
     #train_indexes = [5000*j for j in range(0,19)]
-    train_indexes = [0]
+    train_indexes = [15000]
     rewards_vec = []
     var_vec =[]
     reward_vec_indexes = []
@@ -131,14 +132,14 @@ def get_data(folder,names_vec):
                 if name in(["VOD_00","VOD_002","VOD_004","VOD_006","VOD_008","VOD_01","VOD_012","VOD_014","VOD_016","VOD_018","VOD_02","VOD_015","VOD_005","VOD_0175"]):
                     restore_name = 'data_manager_0'
                 else:
-                    restore_name = 'data_manager_'+str(i)
+                    restore_name = 'data_manager_'+str(i)#'data_manager'
                 dataManager = data_manager1.DataManager(restore_path,restore_path,True,restore_name = restore_name)#
                 if dataManager.error:
                     print("cannot restore dataManager",name,"num:",i)
                     break
-                
+                #print(dataManager.path_seed)
                 avg_reward ,var_reward= get_avg_reward(dataManager)
-                vel,abs_var = get_abs_vel(dataManager)
+                vel,abs_var = 0,0#get_abs_vel(dataManager)
                 if avg_reward>=0:
                     single_rewards.append(avg_reward)
                     single_var.append(var_reward)
@@ -180,7 +181,7 @@ def average_training_processes(rewards_vec):
     return avg_rewards_vec,vars_vec
 
 if __name__ == "__main__":
-    folder = "paper_fix_final"#\old reward backup"
+    folder = "paper_fix"#\old reward backup"
     size = 15
     names_vec = []
 
@@ -188,7 +189,7 @@ if __name__ == "__main__":
     #names = ["VOD_00","VOD_005","VOD_01","VOD_015","VOD_0175","VOD_02"]
     #for name in names:
     #    names_vec.append([[name],[name,None]])
-    #reward_vec_indexes,rewards_vec,indexes,fails_vec,series_colors,series_names = get_data(folder,names_vec)
+    #reward_vec_indexes,rewards_vec,indexes,fails_vec,var,series_colors,series_names = get_data(folder,names_vec)
     #vel = [reward[0][0] for reward in rewards_vec]
     #fail = [fails[0][0] for fails in fails_vec]
     
@@ -196,8 +197,13 @@ if __name__ == "__main__":
     #plt.figure(3)
     #plt.xlabel('Velocity factor',fontsize = size)
     #plt.ylabel('Fails [%]',fontsize = size)
-    #plt.plot(vel,fail,'o',c = 'r')
+    #plt.plot(vel,fail,'o',c = 'r',label = 'VOD')
     #plt.plot(vel,fail,c = 'r')
+    #plt.plot([1.12],[0.6],'o',c = 'green',label = 'REVO')
+    #plt.plot([1.11],[0.8],'o',c = 'blue',label = 'REVO+F')
+    #plt.plot([1.08],[0.6],'o',c = 'black',label = 'REVO+A')
+    #plt.legend()
+    #plt.show()
     #names_vec.append(['same_REVO2'])#,'same_REVO2'])#+str(i) for i in range(1,5)])
     #names_vec.append(['eps_REVO1','eps_REVO2','eps_REVO3'])
     #names_vec.append([['batch_256_REVO1','batch_256_REVO2','batch_256_REVO3','batch_256_REVO4','batch_256_REVO5'],['batch_256_REVO','blue']])
@@ -214,11 +220,11 @@ if __name__ == "__main__":
     #names_vec.append([['REVO+F4'],['REVO+F4',None]])#important: ,95000? avg_reward: 1.1415095329248326 single_fails: 2.004008016032064 len: 998
     #names_vec.append([['REVO+F5'],['REVO+F5',None]])
 
-    #names_vec.append([['REVO+A1'],['REVO1',None]])
-    #names_vec.append([['REVO+A2'],['REVO2',None]])
-    #names_vec.append([['REVO+A3'],['REVO3',None]])
-    #names_vec.append([['REVO+A4'],['REVO4',None]])
-    #names_vec.append([['REVO+A8'],['REVO8',None]])
+    #names_vec.append([['REVO+A1'],['REVO+A1',None]])
+    #names_vec.append([['REVO+A2'],['REVO+A2',None]])
+    #names_vec.append([['REVO+A3'],['REVO+A3',None]])
+    #names_vec.append([['REVO+A4'],['REVO+A4',None]])
+    #names_vec.append([['REVO+A8'],['REVO+A8',None]])
 
     #names_vec.append([['REVO+A4'],['REVO+A4',None]])
     ##names_vec.append([['REVO+A5'],['REVO+A5',None]])
@@ -239,10 +245,12 @@ if __name__ == "__main__":
     #names_vec.append([['REVO10'],['REVO','green']])#85000
     #names_vec.append([['REVO+A3'],['REVO3',None]])#90000
     #names_vec.append([['REVO+F3'],['REVO+F3',None]])#70000
-    names_vec.append([['VOD_long'],['VOD',None]])#0
+    #names_vec.append([['VOD_long2'],['VOD',None]])#0
     
-    #add_zero_data_manager(folder,names_vec)
-    #correct_relative_reward(folder,names_vec)
+    names_vec.append([['REVO+A1'],['REVO+A1',None]])#90000
+
+    ##add_zero_data_manager(folder,names_vec)
+    ##correct_relative_reward(folder,names_vec)
 
     reward_vec_indexes,rewards_vec,indexes,fails_vec,var,series_colors,series_names = get_data(folder,names_vec)
 

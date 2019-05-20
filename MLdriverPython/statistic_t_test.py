@@ -19,13 +19,14 @@ def save_data(relative_reward_vec,file_name):
     with open(file_name, 'w') as f:#append data to the file
         for relative_reward in relative_reward_vec:
             for relative_reward_i in relative_reward:
-                f.write("%s," % (relative_reward_i))
-            f.write('\n')
+                f.write("%s\n" % (relative_reward_i))
+            #f.write('\n')
     return
 
-
-relative_reward_vec = get_data("paper_fix",["final_REVO","final_REVO+A"])
-save_data(relative_reward_vec,"relative_reward.txt")
+names = ["REVO+A3","REVO+F3","REVO10","VOD_long"]
+for name in names:
+    relative_reward_vec = get_data("paper_fix_final",[name])#,"REVO+A3","VOD_long"
+    save_data(relative_reward_vec,name+"_relative_reward.txt")
 
 
 ##%matplotlib inline
