@@ -2,15 +2,24 @@
 #import data_manager1
 #from hyper_parameters import HyperParameters
 #from DDPG_net import DDPG_network
-#import numpy as np
+import numpy as np
 #import tensorflow as tf
 #import json
 #import time
 #import collections
 #import matplotlib.pyplot as plt
 #input_dim=2
+#a =[[1,2],[3,4],[5,6]]
+#np.array(a)
+#a_tr = np.transpose(a)
+#print(a_tr)
+#a_tr[0] = np.square( a_tr[0] - 1)
+#print(a_tr)
 
-
+import time
+t = time.clock()
+np.array(list(range(100000)))
+print(time.clock() - t)
 
 #model = tf.keras.models.Sequential([
 #    tf.keras.layers.Dense(20, activation=tf.keras.activations.relu,input_shape = (2,) ),

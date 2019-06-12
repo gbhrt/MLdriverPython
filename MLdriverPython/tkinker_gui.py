@@ -211,9 +211,9 @@ class draw_state:
             if len(self.guiShared.planningData.vec_emergency_predicded_path[self.index[0]])>1:
                 self.draw_path(self.guiShared.planningData.vec_emergency_predicded_path[self.index[0]],color = "blue")
         #draw target points:
-        if len(self.guiShared.planningData.vec_target_points) > self.index[0]+1:
-            for target_point in self.guiShared.planningData.vec_target_points[self.index[0]]:
-                self.draw_target_point(target_point)
+        #if len(self.guiShared.planningData.vec_target_points) > self.index[0]+1:
+        #    for target_point in self.guiShared.planningData.vec_target_points[self.index[0]]:
+        #        self.draw_target_point(target_point)
         self.root.after(50,self.draw)
         #self.draw_vehicle(0.5)
         #test_path = [[0,0],[1,1],[2,4],[5,7],[7,7]]

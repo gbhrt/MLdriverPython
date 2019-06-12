@@ -30,7 +30,8 @@ def test():
 
     targetPoint = target_point.TargetPoint()
     targetPoint.vel = 2.0
-    targetPoint.rel_pos = [20,10]
+    #targetPoint.rel_pos = [20,10]
+    targetPoint.rel_pos = [10,10]
     targetPoint = actions.comp_abs_target(targetPoint,S.Vehicle)
     #for _ in range(100):
     #    try:

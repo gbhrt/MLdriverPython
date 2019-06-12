@@ -59,7 +59,55 @@ def plot_state_vec(StateVehicle_vec,ax):
 
 
 
+def steer_policy(state_Vehicle,state_env,SteerNet,trainHP):
+    #acc = 1.0
+    #steer_max = get_dsteer_max(SteerNet,state.Vehicle.values,acc,1,trainHP)
+    #steer_min = get_dsteer_max(SteerNet,state.Vehicle.values,acc,-1,trainHP)
+    #print("steer:",steer_min,steer_max)
+    #steer_max = np.clip(0.7-state.Vehicle.values[0]*0.1,0,0.7)
+    #steer_min = np.clip(-(0.7-state.Vehicle.values[0]*0.1),-0.7,0)
+    #np.clip(steer,steer_min,steer_max).item()
+    
+    return lib.comp_steer_general(state_env[0],state_env[1],state_Vehicle.abs_pos,state_Vehicle.abs_ang,state_Vehicle.values[0])
 
+#def emergency_steer_policy(state):
+#    return 0.0
+def emergency_steer_policy(state_Vehicle,state_env,SteerNet,trainHP):
+    acc = -1.0
+    steer_max = get_dsteer_max(SteerNet,state_Vehicle.values,acc,1,trainHP)
+    steer_min = get_dsteer_max(SteerNet,state_Vehicle.values,acc,-1,trainHP)
+    steer = lib.comp_steer_general(state_env[0],state_env[1],state_Vehicle.abs_pos,state_Vehicle.abs_ang,state_Vehicle.values[0])
+    return np.clip(steer,steer_min,steer_max).item()
+
+def acc_policy():
+    return -1.0
+def emergency_acc_policy():
+    return -1.0
+def clip_steering(state,acc,steer,SteerNet,trainHP):
+    steer_max = get_dsteer_max(SteerNet,state.Vehicle.values,acc,1,trainHP)
+    steer_min = get_dsteer_max(SteerNet,state.Vehicle.values,acc,-1,trainHP)
+    cliped = False
+    if steer > steer_max:
+        steer = steer_max
+        cliped = True
+    elif steer < steer_min:
+        steer = steer_min
+        cliped = True
+    return cliped
+
+def check_stability(state_Vehicle,state_env,roll_var = 0.0,max_plan_roll = None,max_plan_deviation = None):
+    dev_flag,roll_flag = 0,0
+    path = state_env[0]
+    index = state_env[1]
+    roll = state_Vehicle.values[2]
+    #print("roll",roll,"roll var",roll_var)
+    dev_from_path = lib.dist(path.position[index][0],path.position[index][1],state_Vehicle.abs_pos[0],state_Vehicle.abs_pos[1])#absolute deviation from the path
+    if abs(roll)+roll_var > max_plan_roll: #check the current roll 
+        roll_flag = math.copysign(1,roll)
+    if dev_from_path > max_plan_deviation:
+        dev_flag = 1
+        #max_plan_deviation = 10
+    return roll_flag,dev_flag
 
 def comp_rel_target(targetPoint,StateVehicle):#update the position of the target point relative to the new position of the vehicle
     newTargetPoint = copy.copy(targetPoint)
@@ -240,6 +288,7 @@ def comp_local_steer(nets,StateVehicle,targetPoint,trainHP,stop_flag,ax = None):
 
 
 def step(stateVehicle,acc,steer,TransNet,trainHP):#get a state and actions, return next state
+
     steer = np.clip(steer,-0.7,0.7)
     x = [stateVehicle.values+[acc,steer]]
     y = TransNet.predict(np.array(x))[0]
@@ -249,6 +298,7 @@ def step(stateVehicle,acc,steer,TransNet,trainHP):#get a state and actions, retu
     nextState.Vehicle.rel_pos = y[len(trainHP.vehicle_ind_data):len(trainHP.vehicle_ind_data)+2]
     nextState.Vehicle.rel_ang = y[len(trainHP.vehicle_ind_data)+2:]
     nextState.Vehicle.abs_pos,nextState.Vehicle.abs_ang = predict_lib.comp_abs_pos_ang(nextState.Vehicle.rel_pos,nextState.Vehicle.rel_ang,stateVehicle.abs_pos,stateVehicle.abs_ang)
+    
     return nextState.Vehicle
 
 def stop_toward_target(nets,StateVehicle,targetPoint,acc_flag,trainHP,stop_flag,ax = None):

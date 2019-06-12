@@ -49,18 +49,18 @@ class OptimalVelocityPlannerData:
         self.max_angular_velocity_x = 6
         self.max_angular_velocity_y = 6
         self.max_angular_velocity_z = 6
-        self.max_acc_x = 1.38# 0-100 kmh in 20 sec. 1.5 # [m/s^2]  need to be more then maximum acceleration in real
-        self.max_acc_y = 1.38# 0-100 kmh in 20 sec. 1.5 # [m/s^2]  need to be more then maximum acceleration in real
-        self.max_acc_z = 1.38# 0-100 kmh in 20 sec. 1.5 # [m/s^2]  need to be more then maximum acceleration in real
+        self.max_acc_x = 1.38# 0-100 kmh in 20 sec. 1.5 # [m/s^2]  need to be more than maximum acceleration in real
+        self.max_acc_y = 1.38# 0-100 kmh in 20 sec. 1.5 # [m/s^2]  need to be more than maximum acceleration in real
+        self.max_acc_z = 1.38# 0-100 kmh in 20 sec. 1.5 # [m/s^2]  need to be more than maximum acceleration in real
         self.max_angular_acc_x = 100
         self.max_angular_acc_y = 100
         self.max_angular_acc_z = 100
 
         self.max_pitch = 0.3#0.3
-        self.max_roll = 0.1#0.05#0.3# last 0.2
+        self.max_roll = 0.3#0.05#0.3# last 0.2
         self.max_slip = 10
         self.max_plan_slip = 0.1
-        self.max_plan_roll = 0.1#0.05
+        self.max_plan_roll = 0.05
         self.max_steering = 0.7
         self.max_d_steering = 0.1
         self.max_wheel_vel = 60# rad/sec. in unity limited to 5720 deg/sec 

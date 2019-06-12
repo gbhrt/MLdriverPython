@@ -7,6 +7,10 @@ import shared
 import hyper_parameters
 import data_manager1
 
+#python runsnake.py myscript.profile
+#snakeviz myscript.profile
+#snakeviz action_prof.profile
+#snakeviz train_prof.profile
 class programThread (threading.Thread):
    def __init__(self,guiShared,HP,dataManager):
         threading.Thread.__init__(self)
@@ -33,9 +37,9 @@ if __name__ == "__main__":
     if HP.gui_flag:
         #start the gui:
         tkinker_gui.TkGui(guiShared)
-    #while(not guiShared.exit):
-    #    time.sleep(1)
-    #    continue
+    while(not guiShared.exit):
+        time.sleep(1)
+        continue
 
     
 

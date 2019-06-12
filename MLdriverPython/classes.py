@@ -241,4 +241,4 @@ class planningData:
         if len(data.vec_emergency_planned_steer) > 0: self.vec_emergency_planned_steer.append(data.vec_emergency_planned_steer[0])
         else: self.vec_emergency_planned_steer.append([])
 
-        self.vec_target_points.append(data.vec_target_points[0])
+        #self.vec_target_points.append(data.vec_target_points[0])

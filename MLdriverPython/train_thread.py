@@ -15,8 +15,7 @@ def train(nets,Replay,trainHP,HP,trainShared,transgraph):
         time.sleep(0.01)
 
     while trainShared.train:
-       
-        # t = time.clock()
+
 
         trainShared.algorithmIsIn.wait()#wait that the other thread enabled the lock
         with trainShared.Lock:
@@ -65,7 +64,8 @@ def train(nets,Replay,trainHP,HP,trainShared,transgraph):
                 #nets.AccNet.train_on_batch(np.array(AccNet_X),np.array(AccNet_Y_))
                 if train_count % 1000 == 0:
                     print("train:",train_count)
-                    print(nets.TransNet.evaluate(np.array(TransNet_X),np.array(TransNet_Y_)))
+                    print("Trans loss:",nets.TransNet.evaluate(np.array(TransNet_X),np.array(TransNet_Y_)))
+                    print("Steer loss:",nets.SteerNet.evaluate(np.array(SteerNet_X),np.array(SteerNet_Y_)))
                     #print(nets.SteerNet.evaluate(np.array(SteerNet_X),np.array(SteerNet_Y_)))
             #    #X,Y_ = env.create_XY_(rand_state, rand_a, rand_next_state)
             #    print("loss:",float(net.get_loss(batch_X,batch_Y_)))
@@ -74,6 +74,8 @@ def train(nets,Replay,trainHP,HP,trainShared,transgraph):
                     nets.save_all(HP.save_file_path)
                     Replay.save(HP.save_file_path)
                     last_save_time = time.time()
+
+
                 #print("update model")
                 
             

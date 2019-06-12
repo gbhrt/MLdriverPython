@@ -90,7 +90,8 @@ def train(env,HP,Agent,dataManager,guiShared,seed = None):
             continue
         #episode_start_time = time.time()
         acc,steer = 0.0,0.0
-        acc,steer,planningData,roll_flag,dev_flag = Agent.comp_action(state,acc,steer)#for the first time (required because the first time is longer)
+        acc,steer,planningData= Agent.comp_action(state,acc,steer)#for the first time (required because the first time is longer)
+        #acc,steer,planningData,roll_flag,dev_flag = Agent.comp_action(env_state,acc,steer,env)#for the first time (required because the first time is longer)
 
         env.pl.init_timer()
         while  waitFor.stop != [True] and guiShared.request_exit == False:#while not stoped, the loop break if reached the end or the deviation is to big          
@@ -118,9 +119,9 @@ def train(env,HP,Agent,dataManager,guiShared,seed = None):
                 next_state, reward, done, info = env.step(acc)#input the estimated next actions to execute after delta t and getting next state
                 
             else:#not HP.analytic_action
-                #acc,steer,planningData,roll_flag,dev_flag = Agent.comp_action(env_state,acc,steer,env)#env is temp 
+                acc,steer,planningData = Agent.comp_action(state,acc,steer)#env is temp  ,roll_flag,dev_flag 
                 
-                acc,steer,planningData,roll_flag,dev_flag = Agent.comp_action(state,acc,steer)
+                #acc,steer,planningData,roll_flag,dev_flag = Agent.comp_action(state,acc,steer)
 
 
                 #trainShared.algorithmIsIn.clear()#indicates that are ready to take the lock
@@ -143,9 +144,9 @@ def train(env,HP,Agent,dataManager,guiShared,seed = None):
                     else:
                         last_tim = 0
                                
-                if dev_flag:
-                    fail = True #save in the Replay buffer that this episode failed
-                    done = True #break
+                #if dev_flag:
+                #    fail = True #save in the Replay buffer that this episode failed
+                #    done = True #break
 
                 #t= time.clock()
                 with guiShared.Lock:

@@ -290,7 +290,7 @@ def test_net(Agent):
         TransNet_X.append(vehicle_state+action)
         TransNet_Y_.append([vehicle_state_next[i] - vehicle_state[i] for i in range(len(vehicle_state_next))] +rel_pos)
 
-        SteerNet_X.append(vehicle_state+[action[0],vehicle_state_next[Agent.trainHP.vehicle_ind_data['roll']]])
+        SteerNet_X.append(vehicle_state+[action[0],vehicle_state_next[vehicle_state_next.vehicle_ind_data['roll']]])
         SteerNet_Y_.append([action[1]])
 
     

@@ -47,8 +47,8 @@ def predict_one_step(net,env,X_dict,abs_pos,abs_ang):
     abs_pos,abs_ang = comp_abs_pos_ang(rel_pos,env.denormalize(Y_dict["rel_ang"],"rel_ang"),abs_pos,abs_ang)
     #pred = [abs_pos,abs_ang,vel,roll,roll_var]
     return X_dict,abs_pos,abs_ang
-#input: X dict
-#output: X dict after one step
+#input: 
+#output:
 def predict_n_next1(n,net,env,X_dict,abs_pos,abs_ang,path,emergency_flag = False,max_plan_roll = None,max_plan_deviation = None,roll_var = 0,delta_var = 0.0):
     dev_flag,roll_flag = False,0
     pred_vec = []

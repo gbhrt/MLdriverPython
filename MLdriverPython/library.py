@@ -195,11 +195,19 @@ def comp_steer_target(path,vel, index = 0):
 
         return [x,y]
 def find_index_on_path(path,pos,start_index = 0):#return closest index to vehicle
-    distances = [10000. for _ in range(len(path.position))]
-    for i in range(start_index, len(path.position)):
-            distances[i] = (path.position[i][0] - pos[0])**2 + (path.position[i][1] - pos[1])**2
-    index_min = np.argmin(distances)
-    return index_min
+    #distances = [10000. for _ in range(len(path.position))]
+    #for i in range(start_index, len(path.position)):
+    #        distances[i] = (path.position[i][0] - pos[0])**2 + (path.position[i][1] - pos[1])**2
+    #index_min = np.argmin(distances)
+    #a =[[1,2],[3,4],[5,6]]
+    #t = time.clock()
+    #np_path = np.array(path.position[start_index:])
+    #print("np.array:",time.clock() - t)
+    np_path_tr = np.transpose(path.position[start_index:])
+    #print(a_tr)
+    distances = np.square( np_path_tr[0] - pos[0])+np.square( np_path_tr[1] - pos[1])
+    #print(a_tr)
+    return np.argmin(distances)
 #def find_index_on_path(path, vehicle, start_index):#return closest index to vehicle
 #    distances = [10000. for _ in range(len(path.position))]
 #    for i in range(start_index, len(path.position)):
