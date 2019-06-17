@@ -4,6 +4,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import numpy as np
 import math
 import time
+import copy
 
 def rotate_vec(vec,ang):
     rvec =np.array([0.,0.])
@@ -142,8 +143,9 @@ class data_plots():
                 #self.line_emergency_roll_var1.set_data(np.arange(len(self.guiShared.planningData.vec_emergency_planned_roll[self.index[0]])),np.array(self.guiShared.planningData.vec_emergency_planned_roll[self.index[0]])-np.array(self.guiShared.planningData.vec_emergency_planned_roll_var[self.index[0]]))
                 #self.line_emergency_roll_var2.set_data(np.arange(len(self.guiShared.planningData.vec_emergency_planned_roll[self.index[0]])),np.array(self.guiShared.planningData.vec_emergency_planned_roll[self.index[0]])+np.array(self.guiShared.planningData.vec_emergency_planned_roll_var[self.index[0]]))
                 self.guiShared.update_data_flag = False
-        
-            path = self.guiShared.real_path
+
+            with self.guiShared.Lock:
+                path = copy.deepcopy( self.guiShared.real_path)
 
             if len(path.distance) > 0:
                 #if self.index[0] == -1:
@@ -173,6 +175,59 @@ class data_plots():
 
         self.root.after(50,self.plot_data)
 
+class Q_plot():
+    def __init__(self,root,spinBox,guiShared,index):
+        self.guiShared = guiShared
+        self.root = root
+        self.spinBox = spinBox
+        self.index = index
+        self.last_index = -1
+        self.figure,self.ax  = plt.subplots(1, 1,figsize=(2,2))
+        #self.ax.set_ylim(-1.0,1.0)
+        #self.ax.set_xlim(-1.0,1.0)
+
+        self.canvas = FigureCanvasTkAgg(self.figure, master= root)
+        self.canvas.get_tk_widget().grid(row = 1,column = 1)
+
+        self.plot_data()
+
+    def plot_data(self):
+        print_debug_data = False
+        if self.index[0] >=0:#update data if spin box changed.
+            self.index[0] = min(int(self.spinBox.get()),len(self.guiShared.roll)-1)
+            if self.index[0]!=self.last_index:
+                self.guiShared.update_data_flag = True
+                print_debug_data = True
+                self.last_index = self.index[0]
+
+        if self.guiShared.update_data_flag:
+            with self.guiShared.Lock:
+                vec_Q = copy.deepcopy( self.guiShared.planningData.vec_Q)
+                action_vec = copy.deepcopy( self.guiShared.planningData.action_vec)
+            if len(vec_Q)>0:
+                #print(self.guiShared.planningData.vec_Q[self.index[0]])
+                #arr = np.arange(100).reshape((10,10))
+                #print(arr)
+                self.ax.clear()
+                #self.ax.set_ylim(-1.0,1.0)
+                #self.ax.set_xlim(-1.0,1.0)
+                im = self.ax.imshow(vec_Q[self.index[0]],cmap = 'plasma')# "YlGn"
+               # im = self.ax.imshow(arr,cmap = 'plasma')# "YlGn"
+                print("action gui:",action_vec[self.index[0]])
+                print("self.guiShared.planningData.action_vec[self.index[0]][0]*5+5:",action_vec[self.index[0]][0]*5+5)
+                self.ax.scatter([-action_vec[self.index[0]][1]*5+5],[-action_vec[self.index[0]][0]*5+5],color = 'black')
+                #self.ax.set_xticks(np.arange(len(self.guiShared.planningData.vec_Q[self.index[0]])))
+                #self.ax.set_yticks(np.arange(len(self.guiShared.planningData.vec_Q[self.index[0]])))
+                ### ... and label them with the respective list entries
+                #self.ax.set_xticklabels(np.arange(len(self.guiShared.planningData.vec_Q[self.index[0]])))
+                #self.ax.set_yticklabels(np.arange(len(self.guiShared.planningData.vec_Q[self.index[0]])),)
+                #self.figure.colorbar(im, ax=self.ax)
+                self.ax.set_title('Q')
+                self.canvas.draw()
+                self.guiShared.update_episodes_flag = False
+        self.root.after(50,self.plot_data)
+
+
 class draw_state:
     def __init__(self,root,spinBox,guiShared,index):
         self.guiShared = guiShared
@@ -188,7 +243,7 @@ class draw_state:
         self.canvas = tk.Canvas(self.root,width = self.canvas_width, height = self.canvas_height)
         self.canvas.config(background="white")
         #self.canvas.pack()
-        self.canvas.grid(row = 1,rowspan = 2)
+        self.canvas.grid(row = 1,rowspan = 5)
         self.vehicle_pos = np.array([self.canvas_width*0.5,self.canvas_height*0.85])
 
         self.draw()
@@ -275,6 +330,7 @@ class draw_state:
 
 class TkGui():
     def __init__(self,guiShared):
+        
         self.guiShared = guiShared
         self.index = [-1]
         
@@ -287,19 +343,21 @@ class TkGui():
 
         
         self.spinBox = tk.Spinbox(self.root, from_=0, to= 120)
-        self.spinBox.grid(row = 4, column=1)
-        data_plots(self.root,self.spinBox,guiShared,self.index)
-        draw_state(self.root,self.spinBox,guiShared,self.index)
+        self.spinBox.grid(row = 5, column=1)
+        data_plots(self.root,self.spinBox,self.guiShared,self.index)
+        draw_state(self.root,self.spinBox,self.guiShared,self.index)
+        #if self.guiShared.mode == 'SDDPG':
+        Q_plot(self.root,self.spinBox,self.guiShared,self.index)
 
         #tk.Button(self.root, text="Quit", command=self.quit).pack()
-        tk.Button(self.root, text="Quit", command=self.quit).grid(row = 1,column =1)
+        tk.Button(self.root, text="Quit", command=self.quit).grid(row = 2,column =1)
 
         self.pause_btn_text = tk.StringVar()
-        tk.Button(self.root,  textvariable = self.pause_btn_text, command=self.pause_after_episode).grid(row = 2, column=1)
+        tk.Button(self.root,  textvariable = self.pause_btn_text, command=self.pause_after_episode).grid(row = 3, column=1)
         self.pause_btn_text.set("Pause")
 
         self.replay_btn_text = tk.StringVar()
-        tk.Button(self.root,  textvariable = self.replay_btn_text, command=self.replay_mode).grid(row = 3, column=1)
+        tk.Button(self.root,  textvariable = self.replay_btn_text, command=self.replay_mode).grid(row = 4, column=1)
         self.replay_btn_text.set("Set Replay Mode")
 
         self.root.mainloop()

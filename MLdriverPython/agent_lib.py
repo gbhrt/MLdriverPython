@@ -5,7 +5,7 @@ import json
 import library as lib
 import pathlib
 import sys
-from math import copysign
+import math
 
 import time
 
@@ -116,6 +116,49 @@ def DDQN(rand_state, rand_a, rand_reward, rand_next_state,net,HP):
     net.Update_Q(rand_state,rand_a,rand_targetQ)
     net.update_target()
     return
+
+def get_DQN_action(net,state):
+    da = 0.2
+    actions = []#for Q evaluation
+    for i in np.arange(1,-1-da,-da):
+        for j in np.arange(1,-1-da,-da):
+            actions.append([i,j])
+    l = int(math.sqrt(len(actions)))
+    Qs = net.get_Qa([state]*len(actions),actions)
+    Qs = Qs.flatten()
+    #print(Q)
+    Qs = np.reshape(Qs,(l,l))
+    max_Q_ind = np.argmax(Qs)
+    return actions[max_Q_ind]
+def DDQN(rand_state, rand_a, rand_reward, rand_next_state,rand_end,net,HP):
+    #compute target Q:
+
+    rand_next_a = [get_DQN_action(net,state) for state in rand_state]
+   
+    rand_next_targetQa = net.get_targetQa(rand_next_state,rand_next_a)#like in DQN
+    rand_targetQa = []
+    for i in range(len(rand_state)):
+        if rand_end[i] == False:
+            rand_targetQa.append(rand_reward[i] + HP.gamma*rand_next_targetQa[i])#DQN  
+        else:
+            rand_targetQa.append([rand_reward[i]])
+    #update critic:
+    net.Update_critic(rand_state,rand_a,rand_targetQa)#compute Qa(state,a) and minimize loss (Qa - targetQa)^2
+    Qa = net.get_Qa(rand_state,rand_a)
+    critic_loss = net.get_critic_loss(rand_state,rand_a,rand_targetQa)
+    print("critic_loss:",critic_loss)
+    
+    #update actor
+    #pred_action = net.get_actions(rand_state)#predicted action from state
+    #print("actions: ",pred_action)
+    #print("params: ",net.get_actor_parms())
+    #print("grads: ",net.get_actor_grads(rand_state,pred_action))
+    #print("norm grads: ",net.get_norm_actor_grads(rand_state,pred_action))
+    #print("grads: ",net.get_neg_Q_grads(rand_state,pred_action))
+    
+    #net.Update_actor(rand_state,pred_action)
+    net.update_targets()
+    return critic_loss, Qa#temp
 
 # Taken from https://github.com/openai/baselines/blob/master/baselines/ddpg/noise.py, which is
 # based on http://math.stackexchange.com/questions/1287634/implementing-ornstein-uhlenbeck-in-matlab

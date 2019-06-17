@@ -269,7 +269,7 @@ class Planner(PathManager):#planner - get and send data to simulator. input - mi
 
     def get_local_path(self, num_of_points = None):#send_path = True,
         #local_path = comp_path(pl,main_path_trans,main_index,num_of_points)#compute local path and global path(inside the planner)
-        self.index = self.find_index_on_path(0)
+        self.index = self.find_index_on_path(0)#
         self.main_index += self.index
         self.desired_path = self.copy_path(self.in_vehicle_reference_path,self.main_index,num_of_points)#choose 100 next points from vehicle position
         #if send_path:

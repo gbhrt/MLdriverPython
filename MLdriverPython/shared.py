@@ -12,6 +12,7 @@ class guiShared():#classes.planningData
         
         self.state = None
         self.steer = None
+        self.action = []
 
         self.steering_target = None
         self.max_roll = 0

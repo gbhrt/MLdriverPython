@@ -2,7 +2,7 @@
 #import data_manager1
 #from hyper_parameters import HyperParameters
 #from DDPG_net import DDPG_network
-import numpy as np
+#import numpy as np
 #import tensorflow as tf
 #import json
 #import time
@@ -16,10 +16,10 @@ import numpy as np
 #a_tr[0] = np.square( a_tr[0] - 1)
 #print(a_tr)
 
-import time
-t = time.clock()
-np.array(list(range(100000)))
-print(time.clock() - t)
+#import time
+#t = time.clock()
+#np.array(list(range(100000)))
+#print(time.clock() - t)
 
 #model = tf.keras.models.Sequential([
 #    tf.keras.layers.Dense(20, activation=tf.keras.activations.relu,input_shape = (2,) ),
@@ -123,3 +123,119 @@ print(time.clock() - t)
             
      
 #        time.sleep(0.5)
+
+
+
+
+#import matplotlib
+#import matplotlib.pyplot as plt
+#from matplotlib.colors import BoundaryNorm
+#from matplotlib.ticker import MaxNLocator
+#import numpy as np
+
+##
+##acc, steer = np.mgrid[slice(-1, 1 + da, da),
+##                        slice(-1, 1 + da, da)]
+
+##actions = zip(acc, steer)
+##a = np.arange(10000).reshape((100, 100))
+##print(a)
+
+#da = 0.1
+##a = [[i+j for i in np.arange(-1,1+da,da)] for j in np.arange(-1,1+da,da)]
+
+##[0,0],[0,0.1],...,[0,1],[0.1,0],...,[0.1,1],
+
+
+
+
+## make these smaller to increase the resolution
+#dx, dy = 0.05, 0.05
+
+## generate 2 2d grids for the x & y bounds
+
+
+#y, x = np.mgrid[slice(1, 5 + dy, dy),
+#                slice(1, 5 + dx, dx)]
+
+#z = np.sin(x)**10 + np.cos(10 + y*x) * np.cos(x)
+
+#da = 0.2
+##x = np.arange(-1.0, 1.0+ da, da)
+##z = np.sin(x)**10 + np.cos(10 + x*x) * np.cos(x)
+## x and y are bounds, so z should be the value *inside* those bounds.
+## Therefore, remove the last value from the z array.
+##z = z[:-1, :-1]
+##levels = MaxNLocator(nbins=15).tick_values(z.min(), z.max())
+
+
+### pick the desired colormap, sensible levels, and define a normalization
+### instance which takes data values and translates those into levels.
+#cmap = plt.get_cmap('PiYG')
+##norm = BoundaryNorm(levels, ncolors=cmap.N, clip=True)
+
+#fig, (ax0, ax1) = plt.subplots(nrows=2)
+
+#im = ax0.pcolormesh(x, y, z, cmap=cmap)# norm=norm
+##im = ax0.pcolormesh(x, x, z, cmap=cmap)# norm=norm
+#fig.colorbar(im, ax=ax0)
+#ax0.set_title('pcolormesh with levels')
+
+
+## contours are *point* based plots, so convert our bound into point
+## centers
+##cf = ax1.contourf(x[:-1, :-1] + dx/2.,
+##                  y[:-1, :-1] + dy/2., z, levels=levels,
+##                  cmap=cmap)
+##fig.colorbar(cf, ax=ax1)
+##ax1.set_title('contourf with levels')
+
+## adjust spacing between subplots so `ax1` title and `ax0` tick labels
+## don't overlap
+#fig.tight_layout()
+
+#plt.show()
+
+import numpy as np
+import matplotlib
+import matplotlib.pyplot as plt
+# sphinx_gallery_thumbnail_number = 2
+
+vegetables = ["cucumber", "tomato", "lettuce", "asparagus",
+              "potato", "wheat", "barley"]
+farmers = ["Farmer Joe", "Upland Bros.", "Smith Gardening",
+           "Agrifun", "Organiculture", "BioGoods Ltd.", "Cornylee Corp."]
+
+harvest = np.array([[0.8, 2.4, 2.5, 3.9, 0.0, 4.0, 0.0],
+                    [2.4, 0.0, 4.0, 1.0, 2.7, 0.0, 0.0],
+                    [1.1, 2.4, 0.8, 4.3, 1.9, 4.4, 0.0],
+                    [0.6, 0.0, 0.3, 0.0, 3.1, 0.0, 0.0],
+                    [0.7, 1.7, 0.6, 2.6, 2.2, 6.2, 0.0],
+                    [1.3, 1.2, 0.0, 0.0, 0.0, 3.2, 5.1],
+                    [0.1, 2.0, 0.0, 1.4, 0.0, 1.9, 6.3]])
+
+
+fig, ax = plt.subplots()
+im = ax.imshow(harvest,cmap ="YlGn" )
+
+ax.scatter([1],[1],color = 'black')#,'o'
+# We want to show all ticks...
+#ax.set_xticks(np.arange(len(farmers)))
+#ax.set_yticks(np.arange(len(vegetables)))
+## ... and label them with the respective list entries
+#ax.set_xticklabels(farmers)
+#ax.set_yticklabels(vegetables)
+
+## Rotate the tick labels and set their alignment.
+#plt.setp(ax.get_xticklabels(), rotation=45, ha="right",
+#         rotation_mode="anchor")
+
+## Loop over data dimensions and create text annotations.
+#for i in range(len(vegetables)):
+#    for j in range(len(farmers)):
+#        text = ax.text(j, i, harvest[i, j],
+#                       ha="center", va="center", color="w")
+
+#ax.set_title("Harvest of local farmers (in tons/year)")
+#fig.tight_layout()
+plt.show()

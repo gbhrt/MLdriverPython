@@ -211,6 +211,9 @@ class planningData:
 
         self.vec_target_points = []
 
+        self.vec_Q = []#[Q(1),Q(0),Q(-1),Q(a)]
+        self.action_vec = []
+
     def append(self,data):
         if len(data.vec_path)>0: self.vec_path.append(data.vec_path[0])
         #else: self.vec_path.append([])
@@ -240,5 +243,10 @@ class planningData:
         else: self.vec_emergency_planned_acc.append([])
         if len(data.vec_emergency_planned_steer) > 0: self.vec_emergency_planned_steer.append(data.vec_emergency_planned_steer[0])
         else: self.vec_emergency_planned_steer.append([])
+
+        if len(data.vec_Q) > 0: self.vec_Q.append(data.vec_Q[0])
+        else: self.vec_Q.append([])
+        if len(data.action_vec) > 0: self.action_vec.append(data.action_vec[0])
+        else: self.vec_Q.append([])
 
         #self.vec_target_points.append(data.vec_target_points[0])

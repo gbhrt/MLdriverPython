@@ -202,15 +202,19 @@ class TrainHyperParameters:
         self.run_random_num = 'inf'
         self.vehicle_ind_data = OrderedDict([('vel_y',0),('steer',1), ('roll',2)])  
         self.plan_roll = 0.03
+        #self.emergency_plan_roll = 0.07
         self.target_tolerance = 0.02
         self.min_dis = 0.5#or precentage
         self.max_plan_deviation = 10
         self.max_plan_roll = 0.1
-        self.emergency_action_flag = False
-        self.emergency_initial_state_action_flag = False
-        self.one_step_var = 0.01
         self.init_var = 0.0#uncertainty of the roll measurment
+        self.one_step_var = 0.01
         self.const_var = 0.05#roll variance at the future states, constant because closed loop control?
+        #self.emergency_const_var = 0.05
+
+        self.emergency_action_flag = True
+        
+
         self.max_cost = 100
         self.rollout_n = 10
 

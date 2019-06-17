@@ -142,6 +142,22 @@ def get_model_based_state(pl,last_abs_pos,last_abs_ang,local_path):
     last_abs_ang[1] = pl.simulator.vehicle.angle[1]
     return state
 
+def get_SDDPG_reward_stabilize(velocity,max_vel,mode,deviation,lower_bound = 0.0):
+    if mode == 'kipp'or mode == 'deviate':
+        reward = -1.0
+    else:
+        reward =  -0.02*velocity/max_vel
+    return reward
+def get_SDDPG_reward(progress,velocity,max_vel,mode,deviation,lower_bound = 0.0):
+    print("progress:",progress)
+    if mode == 'kipp'or mode == 'deviate':
+        reward = -1.0
+    elif velocity <= lower_bound:
+        reward = -0.2
+    else:
+        #reward =  - abs(deviation*0.03)+0.02*velocity/max_vel
+        reward =  - abs(deviation*0.03)+0.02*progress/(max_vel*0.2/0.05)
+    return reward
 def get_reward(velocity,max_vel,mode,lower_bound = 0.0,analytic_velocity = None,roll = None,max_alowed_roll = None,max_roll =None): 
     if analytic_velocity is not None:
         #reward = -abs((velocity - analytic_velocity)/max_vel)
