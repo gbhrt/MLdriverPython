@@ -9,6 +9,7 @@ class guiShared():#classes.planningData
         self.request_exit = False
         self.exit = False
         self.pause_after_episode_flag = False
+        self.evaluate = False
         
         self.state = None
         self.steer = None

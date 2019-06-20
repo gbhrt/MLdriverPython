@@ -5,16 +5,14 @@ import library as lib
 from classes import Path
 import copy
 import random
-
-from plot import Plot
 import agent_lib as pLib
-#import subprocess
+
 import math
 import os
 import classes
 
 
-def train(env,HP,net_drive,net_stabilize,dataManager,guiShared = None,seed = None,global_train_count = 0):
+def train(env,HP,net_drive,dataManager,net_stabilize = None,guiShared = None,seed = None,global_train_count = 0):
     
 
     #"""
@@ -32,8 +30,13 @@ def train(env,HP,net_drive,net_stabilize,dataManager,guiShared = None,seed = Non
     da = 0.2
     actions = []#for Q evaluation
     for i in np.arange(1,-1-da,-da):
-        for j in np.arange(1,-1-da,-da):
-            actions.append([i,j])
+        if HP.env_mode == "SDDPG_pure_persuit":
+            actions.append([i])
+        else:
+            for j in np.arange(1,-1-da,-da):
+                actions.append([i,j])
+             
+
     l = int(math.sqrt(len(actions)))
 
     total_step_count = 0
@@ -53,9 +56,6 @@ def train(env,HP,net_drive,net_stabilize,dataManager,guiShared = None,seed = Non
 
    
     #if not HP.skip_run:
-        
-    #plot = Plot()
-    #dataManager = data_manager.DataManager(total_data_names = ['total_reward'],  file = HP.save_name+".txt")
     #Replay_fails = pLib.Replay(HP.replay_memory_size)
     #if HP.restore_flag:
     #    Replay_fails.restore(HP.restore_file_path,name = "replay_fails")
@@ -100,9 +100,11 @@ def train(env,HP,net_drive,net_stabilize,dataManager,guiShared = None,seed = Non
             continue
         if i == 0 and not evaluation_flag:
             print("update nets first time")
-            pLib.DDPG([state], [[0,0]], [0], [state],[False],net_drive,HP)
+            tmp_a = [0] if HP.env_mode == "SDDPG_pure_persuit" else [0,0]
+            print("state",state)
+            pLib.DDPG([state], [tmp_a], [0], [state],[False],net_drive,HP)
             if HP.stabilize_flag:
-                pLib.DDPG([state], [[0,0]], [0], [state],[False],net_stabilize,HP)
+                pLib.DDPG([state], [tmp_a], [0], [state],[False],net_stabilize,HP)
         #episode_start_time = time.time()
         while  waitFor.stop != [True]:#while not stoped, the loop break if reached the end or the deviation is to big
             step_count+=1
@@ -113,30 +115,38 @@ def train(env,HP,net_drive,net_stabilize,dataManager,guiShared = None,seed = Non
             #print("velocity1: ",state[0])#,"Q: ",Q)#,"PI: ",Pi)#"velocity2: ",state[1],
           
             noise_range = env.action_space.high[0]
-            vel = state[0]
-
+            emergency_action = False
             if HP.analytic_action:# and HP.noise_flag:
                 state[0] = state[0]*(1.0- HP.reduce_vel)
                 a = [env.comp_analytic_acceleration(state)]#env.analytic_feature_flag must be false
                 #a = env.get_analytic_action()
             else:      
-                Q = net_drive.get_Qa([state]*len(actions),actions)
-                Q = Q.flatten()
+                #Q_matrix = net_drive.get_Qa([state]*len(actions),actions)
+                #Q_matrix = Q_matrix.flatten()
                 #print(Q)
-                Q = np.reshape(Q,(l,l))
+                #if  HP.env_mode == "SDDPG_pure_persuit":    
+                #    Q_matrix = np.reshape(Q_matrix,(len(Q_matrix),1))
+                #else:
+                    #Q_matrix = np.reshape(Q_matrix,(l,l))
+
                 if HP.DQN_flag:
-                    max_Q_ind = np.argmax(Q)
+                    max_Q_ind = np.argmax(Q_matrix)
                     action = actions[max_Q_ind]
                 else:
                     action  = net_drive.get_actions(np.reshape(state, (1, env.observation_space.shape[0])))[0]#[[action]] batch, action list
                 if HP.stabilize_flag:
                     Q_stabilize = net_stabilize.get_Qa([state],[action])
                     print("Q_stabilize:",Q_stabilize)
+                    #Q_matrix_stabilize = net_stabilize.get_Qa([state]*len(actions),actions)
+                    #if HP.env_mode != "SDDPG_pure_persuit":
+                        #Q_matrix_stabilize = np.reshape(Q_matrix_stabilize.flatten(),(l,l))
                     if Q_stabilize < HP.minQ:
+                        emergency_action = True
+                        print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
                         if HP.DQN_flag:
                             action =pLib.get_DQN_action(net_stabilize,state)
                         else:
-                            action  = net_drive.get_actions(np.reshape(state, (1, env.observation_space.shape[0])))[0]#
+                            action  = net_stabilize.get_actions(np.reshape(state, (1, env.observation_space.shape[0])))[0]#
                 
                 
                 
@@ -149,17 +159,24 @@ def train(env,HP,net_drive,net_stabilize,dataManager,guiShared = None,seed = Non
                 #noise = random.uniform(-1, 1)* noise_range
             
                 if not evaluation_flag:# HP.noise_flag:
-                    if vel <0.02:
+                    if env.pl.simulator.vehicle.velocity[1] <0.1:
                         noise = abs(noise)
                     
-                    a = np.array(action) +  noise#np vectors##########################################################
+                    if not emergency_action:#tmp
+                        a = np.array(action) +  noise#np vectors##########################################################
+                    else:
+                        a = np.array(action)
                     dataManager.noise.append(noise)
-                    print("noise:",noise)
+                    #print("noise:",noise)
+                else:
+                    a = action
                 a = list(np.clip(a,-env.action_space.high[0],env.action_space.high[0]))  
             
                 a = [float(a[k]) for k in range(len(a))]  
 
-                #a[0] = 1.0 if vel < 0.1 else 0.0
+                if HP.constant_velocity is not None:
+                    #if env.pl.simulator.vehicle.velocity > HP.constant_velocity/env.max_velocity_y: a[0] = 0.0
+                    a[0] = 1.0 if env.pl.simulator.vehicle.velocity[1] < HP.constant_velocity/env.max_velocity_y else 0.0
                 #a = [1.0]
             
                 #a = [state[0]]# 
@@ -178,9 +195,12 @@ def train(env,HP,net_drive,net_stabilize,dataManager,guiShared = None,seed = Non
            # print("state:", state)
             #a = env.get_analytic_action()
             #print("action: ", a)#,"noise: ",noise)
-            print("action:",a)#,"analytic_action:",analytic_action)
+            #print("action:",a)#,"analytic_action:",analytic_action)
             if not HP.gym_flag:
-                env.command(a[0],steer = a[1])
+                if HP.env_mode == "SDDPG_pure_persuit":
+                    env.command(a[0])
+                else:
+                    env.command(a[0],steer = a[1])
                # print("time until command: ",time.clock() - env.lt)
             #print("time from get state to execute action:",time.time() - env.lt)
 
@@ -218,7 +238,8 @@ def train(env,HP,net_drive,net_stabilize,dataManager,guiShared = None,seed = Non
                     last_time = start_time
                     train_count = 0
                     #for _ in range(HP.train_num):
-                    while (t - start_time) < env.step_time - (t - last_time)-0.05 and train_count < HP.train_num:  
+                    #while (t - start_time) < env.step_time - (t - last_time)-0.05 and train_count < HP.train_num:  
+                    while (t - start_time) < env.step_time - (t - last_time)-0.1 and train_count < HP.train_num:  
                         #print(t - start_time, t - last_time)
                         last_time = t
                         train_count += 1
@@ -273,8 +294,12 @@ def train(env,HP,net_drive,net_stabilize,dataManager,guiShared = None,seed = Non
             if guiShared is not None:
                 planningData = classes.planningData()
                 planningData.vec_path.append(env.local_path)
-                planningData.vec_Q.append(Q)
+                #planningData.vec_Q.append(Q_matrix)# Q_matrix_stabilize
                 planningData.action_vec.append(action)
+                planningData.action_noise_vec.append(a)
+                planningData.vec_emergency_action.append(emergency_action)
+                if HP.env_mode == 'DDPG_target':
+                    planningData.target_point.append(state[1:5])
                 with guiShared.Lock:
                     guiShared.planningData.append(planningData)
                     guiShared.roll = copy.copy(dataManager.roll)
@@ -367,7 +392,7 @@ def train(env,HP,net_drive,net_stabilize,dataManager,guiShared = None,seed = Non
         else:#not needed 
             seed = HP.seed[0]
 
-        if (i % HP.evaluation_every == 0 and i > 0) or test_path_ind != 0 or HP.always_no_noise_flag:
+        if (i % HP.evaluation_every == 0 and i > 0) or test_path_ind != 0 or HP.always_no_noise_flag or guiShared.evaluate:
             #HP.noise_flag = False
             evaluation_flag = True
             if HP.test_same_path:
@@ -381,36 +406,28 @@ def train(env,HP,net_drive,net_stabilize,dataManager,guiShared = None,seed = Non
             HP.train_flag = True
 
             net_drive.save_model(HP.save_file_path,name = 'tf_model_'+str(global_train_count))
+            if HP.stabilize_flag:
+                net_stabilize.save_model(HP.save_file_path,name = 'tf_model_stabilize_'+str(global_train_count))
 
         if (i % HP.save_every == 0 and i > 0): 
             if not HP.evaluation_flag:
                 net_drive.save_model(HP.save_file_path)
+                if HP.stabilize_flag:
+                    net_stabilize.save_model(HP.save_file_path,name = 'tf_model_stabilize')
                 Replay.save(HP.save_file_path)
             #Replay_fails.save(HP.save_file_path,name = "replay_fails")
                 dataManager.save_data()
         if HP.plot_flag and waitFor.command == [b'1']:
             dataManager.plot_all()
-            #dataManager.plot.plot('total_reward')#,'curvature'
-            #dataManager.plot.plot('curvature')
-            #dataManager.plot.plot_path_with_features(dataManager,env.distance_between_points,block = True)
-            #dataManager.plot.plot_path(dataManager.real_path,block = True)
-        #dataManager.save_readeable_data()
+ 
+        
 
         while guiShared.pause_after_episode_flag:
             time.sleep(0.1)
 
         
 
-        
-        #try:
-        #    dataManager.comp_rewards(path_num-1,HP.gamma)
-        #    dataManager.print_data()
-        #except:
-        #    print("cannot print data")
-        #if HP.plot_flag and command == [b'1']:
-        #    plot.close()
-        #    plot.plot_path_with_features(dataManager,HP.distance_between_points,block = True)
-            #plot.plot_path(dataManager.real_path,block = True)
+      
             
         #dataManager.restart()
 
@@ -418,6 +435,8 @@ def train(env,HP,net_drive,net_stabilize,dataManager,guiShared = None,seed = Non
     
     env.close()
     net_drive.save_model(HP.save_file_path)
+    if HP.stabilize_flag:
+        net_stabilize.save_model(HP.save_file_path,name = 'tf_model_stabilize')
     Replay.save(HP.save_file_path)
     #Replay.save(HP.save_file_path,name = "replay_fails")
     dataManager.save_data()

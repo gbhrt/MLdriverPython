@@ -96,7 +96,7 @@ class data_plots():
 
         self.canvas = FigureCanvasTkAgg(self.figure1, master= root)
         #self.canvas.get_tk_widget().pack()#side=tk.LEFT, fill=tk.BOTH)
-        self.canvas.get_tk_widget().grid(row = 0,column = 0, columnspan=2)
+        self.canvas.get_tk_widget().grid(row = 0,column = 0, columnspan=3)
         
         self.plot_data()
 
@@ -187,7 +187,7 @@ class Q_plot():
         #self.ax.set_xlim(-1.0,1.0)
 
         self.canvas = FigureCanvasTkAgg(self.figure, master= root)
-        self.canvas.get_tk_widget().grid(row = 1,column = 1)
+        self.canvas.get_tk_widget().grid(row = 1,column = 1,columnspan = 2)
 
         self.plot_data()
 
@@ -204,27 +204,36 @@ class Q_plot():
             with self.guiShared.Lock:
                 vec_Q = copy.deepcopy( self.guiShared.planningData.vec_Q)
                 action_vec = copy.deepcopy( self.guiShared.planningData.action_vec)
+                action_noise_vec = copy.deepcopy( self.guiShared.planningData.action_noise_vec)
             if len(vec_Q)>0:
-                #print(self.guiShared.planningData.vec_Q[self.index[0]])
-                #arr = np.arange(100).reshape((10,10))
-                #print(arr)
-                self.ax.clear()
-                #self.ax.set_ylim(-1.0,1.0)
-                #self.ax.set_xlim(-1.0,1.0)
-                im = self.ax.imshow(vec_Q[self.index[0]],cmap = 'plasma')# "YlGn"
-               # im = self.ax.imshow(arr,cmap = 'plasma')# "YlGn"
-                print("action gui:",action_vec[self.index[0]])
-                print("self.guiShared.planningData.action_vec[self.index[0]][0]*5+5:",action_vec[self.index[0]][0]*5+5)
-                self.ax.scatter([-action_vec[self.index[0]][1]*5+5],[-action_vec[self.index[0]][0]*5+5],color = 'black')
-                #self.ax.set_xticks(np.arange(len(self.guiShared.planningData.vec_Q[self.index[0]])))
-                #self.ax.set_yticks(np.arange(len(self.guiShared.planningData.vec_Q[self.index[0]])))
-                ### ... and label them with the respective list entries
-                #self.ax.set_xticklabels(np.arange(len(self.guiShared.planningData.vec_Q[self.index[0]])))
-                #self.ax.set_yticklabels(np.arange(len(self.guiShared.planningData.vec_Q[self.index[0]])),)
-                #self.figure.colorbar(im, ax=self.ax)
-                self.ax.set_title('Q')
-                self.canvas.draw()
-                self.guiShared.update_episodes_flag = False
+                if len(vec_Q[self.index[0]])>0:
+                    #print(self.guiShared.planningData.vec_Q[self.index[0]])
+                    #arr = np.arange(100).reshape((10,10))
+                    if print_debug_data:
+                        for row in vec_Q[self.index[0]]:
+                            for item in row:
+                                print(item,end = "    ")
+                            print()
+                    self.ax.clear()
+                    #self.ax.set_ylim(-1.0,1.0)
+                    #self.ax.set_xlim(-1.0,1.0)
+                    im = self.ax.imshow(vec_Q[self.index[0]],cmap = 'plasma')# "YlGn"
+                   # im = self.ax.imshow(arr,cmap = 'plasma')# "YlGn"
+                    if len(action_vec[self.index[0]])==2:
+                        self.ax.scatter([-action_vec[self.index[0]][1]*5+5],[-action_vec[self.index[0]][0]*5+5],color = 'black')
+                        self.ax.scatter([-action_noise_vec[self.index[0]][1]*5+5],[-action_noise_vec[self.index[0]][0]*5+5],color = 'white')
+                    else:
+                        self.ax.scatter([0],[-action_vec[self.index[0]][0]*5+5],color = 'black')
+                        self.ax.scatter([0],[-action_noise_vec[self.index[0]][0]*5+5],color = 'white')
+                    #self.ax.set_xticks(np.arange(len(self.guiShared.planningData.vec_Q[self.index[0]])))
+                    #self.ax.set_yticks(np.arange(len(self.guiShared.planningData.vec_Q[self.index[0]])))
+                    ### ... and label them with the respective list entries
+                    #self.ax.set_xticklabels(np.arange(len(self.guiShared.planningData.vec_Q[self.index[0]])))
+                    #self.ax.set_yticklabels(np.arange(len(self.guiShared.planningData.vec_Q[self.index[0]])),)
+                    #self.figure.colorbar(im, ax=self.ax)
+                    self.ax.set_title('Q')
+                    self.canvas.draw()
+                    self.guiShared.update_episodes_flag = False
         self.root.after(50,self.plot_data)
 
 
@@ -265,6 +274,9 @@ class draw_state:
         if len(self.guiShared.planningData.vec_emergency_predicded_path) > self.index[0]+1:
             if len(self.guiShared.planningData.vec_emergency_predicded_path[self.index[0]])>1:
                 self.draw_path(self.guiShared.planningData.vec_emergency_predicded_path[self.index[0]],color = "blue")
+        if len(self.guiShared.planningData.target_point)>self.index[0]+1:
+            if len(self.guiShared.planningData.target_point[self.index[0]])>1:
+                self.draw_point(self.guiShared.planningData.target_point[self.index[0]])
         #draw target points:
         #if len(self.guiShared.planningData.vec_target_points) > self.index[0]+1:
         #    for target_point in self.guiShared.planningData.vec_target_points[self.index[0]]:
@@ -273,6 +285,10 @@ class draw_state:
         #self.draw_vehicle(0.5)
         #test_path = [[0,0],[1,1],[2,4],[5,7],[7,7]]
         #self.draw_path(test_path)
+    def draw_point(self,point):
+        r = 0.5*self.scale
+        x,y = self.vehicle_pos[0]+point[0]*self.scale ,self.vehicle_pos[1]-point[1]*self.scale 
+        self.canvas.create_oval(x-r, y-r, x+r, y+r,fill = "black")
 
     def draw_target_point(self,targetPoint):
         r = 0.5*self.scale
@@ -343,7 +359,7 @@ class TkGui():
 
         
         self.spinBox = tk.Spinbox(self.root, from_=0, to= 120)
-        self.spinBox.grid(row = 5, column=1)
+        self.spinBox.grid(row = 5, column=1,columnspan = 2)
         data_plots(self.root,self.spinBox,self.guiShared,self.index)
         draw_state(self.root,self.spinBox,self.guiShared,self.index)
         #if self.guiShared.mode == 'SDDPG':
@@ -356,12 +372,24 @@ class TkGui():
         tk.Button(self.root,  textvariable = self.pause_btn_text, command=self.pause_after_episode).grid(row = 3, column=1)
         self.pause_btn_text.set("Pause")
 
+        self.evaluate_btn_text = tk.StringVar()
+        tk.Button(self.root,  textvariable = self.evaluate_btn_text, command=self.evaluate).grid(row = 3, column=2)
+        self.evaluate_btn_text.set("Evaluate")
+
         self.replay_btn_text = tk.StringVar()
         tk.Button(self.root,  textvariable = self.replay_btn_text, command=self.replay_mode).grid(row = 4, column=1)
         self.replay_btn_text.set("Set Replay Mode")
 
         self.root.mainloop()
 
+    def evaluate(self):
+        print("pause at the end of the episode")
+        if self.guiShared.evaluate:
+            self.guiShared.evaluate = False
+            self.evaluate_btn_text.set("Evaluate")
+        else:
+            self.guiShared.evaluate = True
+            self.evaluate_btn_text.set("Cancel evaluate")
     def quit(self):
         self.guiShared.request_exit = True
         while not self.guiShared.exit:#wait for finish the program

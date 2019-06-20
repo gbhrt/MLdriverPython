@@ -26,6 +26,7 @@ class NetLib:
 
     def save_model(self,path,name = "tf_model"):
         try:
+            with self.graph.as_default():
                 path1 = path +name+"\\"
                 pathlib.Path(path1).mkdir(parents=True, exist_ok=True) 
                 file_name =  path1+name+".ckpt "
@@ -40,13 +41,14 @@ class NetLib:
 
     def restore(self,path,name = "tf_model"):
         try:
-            path = path +name+"\\"
-            file_name =  path+name+".ckpt " #/media/windows-share/MLdriverPython/MLdriverPython/
-            # Restore variables from disk.
-            saver = tf.train.Saver()
-            saver.restore(self.sess, file_name)
-            print("Model restored.")
-            return False
+            with self.graph.as_default():
+                path = path +name+"\\"
+                file_name =  path+name+".ckpt " #/media/windows-share/MLdriverPython/MLdriverPython/
+                # Restore variables from disk.
+                saver = tf.train.Saver()
+                saver.restore(self.sess, file_name)
+                print("Model restored.")
+                return False
         except:
             print('cannot restore net',sys.exc_info()[0])
             #raise

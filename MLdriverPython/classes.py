@@ -213,6 +213,8 @@ class planningData:
 
         self.vec_Q = []#[Q(1),Q(0),Q(-1),Q(a)]
         self.action_vec = []
+        self.action_noise_vec = []
+        self.target_point = []
 
     def append(self,data):
         if len(data.vec_path)>0: self.vec_path.append(data.vec_path[0])
@@ -247,6 +249,12 @@ class planningData:
         if len(data.vec_Q) > 0: self.vec_Q.append(data.vec_Q[0])
         else: self.vec_Q.append([])
         if len(data.action_vec) > 0: self.action_vec.append(data.action_vec[0])
-        else: self.vec_Q.append([])
+        else: self.action_vec.append([])
+        if len(data.action_noise_vec) > 0: self.action_noise_vec.append(data.action_noise_vec[0])
+        else: self.action_noise_vec.append([])
+        if len(data.target_point) > 0: self.target_point.append(data.target_point[0])
+        else: self.target_point.append([])
 
+
+        
         #self.vec_target_points.append(data.vec_target_points[0])

@@ -62,9 +62,10 @@ class SafteyHyperParameters:
         self.train_num = 2# how many times to train in every step
         self.sample_ratio = 1.0
         self.epsilon = 0.1
-        self.minQ = -0.2
+        self.minQ = -0.5
         #########################
-        self.DQN_flag = False
+        #env_mode =  "SDDPG_pure_persuit" if HP.pure_persuit_flag else "SDDPG"
+        self.env_mode = "SDDPG_pure_persuit"#SDDPG DDPG_target
         self.evaluation_flag = False
         self.reduce_vel = 0.0
         self.add_feature_to_action  = False
@@ -80,16 +81,20 @@ class SafteyHyperParameters:
         self.render_flag = True
         self.plot_flag = True
         self.stabilize_flag = True
-        self.restore_flag = False  
+        self.constant_velocity = None #5.0
+        self.DQN_flag = False
+        #self.pure_persuit_flag = False
+        self.restore_flag = True  
         self.skip_run = False
         self.reset_every = 3
-        self.save_every = 500000
+        self.save_every = 100
         self.save_every_train_number = 25000000
         self.seed = [1111]#,1112,1113,1114,1115]
-        self.save_name ="SDDPG_vel_and_steer"
+        self.save_name ="SDDPG_pure_persuit1"#SDDPG_vel_and_steer_roll_reward2- roll reward, no saftey, ~0.8 of VOD 20-30% fails 
+        #SDDPG_vel_and_steer_roll_reward3 -with roll feature, doesn't converge
         self.save_file_path = os.getcwd()+ "\\files\\models\\saftey_DDPG1\\"+self.save_name+"\\"
 
-        self.restore_name = "SDDPG"
+        self.restore_name = "SDDPG_pure_persuit1"#SDDPG_pure_persuit saftey good but limit velocity because reward to low
         self.restore_file_path = os.getcwd()+ "\\files\\models\\saftey_DDPG1\\"+self.restore_name+"\\"
 
         if self.always_no_noise_flag:

@@ -50,9 +50,6 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="c_functions.py" />
-    <Compile Include="data_manager.py">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="data_manager1.py">
       <SubType>Code</SubType>
     </Compile>
@@ -61,7 +58,6 @@
     <Compile Include="drive_test.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="environment2.py" />
     <Compile Include="go_to_target.py">
       <SubType>Code</SubType>
     </Compile>
@@ -88,9 +84,6 @@
     <Compile Include="plot_data1.py" />
     <Compile Include="plot_paths _movie.py" />
     <Compile Include="predict_lib.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="replay_data.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="saftey_DDPG_main.py">
@@ -180,9 +173,6 @@
     <Compile Include="plot_data.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="plot_lib.py">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="tasks.py">
       <SubType>Code</SubType>
     </Compile>
@@ -198,9 +188,6 @@
     <Compile Include="planner.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="plot.py">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="test1.py">
       <SubType>Code</SubType>
     </Compile>
@@ -213,6 +200,7 @@
     <Compile Include="train_without_sim.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="train_net.py" />
     <Compile Include="uncertainty_test1.py" />
     <Compile Include="uncertainty_test.py">
       <SubType>Code</SubType>

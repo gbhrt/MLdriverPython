@@ -58,6 +58,20 @@ def choose_position_points(local_path,number,distance_between_points):#return po
 
     return points
 
+def get_ddpg_target_state(pl = None,local_path = None,num_points = 1,distance_between = 1.0,max_velocity = 30.0,max_curvature = 0.12):
+    #points = choose_position_points(local_path,num_points,distance_between)
+    #max_lenght = distance_between*num_points
+    #points = [pnt/max_lenght for pnt in points]
+    
+
+    index = lib.select_target_index(local_path, velocity = pl.simulator.vehicle.velocity[1])
+
+    points = [local_path.position[index][0],local_path.position[index][1]]
+
+    vel = max(pl.simulator.vehicle.velocity[1]/max_velocity,0)
+    state = [vel] +  points + [local_path.analytic_velocity[index]]
+    return state
+
 def get_ddpg_state(pl = None,local_path = None,num_points = 1,distance_between = 1.0,max_velocity = 30.0,max_curvature = 0.12):
     #velocity limit state:
     #points = choose_points(local_path,points,distance_between)
@@ -142,21 +156,37 @@ def get_model_based_state(pl,last_abs_pos,last_abs_ang,local_path):
     last_abs_ang[1] = pl.simulator.vehicle.angle[1]
     return state
 
-def get_SDDPG_reward_stabilize(velocity,max_vel,mode,deviation,lower_bound = 0.0):
+#def get_DDPG_target_reward(state,velocity,max_vel,roll,mode,deviation,lower_bound = 0.0):
+#    if mode == 'kipp'or mode == 'deviate':
+#        reward = -1.0
+#    else:
+#        reward =  -abs(velocity)/max_vel - abs(roll)#0.02*
+#    return reward
+
+def get_SDDPG_reward_stabilize(velocity,max_vel,roll,mode,deviation,lower_bound = 0.0):
     if mode == 'kipp'or mode == 'deviate':
         reward = -1.0
     else:
-        reward =  -0.02*velocity/max_vel
+        reward =  0.01*(-abs(velocity)/max_vel - abs(roll))#0.02*
     return reward
-def get_SDDPG_reward(progress,velocity,max_vel,mode,deviation,lower_bound = 0.0):
-    print("progress:",progress)
+def get_SDDPG_reward(progress,velocity,max_vel,roll,mode,deviation,lower_bound = 0.0):
+    #print("progress:",progress,"deviation:",deviation)
     if mode == 'kipp'or mode == 'deviate':
         reward = -1.0
     elif velocity <= lower_bound:
         reward = -0.2
+
+    elif abs(deviation) > 4.0:
+        print("deviation > 4.0")
+        reward = -0.1
+    elif  abs(roll) > 0.1:
+        reward = -0.5
     else:
-        #reward =  - abs(deviation*0.03)+0.02*velocity/max_vel
-        reward =  - abs(deviation*0.03)+0.02*progress/(max_vel*0.2/0.05)
+        reward = velocity/max_vel#progress/(max_vel*0.2/0.05)
+
+    #else:
+    #    #reward =  - abs(deviation*0.03)+0.02*velocity/max_vel
+    #    reward =  - abs(deviation*0.03)+0.02*progress/(max_vel*0.2/0.05)
     return reward
 def get_reward(velocity,max_vel,mode,lower_bound = 0.0,analytic_velocity = None,roll = None,max_alowed_roll = None,max_roll =None): 
     if analytic_velocity is not None:

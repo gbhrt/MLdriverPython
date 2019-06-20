@@ -136,9 +136,10 @@ def to_global(pos, init_pos, init_ang):#pos given in local reference system (loc
 
 
 
-def select_target_index(path,vehicle,index):
+def select_target_index(path,velocity = None, index = 0):
     k = 1.
-    forward_distance = k*path.velocity[index]
+    vel = velocity if velocity is not None else path.velocity[index]
+    forward_distance = k*vel
     target_index = index
     while (path.distance[target_index] - path.distance[index]) < forward_distance:
         if target_index >= len(path.distance) - 1:

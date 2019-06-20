@@ -206,9 +206,9 @@ def DDPG(rand_state, rand_a, rand_reward, rand_next_state,rand_end,net,HP,comp_a
             rand_targetQa.append([rand_reward[i]])
     #update critic:
     net.Update_critic(rand_state,rand_a,rand_targetQa)#compute Qa(state,a) and minimize loss (Qa - targetQa)^2
-    Qa = net.get_Qa(rand_state,rand_a)
-    critic_loss = net.get_critic_loss(rand_state,rand_a,rand_targetQa)
-    print("critic_loss:",critic_loss)
+    #Qa = net.get_Qa(rand_state,rand_a)
+    #critic_loss = net.get_critic_loss(rand_state,rand_a,rand_targetQa)
+    #print("critic_loss:",critic_loss)
     
     #update actor
     pred_action = net.get_actions(rand_state)#predicted action from state
@@ -220,7 +220,7 @@ def DDPG(rand_state, rand_a, rand_reward, rand_next_state,rand_end,net,HP,comp_a
     
     net.Update_actor(rand_state,pred_action)
     net.update_targets()
-    return critic_loss, Qa#temp
+    return #critic_loss, Qa#temp
 def model_based_update(rand_state, rand_a, rand_next_state,rand_end,net,HP,env):
     X,Y_ = env.create_XY_(rand_state, rand_a, rand_next_state)
     net.update_network(X,Y_)

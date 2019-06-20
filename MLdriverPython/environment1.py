@@ -25,6 +25,7 @@ class OptimalVelocityPlannerData:
 
         self.analytic_feature_flag = False
         self.roll_feature_flag = False
+        self.vehicle_data_features = True
         self.wheels_vel_feature_flag = False
         self.end_indication_flag = False
         self.lower_bound_flag = False
@@ -37,8 +38,10 @@ class OptimalVelocityPlannerData:
         self.distance_between_points = 1.0 #meter 1.0
         self.path_lenght = 9000#self.feature_points*self.distance_between_points
         self.step_time = 0.2
-        if env_mode == 'SDDPG':
+        if env_mode == 'SDDPG' or env_mode == 'DDPG_target':
             self.action_space_n = 2
+        elif env_mode == 'SDDPG_pure_persuit':
+            self.action_space_n = 1
         else:
             self.action_space_n = 1
 
@@ -76,7 +79,7 @@ class OptimalVelocityPlannerData:
         self.action_space.high = [1.0]#self.acc*self.step_time] #, torque in Nm
         self.observation_space = ObservationSpace()
         
-        if self.env_mode == 'DDPG' or self.env_mode == 'SDDPG':
+        if self.env_mode == 'DDPG' or self.env_mode == 'SDDPG' or self.env_mode == 'SDDPG_pure_persuit':
             self.X_n = self.feature_data_num +  2*self.feature_points #vehicle state points on the path (distance)
             self.observation_space.range = [[0,self.max_velocity_y],
                                 [-self.max_steering,self.max_steering],
@@ -84,7 +87,10 @@ class OptimalVelocityPlannerData:
                                 [-self.max_steering,self.max_steering],
                                 [-1.0,1.0]]#vel,steer,roll,steer_comand,acc_comand
             self.observation_space.shape = [self.X_n]
-        if self.env_mode == 'model_based':
+        elif self.env_mode == 'DDPG_target':
+            self.X_n = self.feature_data_num+3 #vel,x taget,y target,vel target
+            self.observation_space.shape = [self.X_n]
+        elif self.env_mode == 'model_based':
             self.max_min_values = {'vel_x':[0,self.max_velocity_x],
                                  #'vel_y':[0,self.max_velocity_y],
                                  'vel_y':[-self.max_acc_y,self.max_acc_y],
@@ -330,8 +336,35 @@ class OptimalVelocityPlanner(OptimalVelocityPlannerData):
         self.path_seed = None
         return
 
-        
-             
+    def get_state(self):
+        if self.env_mode == 'DDPG' or self.env_mode == 'SDDPG' or self.env_mode == 'SDDPG_pure_persuit':
+            
+            state = get_ddpg_state(self.pl,self.local_path,self.feature_points,self.distance_between_points,self.max_velocity_y,self.max_curvature)
+            if self.roll_feature_flag:
+                state = [self.pl.simulator.vehicle.angle[2]/self.max_roll]+state
+            if self.wheels_vel_feature_flag:
+                state = [self.pl.simulator.vehicle.steering/self.max_steering]+state
+                state = [wheel.angular_vel/self.max_wheel_vel for wheel in self.pl.simulator.vehicle.wheels]+state
+            if self.analytic_feature_flag:
+                analytic_a = [self.comp_analytic_acceleration(state)]
+                state = analytic_a + state
+            if self.vehicle_data_features:
+                state = [self.pl.simulator.vehicle.angle[2]/self.max_roll]+ [pl.simulator.vehicle.steering] +state
+
+
+
+        if self.env_mode == 'DDPG_target':
+            state = get_ddpg_target_state(self.pl,self.local_path,self.feature_points,self.distance_between_points,self.max_velocity_y,self.max_curvature)
+            if self.roll_feature_flag:
+                state = [self.pl.simulator.vehicle.angle[2]/self.max_roll]+state
+            if self.wheels_vel_feature_flag:
+                state = [self.pl.simulator.vehicle.steering/self.max_steering]+state
+                state = [wheel.angular_vel/self.max_wheel_vel for wheel in self.pl.simulator.vehicle.wheels]+state
+        if self.env_mode == 'model_based':
+            self.last_pos = self.pl.simulator.vehicle.position#first time init abs position and angle - updated in the function
+            self.last_ang = self.pl.simulator.vehicle.angle
+            state = get_model_based_state(self.pl,self.last_pos,self.last_ang,self.local_path)
+        return state
 
     def reset(self,seed = None):
         self.stop_flag = False
@@ -377,21 +410,8 @@ class OptimalVelocityPlanner(OptimalVelocityPlannerData):
         self.error = self.pl.send_desired_path()
         if self.error:
             return "error"
-        if self.env_mode == 'DDPG' or self.env_mode == 'SDDPG':
-            
-            state = get_ddpg_state(self.pl,self.local_path,self.feature_points,self.distance_between_points,self.max_velocity_y,self.max_curvature)
-            if self.roll_feature_flag:
-                state = [self.pl.simulator.vehicle.angle[2]/self.max_roll]+state
-            if self.wheels_vel_feature_flag:
-                state = [self.pl.simulator.vehicle.steering/self.max_steering]+state
-                state = [wheel.angular_vel/self.max_wheel_vel for wheel in self.pl.simulator.vehicle.wheels]+state
-            if self.analytic_feature_flag:
-                analytic_a = [self.comp_analytic_acceleration(state)]
-                state = analytic_a + state
-        if self.env_mode == 'model_based':
-            self.last_pos = self.pl.simulator.vehicle.position#first time init abs position and angle - updated in the function
-            self.last_ang = self.pl.simulator.vehicle.angle
-            state = get_model_based_state(self.pl,self.last_pos,self.last_ang,self.local_path)
+        
+        state = self.get_state()
 
         #self.dataManager.update_real_path(pl = self.pl,velocity_limit = self.local_path.analytic_velocity_limit[0],analytic_vel = self.local_path.analytic_velocity[0]\
         #    ,curvature = self.local_path.curvature[0],seed = self.path_seed)#update at the first time
@@ -434,24 +454,7 @@ class OptimalVelocityPlanner(OptimalVelocityPlannerData):
 
         self.local_path = self.pl.get_local_path(num_of_points = self.visualized_points)#num_of_points = visualized_points
 
-        if self.env_mode == 'DDPG' or self.env_mode == 'SDDPG':
-            #self.local_path = self.pl.get_local_path_vehicle_on_path(send_path = False,num_of_points = self.visualized_points)#num_of_points = visualized_points
-       
-            next_state = get_ddpg_state(self.pl,self.local_path,self.feature_points,self.distance_between_points,self.max_velocity_y,self.max_curvature)
-            if self.roll_feature_flag:
-                next_state = [self.pl.simulator.vehicle.angle[2]/self.max_roll]+next_state
-            if self.wheels_vel_feature_flag:
-                next_state = [self.pl.simulator.vehicle.steering/self.max_steering]+next_state
-                next_state = [wheel.angular_vel/self.max_wheel_vel for wheel in self.pl.simulator.vehicle.wheels]+next_state
-            if self.analytic_feature_flag:
-                analytic_a = [self.comp_analytic_acceleration(next_state)]
-                next_state = analytic_a + next_state
-                self.dataManager.update_real_path(pl = self.pl,velocity_limit = self.local_path.analytic_velocity_limit[0],analytic_vel = self.local_path.analytic_velocity[0]\
-                    ,curvature = self.local_path.curvature[0],seed = self.path_seed)
-        if self.env_mode == 'model_based':
-           # print("before get_model_based_state: ",time.time() - self.last_time[0])
-            next_state = get_model_based_state(self.pl,self.last_pos,self.last_ang,self.local_path)
-            self.roll_vec.append(self.pl.simulator.vehicle.angle[2])
+        next_state = self.get_state()
 
         self.dataManager.update_real_path(pl = self.pl,velocity_limit = self.local_path.analytic_velocity_limit[0],analytic_vel = self.local_path.analytic_velocity[0]\
             ,curvature = self.local_path.curvature[0],seed = self.path_seed)
@@ -471,10 +474,11 @@ class OptimalVelocityPlanner(OptimalVelocityPlannerData):
         self.dataManager.step_times.append(self.lt)
 
         #get reward:
-        if self.env_mode == 'SDDPG':
+        if self.env_mode == 'SDDPG' or self.env_mode == 'SDDPG_pure_persuit':
             if stabilize_flag:
-                reward_stabilize = get_SDDPG_reward_stabilize(self.pl.simulator.vehicle.velocity[1],self.max_velocity_y,self.mode,deviation)
-            reward = get_SDDPG_reward(self.pl.index,self.pl.simulator.vehicle.velocity[1],self.max_velocity_y,self.mode,deviation)
+                reward_stabilize = get_SDDPG_reward_stabilize(self.pl.simulator.vehicle.velocity[1],self.max_velocity_y,self.pl.simulator.vehicle.angle[2],self.mode,deviation)
+                #print("reward_stabilize:",reward_stabilize)
+            reward = get_SDDPG_reward(self.pl.index,self.pl.simulator.vehicle.velocity[1],self.max_velocity_y,self.pl.simulator.vehicle.angle[2],self.mode,deviation)
         else:
             reward = get_reward(self.pl.simulator.vehicle.velocity[1],self.max_velocity_y,self.mode)#,analytic_velocity = self.local_path.analytic_velocity[0])#
 

@@ -13,6 +13,9 @@ from net_lib import NetLib
 
 class model_based_network(NetLib):
     def __init__(self,X_n,Y_n,alpha,net_type = 0):#,dropout_flag = False  X_mean,X_std,Y_mean,Y_std
+        
+        #tf.reset_default_graph()  
+        #self.graph = tf.get_default_graph()
         self.X_n = X_n#len(X_mean)#X_n
         self.Y_n = Y_n#len(Y_mean)#Y_n
 
@@ -203,7 +206,7 @@ class model_based_network(NetLib):
         return 
     def get_loss(self,X,Y_,keep_prob = 1.0):
         #return self.sess.run(self.loss, feed_dict= {self.X: lib.normalize(X,self.X_norm_vec) ,self.Y_: Y_})# 
-        return self.model.loss()#self.sess.run(self.loss, feed_dict= {self.X: X ,self.Y_: Y_,self.keep_prob: keep_prob})# 
+        return self.model.evaluate(np.array(X),np.array(Y_))#loss()#self.sess.run(self.loss, feed_dict= {self.X: X ,self.Y_: Y_,self.keep_prob: keep_prob})# 
     #def get_Y_1(self,X):
     #    Y = self.sess.run(self.Y, feed_dict= {self.X: lib.normalize(X,self.X_norm_vec)})
     #    #Y = self.sess.run(self.Y, feed_dict= {self.X: X})

@@ -10,7 +10,8 @@ class DDPG_network(NetLib):
         alpha_actor = None,alpha_critic = None,alpha_analytic_actor = None,alpha_analytic_critic = None,  tau = 1.0,seed = None,conv_flag = True,feature_data_n = 1):
        
 
-        tf.reset_default_graph()                  
+        tf.reset_default_graph()     
+        self.graph = tf.get_default_graph()
         if seed != None:
             tf.set_random_seed(seed)
         self.state = tf.placeholder(tf.float32, [None,state_n] )
