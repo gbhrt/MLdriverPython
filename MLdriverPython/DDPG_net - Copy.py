@@ -10,7 +10,8 @@ class DDPG_network(NetLib):
         alpha_actor = None,alpha_critic = None,alpha_analytic_actor = None,alpha_analytic_critic = None,  tau = 1.0,seed = None,conv_flag = True,feature_data_n = 1):
        
 
-        tf.reset_default_graph()                                                                 
+        tf.reset_default_graph()     
+        self.graph = tf.get_default_graph()
         if seed != None:
             tf.set_random_seed(seed)
         self.state = tf.placeholder(tf.float32, [None,state_n] )
@@ -62,12 +63,12 @@ class DDPG_network(NetLib):
 
             #############################################################
             #for analytic initialize:
-            self.analytic_action = tf.placeholder( dtype=tf.float32, shape=[None,action_space_n] )
-            self.analytic_actor_loss = tf.reduce_mean( tf.squared_difference(self.action_out,self.analytic_action))#
-            self.update_analytic_actor = tf.train.AdamOptimizer(alpha_analytic_actor).minimize(self.analytic_actor_loss)
+            #self.analytic_action = tf.placeholder( dtype=tf.float32, shape=[None,action_space_n] )
+            #self.analytic_actor_loss = tf.reduce_mean( tf.squared_difference(self.action_out,self.analytic_action))#
+            #self.update_analytic_actor = tf.train.AdamOptimizer(alpha_analytic_actor).minimize(self.analytic_actor_loss)
 
-            self.copy_actor_target_vec = self.copy_target_init(tau,self.actor_params,self.target_actor_params)#update targrt networks immediately
-            self.copy_critic_target_vec = self.copy_target_init(tau,self.critic_params,self.target_critic_params)
+            #self.copy_actor_target_vec = self.copy_target_init(tau,self.actor_params,self.target_actor_params)#update targrt networks immediately
+            #self.copy_critic_target_vec = self.copy_target_init(tau,self.critic_params,self.target_critic_params)
             #############################################################
             #self.Pia = tf.reduce_sum(tf.multiply(self.Pi, self.actions_one_hot),axis=1)#Pi on action a at the feeded state
 
@@ -88,6 +89,10 @@ class DDPG_network(NetLib):
     def continues_actor(self,action_n,action_limit,state,state_n,feature_data_n = 1,conv_flag = True): #define a net - input: state (and dimentions) - output: a continues action ,
         hidden_layer_nodes1 = 400#400
         hidden_layer_nodes2 = 300#300
+        #hidden_layer_nodes1 = 40#400
+        #hidden_layer_nodes2 = 30#300
+
+        hidden_layer_nodes3 = 200
 
         ##hidden layer 1:
         #theta1 = tf.Variable(tf.truncated_normal([state_n,hidden_layer_nodes1], stddev=0.02),name = "P_th1")
@@ -119,9 +124,11 @@ class DDPG_network(NetLib):
             #batch_size.shape()
             # Flatten the data to a 1-D vector for the fully connected layer
             conv = tf.contrib.layers.flatten(conv)
+            hidden_data_layer_nodes = 50
+            fc_data = tflearn.fully_connected(data_s, hidden_data_layer_nodes,regularizer='L2', weight_decay=0.01)#
             fc1_1 = tflearn.fully_connected(conv, hidden_layer_nodes1,regularizer='L2', weight_decay=0.01)#from state
-            fc1_2 = tflearn.fully_connected(data_s, hidden_layer_nodes1,regularizer='L2', weight_decay=0.01)#from analytic action
-            fc1 = tflearn.activation(tf.matmul(conv, fc1_1.W) + tf.matmul(data_s, fc1_2.W) + fc1_1.b + fc1_2.b, activation='relu')
+            fc1_2 = tflearn.fully_connected(fc_data, hidden_layer_nodes1,regularizer='L2', weight_decay=0.01)#from analytic action
+            fc1 = tflearn.activation(tf.matmul(conv, fc1_1.W) + tf.matmul(fc_data, fc1_2.W) + fc1_1.b + fc1_2.b, activation='relu')
             #state[...,1:].shape()
         else:
             fc1 = tflearn.fully_connected(state, hidden_layer_nodes1,regularizer='L2', weight_decay=0.01)#from state
@@ -132,15 +139,23 @@ class DDPG_network(NetLib):
         #net = tflearn.layers.normalization.batch_normalization(net)
         fc2 = tflearn.activations.relu(fc2)
         
+        fc3 = tflearn.fully_connected(fc2, hidden_layer_nodes3,regularizer='L2', weight_decay=0.01)
+        fc3 = tflearn.activations.relu(fc3)
+
         init = tflearn.initializations.uniform(minval=-0.003, maxval=0.003)# Final layer weights are init to Uniform[-3e-3, 3e-3]
-        action = tflearn.fully_connected(fc2, action_n, activation='tanh', weights_init=init,bias_init = init,regularizer='L2', weight_decay=0.01)
+        action = tflearn.fully_connected(fc3, action_n, activation='tanh', weights_init=init,bias_init = init,regularizer='L2', weight_decay=0.01)
         # Scale output to -action_bound to action_bound
         action = tf.multiply(action, action_limit)
 
         return action
     def continues_critic(self,action,action_n,state,state_n,feature_data_n = 1,conv_flag = True):#define a net - input: state (and dimentions) - output: Q - Value
-        hidden_layer_nodes1 = 400
-        hidden_layer_nodes2 = 300
+        hidden_layer_nodes1 = 400#400
+        hidden_layer_nodes2 = 300#300
+        hidden_layer_nodes3 = 400
+        #hidden_layer_nodes1 = 40#400
+        #hidden_layer_nodes2 = 30
+        #hidden_layer_nodes1 = 200#400
+        #hidden_layer_nodes2 = 150
 
         #linear regression:
         #W1 = tf.Variable(tf.truncated_normal([features_num,action_space_n], stddev=1e-5))
@@ -194,14 +209,21 @@ class DDPG_network(NetLib):
             #batch_size.shape()
             # Flatten the data to a 1-D vector for the fully connected layer
             conv = tf.contrib.layers.flatten(conv)
+
+            hidden_data_layer_nodes = 50
+            fc_data = tflearn.fully_connected(data_s, hidden_data_layer_nodes,regularizer='L2', weight_decay=0.01)#
+
             fc1_1 = tflearn.fully_connected(conv, hidden_layer_nodes1,regularizer='L2', weight_decay=0.01)#from state
-            fc1_2 = tflearn.fully_connected(data_s, hidden_layer_nodes1,regularizer='L2', weight_decay=0.01)#from analytic action
-            fc1 = tflearn.activation(tf.matmul(conv, fc1_1.W) + tf.matmul(data_s, fc1_2.W) + fc1_1.b + fc1_2.b, activation='relu')
+            fc1_2 = tflearn.fully_connected(fc_data, hidden_layer_nodes1,regularizer='L2', weight_decay=0.01)#from analytic action
+            fc1 = tflearn.activation(tf.matmul(conv, fc1_1.W) + tf.matmul(fc_data, fc1_2.W) + fc1_1.b + fc1_2.b, activation='relu')
             #state[...,1:].shape()
         else:
             fc1 = tflearn.fully_connected(state, hidden_layer_nodes1,regularizer='L2', weight_decay=0.01)#from state
             #fc1 = tflearn.layers.normalization.batch_normalization(fc1)
             fc1 = tflearn.activations.relu(fc1)
+
+            #fc3 = tflearn.fully_connected(fc1, hidden_layer_nodes3,regularizer='L2', weight_decay=0.01)
+            #fc3 = tflearn.activations.relu(fc3)
 
         # Add the action tensor in the 2nd hidden layer
         # Use two temp layers to get the corresponding weights and biases
@@ -210,6 +232,8 @@ class DDPG_network(NetLib):
 
         fc2 = tflearn.activation(tf.matmul(fc1, fc2_1.W) + tf.matmul(action, fc2_2.W)  + fc2_2.b + fc2_1.b, activation='relu')#
           
+        #fc3 = tflearn.fully_connected(fc2, hidden_layer_nodes3,regularizer='L2', weight_decay=0.01)
+        #fc3 = tflearn.activations.relu(fc3)
 
         # linear layer connected to 1 output representing Q(s,a)
         # Weights are init to Uniform[-3e-3, 3e-3]

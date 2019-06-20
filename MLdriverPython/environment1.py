@@ -34,7 +34,7 @@ class OptimalVelocityPlannerData:
         self.roll_vec=[]#save all roll angles during one episode
         self.max_episode_steps = 100#100#200#
         self.feature_points = 25#60 # number of points on the path in the state +(1*self.end_indication_flag)
-        self.feature_data_num = 1  + (1*self.analytic_feature_flag)+ (1*self.roll_feature_flag) + (5*self.wheels_vel_feature_flag)# number of data in state (vehicle velocity, analytic data...)
+        self.feature_data_num = 1+(8*self.vehicle_data_features)  + (1*self.analytic_feature_flag)+ (1*self.roll_feature_flag) + (5*self.wheels_vel_feature_flag)# number of data in state (vehicle velocity, analytic data...)
         self.distance_between_points = 1.0 #meter 1.0
         self.path_lenght = 9000#self.feature_points*self.distance_between_points
         self.step_time = 0.2
@@ -349,7 +349,13 @@ class OptimalVelocityPlanner(OptimalVelocityPlannerData):
                 analytic_a = [self.comp_analytic_acceleration(state)]
                 state = analytic_a + state
             if self.vehicle_data_features:
-                state = [self.pl.simulator.vehicle.angle[2]/self.max_roll]+ [pl.simulator.vehicle.steering] +state
+                state = [self.pl.simulator.vehicle.angle[2]/self.max_roll]+\
+                [self.pl.simulator.vehicle.angle[0]/self.max_roll]+\
+                [self.pl.simulator.vehicle.steering] +\
+                self.pl.simulator.vehicle.angular_velocity+\
+                [self.pl.simulator.vehicle.velocity[0]]+\
+                [self.pl.simulator.vehicle.velocity[2]]+\
+                state
 
 
 

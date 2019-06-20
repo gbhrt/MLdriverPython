@@ -53,8 +53,8 @@
     <Compile Include="data_manager1.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="saftey_DDPG_algorithm.py" />
     <Compile Include="DDPG_net - Copy.py" />
+    <Compile Include="saftey_DDPG_algorithm.py" />
     <Compile Include="drive_test.py">
       <SubType>Code</SubType>
     </Compile>

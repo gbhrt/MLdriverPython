@@ -92,7 +92,7 @@ class DDPG_network(NetLib):
         #hidden_layer_nodes1 = 40#400
         #hidden_layer_nodes2 = 30#300
 
-        hidden_layer_nodes3 = 200
+        #hidden_layer_nodes3 = 200
 
         ##hidden layer 1:
         #theta1 = tf.Variable(tf.truncated_normal([state_n,hidden_layer_nodes1], stddev=0.02),name = "P_th1")
@@ -110,25 +110,48 @@ class DDPG_network(NetLib):
         #input = tflearn.input_data(shape=[None, state_n])
 
 
-        if conv_flag:#if add convolution layers - split state to data and path (or picture)
+        #if conv_flag:#if add convolution layers - split state to data and path (or picture)
+        #    #if the first item in each state is the analytical action:
+        #    s = state[...,feature_data_n:]
+        #    data_s = state[...,0:feature_data_n]
+        #    s_n = state_n - feature_data_n#data items removed
+
+
+        #    s = tf.reshape(s, [-1, s_n, 1])#
+        #    conv = tflearn.layers.conv.conv_1d(s,16,6,activation = 'relu')
+        #    #net = tf.reshape(net, [-1,net.W.get_shape().as_list()[0]])
+        #    #net = net[...,0:-2]
+        #    #batch_size.shape()
+        #    # Flatten the data to a 1-D vector for the fully connected layer
+        #    conv = tf.contrib.layers.flatten(conv)
+        #    hidden_data_layer_nodes = 50
+        #    fc_data = tflearn.fully_connected(data_s, hidden_data_layer_nodes,regularizer='L2', weight_decay=0.01)#
+        #    fc1_1 = tflearn.fully_connected(conv, hidden_layer_nodes1,regularizer='L2', weight_decay=0.01)#from state
+        #    fc1_2 = tflearn.fully_connected(fc_data, hidden_layer_nodes1,regularizer='L2', weight_decay=0.01)#from analytic action
+        #    fc1 = tflearn.activation(tf.matmul(conv, fc1_1.W) + tf.matmul(fc_data, fc1_2.W) + fc1_1.b + fc1_2.b, activation='relu')
+        #    #state[...,1:].shape()
+
+        if conv_flag:# split state to data and path (or picture)
             #if the first item in each state is the analytical action:
-            s = state[...,feature_data_n:]
+            path_s = state[...,feature_data_n:]
             data_s = state[...,0:feature_data_n]
             s_n = state_n - feature_data_n#data items removed
 
 
-            s = tf.reshape(s, [-1, s_n, 1])#
-            conv = tflearn.layers.conv.conv_1d(s,16,6,activation = 'relu')
-            #net = tf.reshape(net, [-1,net.W.get_shape().as_list()[0]])
-            #net = net[...,0:-2]
-            #batch_size.shape()
-            # Flatten the data to a 1-D vector for the fully connected layer
-            conv = tf.contrib.layers.flatten(conv)
-            hidden_data_layer_nodes = 50
-            fc_data = tflearn.fully_connected(data_s, hidden_data_layer_nodes,regularizer='L2', weight_decay=0.01)#
-            fc1_1 = tflearn.fully_connected(conv, hidden_layer_nodes1,regularizer='L2', weight_decay=0.01)#from state
-            fc1_2 = tflearn.fully_connected(fc_data, hidden_layer_nodes1,regularizer='L2', weight_decay=0.01)#from analytic action
-            fc1 = tflearn.activation(tf.matmul(conv, fc1_1.W) + tf.matmul(fc_data, fc1_2.W) + fc1_1.b + fc1_2.b, activation='relu')
+            path_s = tf.reshape(path_s, [-1, s_n, 1])#
+            hidden_layer_nodes_path1 = 20
+            hidden_layer_nodes_path2 = 5
+            path_fc1 = tflearn.fully_connected(path_s, hidden_layer_nodes_path1,regularizer='L2', weight_decay=0.01)
+
+            path_fc2 = tflearn.fully_connected(path_fc1, hidden_layer_nodes_path1,regularizer='L2', weight_decay=0.01)
+            #conv = tflearn.layers.conv.conv_1d(s,16,6,activation = 'relu')
+
+            #conv = tf.contrib.layers.flatten(conv)
+            #hidden_data_layer_nodes = 50
+            #fc_data = tflearn.fully_connected(data_s, hidden_data_layer_nodes,regularizer='L2', weight_decay=0.01)#
+            fc1_1 = tflearn.fully_connected(path_fc2, hidden_layer_nodes1,regularizer='L2', weight_decay=0.01)#from state
+            fc1_2 = tflearn.fully_connected(data_s, hidden_layer_nodes1,regularizer='L2', weight_decay=0.01)#from analytic action
+            fc1 = tflearn.activation(tf.matmul(path_fc2, fc1_1.W) + tf.matmul(data_s, fc1_2.W) + fc1_1.b + fc1_2.b, activation='relu')
             #state[...,1:].shape()
         else:
             fc1 = tflearn.fully_connected(state, hidden_layer_nodes1,regularizer='L2', weight_decay=0.01)#from state
@@ -139,11 +162,11 @@ class DDPG_network(NetLib):
         #net = tflearn.layers.normalization.batch_normalization(net)
         fc2 = tflearn.activations.relu(fc2)
         
-        fc3 = tflearn.fully_connected(fc2, hidden_layer_nodes3,regularizer='L2', weight_decay=0.01)
-        fc3 = tflearn.activations.relu(fc3)
+        #fc3 = tflearn.fully_connected(fc2, hidden_layer_nodes3,regularizer='L2', weight_decay=0.01)
+        #fc3 = tflearn.activations.relu(fc3)
 
         init = tflearn.initializations.uniform(minval=-0.003, maxval=0.003)# Final layer weights are init to Uniform[-3e-3, 3e-3]
-        action = tflearn.fully_connected(fc3, action_n, activation='tanh', weights_init=init,bias_init = init,regularizer='L2', weight_decay=0.01)
+        action = tflearn.fully_connected(fc2, action_n, activation='tanh', weights_init=init,bias_init = init,regularizer='L2', weight_decay=0.01)
         # Scale output to -action_bound to action_bound
         action = tf.multiply(action, action_limit)
 
@@ -151,72 +174,49 @@ class DDPG_network(NetLib):
     def continues_critic(self,action,action_n,state,state_n,feature_data_n = 1,conv_flag = True):#define a net - input: state (and dimentions) - output: Q - Value
         hidden_layer_nodes1 = 400#400
         hidden_layer_nodes2 = 300#300
-        hidden_layer_nodes3 = 400
-        #hidden_layer_nodes1 = 40#400
-        #hidden_layer_nodes2 = 30
-        #hidden_layer_nodes1 = 200#400
-        #hidden_layer_nodes2 = 150
 
-        #linear regression:
-        #W1 = tf.Variable(tf.truncated_normal([features_num,action_space_n], stddev=1e-5))
-        #b1 = tf.Variable(tf.constant(0.0, shape=[action_space_n]))
-        #Q = tf.matmul(state,W1) + b1
-        #############################################################
-        ##hidden layer 1 - input state
-        #W1_1 = tf.Variable(tf.truncated_normal([state_n,hidden_layer_nodes1], stddev=0.02),name = "Q_W1")
-        #b1_1 = tf.Variable(tf.constant(0.0, shape=[hidden_layer_nodes1]),name = "Q_b1")
-        #z1_1 = tf.nn.relu(tf.add(tf.matmul(state,W1_1),b1_1))#from state to first layer
-
-        ###hidden layer 1 - input actions:
-        #W1_2 = tf.Variable(tf.truncated_normal([action_n,hidden_layer_nodes2], stddev=0.02),name = "Q_W1")
-        ##b1_2 = tf.Variable(tf.constant(0.1, shape=[hidden_layer_nodes1]),name = "Q_b1")
-        ##z1_2 = tf.nn.relu(tf.add(tf.matmul(action,W1_2),b1_2))
+        #if conv_flag:#if add convolution layers - split state to data and path (or picture)
+        #    #if the first item in each state is the analytical action:
+        #    s = state[...,feature_data_n:]
+        #    data_s = state[...,0:feature_data_n]
+        #    s_n = state_n - feature_data_n#data items removed
 
 
-        ##hidden layer 2:
-        #W2 = tf.Variable(tf.truncated_normal([hidden_layer_nodes1,hidden_layer_nodes2], stddev=0.02),name = "Q_W2")
-        #b2 = tf.Variable(tf.constant(0.0, shape=[hidden_layer_nodes2]),name = "Q_b2")
-        #z2 = tf.nn.relu(tf.matmul(z1_1,W2) + tf.matmul(action,W1_2) + b2)#from first layer and action to second layer #add the two first layers
+        #    s = tf.reshape(s, [-1, s_n, 1])#
+        #    conv = tflearn.layers.conv.conv_1d(s,16,6,activation = 'relu')
+        #    #net = tf.reshape(net, [-1,net.W.get_shape().as_list()[0]])
+        #    #net = net[...,0:-2]
+        #    #batch_size.shape()
+        #    # Flatten the data to a 1-D vector for the fully connected layer
+        #    conv = tf.contrib.layers.flatten(conv)
 
-        ##output layer:
-        #W3 = tf.Variable(tf.random_uniform([hidden_layer_nodes2,action_n],  minval = -0.003, maxval = 0.003),name = "Q_W3")
-        #b3 = tf.Variable(tf.constant(0.0, shape=[action_n]),name = "Q_b3")#tf.random_uniform([action_n],  minval = -0.003, maxval = 0.003),
-        #Qa = tf.add(tf.matmul(z2,W3), b3)
+        #    hidden_data_layer_nodes = 50
+        #    fc_data = tflearn.fully_connected(data_s, hidden_data_layer_nodes,regularizer='L2', weight_decay=0.01)#
 
-        #inputs = tflearn.input_data(shape=[None, self.s_dim])
-        #action = tflearn.input_data(shape=[None, self.a_dim])
-        #if conv_flag:
-        #    batch_size = tf.cast((tf.size(state)/state_n),tf.int32)
-        #    state = tf.reshape(state, [batch_size, state_n, 1])
-        #    #net = tflearn.layers.conv.conv_1d(state,5,6,activation = 'relu')
-        #    net = tflearn.layers.conv.conv_1d(state,32,6,activation = 'relu')
-        #    net = tflearn.fully_connected(net, hidden_layer_nodes1,regularizer='L2', weight_decay=0.01)
-        #else:
-        #    net = tflearn.fully_connected(state, hidden_layer_nodes1,regularizer='L2', weight_decay=0.01)
-        ##net = tflearn.layers.normalization.batch_normalization(net)
-        #net = tflearn.activations.relu(net)
+        #    fc1_1 = tflearn.fully_connected(conv, hidden_layer_nodes1,regularizer='L2', weight_decay=0.01)#from state
+        #    fc1_2 = tflearn.fully_connected(fc_data, hidden_layer_nodes1,regularizer='L2', weight_decay=0.01)#from analytic action
+        #    fc1 = tflearn.activation(tf.matmul(conv, fc1_1.W) + tf.matmul(fc_data, fc1_2.W) + fc1_1.b + fc1_2.b, activation='relu')
         if conv_flag:#if add convolution layers - split state to data and path (or picture)
             #if the first item in each state is the analytical action:
-            s = state[...,feature_data_n:]
+            path_s = state[...,feature_data_n:]
             data_s = state[...,0:feature_data_n]
             s_n = state_n - feature_data_n#data items removed
 
 
-            s = tf.reshape(s, [-1, s_n, 1])#
-            conv = tflearn.layers.conv.conv_1d(s,16,6,activation = 'relu')
-            #net = tf.reshape(net, [-1,net.W.get_shape().as_list()[0]])
-            #net = net[...,0:-2]
-            #batch_size.shape()
-            # Flatten the data to a 1-D vector for the fully connected layer
-            conv = tf.contrib.layers.flatten(conv)
+            path_s = tf.reshape(path_s, [-1, s_n, 1])#
+            hidden_layer_nodes_path1 = 20
+            hidden_layer_nodes_path2 = 5
+            path_fc1 = tflearn.fully_connected(path_s, hidden_layer_nodes_path1,regularizer='L2', weight_decay=0.01)
 
-            hidden_data_layer_nodes = 50
-            fc_data = tflearn.fully_connected(data_s, hidden_data_layer_nodes,regularizer='L2', weight_decay=0.01)#
+            path_fc2 = tflearn.fully_connected(path_fc1, hidden_layer_nodes_path1,regularizer='L2', weight_decay=0.01)
+            #conv = tflearn.layers.conv.conv_1d(s,16,6,activation = 'relu')
 
-            fc1_1 = tflearn.fully_connected(conv, hidden_layer_nodes1,regularizer='L2', weight_decay=0.01)#from state
-            fc1_2 = tflearn.fully_connected(fc_data, hidden_layer_nodes1,regularizer='L2', weight_decay=0.01)#from analytic action
-            fc1 = tflearn.activation(tf.matmul(conv, fc1_1.W) + tf.matmul(fc_data, fc1_2.W) + fc1_1.b + fc1_2.b, activation='relu')
-            #state[...,1:].shape()
+            #conv = tf.contrib.layers.flatten(conv)
+            #hidden_data_layer_nodes = 50
+            #fc_data = tflearn.fully_connected(data_s, hidden_data_layer_nodes,regularizer='L2', weight_decay=0.01)#
+            fc1_1 = tflearn.fully_connected(path_fc2, hidden_layer_nodes1,regularizer='L2', weight_decay=0.01)#from state
+            fc1_2 = tflearn.fully_connected(data_s, hidden_layer_nodes1,regularizer='L2', weight_decay=0.01)#from analytic action
+            fc1 = tflearn.activation(tf.matmul(path_fc2, fc1_1.W) + tf.matmul(data_s, fc1_2.W) + fc1_1.b + fc1_2.b, activation='relu')
         else:
             fc1 = tflearn.fully_connected(state, hidden_layer_nodes1,regularizer='L2', weight_decay=0.01)#from state
             #fc1 = tflearn.layers.normalization.batch_normalization(fc1)
