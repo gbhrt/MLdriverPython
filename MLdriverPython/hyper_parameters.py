@@ -90,11 +90,11 @@ class SafteyHyperParameters:
         self.save_every = 100
         self.save_every_train_number = 25000000
         self.seed = [1111]#,1112,1113,1114,1115]
-        self.save_name ="SDDPG_pure_persuit4"#SDDPG_vel_and_steer_roll_reward2- roll reward, no saftey, ~0.8 of VOD 20-30% fails 
+        self.save_name ="DDPG_pure_persuit5"#SDDPG_vel_and_steer_roll_reward2- roll reward, no saftey, ~0.8 of VOD 20-30% fails 
         #SDDPG_vel_and_steer_roll_reward3 -with roll feature, doesn't converge
         self.save_file_path = os.getcwd()+ "\\files\\models\\saftey_DDPG1\\"+self.save_name+"\\"
 
-        self.restore_name = "SDDPG_pure_persuit4"#SDDPG_pure_persuit saftey good but limit velocity because reward to low. SDDPG_pure_persuit1 - good
+        self.restore_name = "DDPG_pure_persuit5"#SDDPG_pure_persuit saftey good but limit velocity because reward to low. SDDPG_pure_persuit1 - good
         #SDDPG_pure_persuit3 - conv_flag, path layer sizes 50,20
         #SDDPG_pure_persuit3 - conv_flag, path layer sizes 20,5
         self.restore_file_path = os.getcwd()+ "\\files\\models\\saftey_DDPG1\\"+self.restore_name+"\\"

@@ -65,6 +65,9 @@ if __name__ == "__main__":
     #cd C:\Users\gavri\Desktop\thesis\ArielUnity - learning2\sim_spring0.25
     #sim_spring0.25.exe -quit -batchmode -nographics 
 
+    #cd C:\Users\gavri\Desktop\sim_14_1_19_no_trail
+    #sim_14_1_19.exe -quit -batchmode -nographics 
+
 
     #env  = gym.make("HalfCheetahBulletEnv-v0")
     HP = HyperParameters()

@@ -121,13 +121,7 @@ def train(env,HP,net_drive,dataManager,net_stabilize = None,guiShared = None,see
                 a = [env.comp_analytic_acceleration(state)]#env.analytic_feature_flag must be false
                 #a = env.get_analytic_action()
             else:      
-                #Q_matrix = net_drive.get_Qa([state]*len(actions),actions)
-                #Q_matrix = Q_matrix.flatten()
-                #print(Q)
-                #if  HP.env_mode == "SDDPG_pure_persuit":    
-                #    Q_matrix = np.reshape(Q_matrix,(len(Q_matrix),1))
-                #else:
-                    #Q_matrix = np.reshape(Q_matrix,(l,l))
+
 
                 if HP.DQN_flag:
                     max_Q_ind = np.argmax(Q_matrix)
@@ -137,9 +131,7 @@ def train(env,HP,net_drive,dataManager,net_stabilize = None,guiShared = None,see
                 if HP.stabilize_flag:
                     Q_stabilize = net_stabilize.get_Qa([state],[action])
                     print("Q_stabilize:",Q_stabilize)
-                    #Q_matrix_stabilize = net_stabilize.get_Qa([state]*len(actions),actions)
-                    #if HP.env_mode != "SDDPG_pure_persuit":
-                        #Q_matrix_stabilize = np.reshape(Q_matrix_stabilize.flatten(),(l,l))
+
                     if Q_stabilize < HP.minQ:
                         emergency_action = True
                         print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
@@ -292,6 +284,19 @@ def train(env,HP,net_drive,dataManager,net_stabilize = None,guiShared = None,see
                 
 
             if guiShared is not None:
+                #Q_matrix = net_drive.get_Qa([state]*len(actions),actions).flatten()
+              
+                #if  HP.env_mode == "SDDPG_pure_persuit":    
+                #    Q_matrix = np.reshape(Q_matrix,(len(Q_matrix),1))
+                #else:
+                #    Q_matrix = np.reshape(Q_matrix,(l,l))
+                #if HP.stabilize_flag:
+                #    Q_matrix_stabilize = net_stabilize.get_Qa([state]*len(actions),actions).flatten()
+                #    if HP.env_mode == "SDDPG_pure_persuit":
+                #        Q_matrix_stabilize = np.reshape(Q_matrix_stabilize,(len(Q_matrix_stabilize),1))
+                #    else:
+                #        Q_matrix_stabilize = np.reshape(Q_matrix_stabilize,(l,l))
+
                 planningData = classes.planningData()
                 planningData.vec_path.append(env.local_path)
                 #planningData.vec_Q.append(Q_matrix)# Q_matrix_stabilize
