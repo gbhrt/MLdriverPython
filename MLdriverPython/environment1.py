@@ -484,7 +484,8 @@ class OptimalVelocityPlanner(OptimalVelocityPlannerData):
             if stabilize_flag:
                 reward_stabilize = get_SDDPG_reward_stabilize(self.pl.simulator.vehicle.velocity[1],self.max_velocity_y,self.pl.simulator.vehicle.angle[2],self.mode,deviation)
                 #print("reward_stabilize:",reward_stabilize)
-            reward = get_SDDPG_reward(self.pl.index,self.pl.simulator.vehicle.velocity[1],self.max_velocity_y,self.pl.simulator.vehicle.angle[2],self.mode,deviation)
+                #self.pl.index
+            reward = get_SDDPG_reward(self.local_path.angle[0],self.pl.simulator.vehicle.velocity[1],self.max_velocity_y,self.pl.simulator.vehicle.angle[2],self.mode,deviation)
         else:
             reward = get_reward(self.pl.simulator.vehicle.velocity[1],self.max_velocity_y,self.mode)#,analytic_velocity = self.local_path.analytic_velocity[0])#
 

@@ -78,7 +78,8 @@ def train(env,HP,net_drive,dataManager,net_stabilize = None,guiShared = None,see
             break
         # initialize every episode:
         dataManager.restart()
-        guiShared.restart()
+        if guiShared is not None:
+            guiShared.restart()
         #reduce_vel+=0.01
         #print("reduce_vel: ",reduce_vel)
         step_count = 0
@@ -101,7 +102,7 @@ def train(env,HP,net_drive,dataManager,net_stabilize = None,guiShared = None,see
         if i == 0 and not evaluation_flag:
             print("update nets first time")
             tmp_a = [0] if HP.env_mode == "SDDPG_pure_persuit" else [0,0]
-            print("state",state)
+            #print("state",state)
             pLib.DDPG([state], [tmp_a], [0], [state],[False],net_drive,HP)
             if HP.stabilize_flag:
                 pLib.DDPG([state], [tmp_a], [0], [state],[False],net_stabilize,HP)
@@ -193,35 +194,7 @@ def train(env,HP,net_drive,dataManager,net_stabilize = None,guiShared = None,see
                     env.command(a[0])
                 else:
                     env.command(a[0],steer = a[1])
-               # print("time until command: ",time.clock() - env.lt)
-            #print("time from get state to execute action:",time.time() - env.lt)
 
-            ##dataManager.acc_target.append(net_drive.get_target_actions(np.reshape(state, (1, env.observation_space.shape[0])))[0])
-            ###print("a:",a)
-            ##dataManager.acc.append(a[0])
-            
-
-            #print(Q)
-            #Qa = net_drive.get_Qa(np.reshape(state, (1, env.observation_space.shape[0])),[a])[0][0]
-            #Q0 = net_drive.get_Qa(np.reshape(state, (1, env.observation_space.shape[0])),[[0]])[0][0]
-            #Q1 = net_drive.get_Qa(np.reshape(state, (1, env.observation_space.shape[0])),[[1.0]])[0][0]
-            #Qneg1 = net_drive.get_Qa(np.reshape(state, (1, env.observation_space.shape[0])),[[-1.0]])[0][0]
-
-            ##Qa_target = net_drive.get_targetQa(np.reshape(state, (1, env.observation_space.shape[0])),[a])[0][0]
-            ##Q0_target = net_drive.get_targetQa(np.reshape(state, (1, env.observation_space.shape[0])),[[0]])[0][0]
-            ##Q1_target = net_drive.get_targetQa(np.reshape(state, (1, env.observation_space.shape[0])),[[1.0]])[0][0]
-            ##Qneg1_target = net_drive.get_targetQa(np.reshape(state, (1, env.observation_space.shape[0])),[[-1.0]])[0][0]
-
-            ###print("Qa:",Qa,"Q0:",Q0,"Q1",Q1,"Qneg1",Qneg1)
-            ##dataManager.Qa.append(Qa)
-            ##dataManager.Q0.append(Q0)
-            ##dataManager.Q1.append(Q1)
-            ##dataManager.Qneg1.append(Qneg1)
-
-            ##dataManager.Qa_target.append(Qa_target)
-            ##dataManager.Q0_target.append(Q0_target)
-            ##dataManager.Q1_target.append(Q1_target)
-            ##dataManager.Qneg1_target.append(Qneg1_target)
 
             if len(Replay.memory) > HP.batch_size and HP.train_flag and not evaluation_flag:############
                 if not HP.gym_flag:
@@ -229,20 +202,10 @@ def train(env,HP,net_drive,dataManager,net_stabilize = None,guiShared = None,see
                     t = start_time
                     last_time = start_time
                     train_count = 0
-                    #for _ in range(HP.train_num):
-                    #while (t - start_time) < env.step_time - (t - last_time)-0.05 and train_count < HP.train_num:  
-                    while (t - start_time) < env.step_time - (t - last_time)-0.1 and train_count < HP.train_num:  
-                        #print(t - start_time, t - last_time)
+                    while (t - start_time) < env.step_time - (t - last_time)-0.05 and train_count < HP.train_num:  
                         last_time = t
                         train_count += 1
-                        #sample from replay buffer:
-                        #if len(Replay_fails.memory)>0 and HP.sample_ratio != 1.0:
-                            #rand_state1, rand_a1, rand_reward1, rand_next_state1, rand_end1 = Replay_fails.sample(int(HP.batch_size*(1-HP.sample_ratio)))
-                            #print("number of done samples:",len(rand_state1))
-                            #rand_state, rand_a, rand_reward, rand_next_state, rand_end = Replay.sample(HP.batch_size - len(rand_state1))#HP.batch_size*HP.sample_ratio)
-                            #rand_state+=rand_state1;rand_a+=rand_a1;rand_reward+=rand_reward1;rand_next_state+=rand_next_state1;rand_end+=rand_end1
-
-                        #else:
+ 
                         if HP.stabilize_flag:
                             rand_state, rand_a, rand_reward,rand_reward_stabilize, rand_next_state, rand_end = Replay.sample(HP.batch_size)
                         else:
@@ -380,24 +343,28 @@ def train(env,HP,net_drive,dataManager,net_stabilize = None,guiShared = None,see
             evaluation_flag = HP.evaluation_flag
            # HP.noise_flag =True
         #print("episode time:",time.time()-episode_start_time)
-            with guiShared.Lock:
-                guiShared.episodes_data.append(relative_reward)
-                #print("planningData.vec_emergency_action:",planningData.vec_emergency_action,'info[0]:',info[0])
-                if info[0] == 'kipp' or info[0] == 'deviate':
-                    guiShared.episodes_fails.append(1)
-                elif any(guiShared.planningData.vec_emergency_action):
-                    guiShared.episodes_fails.append(2)
-                else:
-                    guiShared.episodes_fails.append(0)
-                guiShared.update_episodes_flag = True
+            if guiShared is not None:
+                with guiShared.Lock:
+                    guiShared.episodes_data.append(relative_reward)
+                    #print("planningData.vec_emergency_action:",planningData.vec_emergency_action,'info[0]:',info[0])
+                    if info[0] == 'kipp' or info[0] == 'deviate':
+                        guiShared.episodes_fails.append(1)
+                    elif any(guiShared.planningData.vec_emergency_action):
+                        guiShared.episodes_fails.append(2)
+                    else:
+                        guiShared.episodes_fails.append(0)
+                    guiShared.update_episodes_flag = True
         print("episode:", i, "episode steps:",step_count,"file name:",HP.save_file_path)
         
         if not HP.run_same_path:
             seed = int.from_bytes(os.urandom(8), byteorder="big")
         else:#not needed 
             seed = HP.seed[0]
-
-        if (i % HP.evaluation_every == 0 and i > 0) or test_path_ind != 0 or HP.always_no_noise_flag or guiShared.evaluate:
+        if guiShared is not None:
+            evaluate = guiShared.evaluate 
+        else:
+            evaluate = False
+        if (i % HP.evaluation_every == 0 and i > 0) or test_path_ind != 0 or HP.always_no_noise_flag or evaluate:
             #HP.noise_flag = False
             evaluation_flag = True
             if HP.test_same_path:
@@ -426,9 +393,9 @@ def train(env,HP,net_drive,dataManager,net_stabilize = None,guiShared = None,see
             dataManager.plot_all()
  
         
-
-        while guiShared.pause_after_episode_flag:
-            time.sleep(0.1)
+        if guiShared is not None:
+            while guiShared.pause_after_episode_flag:
+                time.sleep(0.1)
 
         
 
