@@ -16,9 +16,9 @@ def run_all(HP,guiShared):
     envData = environment1.OptimalVelocityPlannerData(env_mode = HP.env_mode)
 
     names_vec = []
-    names_vec.append([['REVO1'],'REVO',None])
+    names_vec.append([['REVO+A1'],'REVO+A',None])
     random.seed(0)
-    HP.seed = random.sample(range(1000),100)
+    HP.seed = random.sample(range(1000),101)#the 101 path is not executed
     HP.evaluation_every = 999999999
     for names,method,training_num in names_vec:
         HP.analytic_action = False
@@ -87,7 +87,7 @@ def run_all(HP,guiShared):
                 else:#not evaluation
                     HP.train_flag = True
                     HP.always_no_noise_flag = False
-                    HP.restore_flag = False
+                    HP.restore_flag = True
                     HP.num_of_runs = 1000
                     HP.save_every_train_number = 5000
 
@@ -117,7 +117,7 @@ def run_train(HP,dataManager,envData,index = None):
                     return True
 
         else:#try to restore the last one
-            nums = [HP.save_every_train_number*j for j in range(1,50)]
+            nums = [HP.save_every_train_number*j for j in range(1,21)]
             found_flag = False
             for i in nums:
                 restored = not net.restore(HP.restore_file_path,name = 'tf_model_'+str(i))
@@ -135,9 +135,9 @@ def run_train(HP,dataManager,envData,index = None):
     env = environment1.OptimalVelocityPlanner(dataManager,env_mode=HP.env_mode)
     if env.opened:     
         if HP.stabilize_flag:
-            saftey_DDPG_algorithm.train(env,HP,net,dataManager,net_stabilize = net_stabilize,guiShared = guiShared)
+            saftey_DDPG_algorithm.train(env,HP,net,dataManager,net_stabilize = net_stabilize,guiShared = guiShared,global_train_count = global_train_count)
         else:
-            saftey_DDPG_algorithm.train(env,HP,net,dataManager,guiShared = guiShared)    
+            saftey_DDPG_algorithm.train(env,HP,net,dataManager,guiShared = guiShared,global_train_count = global_train_count)    
     return False
 
 

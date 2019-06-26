@@ -247,7 +247,7 @@ if __name__ == "__main__":
     #names_vec.append([['REVO+F3'],['REVO+F3',None]])#70000
     #names_vec.append([['VOD_long2'],['VOD',None]])#0
     
-    names_vec.append([['REVO+A1'],['REVO+A1',None]])#90000
+    names_vec.append([['REVO'],['REVO',None]])#90000
 
     ##add_zero_data_manager(folder,names_vec)
     ##correct_relative_reward(folder,names_vec)

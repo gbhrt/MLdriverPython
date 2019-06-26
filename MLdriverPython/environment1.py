@@ -537,6 +537,7 @@ class OptimalVelocityPlanner(OptimalVelocityPlannerData):
         return [np.clip(acc/8,-1,1)]
 
     def comp_analytic_acceleration(self,pos_state):
+        print("vel:",pos_state[0]*self.max_velocity_y)
         max_distance = self.distance_between_points*self.feature_points
         state_path = classes.Path()
         for j in range(1,len(pos_state)-1,2):

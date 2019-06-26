@@ -111,11 +111,15 @@ def train(env,HP,net_drive,dataManager,net_stabilize = None,guiShared = None,see
             step_count+=1
                
             #choose and make action:
-            #Q = net_drive.get_Q([state])
-            #Pi = net_drive.get_Pi([state])
-            #print("velocity1: ",state[0])#,"Q: ",Q)#,"PI: ",Pi)#"velocity2: ",state[1],
-          
-            noise_range = env.action_space.high[0]
+            if HP.add_feature_to_action:
+                path_state = state[env.feature_data_num-1:]
+
+                analytic_action = env.comp_analytic_acceleration(path_state)
+                noise_range = env.action_space.high[0] - abs(analytic_action)
+            else:
+                noise_range = env.action_space.high[0]
+
+            #noise_range = env.action_space.high[0]
             emergency_action = False
             if HP.analytic_action:# and HP.noise_flag:
                 state[0] = state[0]*(1.0- HP.reduce_vel)
@@ -166,6 +170,10 @@ def train(env,HP,net_drive,dataManager,net_stabilize = None,guiShared = None,see
                 a = list(np.clip(a,-env.action_space.high[0],env.action_space.high[0]))  
             
                 a = [float(a[k]) for k in range(len(a))]  
+
+
+                if HP.add_feature_to_action:
+                    a[0] += analytic_action
 
                 if HP.constant_velocity is not None:
                     #if env.pl.simulator.vehicle.velocity > HP.constant_velocity/env.max_velocity_y: a[0] = 0.0
