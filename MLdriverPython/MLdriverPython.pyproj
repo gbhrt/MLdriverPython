@@ -31,6 +31,9 @@
     <Compile Include="agent.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="agent1.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="analysis_data.py">
       <SubType>Code</SubType>
     </Compile>

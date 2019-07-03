@@ -17,6 +17,7 @@ import test_net_performance
 import test_actions
 import cProfile_test
 
+
 def run(guiShared,HP,dataManager): 
     #cd C:\Users\gavri\Desktop\sim_15_3_18
     #cd C:\Users\gavri\Desktop\thesis\ArielUnity - learning2\sim4_5_18
@@ -45,11 +46,15 @@ def run(guiShared,HP,dataManager):
 
     
     #initilize agent:
-    Agent = agent.Agent(HP)
+    envData = environment1.OptimalVelocityPlannerData('model_based')
+    if HP.MF_policy_flag:
+        Agent = agent.Agent(HP,envData)
+    else:
+        Agent = agent.Agent(HP)
 
     if HP.program_mode == "train_in_env":
         #initialize environment:
-        envData = environment1.OptimalVelocityPlannerData('model_based')
+        
         env = environment1.OptimalVelocityPlanner(dataManager,env_mode = "model_based")
 
         guiShared.max_roll = envData.max_plan_roll

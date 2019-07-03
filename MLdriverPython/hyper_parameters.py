@@ -1,6 +1,7 @@
 import os
 class HyperParameters:
     def __init__(self):
+        self.gui_flag = True
         #self.epsilon_start = 1.0
         #self.epsilon = 0.1
         self.gamma = 0.99
@@ -47,7 +48,7 @@ class HyperParameters:
 
 class SafteyHyperParameters:
     def __init__(self):
-        self.gui_flag = False
+        self.gui_flag = True
         #self.epsilon_start = 1.0
         #self.epsilon = 0.1
         self.gamma = 0.99
@@ -64,8 +65,7 @@ class SafteyHyperParameters:
         self.epsilon = 0.1
         self.minQ = -0.5
         #########################
-        #env_mode =  "SDDPG_pure_persuit" if HP.pure_persuit_flag else "SDDPG"
-        self.env_mode = "SDDPG_pure_persuit"#SDDPG DDPG_target
+        self.env_mode = "SDDPG"#SDDPG DDPG_target SDDPG_pure_persuit
         self.evaluation_flag = False
         self.reduce_vel = 0.0
         self.add_feature_to_action  = False
@@ -74,13 +74,13 @@ class SafteyHyperParameters:
         self.noise_flag = True
         self.always_no_noise_flag = False
         self.evaluation_every = 10
-        self.test_same_path = True
+        self.test_same_path = False
         self.run_same_path = False
         self.conv_flag = True
         self.gym_flag = False
         self.render_flag = True
         self.plot_flag = True
-        self.stabilize_flag = True
+        self.stabilize_flag = False
         self.constant_velocity = None #5.0
         self.DQN_flag = False
         #self.pure_persuit_flag = False
@@ -110,6 +110,7 @@ class ModelBasedHyperParameters:#global settings of the program.
             self.gui_flag = False
         else:
             self.gui_flag = True
+        self.MF_policy_flag = True
         #########################
         self.train_flag = True
         #self.noise_flag = True
@@ -122,12 +123,12 @@ class ModelBasedHyperParameters:#global settings of the program.
         self.gym_flag = False
         self.render_flag = True
         self.plot_flag = True
-        self.restore_flag = True
+        self.restore_flag = False
         self.skip_run = False
         self.reset_every = 3
         self.save_every = 100
         self.save_every_time = 5000 #minutes
-        self.seed = 1111
+        self.seed = [1111]
         self.save_name = "collect_data_3"
         self.save_file_path = os.getcwd()+ "\\files\\models\\model_based\\"+self.save_name+"\\"
         self.restore_name = "collect_data_3"#

@@ -16,7 +16,7 @@ def run_all(HP,guiShared):
     envData = environment1.OptimalVelocityPlannerData(env_mode = HP.env_mode)
 
     names_vec = []
-    names_vec.append([['REVO+A1'],'REVO+A',None])
+    names_vec.append([['also_steer1'],'REVO',50000])
     random.seed(0)
     HP.seed = random.sample(range(1000),101)#the 101 path is not executed
     HP.evaluation_every = 999999999
@@ -53,7 +53,7 @@ def run_all(HP,guiShared):
             description]
 
         
-        for evalutaion_flag in [False,True]:
+        for evalutaion_flag in [True]:#False,
             HP.evaluation_flag = evalutaion_flag
 
             for name in names:
@@ -74,10 +74,10 @@ def run_all(HP,guiShared):
                         nums = [training_num]
                     for i in nums:
                         print("num:",i)
-                        dataManager = data_manager1.DataManager(HP.save_file_path,HP.restore_file_path,restore_flag = True,restore_name = 'data_manager_'+str(i))
-                        if not dataManager.error and len(dataManager.episode_end_mode) >= HP.num_of_runs-10: 
-                            print(name,'data_manager_'+str(i)+' exist')
-                            continue
+                        #dataManager = data_manager1.DataManager(HP.save_file_path,HP.restore_file_path,restore_flag = True,restore_name = 'data_manager_'+str(i))
+                        #if not dataManager.error and len(dataManager.episode_end_mode) >= HP.num_of_runs-10: 
+                        #    print(name,'data_manager_'+str(i)+' exist')
+                        #    continue
                         print("HP.num_of_runs:",HP.num_of_runs)
                         print("evaluation on episode:",i)
                         dataManager = data_manager1.DataManager(HP.save_file_path,HP.restore_file_path,restore_flag =False,save_name = 'data_manager_'+str(i))
@@ -101,11 +101,11 @@ def run_all(HP,guiShared):
 
 def run_train(HP,dataManager,envData,index = None):
     global_train_count = 0
-    net = DDPG_network(envData.observation_space.shape[0],envData.action_space.shape[0],envData.action_space.high[0],\
+    net = DDPG_network(envData.observation_space.shape[0],envData.action_space.shape[0],\
         HP.alpha_actor,HP.alpha_critic,HP.alpha_analytic_actor,HP.alpha_analytic_critic,tau = HP.tau,seed = HP.seed[0],feature_data_n = envData.feature_data_num, conv_flag = HP.conv_flag)  
 
     if HP.stabilize_flag:
-        net_stabilize = DDPG_network(envData.observation_space.shape[0],envData.action_space.shape[0],envData.action_space.high[0],\
+        net_stabilize = DDPG_network(envData.observation_space.shape[0],envData.action_space.shape[0],\
             HP.alpha_actor,HP.alpha_critic,HP.alpha_analytic_actor,HP.alpha_analytic_critic,tau = HP.tau,seed = HP.seed[0],feature_data_n = envData.feature_data_num, conv_flag = HP.conv_flag)  
     
     if HP.restore_flag:
@@ -143,15 +143,17 @@ def run_train(HP,dataManager,envData,index = None):
 
 
 def run(HP,guiShared = None):
+    #Agent = agent.Agent(HP)
+
     envData = environment1.OptimalVelocityPlannerData(env_mode = HP.env_mode)
     dataManager = data_manager1.DataManager(HP.save_file_path,HP.restore_file_path,HP.restore_flag)
 
-    net = DDPG_network(envData.observation_space.shape[0],envData.action_space.shape[0],envData.action_space.high[0],\
+    net = DDPG_network(envData.observation_space.shape[0],envData.action_space.shape[0],\
         HP.alpha_actor,HP.alpha_critic,HP.alpha_analytic_actor,HP.alpha_analytic_critic,tau = HP.tau,seed = HP.seed[0],feature_data_n = envData.feature_data_num, conv_flag = HP.conv_flag)  
     if HP.restore_flag:
         net.restore(HP.restore_file_path)#cannot restore - return true
     if HP.stabilize_flag:
-        net_stabilize = DDPG_network(envData.observation_space.shape[0],envData.action_space.shape[0],envData.action_space.high[0],\
+        net_stabilize = DDPG_network(envData.observation_space.shape[0],envData.action_space.shape[0],\
             HP.alpha_actor,HP.alpha_critic,HP.alpha_analytic_actor,HP.alpha_analytic_critic,tau = HP.tau,seed = HP.seed[0],feature_data_n = envData.feature_data_num, conv_flag = HP.conv_flag)  
         if HP.restore_flag:
             net_stabilize.restore(HP.restore_file_path,name = 'tf_model_stabilize')#cannot restore - return true
@@ -182,8 +184,17 @@ class programThread (threading.Thread):
 
 
 if __name__ == "__main__": 
-    
-    HP = hyper_parameters.SafteyHyperParameters()
+    algo_type = "SDDPG"
+
+    if algo_type == "SDDPG":
+        HP = hyper_parameters.SafteyHyperParameters()
+    elif algo_type == "DDPG":
+        HP = HyperParameters()
+    elif algo_type == "MB":
+        HP = hyper_parameters.ModelBasedHyperParameters()
+    else:
+        print("error - algo_type not exist")
+
     guiShared = shared.guiShared() if HP.gui_flag else None
     
 

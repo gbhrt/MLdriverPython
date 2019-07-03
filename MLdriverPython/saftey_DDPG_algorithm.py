@@ -242,12 +242,7 @@ def train(env,HP,net_drive,dataManager,net_stabilize = None,guiShared = None,see
                             print("break and save")
                             break
                             #HP.train_flag = False
-                #else:
-                #    #sample from replay buffer:
-                #    rand_state, rand_a, rand_reward, rand_next_state, rand_end = Replay.sample(HP.batch_size)
-                #    #update neural networs:
-                #    #pLib.DDQN(rand_state, rand_a, rand_reward, rand_next_state,net_drive,HP)
-                #    pLib.DDPG(rand_state, rand_a, rand_reward, rand_next_state,rand_end,net_drive,HP)
+     
 
             if global_train_count > 100000:
                 break
@@ -255,27 +250,27 @@ def train(env,HP,net_drive,dataManager,net_stabilize = None,guiShared = None,see
                 
 
             if guiShared is not None:
-                #Q_matrix = net_drive.get_Qa([state]*len(actions),actions).flatten()
+                Q_matrix = net_drive.get_Qa([state]*len(actions),actions).flatten()
                
-                #if  HP.env_mode == "SDDPG_pure_persuit":    
-                #    Q_matrix = np.reshape(Q_matrix,(len(Q_matrix),1))
-                #else:
-                #    Q_matrix = np.reshape(Q_matrix,(l,l))
-                #if HP.stabilize_flag:
-                #    Q_matrix_stabilize = net_stabilize.get_Qa([state]*len(actions),actions).flatten()
-                #    if HP.env_mode == "SDDPG_pure_persuit":
-                #        Q_matrix_stabilize = np.reshape(Q_matrix_stabilize,(len(Q_matrix_stabilize),1))
-                #    else:
-                #        Q_matrix_stabilize = np.reshape(Q_matrix_stabilize,(l,l))
+                if  HP.env_mode == "SDDPG_pure_persuit":    
+                    Q_matrix = np.reshape(Q_matrix,(len(Q_matrix),1))
+                else:
+                    Q_matrix = np.reshape(Q_matrix,(l,l))
+                if HP.stabilize_flag:
+                    Q_matrix_stabilize = net_stabilize.get_Qa([state]*len(actions),actions).flatten()
+                    if HP.env_mode == "SDDPG_pure_persuit":
+                        Q_matrix_stabilize = np.reshape(Q_matrix_stabilize,(len(Q_matrix_stabilize),1))
+                    else:
+                        Q_matrix_stabilize = np.reshape(Q_matrix_stabilize,(l,l))
 
                 planningData = classes.planningData()
                 planningData.vec_path.append(env.local_path)
-                #planningData.vec_Q.append(Q_matrix)# Q_matrix_stabilize
+                planningData.vec_Q.append(Q_matrix)# Q_matrix_stabilize
                 planningData.action_vec.append(action)
                 planningData.action_noise_vec.append(a)
                 planningData.vec_emergency_action.append(emergency_action)
                 if HP.env_mode == 'DDPG_target':
-                    planningData.target_point.append(state[1:5])
+                    planningData.target_point.append(state[-3:])
                 with guiShared.Lock:
                     guiShared.planningData.append(planningData)
                     guiShared.roll = copy.copy(dataManager.roll)

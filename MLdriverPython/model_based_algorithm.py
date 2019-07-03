@@ -5,41 +5,14 @@ import library as lib
 import classes
 import copy
 import random
-from plot import Plot
+#from plot import Plot
 import predict_lib
 #import subprocess
 import math
 import os
 
 
-def comp_MB_acc(net,env,state,acc,steer):
-    roll_flag,dev_flag = 0, False
-    n = 10
-    print("___________________new acc compution____________________________")
-    predicted_values,roll_flag,dev_flag = predict_lib.predict_n_next(n,net,env,state,acc,steer,1.0)#try 1.0
-    if roll_flag != 0 or dev_flag:#if not ok - try 0.0                                                   
-        predicted_values,roll_flag,dev_flag = predict_lib.predict_n_next(n,net,env,state,acc,steer,0.0)
-        if roll_flag != 0 or dev_flag:#if not ok - try -1.0   
-            predicted_values,roll_flag,dev_flag = predict_lib.predict_n_next(n,net,env,state,acc,steer,-1.0,max_plan_roll = env.max_plan_roll*1.3)#,max_plan_roll = env.max_plan_roll*1.3,max_plan_deviation = 10)
-            if roll_flag != 0 or dev_flag:
-                next_acc = -1.0
-            else:#-1.0 is ok
-                next_acc = -1.0
-        else:# 0.0 is ok
-            next_acc = 0.0
-    else:#1.0 is ok
-        next_acc = 1.0
-    #print("________________________end________________________________")
-    emergency_pred_vec = predicted_values
-    return next_acc,predicted_values,emergency_pred_vec,roll_flag,dev_flag
-
 def train(env,HP,Agent,dataManager,guiShared,seed = None): 
-    
-
-    #"""
-    #cd C:\Users\gavri\Desktop\sim_15_3_18
-    #sim15_3_18 -quit -batchmode -nographics
-    #"""
 
     #subprocess.Popen('C:\\Users\\gavri\\Desktop\\sim_15_3_18\\sim15_3_18 -quit -batchmode -nographics')
   
@@ -52,16 +25,15 @@ def train(env,HP,Agent,dataManager,guiShared,seed = None):
     random_action_flag = True
     #env = environment1.OptimalVelocityPlanner(HP)
     #env  = gym.make("HalfCheetahBulletEnv-v0")
-    np.random.seed(HP.seed)
-    random.seed(HP.seed)
-    env.seed(HP.seed)
+    np.random.seed(HP.seed[0])
+    random.seed(HP.seed[0])
+    env.seed(HP.seed[0])
     steps = [0,0]#for random action selection of random number of steps
     waitFor = lib.waitFor()#wait for "enter" in another thread - then stop = true
-    if HP.render_flag:
-        env.render()
+
 
     global_train_count = 0
-    seed = HP.seed
+    seed = HP.seed[0]
 
     lt = 0#temp
     last_time_stamp = 0
@@ -70,9 +42,7 @@ def train(env,HP,Agent,dataManager,guiShared,seed = None):
             break
         
         # initialize every episode:
-        #if HP.run_random_num != 'inf':
-        #    if i > HP.run_random_num:
-        #        random_action_flag = False
+
         step_count = 0
         reward_vec = []
         t1 = 0
@@ -91,7 +61,6 @@ def train(env,HP,Agent,dataManager,guiShared,seed = None):
         #episode_start_time = time.time()
         acc,steer = 0.0,0.0
         acc,steer,planningData= Agent.comp_action(state,acc,steer)#for the first time (required because the first time is longer)
-        #acc,steer,planningData,roll_flag,dev_flag = Agent.comp_action(env_state,acc,steer,env)#for the first time (required because the first time is longer)
 
         env.pl.init_timer()
         while  waitFor.stop != [True] and guiShared.request_exit == False:#while not stoped, the loop break if reached the end or the deviation is to big          
@@ -221,7 +190,7 @@ def train(env,HP,Agent,dataManager,guiShared,seed = None):
         if not HP.run_same_path:
             seed = int.from_bytes(os.urandom(8), byteorder="big")
         else:#not needed 
-            seed = HP.seed
+            seed = HP.seed[0]
 
         #if (i % HP.zero_noise_every == 0 and i > 0) or HP.always_no_noise_flag:
         #    HP.noise_flag = False

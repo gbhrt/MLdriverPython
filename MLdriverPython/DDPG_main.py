@@ -24,7 +24,7 @@ def run_train(HP,i = 0):
         dataManager.save_run_data()
         
             
-    net = DDPG_network(envData.observation_space.shape[0],envData.action_space.shape[0],envData.action_space.high[0],\
+    net = DDPG_network(envData.observation_space.shape[0],envData.action_space.shape[0],\
         HP.alpha_actor,HP.alpha_critic,HP.alpha_analytic_actor,HP.alpha_analytic_critic,tau = HP.tau,seed = HP.seed[0],feature_data_n = envData.feature_data_num, conv_flag = HP.conv_flag)  
     if HP.restore_flag:
         if HP.evaluation_flag:

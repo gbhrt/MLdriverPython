@@ -6,7 +6,7 @@ from net_lib import NetLib
 
 
 class DDPG_network(NetLib):
-    def __init__(self,state_n,action_space_n,action_limit,\
+    def __init__(self,state_n,action_space_n,\
         alpha_actor = None,alpha_critic = None,alpha_analytic_actor = None,alpha_analytic_critic = None,  tau = 1.0,seed = None,conv_flag = True,feature_data_n = 1):
        
 
@@ -17,9 +17,9 @@ class DDPG_network(NetLib):
         self.state = tf.placeholder(tf.float32, [None,state_n] )
         self.action_in = tf.placeholder( dtype=tf.float32, shape=[None,action_space_n] )
         self.targetQa_in = tf.placeholder(tf.float32, shape=[None,1])
-        self.action_out = self.continues_actor(action_space_n,action_limit,self.state,state_n,feature_data_n = feature_data_n, conv_flag = conv_flag)
+        self.action_out = self.continues_actor(action_space_n,self.state,state_n,feature_data_n = feature_data_n, conv_flag = conv_flag)
         network_params = tf.trainable_variables()
-        self.target_action_out = self.continues_actor(action_space_n,action_limit,self.state,state_n,feature_data_n = feature_data_n,conv_flag = conv_flag)
+        self.target_action_out = self.continues_actor(action_space_n,self.state,state_n,feature_data_n = feature_data_n,conv_flag = conv_flag)
         network_params = tf.trainable_variables()
         params_num = len(network_params)
         self.actor_params = network_params[:params_num//2]
@@ -86,7 +86,7 @@ class DDPG_network(NetLib):
             #print("size: ",self.sess.run(batch_size, feed_dict = {self.state: [[0 for _ in range(31)] for _ in range(40)]}))
             print("Network ready")
         return
-    def continues_actor(self,action_n,action_limit,state,state_n,feature_data_n = 1,conv_flag = True): #define a net - input: state (and dimentions) - output: a continues action ,
+    def continues_actor(self,action_n,state,state_n,feature_data_n = 1,conv_flag = True): #define a net - input: state (and dimentions) - output: a continues action ,
         hidden_layer_nodes1 = 400#400
         hidden_layer_nodes2 = 300#300
         #hidden_layer_nodes1 = 40#400
@@ -168,7 +168,7 @@ class DDPG_network(NetLib):
         init = tflearn.initializations.uniform(minval=-0.003, maxval=0.003)# Final layer weights are init to Uniform[-3e-3, 3e-3]
         action = tflearn.fully_connected(fc2, action_n, activation='tanh', weights_init=init,bias_init = init,regularizer='L2', weight_decay=0.01)
         # Scale output to -action_bound to action_bound
-        action = tf.multiply(action, action_limit)
+        #action = tf.multiply(action, action_limit)
 
         return action
     def continues_critic(self,action,action_n,state,state_n,feature_data_n = 1,conv_flag = True):#define a net - input: state (and dimentions) - output: Q - Value

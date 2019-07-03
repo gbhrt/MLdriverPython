@@ -64,8 +64,8 @@ def get_ddpg_target_state(pl = None,local_path = None,num_points = 1,distance_be
     #points = [pnt/max_lenght for pnt in points]
     
 
-    index = lib.select_target_index(local_path, velocity = pl.simulator.vehicle.velocity[1])
-
+    #index = lib.select_target_index(local_path, velocity = pl.simulator.vehicle.velocity[1])
+    index = 100
     points = [local_path.position[index][0],local_path.position[index][1]]
 
     vel = max(pl.simulator.vehicle.velocity[1]/max_velocity,0)

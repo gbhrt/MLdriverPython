@@ -366,6 +366,14 @@ class OptimalVelocityPlanner(OptimalVelocityPlannerData):
             if self.wheels_vel_feature_flag:
                 state = [self.pl.simulator.vehicle.steering/self.max_steering]+state
                 state = [wheel.angular_vel/self.max_wheel_vel for wheel in self.pl.simulator.vehicle.wheels]+state
+            if self.vehicle_data_features:
+                state = [self.pl.simulator.vehicle.angle[2]/self.max_roll]+\
+                [self.pl.simulator.vehicle.angle[0]/self.max_roll]+\
+                [self.pl.simulator.vehicle.steering] +\
+                self.pl.simulator.vehicle.angular_velocity+\
+                [self.pl.simulator.vehicle.velocity[0]]+\
+                [self.pl.simulator.vehicle.velocity[2]]+\
+                state
         if self.env_mode == 'model_based':
             self.last_pos = self.pl.simulator.vehicle.position#first time init abs position and angle - updated in the function
             self.last_ang = self.pl.simulator.vehicle.angle

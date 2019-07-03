@@ -98,15 +98,15 @@ def add_zero_data_manager(folder,names_vec):
             save_name = 'data_manager_'+str(0)
             dataManager = data_manager1.DataManager(save_path,save_path,False,save_name = save_name)#
             dataManager.episode_end_mode = ['max steps' for _ in range(101)]
-            dataManager.relative_reward = [1.0 for _ in range(101)]
+            dataManager.relative_reward = [0.0 for _ in range(101)]
             dataManager.save_data()
 
 
 def get_data(folder,names_vec):
     HP = HyperParameters()
 
-    #train_indexes = [5000*j for j in range(0,19)]
-    train_indexes = [15000]
+    train_indexes = [5000*j for j in range(0,19)]
+    #train_indexes = [15000]
     rewards_vec = []
     var_vec =[]
     reward_vec_indexes = []
@@ -181,11 +181,12 @@ def average_training_processes(rewards_vec):
     return avg_rewards_vec,vars_vec
 
 if __name__ == "__main__":
-    folder = "paper_fix"#\old reward backup"
+    #folder = "new_state"#\old reward backup"
+    folder = "paper_fix"
     size = 15
     names_vec = []
 
-    #names = ["VOD_00","VOD_002","VOD_004","VOD_006","VOD_008","VOD_01"]
+    ##names = ["VOD_00","VOD_002","VOD_004","VOD_006","VOD_008","VOD_01"]
     #names = ["VOD_00","VOD_005","VOD_01","VOD_015","VOD_0175","VOD_02"]
     #for name in names:
     #    names_vec.append([[name],[name,None]])
@@ -210,8 +211,8 @@ if __name__ == "__main__":
 
     #names_vec.append([['copyREVO+FA3'],['REVO+FA','orange']])
 
-    #names_vec.append([['REVO6','REVO7','REVO8','REVO9','REVO10'],['REVO','green']])#corrected
-    #names_vec.append([['REVO+A1','REVO+A2','REVO+A3','REVO+A4','REVO+A8'],['REVO+A','black']])#corrected ,
+    names_vec.append([['REVO6','REVO7','REVO8','REVO9','REVO10'],['REVO','green']])#corrected
+    names_vec.append([['REVO+A1','REVO+A2','REVO+A3','REVO+A4','REVO+A8'],['REVO+A','black']])#corrected ,
     #names_vec.append([['REVO+F1','REVO+F2','REVO+F3','REVO+F4','REVO+F5'],['REVO+F','blue']])#corrected,'REVO+F5' ,'REVO+F2','REVO+F3','REVO+F4' REVO+F1, data_manager_15000 was empty, replaced by 20000
     #names_vec.append([['REVO+FA1','REVO+FA2' ,'REVO+FA3','REVO+FA4','REVO+FA5'],['REVO+FA','orange']])#corrected   'REVO+FA1' ,'REVO+FA3','REVO+FA4'
     #names_vec.append([['REVO+F1'],['REVO+F1',None]])
@@ -247,10 +248,10 @@ if __name__ == "__main__":
     #names_vec.append([['REVO+F3'],['REVO+F3',None]])#70000
     #names_vec.append([['VOD_long2'],['VOD',None]])#0
     
-    names_vec.append([['REVO'],['REVO',None]])#90000
+    #names_vec.append([['also_steer1'],['REVO',None]])#90000
 
-    ##add_zero_data_manager(folder,names_vec)
-    ##correct_relative_reward(folder,names_vec)
+    #add_zero_data_manager(folder,names_vec)
+    #correct_relative_reward(folder,names_vec)
 
     reward_vec_indexes,rewards_vec,indexes,fails_vec,var,series_colors,series_names = get_data(folder,names_vec)
 
