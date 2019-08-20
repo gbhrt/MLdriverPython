@@ -12,8 +12,8 @@ def show_path(folder,name,train_num,plot_VOD = True,alpha = 1.0):
     envData = environment1.OptimalVelocityPlannerData(env_mode = "DDPG")
     HP.restore_name = name
     HP.save_name = name
-    save_path = os.getcwd()+ "\\files\\models\\"+folder+"\\"+HP.save_name+"\\"
-    restore_path = os.getcwd()+ "\\files\\models\\"+folder+"\\"+HP.restore_name+"\\"
+    save_path = os.getcwd()+ "/files/models/"+folder+"/"+HP.save_name+"/"
+    restore_path = os.getcwd()+ "/files/models/"+folder+"/"+HP.restore_name+"/"
     dataManager = (data_manager1.DataManager(save_path,restore_path,True,restore_name = 'data_manager_'+str(train_num)))
 
     #if len(self.real_path.time) > 0:

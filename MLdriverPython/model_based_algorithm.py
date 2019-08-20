@@ -14,7 +14,7 @@ import os
 
 def train(env,HP,Agent,dataManager,guiShared,seed = None): 
 
-    #subprocess.Popen('C:\\Users\\gavri\\Desktop\\sim_15_3_18\\sim15_3_18 -quit -batchmode -nographics')
+    #subprocess.Popen('C:/Users/gavri/Desktop/sim_15_3_18/sim15_3_18 -quit -batchmode -nographics')
   
     #pre-defined parameters:
     Agent.start_training()

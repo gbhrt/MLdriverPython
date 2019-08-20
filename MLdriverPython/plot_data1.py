@@ -79,7 +79,7 @@ def correct_relative_reward(folder,names_vec):
     for names in names_vec:#for every series of data (e.g. REVO or REVO+A)
         for name in names[0]:#for every training process(e.g. REVO1)
             for i in train_indexes:#for every test at a fixed parameter set (fixed training point)
-                restore_path = os.getcwd()+ "\\files\\models\\"+str(folder)+"\\"+name+"\\"
+                restore_path = os.getcwd()+ "/files/models/"+str(folder)+"/"+name+"/"
                 restore_name = 'data_manager_'+str(i)
                 dataManager = data_manager1.DataManager(restore_path,restore_path,True,save_name = restore_name,restore_name = restore_name)#
                 if dataManager.error:
@@ -94,7 +94,7 @@ def correct_relative_reward(folder,names_vec):
 def add_zero_data_manager(folder,names_vec):
     for names in names_vec:#for every series of data (e.g. REVO or REVO+A)
         for name in names[0]:#for every training process(e.g. REVO1)
-            save_path = os.getcwd()+ "\\files\\models\\"+str(folder)+"\\"+name+"\\"
+            save_path = os.getcwd()+ "/files/models/"+str(folder)+"/"+name+"/"
             save_name = 'data_manager_'+str(0)
             dataManager = data_manager1.DataManager(save_path,save_path,False,save_name = save_name)#
             dataManager.episode_end_mode = ['max steps' for _ in range(101)]
@@ -127,7 +127,7 @@ def get_data(folder,names_vec):
             single_reward_indexes = []
             single_fails = []
             for i in train_indexes:#for every test at a fixed parameter set (fixed training point)
-                restore_path = os.getcwd()+ "\\files\\models\\"+str(folder)+"\\"+name+"\\"
+                restore_path = os.getcwd()+ "/files/models/"+str(folder)+"/"+name+"/"
                 #if name ==  "VOD_01_1" or name == "VOD_022_1" or name == "VOD_020_1" or name == "VOD_010_1":
                 if name in(["VOD_00","VOD_002","VOD_004","VOD_006","VOD_008","VOD_01","VOD_012","VOD_014","VOD_016","VOD_018","VOD_02","VOD_015","VOD_005","VOD_0175"]):
                     restore_name = 'data_manager_0'

@@ -15,7 +15,8 @@ class DataManager():
     def __init__(self,save_path = None, restore_path = None,restore_flag = False,save_name = "data_manager",restore_name = "data_manager"):
         self.error = False
         if save_path != None:
-            save_path += save_name+'\\'
+            #save_path += save_name+'/'
+            save_path += save_name+'/'
             pathlib.Path(save_path).mkdir(parents=True, exist_ok=True) 
             self.save_name = save_path+"data.txt"
             self.save_readable_data_name = save_path+"readable_data.txt"
@@ -23,7 +24,8 @@ class DataManager():
         else:
             self.save_name ="data.txt"
         if restore_path != None:
-            self.restore_name = restore_path+restore_name+"\\data.txt"
+            #self.restore_name = restore_path+restore_name+"/data.txt"
+            self.restore_name = restore_path+restore_name+"/data.txt"
         else:
             self.restore_name = "data.txt"
         

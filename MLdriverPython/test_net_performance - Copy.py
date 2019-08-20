@@ -297,7 +297,7 @@ if __name__ == "__main__":
             data.append([envData.denormalize_dict(envData.Y_to_Y_dict(y_)) for y_ in test_Y_])
 
     
-        save_data(os.getcwd()+"\\files\\train_data\\"+file_name,data)
+        save_data(os.getcwd()+"/files/train_data/"+file_name,data)
         print("data saved")
 
         ##compare n step prediction:

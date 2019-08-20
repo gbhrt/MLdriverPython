@@ -21,7 +21,7 @@ def train(env,HP,net,dataManager,seed = None,global_train_count = 0):
     #sim15_3_18 -quit -batchmode -nographics
     #"""
 
-    #subprocess.Popen('C:\\Users\\gavri\\Desktop\\sim_15_3_18\\sim15_3_18 -quit -batchmode -nographics')
+    #subprocess.Popen('C:/Users/gavri/Desktop/sim_15_3_18/sim15_3_18 -quit -batchmode -nographics')
   
     #pre-defined parameters:
     if seed != None:

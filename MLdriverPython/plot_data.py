@@ -55,8 +55,8 @@ def plot_rewards(folder,names,shape=None,color=None,label = None,vod_label = Non
         #slip_com_high
         #no_friction_hard
         
-        save_path = os.getcwd()+ "\\files\\models\\"+str(folder)+"\\"+HP.save_name+"\\"
-        restore_path = os.getcwd()+ "\\files\\models\\"+str(folder)+"\\"+HP.restore_name+"\\"
+        save_path = os.getcwd()+ "/files/models/"+str(folder)+"/"+HP.save_name+"/"
+        restore_path = os.getcwd()+ "/files/models/"+str(folder)+"/"+HP.restore_name+"/"
         dataManager_vec.append(data_manager1.DataManager(save_path,restore_path,True))
         relative_rewards_changed_vec.append(np.array(change_failes_value(dataManager_vec[-1].relative_reward,dataManager_vec[-1].episode_end_mode)))#[:episodes_num]
 

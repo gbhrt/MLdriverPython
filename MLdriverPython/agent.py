@@ -50,7 +50,7 @@ class Nets:#define the input and outputs to networks, and the nets itself.
 
     def restore_all(self,restore_file_path):
         name = "tf_model"
-        path = restore_file_path +name+"\\"
+        path = restore_file_path +name+"/"
         file_name =  path + "TransNet.ckpt"
         self.TransNet.load_weights(file_name)
         file_name =  path + "AccNet.ckpt"
@@ -62,7 +62,7 @@ class Nets:#define the input and outputs to networks, and the nets itself.
     def save_all(self,save_file_path):
         #self.TransNet.save_model(save_file_path)
         name = "tf_model"
-        path = save_file_path +name+"\\"
+        path = save_file_path +name+"/"
         pathlib.Path(path).mkdir(parents=True, exist_ok=True) 
 
         file_name =  path+"TransNet.ckpt "

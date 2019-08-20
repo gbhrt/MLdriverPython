@@ -127,9 +127,9 @@ if __name__ == "__main__":
             
             for name,reduce in zip(names,reduce_vec):
                 HP.restore_name = name
-                HP.restore_file_path = os.getcwd()+ "\\files\\models\\paper_fix\\"+HP.restore_name+"\\"
+                HP.restore_file_path = os.getcwd()+ "/files/models/paper_fix/"+HP.restore_name+"/"
                 HP.save_name = name#"save_movie"#
-                HP.save_file_path = os.getcwd()+ "\\files\\models\\paper_fix\\"+HP.save_name+"\\"
+                HP.save_file_path = os.getcwd()+ "/files/models/paper_fix/"+HP.save_name+"/"
                 HP.reduce_vel = reduce
                 run_data = []
                 run_train(HP)
@@ -186,9 +186,9 @@ if __name__ == "__main__":
 
         
                 HP.restore_name = name
-                HP.restore_file_path = os.getcwd()+ "\\files\\models\\paper_fix\\"+HP.restore_name+"\\"
+                HP.restore_file_path = os.getcwd()+ "/files/models/paper_fix/"+HP.restore_name+"/"
                 HP.save_name = name#"save_movie"#
-                HP.save_file_path = os.getcwd()+ "\\files\\models\\paper_fix\\"+HP.save_name+"\\"
+                HP.save_file_path = os.getcwd()+ "/files/models/paper_fix/"+HP.save_name+"/"
 
                 if HP.evaluation_flag:
                     #run_train(HP)

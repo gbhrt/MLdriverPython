@@ -58,9 +58,9 @@ def run_all(HP,guiShared):
 
             for name in names:
                 HP.restore_name = name
-                HP.restore_file_path = os.getcwd()+ "\\files\\models\\new_state\\"+HP.restore_name+"\\"
+                HP.restore_file_path = os.getcwd()+ "/files/models/new_state/"+HP.restore_name+"/"
                 HP.save_name = name#"save_movie"#
-                HP.save_file_path = os.getcwd()+ "\\files\\models\\new_state\\"+HP.save_name+"\\"
+                HP.save_file_path = os.getcwd()+ "/files/models/new_state/"+HP.save_name+"/"
                 
                 if HP.evaluation_flag:
                     HP.train_flag = False
@@ -172,11 +172,12 @@ class programThread (threading.Thread):
         threading.Thread.__init__(self)
         self.guiShared = guiShared
         self.HP = HP
+        
       
     def run(self):
         print ("Starting " + self.name)
-        #run(self.HP,self.guiShared)
-        run_all(self.HP,self.guiShared)
+        run(self.HP,self.guiShared)
+        #run_all(self.HP,self.guiShared)
         print ("Exiting " + self.name)
 
         

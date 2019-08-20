@@ -26,8 +26,8 @@ def train_model():
     plt.show()
 
     #file_name =  path+name+".ckpt "
-    net.model.save_weights(os.getcwd()+"\\files\\"+save_name)
-    #net.save_model(os.getcwd()+"\\files\\",name = save_name)
+    net.model.save_weights(os.getcwd()+"/files/"+save_name)
+    #net.save_model(os.getcwd()+"/files/",name = save_name)
 
 if __name__ == "__main__": 
     waitFor = lib.waitFor()
@@ -72,7 +72,7 @@ if __name__ == "__main__":
     net = model_based_network(X_n,Y_n,alpha)#,dropout_flag = True
 
     if restore_flag:
-        net.restore(os.getcwd()+"\\files\\",name = save_name)
+        net.restore(os.getcwd()+"/files/",name = save_name)
     if train_flag:
         train_model()
    

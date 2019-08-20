@@ -5,7 +5,7 @@ import data_manager1
 def get_data(folder,names):
     relative_reward_vec = []
     for name in names:#
-        restore_path = os.getcwd()+ "\\files\\models\\"+str(folder)+"\\"+name+"\\"
+        restore_path = os.getcwd()+ "/files/models/"+str(folder)+"/"+name+"/"
         restore_name = 'data_manager'
         dataManager = data_manager1.DataManager(restore_path,restore_path,True,save_name = restore_name,restore_name = restore_name)#
         if dataManager.error:

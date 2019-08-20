@@ -50,7 +50,7 @@ if __name__ == "__main__":
     #"big_state_standard_norm_3_layers_20_nodes_alpha_0001.txt"
 
     envData = environment1.OptimalVelocityPlannerData('model_based')
-    folder = os.getcwd()+"\\files\\train_data\\"
+    folder = os.getcwd()+"/files/train_data/"
 
     file_name_list = [folder+file for file in files]
     data_vec = []

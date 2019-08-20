@@ -109,7 +109,7 @@ if __name__ == "__main__":
 
     buffer_size = 10000
     name = "data2"
-    path = "\\files\\collect_data\\"
+    path = "/files/collect_data/"
     collect_random_data(buffer_size,path,name)
    # buffer = load_data(buffer_size,path,name)
 

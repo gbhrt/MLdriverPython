@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import time
 import math
 import numpy as np
@@ -8,7 +9,10 @@ import os
 import random
 import copy
 
+#def init_c_func():
+
 cf = c_func.cFunctions()
+
     
 def clear_screen():
     os.system('cls')
@@ -566,7 +570,7 @@ class waitFor:
             if inp ==  b'\x00':
                 continue
             print("input:",inp)
-            if inp == b'\r':
+            if inp == b'\r' or inp == '\r':
                 stop[0] = True
             else:
                 command[0] = inp

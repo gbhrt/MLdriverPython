@@ -20,7 +20,7 @@ def train(env,HP,net_drive,dataManager,net_stabilize = None,guiShared = None,see
     #sim15_3_18 -quit -batchmode -nographics
     #"""
 
-    #subprocess.Popen('C:\\Users\\gavri\\Desktop\\sim_15_3_18\\sim15_3_18 -quit -batchmode -nographics')
+    #subprocess.Popen('C:/Users/gavri/Desktop/sim_15_3_18/sim15_3_18 -quit -batchmode -nographics')
   
     #pre-defined parameters:
     if seed != None:
@@ -252,16 +252,16 @@ def train(env,HP,net_drive,dataManager,net_stabilize = None,guiShared = None,see
             if guiShared is not None:
                 Q_matrix = net_drive.get_Qa([state]*len(actions),actions).flatten()
                
-                if  HP.env_mode == "SDDPG_pure_persuit":    
-                    Q_matrix = np.reshape(Q_matrix,(len(Q_matrix),1))
-                else:
-                    Q_matrix = np.reshape(Q_matrix,(l,l))
-                if HP.stabilize_flag:
-                    Q_matrix_stabilize = net_stabilize.get_Qa([state]*len(actions),actions).flatten()
-                    if HP.env_mode == "SDDPG_pure_persuit":
-                        Q_matrix_stabilize = np.reshape(Q_matrix_stabilize,(len(Q_matrix_stabilize),1))
-                    else:
-                        Q_matrix_stabilize = np.reshape(Q_matrix_stabilize,(l,l))
+                # if  HP.env_mode == "SDDPG_pure_persuit":    
+                #     Q_matrix = np.reshape(Q_matrix,(len(Q_matrix),1))
+                # else:
+                #     Q_matrix = np.reshape(Q_matrix,(l,l))
+                # if HP.stabilize_flag:
+                #     Q_matrix_stabilize = net_stabilize.get_Qa([state]*len(actions),actions).flatten()
+                #     if HP.env_mode == "SDDPG_pure_persuit":
+                #         Q_matrix_stabilize = np.reshape(Q_matrix_stabilize,(len(Q_matrix_stabilize),1))
+                #     else:
+                #         Q_matrix_stabilize = np.reshape(Q_matrix_stabilize,(l,l))
 
                 planningData = classes.planningData()
                 planningData.vec_path.append(env.local_path)

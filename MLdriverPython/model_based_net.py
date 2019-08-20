@@ -174,7 +174,7 @@ class model_based_network(NetLib):
     #        self.update_network(X,Y_)
     #        if i %100 == 0:
     #            print(self.get_loss(X,Y_))
-    #    self.save_model('models\\',self.file)
+    #    self.save_model('models/',self.file)
 
     #    return
     #def get_loss_from_data(self,data):

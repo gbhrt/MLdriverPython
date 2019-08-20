@@ -5,7 +5,9 @@ from ctypes import *
 #libc.printf
 class cFunctions:
     def __init__(self):
-        self.c_lib = CDLL('c_lib.dll')
+        #self.c_lib = CDLL('c_lib.dll')
+        
+        self.c_lib = CDLL('c_lib.so')
         #func = c_lib['compute_limit_curve']
         #self.c_lib.compute_limit_curve.argtypes = (c_int, POINTER(c_float),POINTER(c_float),POINTER(c_float),POINTER(c_float))
         #self.c_lib.compute_limit_curve.restype = c_int

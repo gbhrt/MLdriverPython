@@ -29,7 +29,7 @@ class Replay:
     def save(self,path,name = "replay_memory"):
         print("save replay buffer...")
         #try:
-        path += "replay_memory\\"
+        path += "replay_memory/"
         pathlib.Path(path).mkdir(parents=True, exist_ok=True) 
         file_name = path + name + ".txt"
         with open(file_name, 'w') as f:
@@ -45,7 +45,7 @@ class Replay:
     def restore(self,path,name = "replay_memory"):
         print("restore replay buffer...")
         try:
-            path += "replay_memory\\"
+            path += "replay_memory/"
             pathlib.Path(path).mkdir(parents=True, exist_ok=True) 
             file_name = path + name + ".txt"
             with open(file_name, 'r') as f:
@@ -75,7 +75,7 @@ class Replay:
 #    def save(self,path,name = "replay_memory"):
 #        print("save replay buffer...")
 #        try:
-#            path += "replay_memory\\"
+#            path += "replay_memory/"
 #            pathlib.Path(path).mkdir(parents=True, exist_ok=True) 
 #            file_name = path + name + ".txt"
 #            with open(file_name, 'w') as f:
@@ -91,7 +91,7 @@ class Replay:
 #    def restore(self,path,name = "replay_memory"):
 #        print("restore replay buffer...")
 #        try:
-#            path += "replay_memory\\"
+#            path += "replay_memory/"
 #            pathlib.Path(path).mkdir(parents=True, exist_ok=True) 
 #            file_name = path + name + ".txt"
 #            with open(file_name, 'r') as f:

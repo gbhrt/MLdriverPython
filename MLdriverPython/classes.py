@@ -167,7 +167,7 @@ class PathManager:#
     def get_next_random_path(self):
         def read():
             self.random_count+=1
-            return self.random_count,self.read_path('splited_files\\random2\\path_'+ str(self.random_count) +'.txt')
+            return self.random_count,self.read_path('splited_files/random2/path_'+ str(self.random_count) +'.txt')
         _,path = read()
         if path == None:
             self.random_count = 1

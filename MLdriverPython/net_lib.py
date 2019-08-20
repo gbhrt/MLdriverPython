@@ -27,7 +27,7 @@ class NetLib:
     def save_model(self,path,name = "tf_model"):
         try:
             with self.graph.as_default():
-                path1 = path +name+"\\"
+                path1 = path +name+"/"
                 pathlib.Path(path1).mkdir(parents=True, exist_ok=True) 
                 file_name =  path1+name+".ckpt "
                 saver = tf.train.Saver()
@@ -42,7 +42,7 @@ class NetLib:
     def restore(self,path,name = "tf_model"):
         try:
             with self.graph.as_default():
-                path = path +name+"\\"
+                path = path +name+"/"
                 file_name =  path+name+".ckpt " #/media/windows-share/MLdriverPython/MLdriverPython/
                 # Restore variables from disk.
                 saver = tf.train.Saver()
