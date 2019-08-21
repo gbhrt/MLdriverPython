@@ -109,7 +109,7 @@ def get_ddpg_state(pl = None,local_path = None,num_points = 1,distance_between =
 
 def get_model_based_state(pl,last_abs_pos,last_abs_ang,local_path):
     rel_pos = lib.to_local(pl.simulator.vehicle.position,last_abs_pos,last_abs_ang[1])#relative position
-
+    
     if rel_pos[0] >10:#temp error
         print ("error in get state__________________________________________________________________")
         print("pos:",pl.simulator.vehicle.position)
@@ -148,8 +148,7 @@ def get_model_based_state(pl,last_abs_pos,last_abs_ang,local_path):
              'roll':roll,
              'path':local_path
              }
-    #last_abs_pos = copy.copy(pl.simulator.vehicle.position)
-    #last_abs_ang = copy.copy(pl.simulator.vehicle.angle)
+
     last_abs_pos[0] = pl.simulator.vehicle.position[0]
     last_abs_pos[1] = pl.simulator.vehicle.position[1]
     last_abs_pos[2] = pl.simulator.vehicle.position[2]

@@ -21,8 +21,9 @@ def plot_distribution(data,name):
 
 def plot_comparison(real, predicted,name):
     plt.figure(name)
-    plt.plot(real,'o')
-    plt.plot(predicted,'o')
+    plt.plot(real,'o',label = "real")
+    plt.plot(predicted,'o',label = "predicted")
+    plt.legend()
 
 def plot_distribution_dict(Y_, Y,feature,index = None,plot_name=" "):
     plt.figure(plot_name+" distribution")
@@ -238,7 +239,7 @@ def test_net(Agent):
     #Replay.memory = Replay.memory[:10000]
     print("lenght of buffer: ",len(Agent.Replay.memory))
     if Agent.HP.restore_flag:
-        Agent.nets.restore_all(Agent.HP.restore_file_path)
+        Agent.nets.restore_all(Agent.HP.restore_file_path,Agent.HP.net_name)
     
     full_replay_memory = Agent.Replay.memory
     train_replay_memory = full_replay_memory[int(test_part*len(full_replay_memory)):]
@@ -290,8 +291,8 @@ def test_net(Agent):
         TransNet_X.append(vehicle_state+action)
         TransNet_Y_.append([vehicle_state_next[i] - vehicle_state[i] for i in range(len(vehicle_state_next))] +rel_pos)
 
-        SteerNet_X.append(vehicle_state+[action[0],vehicle_state_next[vehicle_state_next.vehicle_ind_data['roll']]])
-        SteerNet_Y_.append([action[1]])
+        #SteerNet_X.append(vehicle_state+[action[0],vehicle_state_next[vehicle_state_next.vehicle_ind_data['roll']]])
+        #SteerNet_Y_.append([action[1]])
 
     
 
@@ -303,23 +304,23 @@ def test_net(Agent):
 
     TransNet_Y = Agent.nets.TransNet.predict(np.array(TransNet_X))
 
-    ##vehicle_state_vec,action_vec,vehicle_state_next_vec,rel_pos_vec,vehicle_state_next_pred_vec,rel_pos_pred_vec = [],[],[],[],[],[]
-    ##for x,y_,y in zip(TransNet_X,TransNet_Y_,TransNet_Y):
-    ##    vehicle_state_vec.append( x[:len(Agent.trainHP.vehicle_ind_data)])
-    ##    action_vec.append(x[len(Agent.trainHP.vehicle_ind_data):])
-    ##    vehicle_state_next = y_[:len(Agent.trainHP.vehicle_ind_data)]
-    ##    vehicle_state_next_vec.append([vehicle_state_next[i] + vehicle_state_vec[-1][i] for i in range(len(vehicle_state_next))])
-    ##    rel_pos_vec.append(y_[len(Agent.trainHP.vehicle_ind_data):])
-    ##    vehicle_state_next_pred = y[:len(Agent.trainHP.vehicle_ind_data)]
-    ##    vehicle_state_next_pred_vec.append([vehicle_state_next_pred[i] + vehicle_state_vec[-1][i] for i in range(len(vehicle_state_next))])
-    ##    rel_pos_pred_vec.append(y[len(Agent.trainHP.vehicle_ind_data):])
+    vehicle_state_vec,action_vec,vehicle_state_next_vec,rel_pos_vec,vehicle_state_next_pred_vec,rel_pos_pred_vec = [],[],[],[],[],[]
+    for x,y_,y in zip(TransNet_X,TransNet_Y_,TransNet_Y):
+        vehicle_state_vec.append( x[:len(Agent.trainHP.vehicle_ind_data)])
+        action_vec.append(x[len(Agent.trainHP.vehicle_ind_data):])
+        vehicle_state_next = y_[:len(Agent.trainHP.vehicle_ind_data)]
+        vehicle_state_next_vec.append([vehicle_state_next[i] + vehicle_state_vec[-1][i] for i in range(len(vehicle_state_next))])
+        rel_pos_vec.append(y_[len(Agent.trainHP.vehicle_ind_data):])
+        vehicle_state_next_pred = y[:len(Agent.trainHP.vehicle_ind_data)]
+        vehicle_state_next_pred_vec.append([vehicle_state_next_pred[i] + vehicle_state_vec[-1][i] for i in range(len(vehicle_state_next))])
+        rel_pos_pred_vec.append(y[len(Agent.trainHP.vehicle_ind_data):])
     
 
-    ##for feature,ind in Agent.trainHP.vehicle_ind_data.items():
-    ##    plot_comparison(np.array(vehicle_state_next_vec)[:,ind], np.array(vehicle_state_next_pred_vec)[:,ind],feature)
+    for feature,ind in Agent.trainHP.vehicle_ind_data.items():
+        plot_comparison(np.array(vehicle_state_next_vec)[:,ind], np.array(vehicle_state_next_pred_vec)[:,ind],feature)
 
-    ##for ind,feature in enumerate(["dx","dy","dang"]):
-    ##    plot_comparison(np.array(rel_pos_vec)[:,ind], np.array(rel_pos_pred_vec)[:,ind],feature)
+    for ind,feature in enumerate(["dx","dy","dang"]):
+        plot_comparison(np.array(rel_pos_vec)[:,ind], np.array(rel_pos_pred_vec)[:,ind],feature)
 
     plt.show()
     #train_X,train_Y_,_,_ = convert_data(ReplayTrain,envData)

@@ -73,13 +73,18 @@ def steer_policy(state_Vehicle,state_env,SteerNet,trainHP):
 #def emergency_steer_policy(state):
 #    return 0.0
 def emergency_steer_policy(state_Vehicle,state_env,SteerNet,trainHP):
-    #acc = -1.0
-    #steer_max = get_dsteer_max(SteerNet,state_Vehicle.values,acc,1,trainHP)
-    #steer_min = get_dsteer_max(SteerNet,state_Vehicle.values,acc,-1,trainHP)
-    #return np.clip(steer,steer_min,steer_max).item()
-    steer = lib.comp_steer_general(state_env[0],state_env[1],state_Vehicle.abs_pos,state_Vehicle.abs_ang,state_Vehicle.values[0])
-
-    return steer*0.5
+    if trainHP.emergency_steering_type == 1:
+        steer = 0
+    elif trainHP.emergency_steering_type == 2:
+        steer = 0.5*lib.comp_steer_general(state_env[0],state_env[1],state_Vehicle.abs_pos,state_Vehicle.abs_ang,state_Vehicle.values[0])
+    elif trainHP.emergency_steering_type == 3:
+        acc = -1.0
+        steer_max = get_dsteer_max(SteerNet,state_Vehicle.values,acc,1,trainHP)
+        steer_min = get_dsteer_max(SteerNet,state_Vehicle.values,acc,-1,trainHP)
+        steer = np.clip(steer,steer_min,steer_max).item()
+    else:
+        print("error - emergency_steering_type not exist")
+    return steer
 
 def acc_policy():
     return -1.0

@@ -334,6 +334,8 @@ class OptimalVelocityPlanner(OptimalVelocityPlannerData):
         self.opened = self.pl.simulator.connected
 
         self.path_seed = None
+        self.last_pos = self.pl.simulator.vehicle.position#first time init abs position and angle - updated in the function
+        self.last_ang = self.pl.simulator.vehicle.angle
         return
 
     def get_state(self):
@@ -375,8 +377,8 @@ class OptimalVelocityPlanner(OptimalVelocityPlannerData):
                 [self.pl.simulator.vehicle.velocity[2]]+\
                 state
         if self.env_mode == 'model_based':
-            self.last_pos = self.pl.simulator.vehicle.position#first time init abs position and angle - updated in the function
-            self.last_ang = self.pl.simulator.vehicle.angle
+            #self.last_pos = self.pl.simulator.vehicle.position#first time init abs position and angle - updated in the function
+            #self.last_ang = self.pl.simulator.vehicle.angle
             state = get_model_based_state(self.pl,self.last_pos,self.last_ang,self.local_path)
         return state
 

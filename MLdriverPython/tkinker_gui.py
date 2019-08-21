@@ -265,6 +265,7 @@ class draw_state:
         self.canvas.delete("all")
         if self.guiShared.steer is not None:
             self.draw_vehicle(self.guiShared.steer)
+        
         if len(self.guiShared.planningData.vec_path)>self.index[0]+1:
             if len(self.guiShared.planningData.vec_path[self.index[0]].position)>1:
                 self.draw_path(self.guiShared.planningData.vec_path[self.index[0]].position,color = "red")
@@ -338,6 +339,7 @@ class draw_state:
 
     def draw_path(self,path,color = "black"):
         relative_path = [[pos[0]*self.scale + self.vehicle_pos[0],-pos[1]*self.scale+ self.vehicle_pos[1]] for pos in path]
+        #print("color:",color,"path:",relative_path)
         flat_path = []
         for pos in relative_path:
             flat_path.append(pos[0])

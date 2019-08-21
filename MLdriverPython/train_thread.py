@@ -68,7 +68,7 @@ def train(nets,Replay,trainHP,HP,trainShared):
             #    print("loss:",float(net.get_loss(batch_X,batch_Y_)))
                 #print("loss:",float(net.get_loss(X,Y_)))
                 if time.time() - last_save_time > HP.save_every_time*60:
-                    nets.save_all(HP.save_file_path)
+                    nets.save_all(HP.save_file_path,HP.net_name)
                     Replay.save(HP.save_file_path)
                     last_save_time = time.time()
 

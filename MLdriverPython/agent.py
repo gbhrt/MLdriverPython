@@ -15,6 +15,7 @@ import numpy as np
 import target_point
 import actions_for_given_path as act
 from DDPG_net import DDPG_network
+import sys
 
 def convert_to_MF_state(state,targetPoint):
     return state.Vehicle.values + state.Vehicle.rel_pos+[state.Vehicle.rel_ang]+[targetPoint.abs_pos]+[targetPoint.vel]
@@ -40,36 +41,41 @@ class Nets:#define the input and outputs to networks, and the nets itself.
         #self.TransNet = model_based_network(X_n,Y_n,trainHP.alpha)
         self.TransNet,self.transgraph = keras_model.create_model(X_n,Y_n,trainHP.alpha)
         self.TransNet._make_predict_function()
-        X_n = len(trainHP.vehicle_ind_data) + 2 # + steer-action, desired roll
-        Y_n = 1 #acc
-        self.AccNet,_ = keras_model.create_model(X_n,Y_n,trainHP.alpha)#model_based_network(X_n,Y_n,trainHP.alpha)
+        #X_n = len(trainHP.vehicle_ind_data) + 2 # + steer-action, desired roll
+        #Y_n = 1 #acc
+        #self.AccNet,_ = keras_model.create_model(X_n,Y_n,trainHP.alpha)#model_based_network(X_n,Y_n,trainHP.alpha)
 
         X_n = len(trainHP.vehicle_ind_data) + 2 # + acc-action, desired roll
         Y_n = 1#steer
         self.SteerNet,_ = keras_model.create_model(X_n,Y_n,trainHP.alpha)
+        self.restore_error = False
+    def restore_all(self,restore_file_path,name):
+        try:
+            path = restore_file_path +name+"/"
+            file_name =  path + "TransNet.ckpt"
+            self.TransNet.load_weights(file_name)
+            #file_name =  path + "AccNet.ckpt"
+            #self.AccNet.load_weights(file_name)
+            file_name =  path + "SteerNet.ckpt"
+            self.SteerNet.load_weights(file_name)
+            print("networks restored")
+            self.restore_error = False
+        except:
+            print('cannot restore net',sys.exc_info()[0])
+            #raise
+            self.restore_error = True
 
-    def restore_all(self,restore_file_path):
-        name = "tf_model"
-        path = restore_file_path +name+"/"
-        file_name =  path + "TransNet.ckpt"
-        self.TransNet.load_weights(file_name)
-        file_name =  path + "AccNet.ckpt"
-        self.AccNet.load_weights(file_name)
-        file_name =  path + "SteerNet.ckpt"
-        self.SteerNet.load_weights(file_name)
-        print("networks restored")
-
-    def save_all(self,save_file_path):
+    def save_all(self,save_file_path,name):
         #self.TransNet.save_model(save_file_path)
-        name = "tf_model"
+        
         path = save_file_path +name+"/"
         pathlib.Path(path).mkdir(parents=True, exist_ok=True) 
 
         file_name =  path+"TransNet.ckpt "
         #file_name =  path+name+".ckpt "
         self.TransNet.save_weights(file_name)
-        file_name =  path+"AccNet.ckpt"
-        self.AccNet.save_weights(file_name)
+        #file_name =  path+"AccNet.ckpt"
+        #self.AccNet.save_weights(file_name)
         file_name =  path + "SteerNet.ckpt"
         self.SteerNet.save_weights(file_name)
 
@@ -82,7 +88,7 @@ class MF_Net:#define the input and outputs to networks, and the nets itself.
 
 class TrainHyperParameters:
     def __init__(self):
-        self.MF_policy_flag = True
+        self.MF_policy_flag = False
         self.num_of_runs = 5000
         self.alpha = 0.0001# #learning rate
         self.batch_size = 64
@@ -99,9 +105,11 @@ class TrainHyperParameters:
         self.init_var = 0.0#uncertainty of the roll measurment
         self.one_step_var = 0.01
         self.const_var = 0.05#roll variance at the future states, constant because closed loop control?
+       
         #self.emergency_const_var = 0.05
 
-        self.emergency_action_flag = True
+        self.emergency_action_flag = False
+        self.emergency_steering_type = 1#1 - stright, 2 - 0.5 from original steering, 3-steer net
         
 
         self.max_cost = 100
@@ -122,7 +130,8 @@ class Agent:# includes the networks, policies, replay buffer, learning hyper par
     def __init__(self,HP,envData = None):
         self.HP = HP
         self.trainHP = TrainHyperParameters()
-        
+        self.trainHP.emergency_action_flag = HP.emergency_action_flag
+        self.trainHP.emergency_steering_type = HP.emergency_steering_type#1 - stright, 2 - 0.5 from original steering, 3-steer net
 
         self.Replay = agent_lib.Replay(self.trainHP.replay_memory_size)
         if self.HP.restore_flag:
@@ -133,11 +142,15 @@ class Agent:# includes the networks, policies, replay buffer, learning hyper par
             self.MF_net = MF_Net(self.trainHP,HP,envData)
         self.nets = Nets(self.trainHP)
         if self.HP.restore_flag:
-            self.nets.restore_all(self.HP.restore_file_path)
+            self.nets.restore_all(self.HP.restore_file_path,self.HP.net_name)
         self.trainShared = shared.trainShared()
         return
+    def save_nets(self):
+        with self.trainShared.Lock:
+            self.nets.save_all(self.HP.save_file_path,self.HP.net_name)
     def save(self):
-        self.nets.save_all(self.HP.save_file_path)
+        with self.trainShared.Lock:
+            self.nets.save_all(self.HP.save_file_path,self.HP.net_name)
         self.Replay.save(self.HP.save_file_path)
 
     def start_training(self):
@@ -209,6 +222,7 @@ class Agent:# includes the networks, policies, replay buffer, learning hyper par
         path.position = np.array(path.position)
         S.env = [path,0]#[env_state['path'],0]#local path
         S.Vehicle.rel_pos = [env_state['rel_pos_x'],env_state['rel_pos_y']]
+        #print("rel_pos:",S.Vehicle.rel_pos)
         S.Vehicle.rel_ang = env_state['rel_ang']
         S.Vehicle.abs_pos = [0.0,0.0]
         S.Vehicle.abs_ang = 0.0

@@ -87,7 +87,8 @@ def comp_MB_action(nets,state,acc,steer,trainHP):
     actions_vec = [[acc,steer]]
     StateVehicle_emergency_vec= [state.Vehicle]
     actions_emergency_vec = [[acc,steer]]
-    emergency_action_active = True
+    
+    emergency_action_active = trainHP.emergency_action_flag#initialize to true just if in emergency mode
     #delta_var = 0.002
     #init_var = 0.0#uncertainty of the roll measurment
     #one_step_var = 0.01#roll variance after a single step
@@ -97,7 +98,10 @@ def comp_MB_action(nets,state,acc,steer,trainHP):
     roll_var = trainHP.init_var
     
     #stability at the initial state:
-    roll_flag,dev_flag = actions.check_stability(state.Vehicle,state.env,roll_var = roll_var,max_plan_roll = max_plan_roll,max_plan_deviation = max_plan_deviation)
+    if  trainHP.emergency_action_flag:
+        roll_flag,dev_flag = actions.check_stability(state.Vehicle,state.env,roll_var = roll_var,max_plan_roll = max_plan_roll,max_plan_deviation = max_plan_deviation)
+    else:
+        roll_flag,dev_flag = 0,0
     if roll_flag == 0 and dev_flag == 0:     
         #predict the next unavoidable state (actions already done):      
         state.Vehicle = actions.step(state.Vehicle,acc,steer,nets.TransNet,trainHP)
@@ -107,8 +111,10 @@ def comp_MB_action(nets,state,acc,steer,trainHP):
          
         roll_var += trainHP.one_step_var
         #stability at the next state (unavoidable state):
-        roll_flag,dev_flag = actions.check_stability(state.Vehicle,state.env,roll_var = roll_var,max_plan_roll = max_plan_roll,max_plan_deviation = max_plan_deviation)
-        
+        if  trainHP.emergency_action_flag:
+            roll_flag,dev_flag = actions.check_stability(state.Vehicle,state.env,roll_var = roll_var,max_plan_roll = max_plan_roll,max_plan_deviation = max_plan_deviation)
+        else:
+            roll_flag,dev_flag = 0,0
         if roll_flag == 0 and dev_flag == 0:#first step was Ok
 
             next_acc,next_steer,tmp_state_vec,tmp_a_vec = driving_action(state,nets,trainHP,roll_var)

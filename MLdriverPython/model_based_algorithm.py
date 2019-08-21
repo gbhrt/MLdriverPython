@@ -12,7 +12,7 @@ import math
 import os
 
 
-def train(env,HP,Agent,dataManager,guiShared,seed = None): 
+def train(env,HP,Agent,dataManager,guiShared,seed = None,global_train_count = 0): #the global train number in MB is the step number, training is async, for compability to other methods
 
     #subprocess.Popen('C:/Users/gavri/Desktop/sim_15_3_18/sim15_3_18 -quit -batchmode -nographics')
   
@@ -32,7 +32,7 @@ def train(env,HP,Agent,dataManager,guiShared,seed = None):
     waitFor = lib.waitFor()#wait for "enter" in another thread - then stop = true
 
 
-    global_train_count = 0
+    #global_train_count = 0
     seed = HP.seed[0]
 
     lt = 0#temp
@@ -122,6 +122,7 @@ def train(env,HP,Agent,dataManager,guiShared,seed = None):
                     guiShared.planningData.append(planningData)
                     guiShared.roll = copy.copy(dataManager.roll)
                     guiShared.real_path = copy.deepcopy(dataManager.real_path)
+                    #print("path:",guiShared.real_path.position)
                     guiShared.steer = steer
                     guiShared.update_data_flag = True
                 #print("update gui time:",time.clock() - t)
@@ -149,6 +150,9 @@ def train(env,HP,Agent,dataManager,guiShared,seed = None):
             #print("replay:",Agent.Replay.memory[-1])
             last_time_stamp = env.pl.simulator.vehicle.input_time
             
+            global_train_count+=1
+            if global_train_count % HP.save_every_train_number == 0 and global_train_count > 0:
+                break
             #state = copy.deepcopy(next_state)
             
             #print("copy state time:",time.clock() - env.lt)
@@ -156,7 +160,8 @@ def train(env,HP,Agent,dataManager,guiShared,seed = None):
             #    acc,steer = copy.copy(next_acc), copy.copy(next_steer)
             if done:
                 break
-
+        if global_train_count>150:
+            break
             #end if time
         #end while
 
@@ -196,7 +201,19 @@ def train(env,HP,Agent,dataManager,guiShared,seed = None):
         #    HP.noise_flag = False
         #    if HP.test_same_path:
         #        seed = HP.seed
+        #if (i % HP.evaluation_every == 0 and i > 0) or test_path_ind != 0 or HP.always_no_noise_flag or evaluate:
+        #    #HP.noise_flag = False
+        #    evaluation_flag = True
+        #    if HP.test_same_path:
+        #        test_path_ind +=1
+        #        seed = HP.seed[test_path_ind]
+        #        print("seed:",seed)
+        #        if test_path_ind >= len(HP.seed):
+        #            test_path_ind = 0
+        if global_train_count % HP.save_every_train_number == 0 and not HP.evaluation_flag:# and global_train_count > 0):
+            HP.net_name = 'tf_model_'+str(global_train_count)
 
+            Agent.save_nets()
         if (i % HP.save_every == 0 and i > 0): 
             dataManager.save_data()
         if HP.plot_flag and waitFor.command == [b'1']:
