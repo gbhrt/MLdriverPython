@@ -34,12 +34,14 @@ class model_based_network(NetLib):
 
         self.alpha = alpha#0.001
 
+
         self.model = tf.keras.models.Sequential([
             tf.keras.layers.Dense(hidden_layer_nodes1, activation=tf.keras.activations.relu, input_shape=(self.X_n,)),
             tf.keras.layers.Dense(hidden_layer_nodes2, activation=tf.keras.activations.relu),
             tf.keras.layers.Dense(hidden_layer_nodes3, activation=tf.keras.activations.relu),
             tf.keras.layers.Dense(self.Y_n)
             ])
+        
         self.model.compile(optimizer=tf.keras.optimizers.Adam(),
                 loss=tf.keras.losses.mean_squared_error,
                 metrics=['accuracy'])

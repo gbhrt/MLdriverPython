@@ -37,14 +37,14 @@ def comp_var(X,Y,Y_,feature_name):
     error = np.array(real) - np.array(predicted)
     return np.var(error)
 if __name__ == "__main__": 
-    files = [#"small_state_standard_norm_3_layers_50_nodes.txt",
+    files = ["small_state_standard_norm_3_layers_50_nodes.txt"
              #"big_state_standard_norm_3_layers_50_nodes_alpha_0001.txt",
              #"big_state_standard_norm_3_layers_50_nodes_alpha_001.txt",
              #"big_state_standard_norm_4_layers_50_nodes_alpha_0001.txt",
              #"big_state_standard_norm_3_layers_100_nodes.txt",
              #"big_state_standard_norm_3_layers_100_nodes_L2_01.txt",
-             "small_state_one_net.txt",
-             "small_state_separate_net.txt"
+             #"small_state_one_net.txt",
+             #"small_state_separate_net.txt"
              ]
     #small_state_separate_net
     #"big_state_standard_norm_3_layers_20_nodes_alpha_0001.txt"

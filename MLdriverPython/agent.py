@@ -35,29 +35,33 @@ class State:
         return
 
 class Nets:#define the input and outputs to networks, and the nets itself.
-    def __init__(self,trainHP): 
-        X_n = len(trainHP.vehicle_ind_data)+2# + acc-action, steer-action
-        Y_n = len(trainHP.vehicle_ind_data) + 3 #+dx, dy, dang
-        #self.TransNet = model_based_network(X_n,Y_n,trainHP.alpha)
-        self.TransNet,self.transgraph = keras_model.create_model(X_n,Y_n,trainHP.alpha)
-        self.TransNet._make_predict_function()
-        #X_n = len(trainHP.vehicle_ind_data) + 2 # + steer-action, desired roll
-        #Y_n = 1 #acc
-        #self.AccNet,_ = keras_model.create_model(X_n,Y_n,trainHP.alpha)#model_based_network(X_n,Y_n,trainHP.alpha)
-
-        X_n = len(trainHP.vehicle_ind_data) + 2 # + acc-action, desired roll
-        Y_n = 1#steer
-        self.SteerNet,_ = keras_model.create_model(X_n,Y_n,trainHP.alpha)
+    def __init__(self,trainHP,trans_net_active = True,steer_net_active = True,acc_net_active = False): 
+        self.trans_net_active,self.steer_net_active,self.acc_net_active = trans_net_active,steer_net_active,acc_net_active
+        if self.trans_net_active:
+            X_n = len(trainHP.vehicle_ind_data)+2# + acc-action, steer-action
+            Y_n = len(trainHP.vehicle_ind_data) + 3 #+dx, dy, dang
+            #self.TransNet = model_based_network(X_n,Y_n,trainHP.alpha)
+            self.TransNet,self.transgraph = keras_model.create_model(X_n,Y_n,trainHP.alpha)
+        
+            self.TransNet._make_predict_function()
+        if self.acc_net_active:
+            X_n = len(trainHP.vehicle_ind_data) + 2 # + steer-action, desired roll
+            Y_n = 1 #acc
+            self.AccNet,_ = keras_model.create_model(X_n,Y_n,trainHP.alpha)#model_based_network(X_n,Y_n,trainHP.alpha)
+        if self.steer_net_active:
+            X_n = len(trainHP.vehicle_ind_data) + 2 # + acc-action, desired roll
+            Y_n = 1#steer
+            self.SteerNet,_ = keras_model.create_model(X_n,Y_n,trainHP.alpha)
         self.restore_error = False
     def restore_all(self,restore_file_path,name):
         try:
             path = restore_file_path +name+"/"
-            file_name =  path + "TransNet.ckpt"
-            self.TransNet.load_weights(file_name)
-            #file_name =  path + "AccNet.ckpt"
-            #self.AccNet.load_weights(file_name)
-            file_name =  path + "SteerNet.ckpt"
-            self.SteerNet.load_weights(file_name)
+            if self.trans_net_active:
+                self.TransNet.load_weights(path + "TransNet.ckpt")
+            if self.acc_net_active:
+                self.AccNet.load_weights(path + "AccNet.ckpt")
+            if self.steer_net_active:
+                self.SteerNet.load_weights(path + "SteerNet.ckpt")
             print("networks restored")
             self.restore_error = False
         except:
@@ -70,14 +74,12 @@ class Nets:#define the input and outputs to networks, and the nets itself.
         
         path = save_file_path +name+"/"
         pathlib.Path(path).mkdir(parents=True, exist_ok=True) 
-
-        file_name =  path+"TransNet.ckpt "
-        #file_name =  path+name+".ckpt "
-        self.TransNet.save_weights(file_name)
-        #file_name =  path+"AccNet.ckpt"
-        #self.AccNet.save_weights(file_name)
-        file_name =  path + "SteerNet.ckpt"
-        self.SteerNet.save_weights(file_name)
+        if self.trans_net_active:
+            self.TransNet.save_weights(path+"TransNet.ckpt ")
+        if self.acc_net_active:
+            self.AccNet.save_weights(path+"AccNet.ckpt")
+        if self.steer_net_active:
+            self.SteerNet.save_weights(path + "SteerNet.ckpt")
 
 class MF_Net:#define the input and outputs to networks, and the nets itself.
     def __init__(self,trainHP,HP,envData): 
@@ -127,7 +129,7 @@ class TrainHyperParameters:
  
 
 class Agent:# includes the networks, policies, replay buffer, learning hyper parameters
-    def __init__(self,HP,envData = None):
+    def __init__(self,HP,envData = None,trans_net_active = True,steer_net_active = True,acc_net_active = False):
         self.HP = HP
         self.trainHP = TrainHyperParameters()
         self.trainHP.emergency_action_flag = HP.emergency_action_flag
@@ -140,7 +142,7 @@ class Agent:# includes the networks, policies, replay buffer, learning hyper par
         #define all nets:
         if self.trainHP.MF_policy_flag:
             self.MF_net = MF_Net(self.trainHP,HP,envData)
-        self.nets = Nets(self.trainHP)
+        self.nets = Nets(self.trainHP,trans_net_active,steer_net_active,acc_net_active)
         if self.HP.restore_flag:
             self.nets.restore_all(self.HP.restore_file_path,self.HP.net_name)
         self.trainShared = shared.trainShared()

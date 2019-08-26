@@ -49,6 +49,8 @@ def run(guiShared,HP,dataManager):
     envData = environment1.OptimalVelocityPlannerData('model_based')
     if HP.MF_policy_flag:
         Agent = agent.Agent(HP,envData)
+    elif HP.program_mode == "test_net_performance":
+        Agent = agent.Agent(HP,trans_net_active = True, steer_net_active = False)
     else:
         Agent = agent.Agent(HP)
 

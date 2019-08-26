@@ -36,16 +36,16 @@ def train(nets,Replay,trainHP,HP,trainShared):
                 action = Replay.memory[ind][2]
                 vehicle_state_next = Replay.memory[ind+1][0]
                 rel_pos = Replay.memory[ind+1][1]
+                if nets.trans_net_active:
+                    TransNet_X.append(vehicle_state+action)
+                    TransNet_Y_.append([vehicle_state_next[i] - vehicle_state[i] for i in range(len(vehicle_state_next))] +rel_pos)
 
-                TransNet_X.append(vehicle_state+action)
-                TransNet_Y_.append([vehicle_state_next[i] - vehicle_state[i] for i in range(len(vehicle_state_next))] +rel_pos)
-
-                
-                AccNet_X.append(vehicle_state+[action[1]]+[vehicle_state_next[trainHP.vehicle_ind_data['roll']]])
-                AccNet_Y_.append(action[0])
-
-                SteerNet_X.append(vehicle_state+[action[0]]+[vehicle_state_next[trainHP.vehicle_ind_data['roll']]])
-                SteerNet_Y_.append(action[1])
+                if nets.acc_net_active:
+                    AccNet_X.append(vehicle_state+[action[1]]+[vehicle_state_next[trainHP.vehicle_ind_data['roll']]])
+                    AccNet_Y_.append(action[0])
+                if nets.steer_net_active:
+                    SteerNet_X.append(vehicle_state+[action[0]]+[vehicle_state_next[trainHP.vehicle_ind_data['roll']]])
+                    SteerNet_Y_.append(action[1])
 
                 cnt+=1
 
@@ -54,15 +54,20 @@ def train(nets,Replay,trainHP,HP,trainShared):
             with nets.transgraph.as_default():
                 #
                 #try:
-                nets.TransNet.train_on_batch(np.array(TransNet_X),np.array(TransNet_Y_))
+                if nets.trans_net_active:
+                    nets.TransNet.train_on_batch(np.array(TransNet_X),np.array(TransNet_Y_))
                 #except:
                 #    print("TransNet_Y_:",TransNet_Y_)
-                nets.SteerNet.train_on_batch(np.array(SteerNet_X),np.array(SteerNet_Y_))
-                #nets.AccNet.train_on_batch(np.array(AccNet_X),np.array(AccNet_Y_))
+                if nets.steer_net_active:
+                    nets.SteerNet.train_on_batch(np.array(SteerNet_X),np.array(SteerNet_Y_))
+                if nets.acc_net_active:
+                    nets.AccNet.train_on_batch(np.array(AccNet_X),np.array(AccNet_Y_))
                 if train_count % 1000 == 0:
                     print("train:",train_count)
-                    print("Trans loss:",nets.TransNet.evaluate(np.array(TransNet_X),np.array(TransNet_Y_)))
-                    print("Steer loss:",nets.SteerNet.evaluate(np.array(SteerNet_X),np.array(SteerNet_Y_)))
+                    if nets.trans_net_active:
+                        print("Trans loss:",nets.TransNet.evaluate(np.array(TransNet_X),np.array(TransNet_Y_)))
+                    if nets.steer_net_active:
+                        print("Steer loss:",nets.SteerNet.evaluate(np.array(SteerNet_X),np.array(SteerNet_Y_)))
                     #print(nets.SteerNet.evaluate(np.array(SteerNet_X),np.array(SteerNet_Y_)))
             #    #X,Y_ = env.create_XY_(rand_state, rand_a, rand_next_state)
             #    print("loss:",float(net.get_loss(batch_X,batch_Y_)))
