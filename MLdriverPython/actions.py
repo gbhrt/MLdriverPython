@@ -59,7 +59,7 @@ def plot_state_vec(StateVehicle_vec,ax):
 
 
 
-def steer_policy(state_Vehicle,state_env,SteerNet,trainHP):
+def steer_policy(state_Vehicle,state_env,trainHP,SteerNet = None):
     #acc = 1.0
     #steer_max = get_dsteer_max(SteerNet,state.Vehicle.values,acc,1,trainHP)
     #steer_min = get_dsteer_max(SteerNet,state.Vehicle.values,acc,-1,trainHP)
@@ -72,7 +72,7 @@ def steer_policy(state_Vehicle,state_env,SteerNet,trainHP):
 
 #def emergency_steer_policy(state):
 #    return 0.0
-def emergency_steer_policy(state_Vehicle,state_env,SteerNet,trainHP):
+def emergency_steer_policy(state_Vehicle,state_env,trainHP,SteerNet = None):
     if trainHP.emergency_steering_type == 1:
         steer = 0
     elif trainHP.emergency_steering_type == 2:

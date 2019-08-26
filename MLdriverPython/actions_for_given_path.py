@@ -4,7 +4,7 @@ import library as lib
 
 
 def driving_action(state,nets,trainHP,roll_var):
-    steer = actions.steer_policy(state.Vehicle,state.env,nets.SteerNet,trainHP)
+    steer = actions.steer_policy(state.Vehicle,state.env,trainHP)#nets.SteerNet
 
     #integration on the next n steps:
     acc_to_try =[1.0,-1.0]#[1.0,0.0,-1.0]
@@ -27,7 +27,7 @@ def driving_action(state,nets,trainHP,roll_var):
             S_Vehicle = actions.step(S_Vehicle,acc_command,steer_command,nets.TransNet,trainHP)                   
             tmp_state_vec.append(S_Vehicle)    
             state.env[1] = lib.find_index_on_path(state.env[0],S_Vehicle.abs_pos)         
-            steer_command = actions.steer_policy(S_Vehicle,state.env,nets.SteerNet,trainHP)
+            steer_command = actions.steer_policy(S_Vehicle,state.env,trainHP)#,nets.SteerNet
             acc_command = actions.acc_policy()#always -1
             tmp_a_vec.append([acc_command,steer_command])
 
@@ -56,7 +56,7 @@ def emergency_cost(state,acc,steer,nets,trainHP,roll_var):
             roll_var += trainHP.one_step_var
         S_Vehicle = actions.step(S_Vehicle,acc_command,steer_command,nets.TransNet,trainHP)                   
         tmp_state_vec.append(S_Vehicle) 
-        steer_command = actions.emergency_steer_policy(S_Vehicle,state.env,nets.SteerNet,trainHP)
+        steer_command = actions.emergency_steer_policy(S_Vehicle,state.env,trainHP,SteerNet =  nets.SteerNet if nets.steer_net_active else None)
         acc_command = actions.emergency_acc_policy()#always -1
         tmp_a_vec.append([acc_command,steer_command])
         
@@ -168,7 +168,7 @@ def comp_MB_action(nets,state,acc,steer,trainHP):
         print("unstable initial state - before first step")
 
     if emergency_action_active:
-        next_steer = actions.emergency_steer_policy(state.Vehicle,state.env,nets.SteerNet,trainHP) #steering from the next state, send it to the vehicle at the next state
+        next_steer = actions.emergency_steer_policy(state.Vehicle,state.env,trainHP,SteerNet =  nets.SteerNet if nets.steer_net_active else None) #steering from the next state, send it to the vehicle at the next state
         next_acc  = actions.emergency_acc_policy()#always -1
         print("emergency policy is executed!")
 

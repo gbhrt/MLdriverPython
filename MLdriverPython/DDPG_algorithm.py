@@ -6,7 +6,7 @@ from classes import Path
 import copy
 import random
 
-from plot import Plot
+#from plot import Plot
 import agent_lib as pLib
 #import subprocess
 import math

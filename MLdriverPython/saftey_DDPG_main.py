@@ -229,8 +229,8 @@ class programThread (threading.Thread):
       
     def run(self):
         print ("Starting " + self.name)
-        #run(self.HP,self.guiShared)
-        run_all(self.HP,self.guiShared)
+        run(self.HP,self.guiShared)
+        #run_all(self.HP,self.guiShared)
         print ("Exiting " + self.name)
 
         
@@ -238,7 +238,7 @@ class programThread (threading.Thread):
 
 
 if __name__ == "__main__": 
-    algo_type = "MB"#"SDDPG"
+    algo_type = "SDDPG"#"MB"#"SDDPG"
 
     if algo_type == "SDDPG":
         HP = hyper_parameters.SafteyHyperParameters()

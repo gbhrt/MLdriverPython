@@ -107,7 +107,7 @@ class SafteyHyperParameters:
 class ModelBasedHyperParameters:#global settings of the program.
     def __init__(self):
        
-        self.program_mode =  "test_net_performance"#"test_net_performance" train_in_env, test_net_performance, test_actions  timing
+        self.program_mode =  "train_in_env"#"test_net_performance" train_in_env, test_net_performance, test_actions  timing
         if self.program_mode == "test_net_performance" or self.program_mode == "test_actions":
             self.gui_flag = False
         else:
@@ -145,12 +145,12 @@ class ModelBasedHyperParameters:#global settings of the program.
         self.save_every_time = 5000 #minutes
         self.seed = [1111]
         self.net_name = "tf_model"
-        self.save_name = "collect_data_1"
+        self.save_name = "with_gpu1"
         self.folder_path = os.getcwd()+ "/files/models/model_based/"
         #self.save_file_path = os.getcwd()+ "/files/models/model_based/"+self.save_name+"/"
         self.save_file_path = self.folder_path +self.save_name+"/"
 
-        self.restore_name = "collect_data_1"#
+        self.restore_name = "with_gpu1"#
         #self.restore_file_path = os.getcwd()+ "/files/models/model_based/"+self.restore_name+"/"
         self.restore_file_path = self.folder_path +self.restore_name+"/"
 

@@ -160,7 +160,7 @@ def train(env,HP,Agent,dataManager,guiShared,seed = None,global_train_count = 0)
             #    acc,steer = copy.copy(next_acc), copy.copy(next_steer)
             if done:
                 break
-        if global_train_count>150:
+        if global_train_count>10000:
             break
             #end if time
         #end while
