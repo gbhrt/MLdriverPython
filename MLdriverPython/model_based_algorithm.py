@@ -160,7 +160,7 @@ def train(env,HP,Agent,dataManager,guiShared,seed = None,global_train_count = 0)
             #    acc,steer = copy.copy(next_acc), copy.copy(next_steer)
             if done:
                 break
-        if global_train_count>10000:
+        if global_train_count>HP.max_steps:
             break
             #end if time
         #end while
@@ -222,6 +222,16 @@ def train(env,HP,Agent,dataManager,guiShared,seed = None,global_train_count = 0)
         while guiShared.pause_after_episode_flag:
             time.sleep(0.1)
         #dataManager.save_readeable_data()
+
+        #stop at the end of the episode for training
+        if not HP.evaluation_flag:
+            train_count_at_end = 5000
+            current_traint_count = Agent.trainShared.train_count
+            while Agent.trainShared.train_count - current_traint_count < train_count_at_end:
+                time.sleep(5)
+                env.pl.stop_vehicle()#for maintain connection to simulator (prevent timeout)
+
+
         dataManager.restart()
 
      

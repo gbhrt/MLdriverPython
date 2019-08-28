@@ -20,7 +20,7 @@ def run_all(HP,guiShared):
         guiShared.max_roll = envData.max_plan_roll
         guiShared.max_time = envData.step_time*envData.max_episode_steps+5#add time for braking
     names_vec = []
-    names_vec.append([['MB_R_1'],'MB_R',None])
+    names_vec.append([['MB_R_1','MB_R_2','MB_R_3'],'MB_R',None])
     #names_vec.append([['also_steer1'],'REVO',50000])#trained MF acc and steer policy
     random.seed(0)
     HP.seed = random.sample(range(1000),101)#the 101 path is not executed
@@ -62,7 +62,7 @@ def run_all(HP,guiShared):
             "reduce_vel: "+str(HP.reduce_vel),
             "seed: "+str(HP.seed),
             description]
-        HP.save_every_train_number = 50#5000
+        HP.save_every_train_number = 100#5000
         
         for evalutaion_flag in [False,True]:#False,
             HP.evaluation_flag = evalutaion_flag
@@ -77,7 +77,7 @@ def run_all(HP,guiShared):
                     HP.train_flag = False
                     HP.always_no_noise_flag = True
                     HP.restore_flag = True
-                    HP.num_of_runs = 5#100
+                    HP.num_of_runs = 100
 
                     if training_num is  None:
                         nums = [HP.save_every_train_number*j for j in range(0,50)]
@@ -249,7 +249,7 @@ if __name__ == "__main__":
     else:
         print("error - algo_type not exist")
 
-    guiShared = shared.guiShared() if HP.gui_flag else None
+    guiShared = shared.guiShared(HP.env_mode) if HP.gui_flag else None
     
 
     # Create new thread

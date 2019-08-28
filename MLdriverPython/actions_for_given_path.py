@@ -89,6 +89,7 @@ def comp_MB_action(nets,state,acc,steer,trainHP):
     actions_emergency_vec = [[acc,steer]]
     
     emergency_action_active = trainHP.emergency_action_flag#initialize to true just if in emergency mode
+    #emergency_action_active = False#tmp
     #delta_var = 0.002
     #init_var = 0.0#uncertainty of the roll measurment
     #one_step_var = 0.01#roll variance after a single step
@@ -100,6 +101,7 @@ def comp_MB_action(nets,state,acc,steer,trainHP):
     #stability at the initial state:
     if  trainHP.emergency_action_flag:
         roll_flag,dev_flag = actions.check_stability(state.Vehicle,state.env,roll_var = roll_var,max_plan_roll = max_plan_roll,max_plan_deviation = max_plan_deviation)
+        #roll_flag,dev_flag = 0,0#tmp
     else:
         roll_flag,dev_flag = 0,0
     if roll_flag == 0 and dev_flag == 0:     
@@ -113,6 +115,7 @@ def comp_MB_action(nets,state,acc,steer,trainHP):
         #stability at the next state (unavoidable state):
         if  trainHP.emergency_action_flag:
             roll_flag,dev_flag = actions.check_stability(state.Vehicle,state.env,roll_var = roll_var,max_plan_roll = max_plan_roll,max_plan_deviation = max_plan_deviation)
+            #roll_flag,dev_flag = 0,0#tmp
         else:
             roll_flag,dev_flag = 0,0
         if roll_flag == 0 and dev_flag == 0:#first step was Ok
@@ -128,7 +131,8 @@ def comp_MB_action(nets,state,acc,steer,trainHP):
                 actions_emergency_vec+=tmp_a_vec
 
                 if e_cost < trainHP.max_cost:
-                    emergency_action_active = False          
+                    emergency_action_active = False  
+                            
                
             else:
                 emergency_action_active = False
@@ -171,6 +175,9 @@ def comp_MB_action(nets,state,acc,steer,trainHP):
         next_steer = actions.emergency_steer_policy(state.Vehicle,state.env,trainHP,SteerNet =  nets.SteerNet if nets.steer_net_active else None) #steering from the next state, send it to the vehicle at the next state
         next_acc  = actions.emergency_acc_policy()#always -1
         print("emergency policy is executed!")
+
+    if state.Vehicle.values[0]<trainHP.prior_safe_velocity:
+        next_acc = 1.0
 
 
     #return next_acc,next_steer,pred_vec,emergency_pred_vec,roll_flag,dev_flag,emergency_action

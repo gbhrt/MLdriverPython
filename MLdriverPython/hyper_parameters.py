@@ -2,6 +2,7 @@ import os
 class HyperParameters:
     def __init__(self):
         self.gui_flag = True
+        self.env_mode = 'DDPG'
         #self.epsilon_start = 1.0
         #self.epsilon = 0.1
         self.gamma = 0.99
@@ -113,12 +114,12 @@ class ModelBasedHyperParameters:#global settings of the program.
         else:
             self.gui_flag = True
         self.MF_policy_flag = False
-        self.emergency_action_flag = False
-        self.emergency_steering_type = 1#1 - stright, 2 - 0.5 from original steering, 3-steer net
+        self.emergency_action_flag = True
+        self.emergency_steering_type = 2#1 - stright, 2 - 0.5 from original steering, 3-steer net
         #########################
         #for the shared main:
         self.env_mode = "model_based"
-        self.evaluation_flag = False
+        self.evaluation_flag = True
         self.always_no_noise_flag = False
         self.reduce_vel = 0.0
         self.num_of_runs = 100000
@@ -126,7 +127,8 @@ class ModelBasedHyperParameters:#global settings of the program.
         self.evaluation_every = 999999999
         self.add_feature_to_action = False
         #####################
-        self.train_flag = True
+        self.max_steps = 1001
+        self.train_flag = False
         #self.noise_flag = True
         #self.always_no_noise_flag = False
         self.analytic_action = False
@@ -138,19 +140,19 @@ class ModelBasedHyperParameters:#global settings of the program.
         self.gym_flag = False
         self.render_flag = True
         self.plot_flag = True
-        self.restore_flag = False
+        self.restore_flag = True
         self.skip_run = False
         self.reset_every = 3
         self.save_every = 10000000000
         self.save_every_time = 5000 #minutes
         self.seed = [1111]
         self.net_name = "tf_model"
-        self.save_name = "MB2"
+        self.save_name = "MB3"
         self.folder_path = os.getcwd()+ "/files/models/model_based/"
         #self.save_file_path = os.getcwd()+ "/files/models/model_based/"+self.save_name+"/"
         self.save_file_path = self.folder_path +self.save_name+"/"
 
-        self.restore_name = "MB1"#
+        self.restore_name = "MB3"#
         #self.restore_file_path = os.getcwd()+ "/files/models/model_based/"+self.restore_name+"/"
         self.restore_file_path = self.folder_path +self.restore_name+"/"
 

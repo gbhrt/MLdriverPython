@@ -3,14 +3,15 @@ import classes
 
 
 class guiShared():#classes.planningData
-    def __init__(self):
+    def __init__(self,env_mode):
         #super().__init__()
         self.Lock = threading.Lock()
         self.request_exit = False
         self.exit = False
         self.pause_after_episode_flag = False
         self.evaluate = False
-        
+        self.env_mode = env_mode
+
         self.state = None
         self.steer = None
         self.action = []
@@ -40,6 +41,7 @@ class trainShared:
         self.request_exit = False
         self.exit = False
         self.train = False
+        self.train_count = 0
 
 class simulatorShared:
     def __init__(self):

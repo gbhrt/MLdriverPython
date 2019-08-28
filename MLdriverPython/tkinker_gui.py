@@ -364,8 +364,8 @@ class TkGui():
         self.spinBox.grid(row = 5, column=1,columnspan = 2)
         data_plots(self.root,self.spinBox,self.guiShared,self.index)
         draw_state(self.root,self.spinBox,self.guiShared,self.index)
-        #if self.guiShared.mode == 'SDDPG':
-        Q_plot(self.root,self.spinBox,self.guiShared,self.index)
+        if self.guiShared.env_mode != 'model_based':
+            Q_plot(self.root,self.spinBox,self.guiShared,self.index)
 
         #tk.Button(self.root, text="Quit", command=self.quit).pack()
         tk.Button(self.root, text="Quit", command=self.quit).grid(row = 2,column =1)

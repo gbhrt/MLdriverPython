@@ -10,7 +10,7 @@ def train(nets,Replay,trainHP,HP,trainShared):
         if len(Replay.memory) > 2 and HP.train_flag:############ len(Replay.memory) > HP.batch_size and 
             trainShared.train = True
             last_save_time = time.time()
-            train_count = 0
+            trainShared.train_count = 0
             break
         time.sleep(0.01)
     while trainShared.train:
@@ -61,8 +61,8 @@ def train(nets,Replay,trainHP,HP,trainShared):
                     nets.SteerNet.train_on_batch(np.array(SteerNet_X),np.array(SteerNet_Y_))
                 if nets.acc_net_active:
                     nets.AccNet.train_on_batch(np.array(AccNet_X),np.array(AccNet_Y_))
-                if train_count % 1000 == 0:
-                    print("train:",train_count)
+                if trainShared.train_count % 1000 == 0:
+                    print("train:",trainShared.train_count)
                     if nets.trans_net_active:
                         print("Trans loss:",nets.TransNet.evaluate(np.array(TransNet_X),np.array(TransNet_Y_)))
                     if nets.steer_net_active:
@@ -80,7 +80,7 @@ def train(nets,Replay,trainHP,HP,trainShared):
                 #print("update model")
                 
             
-            train_count+=1
+            trainShared.train_count+=1
 
             
 

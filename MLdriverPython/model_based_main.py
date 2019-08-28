@@ -25,9 +25,8 @@ class programThread (threading.Thread):
 
 
 if __name__ == "__main__": 
-
-    guiShared = shared.guiShared()
     HP = hyper_parameters.ModelBasedHyperParameters()
+    guiShared = shared.guiShared(HP.env_mode)
     dataManager = data_manager1.DataManager(HP.save_file_path,HP.restore_file_path,HP.restore_flag)
 
     # Create new thread
