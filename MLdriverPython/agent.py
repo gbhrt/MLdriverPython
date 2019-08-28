@@ -41,7 +41,7 @@ class Nets:#define the input and outputs to networks, and the nets itself.
             X_n = len(trainHP.vehicle_ind_data)+2# + acc-action, steer-action
             Y_n = len(trainHP.vehicle_ind_data) + 3 #+dx, dy, dang
             #self.TransNet = model_based_network(X_n,Y_n,trainHP.alpha)
-            self.TransNet,self.transgraph = keras_model.create_model(X_n,Y_n,trainHP.alpha)
+            self.TransNet,self.transgraph = keras_model.create_model(X_n,Y_n,trainHP.alpha,normalize = trainHP.normalize_flag,mean= trainHP.features_mean,var = trainHP.features_var)
         
             self.TransNet._make_predict_function()
         if self.acc_net_active:
@@ -98,6 +98,13 @@ class TrainHyperParameters:
         self.train_num = 100# how many times to train in every step
         self.run_random_num = 'inf'
         self.vehicle_ind_data = OrderedDict([('vel_y',0),('steer',1), ('roll',2)])  
+        self.normalize_flag = False
+        if self.normalize_flag == True:
+            self.features_mean = [7,0,0,0,0]#input feature + action
+            self.features_var = [7,0.5,0.05,0.7,0.7]
+        else:
+            self.features_mean = None
+            self.features_var = None
         self.plan_roll = 0.03
         #self.emergency_plan_roll = 0.07
         self.target_tolerance = 0.02

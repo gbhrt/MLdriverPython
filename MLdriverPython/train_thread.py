@@ -51,8 +51,7 @@ def train(nets,Replay,trainHP,HP,trainShared):
 
             #update neural networs:
             #pLib.model_based_update(rand_state, rand_a, rand_next_state,rand_end,net,HP,env
-            with nets.transgraph.as_default():
-                #
+            with nets.transgraph.as_default():                #
                 #try:
                 if nets.trans_net_active:
                     nets.TransNet.train_on_batch(np.array(TransNet_X),np.array(TransNet_Y_))

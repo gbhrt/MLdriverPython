@@ -12,6 +12,8 @@
     <OutputPath>.</OutputPath>
     <Name>MLdriverPython</Name>
     <RootNamespace>MLdriverPython</RootNamespace>
+    <InterpreterId>{07217668-8416-453a-82b8-a68ca32932e5}</InterpreterId>
+    <InterpreterVersion>3.5</InterpreterVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
@@ -213,6 +215,20 @@
     <Folder Include="deepLearnProject\" />
     <Folder Include="gym\" />
     <Folder Include="MB\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Interpreter Include="..\..\..\..\..\venv\">
+      <Id>{07217668-8416-453a-82b8-a68ca32932e5}</Id>
+      <BaseInterpreter>{4194a22e-68f3-44be-8fbd-0d75165253ec}</BaseInterpreter>
+      <Version>3.5</Version>
+      <Description>venv (python 3.6)</Description>
+      <InterpreterPath>Scripts\python.exe</InterpreterPath>
+      <WindowsInterpreterPath>Scripts\pythonw.exe</WindowsInterpreterPath>
+      <LibraryPath>Lib\</LibraryPath>
+      <PathEnvironmentVariable>
+      </PathEnvironmentVariable>
+      <Architecture>Amd64</Architecture>
+    </Interpreter>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in

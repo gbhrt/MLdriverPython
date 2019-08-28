@@ -9,6 +9,8 @@ import os
 import random
 #from sklearn import preprocessing
 import time
+import agent
+import predict_lib
 
 def save_data(file_name,data):
     with open(file_name, 'w') as f:#append data to the file
@@ -198,6 +200,203 @@ def scale_and_split_data(scaling_type,test_part,vec_X,vec_Y_):
 
     return train_X,train_Y_,test_X,test_Y_
 
+def real_to_abs_n_steps(replay_memory_short):#get a short segment from replay memory. try to compute abs pos from start to end and predict path
+    vehicle_state_vec = [replay_memory_short[0][0]]
+    action_vec = [replay_memory_short[0][2]]
+    abs_ang_vec = [0]
+    abs_pos_vec = [[0,0]]#abs relative to the segment begining
+    for ind in range(1,len(replay_memory_short)):
+        vehicle_state_vec.append( replay_memory_short[ind][0])
+        action_vec.append( replay_memory_short[ind][2])
+         
+        if replay_memory_short[ind][3]:# or replay_memory_short[ind][4] or replay_memory_short[ind][5]: # done flag,time errors
+            break
+        rel_pos = replay_memory_short[ind][1][:2]
+        rel_ang = replay_memory_short[ind][1][2:][0]
+
+        abs_pos,abs_ang = predict_lib.comp_abs_pos_ang(rel_pos,rel_ang,abs_pos_vec[-1],abs_ang_vec[-1])
+        abs_pos_vec.append(abs_pos)
+        abs_ang_vec.append(rel_ang)
+    return vehicle_state_vec,action_vec,abs_pos_vec,abs_ang_vec
+
+def predict_n_steps(Agent,vehicle_state,abs_pos,abs_ang,action_vec):#
+    vehicle_state_vec = [vehicle_state]
+    abs_ang_vec = [abs_ang]
+    abs_pos_vec = [abs_pos]#abs relative to the segment begining
+    for ind in range(len(action_vec)-1):
+        X= [vehicle_state_vec[ind]+action_vec[ind]]
+        y = Agent.nets.TransNet.predict(np.array(X))[0]
+
+        delta_values = y[:len(Agent.trainHP.vehicle_ind_data)].tolist()
+        vehicle_state_vec.append( [vehicle_state_vec[-1][i]+delta_values[i] for i in range(len(delta_values))])
+
+        rel_pos = y[len(Agent.trainHP.vehicle_ind_data):len(Agent.trainHP.vehicle_ind_data)+2]
+        rel_ang = y[len(Agent.trainHP.vehicle_ind_data)+2:]
+
+        abs_pos,abs_ang = predict_lib.comp_abs_pos_ang(rel_pos,rel_ang,abs_pos_vec[-1],abs_ang_vec[-1])
+        abs_pos_vec.append(abs_pos)
+        abs_ang_vec.append(rel_ang)
+
+    return vehicle_state_vec,abs_pos_vec,abs_ang_vec
+
+def convert_replay_to_states(replay_memory):
+    states = []
+    actions = []
+    done = []
+    
+    for ind in range(len(replay_memory)-1):
+        StateVehicle = agent.State().Vehicle
+        if replay_memory[ind][3] == True or replay_memory[ind+1][4]: # done flag
+            continue
+        StateVehicle.values = replay_memory[ind][0]
+        actions.append(replay_memory[ind][2])
+        vehicle_state_next = replay_memory[ind+1][0]
+        rel_pos = replay_memory[ind+1][1]
+
+def plot_n_step_state(Agent,replay_memory):
+    #n step:
+    fig1,ax_abs = plt.subplots(1)
+    ax_abs.axis('equal')
+
+    fig2,axes = plt.subplots(len(Agent.trainHP.vehicle_ind_data),constrained_layout=True)
+    plt.ion()
+    fontsize = 15
+    n = 20
+    for i in range(len(replay_memory)-n):
+        replay_memory_short = replay_memory[i:i+n]
+        vehicle_state_vec,action_vec,abs_pos_vec,abs_ang_vec = real_to_abs_n_steps(replay_memory_short)
+        pred_vehicle_state_vec,pred_abs_pos_vec,pred_abs_ang_vec = predict_n_steps(Agent,vehicle_state_vec[0],abs_pos_vec[0],abs_ang_vec[0],action_vec)
+        x,y = zip(*abs_pos_vec)
+        p_x,p_y = zip(*pred_abs_pos_vec)
+        #compare_states = zip(vehicle_state_vec,pred_vehicle_state_vec)
+        
+        fig2.suptitle('Multi-step prediction', fontsize=fontsize)
+        
+        for feature,ind in Agent.trainHP.vehicle_ind_data.items():
+            real = np.array(vehicle_state_vec)[:,ind]
+            pred = np.array(pred_vehicle_state_vec)[:,ind]
+            error = pred - real
+            axes[ind].clear()
+            
+            axes[ind].set_ylabel(feature, fontsize=fontsize)
+            axes[ind].plot(real,label = "real")
+            axes[ind].plot(pred,label = "predicted")
+        axes[-1].set_xlabel('Step number',fontsize=fontsize)
+        fig2.legend()
+
+        ax_abs.clear()
+        ax_abs.plot(x,y)
+        ax_abs.plot(p_x,p_y)
+        plt.draw()
+        plt.pause(0.0001)
+    plt.ioff()
+    plt.show()
+
+def plot_n_step_var(Agent,replay_memory):
+    max_n = 25
+    var_vec = []
+    pos_var_vec = []
+    for n in range(2,max_n):
+        #init_state_vec = []
+        final_state_vec = []
+        final_state_vec_pred = []
+        for i in range(len(replay_memory)-n):
+            replay_memory_short = replay_memory[i:i+n]
+            vehicle_state_vec,action_vec,abs_pos_vec,abs_ang_vec = real_to_abs_n_steps(replay_memory_short)
+            pred_vehicle_state_vec,pred_abs_pos_vec,pred_abs_ang_vec = predict_n_steps(Agent,vehicle_state_vec[0],abs_pos_vec[0],abs_ang_vec[0],action_vec)
+            if len(vehicle_state_vec) == n:
+                #init_state_vec.append(vehicle_state_vec[0])
+                final_state_vec.append(vehicle_state_vec[-1])
+                final_state_vec_pred.append(pred_vehicle_state_vec[-1])
+        print("n",n,"samples num:",len(final_state_vec))
+        #compute variance for n
+        var = []
+        for feature,ind in Agent.trainHP.vehicle_ind_data.items():
+            real = np.array(final_state_vec)[:,ind]
+            pred = np.array(final_state_vec_pred)[:,ind]
+            error = pred - real
+            var.append(np.var(error))
+
+        var_vec.append(var)
+    print(var_vec)
+    fig2,axes = plt.subplots(len(Agent.trainHP.vehicle_ind_data),constrained_layout=True)
+
+    fontsize = 15
+    for feature,ind in Agent.trainHP.vehicle_ind_data.items(): 
+        axes[ind].set_ylabel(feature, fontsize=fontsize)
+        axes[ind].plot(np.array(var_vec)[:,ind])
+ 
+    #fig2.legend()
+    plt.show()
+
+def one_step_pred_plot(Agent,replay_memory):  
+    #one step predictions and plots:
+    TransNet_X,TransNet_Y_ = [],[]
+    AccNet_X,AccNet_Y_ = [],[]
+    SteerNet_X,SteerNet_Y_ = [],[]
+
+    for ind in range(len(replay_memory)-1):
+        if replay_memory[ind][3] == True or replay_memory[ind+1][4]: # done flag
+            continue
+        vehicle_state = replay_memory[ind][0]
+        action = replay_memory[ind][2]
+        vehicle_state_next = replay_memory[ind+1][0]
+        rel_pos = replay_memory[ind+1][1]
+
+
+        TransNet_X.append(vehicle_state+action)
+        TransNet_Y_.append([vehicle_state_next[i] - vehicle_state[i] for i in range(len(vehicle_state_next))] +rel_pos)
+
+        #SteerNet_X.append(vehicle_state+[action[0],vehicle_state_next[vehicle_state_next.vehicle_ind_data['roll']]])
+        #SteerNet_Y_.append([action[1]])
+
+    
+
+    #print(Agent.nets.SteerNet.evaluate(np.array(SteerNet_X),np.array(SteerNet_Y_)))
+    #SteerNet_Y = Agent.nets.SteerNet.predict(np.array(SteerNet_X))
+    #plot_comparison(np.array(SteerNet_Y_)[:,0], np.array(SteerNet_Y)[:,0],"steer action")
+
+    print(Agent.nets.TransNet.evaluate(np.array(TransNet_X),np.array(TransNet_Y_)))
+
+    TransNet_Y = Agent.nets.TransNet.predict(np.array(TransNet_X))
+
+    vehicle_state_vec,action_vec,vehicle_state_next_vec,rel_pos_vec,vehicle_state_next_pred_vec,rel_pos_pred_vec = [],[],[],[],[],[]
+    for x,y_,y in zip(TransNet_X,TransNet_Y_,TransNet_Y):
+        vehicle_state_vec.append( x[:len(Agent.trainHP.vehicle_ind_data)])
+        action_vec.append(x[len(Agent.trainHP.vehicle_ind_data):])
+        vehicle_state_next = y_[:len(Agent.trainHP.vehicle_ind_data)]
+        vehicle_state_next_vec.append([vehicle_state_next[i] + vehicle_state_vec[-1][i] for i in range(len(vehicle_state_next))])
+        rel_pos_vec.append(y_[len(Agent.trainHP.vehicle_ind_data):])
+        vehicle_state_next_pred = y[:len(Agent.trainHP.vehicle_ind_data)]
+        vehicle_state_next_pred_vec.append([vehicle_state_next_pred[i] + vehicle_state_vec[-1][i] for i in range(len(vehicle_state_next))])
+        rel_pos_pred_vec.append(y[len(Agent.trainHP.vehicle_ind_data):])
+    
+
+    for feature,ind in Agent.trainHP.vehicle_ind_data.items():
+        plot_comparison(np.array(vehicle_state_next_vec)[:,ind], np.array(vehicle_state_next_pred_vec)[:,ind],feature)
+
+    for ind,feature in enumerate(["dx","dy","dang"]):
+        plot_comparison(np.array(rel_pos_vec)[:,ind], np.array(rel_pos_pred_vec)[:,ind],feature)
+
+    for feature,ind in Agent.trainHP.vehicle_ind_data.items():
+
+        real = np.array(vehicle_state_next_vec)[:,ind]
+        pred = np.array(vehicle_state_next_pred_vec)[:,ind]
+        error = pred - real
+
+        plot_distribution(error,feature)
+    plt.show()
+
+def train_nets(Agent):
+    waitFor = lib.waitFor()
+    Agent.start_training()
+    while waitFor.stop == [False]:
+        Agent.trainShared.algorithmIsIn.clear()#indicates that are ready to take the lock
+        with Agent.trainShared.Lock:
+            Agent.trainShared.algorithmIsIn.set()
+        time.sleep(1)
+    Agent.stop_training()
+
 def test_net(Agent): 
     train = True
     split_buffer = True
@@ -220,7 +419,7 @@ def test_net(Agent):
     #big_state_standard_norm_3_layers_100_nodes saved in collect_data_test the best
     #big_state_standard_norm_3_layers_20_nodes_L2_01
 
-    waitFor = lib.waitFor()
+    
     #envData = environment1.OptimalVelocityPlannerData('model_based')
 
     #if separate_nets:
@@ -257,72 +456,24 @@ def test_net(Agent):
     #train_X,train_Y_,test_X,test_Y_ = scale_and_split_data(scaling_type,test_part,vec_X,vec_Y_)
 
 
-
-    
     if train:
-        Agent.start_training()
-
-        while waitFor.stop == [False]:
-            Agent.trainShared.algorithmIsIn.clear()#indicates that are ready to take the lock
-            with Agent.trainShared.Lock:
-                Agent.trainShared.algorithmIsIn.set()
-            time.sleep(1)
-
-        Agent.stop_training()
+       train_nets(Agent)
 
     Agent.Replay.memory = full_replay_memory
     Agent.save()
 
-    replay_memory = test_replay_memory
-    
-    TransNet_X,TransNet_Y_ = [],[]
-    AccNet_X,AccNet_Y_ = [],[]
-    SteerNet_X,SteerNet_Y_ = [],[]
+    replay_memory = full_replay_memory#test_replay_memory
 
-    for ind in range(len(replay_memory)-1):
-        if replay_memory[ind][3] == True or replay_memory[ind+1][4]: # done flag
-            continue
-        vehicle_state = replay_memory[ind][0]
-        action = replay_memory[ind][2]
-        vehicle_state_next = replay_memory[ind+1][0]
-        rel_pos = replay_memory[ind+1][1]
+    #TransNet_X = [[1,1,1,1,1]]
 
+    #TransNet_Y = Agent.nets.TransNet.predict(np.array(TransNet_X))[0]
+    #print(TransNet_Y)
+    #plot_n_step_state(Agent,replay_memory)
 
-        TransNet_X.append(vehicle_state+action)
-        TransNet_Y_.append([vehicle_state_next[i] - vehicle_state[i] for i in range(len(vehicle_state_next))] +rel_pos)
+    #plot_n_step_var(Agent,replay_memory)
 
-        #SteerNet_X.append(vehicle_state+[action[0],vehicle_state_next[vehicle_state_next.vehicle_ind_data['roll']]])
-        #SteerNet_Y_.append([action[1]])
+    one_step_pred_plot(Agent,replay_memory)
 
-    
-
-    #print(Agent.nets.SteerNet.evaluate(np.array(SteerNet_X),np.array(SteerNet_Y_)))
-    #SteerNet_Y = Agent.nets.SteerNet.predict(np.array(SteerNet_X))
-    #plot_comparison(np.array(SteerNet_Y_)[:,0], np.array(SteerNet_Y)[:,0],"steer action")
-
-    #print(Agent.nets.TransNet.evaluate(np.array(TransNet_X),np.array(TransNet_Y_)))
-
-    TransNet_Y = Agent.nets.TransNet.predict(np.array(TransNet_X))
-
-    vehicle_state_vec,action_vec,vehicle_state_next_vec,rel_pos_vec,vehicle_state_next_pred_vec,rel_pos_pred_vec = [],[],[],[],[],[]
-    for x,y_,y in zip(TransNet_X,TransNet_Y_,TransNet_Y):
-        vehicle_state_vec.append( x[:len(Agent.trainHP.vehicle_ind_data)])
-        action_vec.append(x[len(Agent.trainHP.vehicle_ind_data):])
-        vehicle_state_next = y_[:len(Agent.trainHP.vehicle_ind_data)]
-        vehicle_state_next_vec.append([vehicle_state_next[i] + vehicle_state_vec[-1][i] for i in range(len(vehicle_state_next))])
-        rel_pos_vec.append(y_[len(Agent.trainHP.vehicle_ind_data):])
-        vehicle_state_next_pred = y[:len(Agent.trainHP.vehicle_ind_data)]
-        vehicle_state_next_pred_vec.append([vehicle_state_next_pred[i] + vehicle_state_vec[-1][i] for i in range(len(vehicle_state_next))])
-        rel_pos_pred_vec.append(y[len(Agent.trainHP.vehicle_ind_data):])
-    
-
-    for feature,ind in Agent.trainHP.vehicle_ind_data.items():
-        plot_comparison(np.array(vehicle_state_next_vec)[:,ind], np.array(vehicle_state_next_pred_vec)[:,ind],feature)
-
-    for ind,feature in enumerate(["dx","dy","dang"]):
-        plot_comparison(np.array(rel_pos_vec)[:,ind], np.array(rel_pos_pred_vec)[:,ind],feature)
-
-    plt.show()
     #train_X,train_Y_,_,_ = convert_data(ReplayTrain,envData)
 
     #print("test loss: ",net.get_loss(test_X,test_Y_))

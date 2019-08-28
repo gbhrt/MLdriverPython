@@ -28,6 +28,7 @@ def denormalize_value(val,min_val,max_val):
     return val# 0.5*((max_val - min_val)*val + max_val + min_val)
 
 def normalize(data,norm_vec):
+
     #try:
     #    n_data = copy.deepcopy(data)
     #    #print("data:",data)
