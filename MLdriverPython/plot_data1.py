@@ -38,14 +38,24 @@ def get_abs_vel(dataManager):
     var = sum(var_vec)/len(var_vec)
     return abs_vel,var
 
-def get_relative_reward(dataManager):
+def get_relative_reward_real_vod(dataManager,VOD_reward):
     run_time =  0.2*101
+    relative_reward = []
+    for real_path,seed,end_mode,VOD_dist in zip(dataManager.paths,dataManager.path_seed, dataManager.episode_end_mode,VOD_reward):
+        if end_mode == 'kipp' or end_mode == 'deviate' or len(real_path[1]) == 0:
+            relative_reward.append(-1)
+        else:
+            real_dist = real_path[1][99]
+            relative_reward.append(real_dist/VOD_dist)
+    return relative_reward
+def get_relative_reward(dataManager):
+    run_time =  0.2*100
     relative_reward = []
     for real_path,seed,end_mode in zip(dataManager.paths,dataManager.path_seed, dataManager.episode_end_mode):
         if end_mode == 'kipp' or end_mode == 'deviate' or len(real_path[1]) == 0:
             relative_reward.append(-1)
         else:
-            real_dist = real_path[1][100]
+            real_dist = real_path[1][99]
             path = classes.Path()
             path.position = lib.create_random_path(6000,0.05,seed = seed)#9000
             lib.comp_velocity_limit_and_velocity(path,skip = 10,reduce_factor = 1.0)
@@ -73,9 +83,22 @@ def get_avg_reward(dataManager):
         return sum(filtered_reward)/len(filtered_reward),np.sqrt(np.var(filtered_reward))
     return -1,0
 
+def get_VOD_dist(folder):
+    restore_path = os.getcwd()+ "/files/models/"+str(folder)+"/VOD/"
+    restore_name = 'data_manager'
+    VOD_dist = []
+    dataManager = data_manager1.DataManager(restore_path,restore_path,True,save_name = restore_name,restore_name = restore_name)#
+    for real_path,seed,end_mode in zip(dataManager.paths,dataManager.path_seed, dataManager.episode_end_mode):
+        if end_mode == 'kipp' or end_mode == 'deviate' or len(real_path[1]) == 0:
+            print('error - VOD failed')
+        else:
+            VOD_dist.append(real_path[1][99])
+    return VOD_dist
+
 def correct_relative_reward(folder,names_vec):
     HP = HyperParameters()
-    train_indexes = [5000*j for j in range(1,21)]
+    VOD_dist = get_VOD_dist(folder)
+    train_indexes = [100*j for j in range(1,10)]#[5000*j for j in range(1,21)]
     for names in names_vec:#for every series of data (e.g. REVO or REVO+A)
         for name in names[0]:#for every training process(e.g. REVO1)
             for i in train_indexes:#for every test at a fixed parameter set (fixed training point)
@@ -86,9 +109,9 @@ def correct_relative_reward(folder,names_vec):
                     print("cannot restore dataManager")
                     continue
                 dataManager.relative_reward  = get_relative_reward(dataManager) 
+                #dataManager.relative_reward  = get_relative_reward_real_vod(dataManager,VOD_dist)
                 dataManager.save_data()
                 del dataManager
-
     return 
 
 def add_zero_data_manager(folder,names_vec):
@@ -105,6 +128,7 @@ def add_zero_data_manager(folder,names_vec):
 def get_data(folder,names_vec):
     HP = HyperParameters()
 
+    #train_indexes = [100*j for j in range(1,19)]
     train_indexes = [5000*j for j in range(0,19)]
     #train_indexes = [15000]
     rewards_vec = []
@@ -182,7 +206,7 @@ def average_training_processes(rewards_vec):
 
 if __name__ == "__main__":
     #folder = "new_state"#\old reward backup"
-    folder = "paper_fix"
+    folder = "paper_fix"#"fix_paper"
     size = 15
     names_vec = []
 
@@ -211,9 +235,13 @@ if __name__ == "__main__":
 
     #names_vec.append([['copyREVO+FA3'],['REVO+FA','orange']])
 
+    ###################REVO paper final##############################
+    #folder = 'REVO_paper_final'
     names_vec.append([['REVO6','REVO7','REVO8','REVO9','REVO10'],['REVO','green']])#corrected
     names_vec.append([['REVO+A1','REVO+A2','REVO+A3','REVO+A4','REVO+A8'],['REVO+A','black']])#corrected ,
-    #names_vec.append([['REVO+F1','REVO+F2','REVO+F3','REVO+F4','REVO+F5'],['REVO+F','blue']])#corrected,'REVO+F5' ,'REVO+F2','REVO+F3','REVO+F4' REVO+F1, data_manager_15000 was empty, replaced by 20000
+    names_vec.append([['REVO+F1','REVO+F2','REVO+F3','REVO+F4','REVO+F5'],['REVO+F','blue']])#corrected,'REVO+F5' ,'REVO+F2','REVO+F3','REVO+F4' REVO+F1, data_manager_15000 was empty, replaced by 20000
+    ####################################################################
+    
     #names_vec.append([['REVO+FA1','REVO+FA2' ,'REVO+FA3','REVO+FA4','REVO+FA5'],['REVO+FA','orange']])#corrected   'REVO+FA1' ,'REVO+FA3','REVO+FA4'
     #names_vec.append([['REVO+F1'],['REVO+F1',None]])
     #names_vec.append([['REVO+F2'],['REVO+F2',None]])
@@ -243,31 +271,37 @@ if __name__ == "__main__":
 
 
     ################################final#########################
+    
     #names_vec.append([['REVO10'],['REVO','green']])#85000
     #names_vec.append([['REVO+A3'],['REVO3',None]])#90000
     #names_vec.append([['REVO+F3'],['REVO+F3',None]])#70000
     #names_vec.append([['VOD_long2'],['VOD',None]])#0
     
     #names_vec.append([['also_steer1'],['REVO',None]])#90000
+    ###########################model based 25.9.19############
+    #folder = "model_based"
+    #names_vec.append([['MB_R_4'],['Model Based RL',None]])
 
     #add_zero_data_manager(folder,names_vec)
     #correct_relative_reward(folder,names_vec)
 
     reward_vec_indexes,rewards_vec,indexes,fails_vec,var,series_colors,series_names = get_data(folder,names_vec)
-
+    indexes = [ind/2 for ind in indexes]#
     avg_rewards_vec,var_rewards_vec = average_training_processes(rewards_vec)
     avg_fails_vec,var_fails_vec = average_training_processes(fails_vec)
    
 
     
     plt.figure(1)
-    
-    plt.xlabel('Train iterations number',fontsize = size)
+    plt.tick_params(labelsize=12)
+    plt.ylim(0,1.5)
+    #plt.xticks(np.arange(0, 2000, 100))
+    plt.xlabel('Time steps',fontsize = size)#'Train iterations number'
     plt.ylabel('Normalized average velocity' ,fontsize = size)#'Relative progress'
     #for rewards,color in zip(rewards_vec,series_colors):
     #    for single_rewards in rewards:
     #        plt.scatter(trains[:len(single_rewards)],single_rewards,c = color,alpha = 0.5)#
-    plt.xlim(0,100000)
+    #plt.xlim(0,100000)
     for reward_indexes,rewards,var,color,label in zip(reward_vec_indexes,avg_rewards_vec,var_rewards_vec,series_colors,series_names):
         plt.plot(indexes[:len(rewards)],rewards,'o',color = color,label = label)
         plt.errorbar(indexes[:len(rewards)],rewards,var,c = color,alpha = 0.7)#reward_indexes[0]
@@ -276,9 +310,10 @@ if __name__ == "__main__":
     plt.legend()
 
     plt.figure(2)
-    plt.xlim(0,100000)
+    plt.tick_params(labelsize=12)
+    #plt.xlim(0,100000)
     plt.ylim(0,100)
-    plt.xlabel('Train iterations number',fontsize = size)
+    plt.xlabel('Time steps',fontsize = size)
     plt.ylabel('Fails [%]',fontsize = size)
     #for fails,color in zip(fails_vec,series_colors):
     #    for single_fails in fails:

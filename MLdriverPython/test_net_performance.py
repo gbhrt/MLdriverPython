@@ -17,12 +17,17 @@ def save_data(file_name,data):
         json.dump(data,f)
 
 def plot_distribution(data,name):
+    var = np.sqrt(np.var(data))
     plt.figure(name+" distribution")
-    plt.hist(data,bins='auto')
-    print("variance of",name,":",np.var(data))
+    plt.title(name,fontsize = 30)
+    plt.tick_params(labelsize=20)
+    plt.hist(data,bins='auto',range=[-3*var, 3*var])
+    print("variance of",name,":",var)
 
 def plot_comparison(real, predicted,name):
+    
     plt.figure(name)
+    plt.title(name)
     plt.plot(real,'o',label = "real")
     plt.plot(predicted,'o',label = "predicted")
     plt.legend()
@@ -217,7 +222,7 @@ def real_to_abs_n_steps(replay_memory_short):#get a short segment from replay me
 
         abs_pos,abs_ang = predict_lib.comp_abs_pos_ang(rel_pos,rel_ang,abs_pos_vec[-1],abs_ang_vec[-1])
         abs_pos_vec.append(abs_pos)
-        abs_ang_vec.append(rel_ang)
+        abs_ang_vec.append(abs_ang)
         if replay_memory_short[ind][3]:#if done or replay_memory_short[ind][4] or replay_memory_short[ind][5]: # done flag,time errors
             break
     return vehicle_state_vec,action_vec,abs_pos_vec,abs_ang_vec
@@ -238,7 +243,7 @@ def predict_n_steps(Agent,vehicle_state,abs_pos,abs_ang,action_vec):#
 
         abs_pos,abs_ang = predict_lib.comp_abs_pos_ang(rel_pos,rel_ang,abs_pos_vec[-1],abs_ang_vec[-1])
         abs_pos_vec.append(abs_pos)
-        abs_ang_vec.append(rel_ang)
+        abs_ang_vec.append(abs_ang)
 
     return vehicle_state_vec,abs_pos_vec,abs_ang_vec
 
@@ -257,6 +262,7 @@ def convert_replay_to_states(replay_memory):
         rel_pos = replay_memory[ind+1][1]
 
 def plot_n_step_state(Agent,replay_memory):
+    waitFor = lib.waitFor()
     #n step:
     fig1,ax_abs = plt.subplots(1)
     ax_abs.axis('equal')
@@ -265,7 +271,10 @@ def plot_n_step_state(Agent,replay_memory):
     plt.ion()
     fontsize = 15
     n = 20
-    for i in range(len(replay_memory)-n):
+    for i in range (63,64):# (len(replay_memory)-n):#:
+        print("index:",i)
+        if waitFor.stop == [True]:
+            break
         replay_memory_short = replay_memory[i:i+n]
         vehicle_state_vec,action_vec,abs_pos_vec,abs_ang_vec = real_to_abs_n_steps(replay_memory_short)
         pred_vehicle_state_vec,pred_abs_pos_vec,pred_abs_ang_vec = predict_n_steps(Agent,vehicle_state_vec[0],abs_pos_vec[0],abs_ang_vec[0],action_vec)
@@ -282,24 +291,33 @@ def plot_n_step_state(Agent,replay_memory):
             axes[ind].clear()
             
             axes[ind].set_ylabel(feature, fontsize=fontsize)
-            axes[ind].plot(real,label = "real")
-            axes[ind].plot(pred,label = "predicted")
+            #x = list(range(n))
+            axes[ind].plot(real,color = "red")
+            axes[ind].plot(pred,color = "blue")
+            axes[ind].xaxis.set_ticks(np.arange(0, n, 1))
         axes[-1].set_xlabel('Step number',fontsize=fontsize)
         fig2.legend()
-
+        
         ax_abs.clear()
-        ax_abs.plot(x,y)
-        ax_abs.plot(p_x,p_y)
+        ax_abs.set_xlabel('X', fontsize=fontsize)
+        ax_abs.set_ylabel('Y', fontsize=fontsize)
+        ax_abs.plot(x,y,color = "red")
+        ax_abs.plot(p_x,p_y,color = "blue")
         plt.draw()
         plt.pause(0.0001)
     plt.ioff()
     plt.show()
 
 def plot_n_step_var(Agent,replay_memory):
-    max_n = 5
+    max_n = 12
+    n_list = list(range(2,max_n))
     var_vec = []
+    mean_vec = []
     pos_var_vec = []
-    for n in range(2,max_n):
+    pos_mean_vec = []
+    ang_var_vec = []
+    ang_mean_vec = []
+    for n in n_list:
         final_state_vec = []
         final_state_vec_pred = []
         final_pos_vec = []
@@ -326,40 +344,83 @@ def plot_n_step_var(Agent,replay_memory):
 
         print("n",n,"samples num:",len(final_state_vec))
         #compute variance for n
-        var = []
+        val_var = []
+        val_mean = []
         for feature,ind in Agent.trainHP.vehicle_ind_data.items():
             real = np.array(final_state_vec)[:,ind]
             pred = np.array(final_state_vec_pred)[:,ind]
             error = pred - real
-            var.append(np.var(error))
+            #val_var.append(np.sqrt( np.var(error)))
+            val_var.append(np.sqrt( (error**2).mean()))
+            val_mean.append(np.mean(error))
         pos_var = []
+        pos_mean = []
         for ind in range(2):
-            real = np.array(final_pos_vec)[:,i]
-            pred = np.array(final_pos_vec_pred)[:,i]
+            real = np.array(final_pos_vec)[:,ind]
+            pred = np.array(final_pos_vec_pred)[:,ind]
             error = pred - real
-            pos_var.append(np.var(error))
+            #pos_var.append(np.sqrt( np.var(error)))
+            pos_var.append(np.sqrt( (error**2).mean()))
+            pos_mean.append(np.mean(error))
 
         real = np.array(final_ang_vec)
+        final_ang_vec_pred = [item for sublist in final_ang_vec_pred for item in sublist]
         pred = np.array(final_ang_vec_pred)
-        ang_var = pred - real
+        
+        error = pred - real
+        #ang_var = np.sqrt( np.var(error))
+        ang_var = np.sqrt( (error**2).mean())
+        ang_mean = np.mean(error)
 
 
-        var_vec.append(var)
-    print(var_vec)
+        var_vec.append(val_var)
+        mean_vec.append(val_mean)
+        pos_var_vec.append(pos_var)
+        pos_mean_vec.append(pos_mean)
+        ang_var_vec.append(ang_var)
+        ang_mean_vec.append(ang_mean)
+
+    #max_n = 12
+    #var_vec = list(range(2,max_n))
+    #mean_vec= list(range(2,max_n))
+    #pos_var_vec= list(range(2,max_n))
+    #pos_mean_vec= list(range(2,max_n))
+    #ang_var_vec= list(range(2,max_n))
+    #ang_mean_vec= list(range(2,max_n))
+
     fig2,axes = plt.subplots(len(Agent.trainHP.vehicle_ind_data)+3,constrained_layout=True)
+    
+    
+    n_list = list(range(1,max_n-1))#for ploting from 1
+    fontsize = 20
 
-    fontsize = 15
-    for feature,ind in Agent.trainHP.vehicle_ind_data.items(): 
+    for ind,feature in enumerate([r'$\Delta x[m]$',r'$\Delta y[m]$']): 
+        axes[ind+len(Agent.trainHP.vehicle_ind_data)].set_ylabel(feature, fontsize=fontsize)
+        var = np.array(pos_var_vec)[:,ind]
+        mean = np.array(pos_mean_vec)[:,ind]     
+        #axes[ind+len(Agent.trainHP.vehicle_ind_data)].plot(n_list,var)
+        axes[ind+len(Agent.trainHP.vehicle_ind_data)].tick_params(labelsize=15)
+        axes[ind+len(Agent.trainHP.vehicle_ind_data)].errorbar(n_list,mean,alpha = 0.7)#var
+        axes[ind+len(Agent.trainHP.vehicle_ind_data)].fill_between(n_list,mean+var,mean-var,color = "#dddddd" )
+
+    axes[len(Agent.trainHP.vehicle_ind_data)+2].set_ylabel(r'$\Delta \theta_z[rad]$', fontsize=fontsize)
+    var = np.array(ang_var_vec)
+    mean = np.array(ang_mean_vec) 
+    #axes[len(Agent.trainHP.vehicle_ind_data)+2].plot(n_list,var)
+    axes[len(Agent.trainHP.vehicle_ind_data)+2].tick_params(labelsize=15)
+    axes[len(Agent.trainHP.vehicle_ind_data)+2].errorbar(n_list,mean,alpha = 0.7)#,var
+    axes[len(Agent.trainHP.vehicle_ind_data)+2].fill_between(n_list,mean+var,mean-var,color = "#dddddd" )
+
+    for ind,feature in enumerate([r'$v[m/s]$',r'$\delta[rad]$',r'$\theta_y[rad]$']): 
         axes[ind].set_ylabel(feature, fontsize=fontsize)
-        axes[ind].plot(np.array(var_vec)[:,ind])
+        var = np.array(var_vec)[:,ind]
+        mean = np.array(mean_vec)[:,ind]
+        #axes[ind].plot(n_list,var)
+        axes[ind].tick_params(labelsize=15)
+        axes[ind].errorbar(n_list,mean,alpha = 0.7)#,var
+        axes[ind].fill_between(n_list,mean+var,mean-var,color = "#dddddd" )
 
-    for i,feature in enumerate(['x','y']): 
-        ind = len(Agent.trainHP.vehicle_ind_data)+i
-        axes[ind].set_ylabel(feature, fontsize=fontsize)
-        axes[ind].plot(np.array(pos_var)[:,ind])
-
-    axes[len(Agent.trainHP.vehicle_ind_data)+3].set_ylabel(feature, fontsize=fontsize)
-    axes[len(Agent.trainHP.vehicle_ind_data)+3].plot(np.array(ang_var))
+    axes[-1].set_xlabel('Step number',fontsize=fontsize)
     #fig2.legend()
     plt.show()
 
@@ -405,19 +466,26 @@ def one_step_pred_plot(Agent,replay_memory):
         vehicle_state_next_pred_vec.append([vehicle_state_next_pred[i] + vehicle_state_vec[-1][i] for i in range(len(vehicle_state_next))])
         rel_pos_pred_vec.append(y[len(Agent.trainHP.vehicle_ind_data):])
     
+        
 
     for feature,ind in Agent.trainHP.vehicle_ind_data.items():
         plot_comparison(np.array(vehicle_state_next_vec)[:,ind], np.array(vehicle_state_next_pred_vec)[:,ind],feature)
+        
 
-    for ind,feature in enumerate(["dx","dy","dang"]):
-        plot_comparison(np.array(rel_pos_vec)[:,ind], np.array(rel_pos_pred_vec)[:,ind],feature)
+    for ind,feature in enumerate([r'$\Delta x$',r'$\Delta y$',r'$\Delta \theta_z$']):
+        real = np.array(rel_pos_vec)[:,ind]
+        pred = np.array(rel_pos_pred_vec)[:,ind]
+        error = pred - real
+        print("mse:",feature,np.sqrt((error**2).mean()))
+        plot_distribution(error,feature)
+        plot_comparison(real, pred,feature)
 
-    for feature,ind in Agent.trainHP.vehicle_ind_data.items():
+    for ind,feature in enumerate([r'$v$',r'$\delta$',r'$\theta_y$']):
 
         real = np.array(vehicle_state_next_vec)[:,ind]
         pred = np.array(vehicle_state_next_pred_vec)[:,ind]
         error = pred - real
-
+        print("mse:",feature,np.sqrt((error**2).mean()))
         plot_distribution(error,feature)
     plt.show()
 
@@ -496,7 +564,7 @@ def test_net(Agent):
     Agent.Replay.memory = full_replay_memory
     Agent.save()
 
-    replay_memory = test_replay_memory#test_replay_memory
+    replay_memory = full_replay_memory[:int(0.3*len(full_replay_memory))]#test_replay_memory# #test_replay_memory#test_replay_memory
 
     #TransNet_X = [[1,1,1,1,1]]
 

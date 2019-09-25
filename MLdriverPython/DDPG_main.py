@@ -118,7 +118,7 @@ if __name__ == "__main__":
             HP.analytic_action = True
             HP.evaluation_flag = True
             #reduce_vec = [0.02*i for i in range(1,10)]
-            reduce_vec = [0.175]
+            reduce_vec = [0.0]
             HP.train_flag = False
             HP.always_no_noise_flag = True
             HP.restore_flag = False

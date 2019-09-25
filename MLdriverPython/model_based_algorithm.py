@@ -140,18 +140,19 @@ def train(env,HP,Agent,dataManager,guiShared,seed = None,global_train_count = 0)
             else:
                 fail = False
             time_step_error = info[1]
-
+            #print('info:',info)
             if abs(env.pl.simulator.vehicle.input_time - last_time_stamp-env.step_time) <0.01 and not time_step_error:
                 time_error = False
             else:
                 time_error = True
-
-            Agent.add_to_replay(state,acc,steer,done,time_error,time_step_error)# fail
+            if not HP.evaluation_flag:
+                Agent.add_to_replay(state,acc,steer,done,time_error,time_step_error)# fail
             #print("replay:",Agent.Replay.memory[-1])
             last_time_stamp = env.pl.simulator.vehicle.input_time
             
             global_train_count+=1
             if global_train_count % HP.save_every_train_number == 0 and global_train_count > 0:
+                #print("break in global_train_count % HP.save_every_train_number == 0 and global_train_count > 0:")
                 break
             #state = copy.deepcopy(next_state)
             
@@ -159,8 +160,10 @@ def train(env,HP,Agent,dataManager,guiShared,seed = None,global_train_count = 0)
             #if not HP.analytic_action:
             #    acc,steer = copy.copy(next_acc), copy.copy(next_steer)
             if done:
+                #print("break in done")
                 break
-        if global_train_count>HP.max_steps:
+        if global_train_count>HP.max_steps and not HP.evaluation_flag:
+            #print("break in global_train_count>HP.max_steps and not HP.evaluation_flag")
             break
             #end if time
         #end while
@@ -169,6 +172,10 @@ def train(env,HP,Agent,dataManager,guiShared,seed = None,global_train_count = 0)
         env.stop_vehicle_complete()
         total_reward = sum(reward_vec)
         if not HP.gym_flag: #and not HP.noise_flag:
+            #if step_count<env.max_episode_steps and info[0] == 'ok':
+            #    print("error - step_count<env.max_episode_steps and info[0] == ok")
+            #    input()
+
             dataManager.episode_end_mode.append(info[0])
             dataManager.rewards.append(total_reward)
             dataManager.lenght.append(step_count)

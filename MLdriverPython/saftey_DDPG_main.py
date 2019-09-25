@@ -20,7 +20,7 @@ def run_all(HP,guiShared):
         guiShared.max_roll = envData.max_plan_roll
         guiShared.max_time = envData.step_time*envData.max_episode_steps+5#add time for braking
     names_vec = []
-    names_vec.append([['MB_R_1','MB_R_2','MB_R_3'],'MB_R',None])
+    names_vec.append([['MB_R_doublicated'],'MB_R',None])
     #names_vec.append([['also_steer1'],'REVO',50000])#trained MF acc and steer policy
     random.seed(0)
     HP.seed = random.sample(range(1000),101)#the 101 path is not executed
@@ -64,7 +64,7 @@ def run_all(HP,guiShared):
             description]
         HP.save_every_train_number = 100#5000
         
-        for evalutaion_flag in [False,True]:#False,
+        for evalutaion_flag in [True]:#False,
             HP.evaluation_flag = evalutaion_flag
 
             for name in names:
@@ -123,7 +123,7 @@ def run_train_MB(HP,dataManager,envData,index = None):
     if HP.restore_flag:
         if HP.evaluation_flag:
             HP.net_name = 'tf_model_'+str(index)
-            Agent = agent.Agent(HP)
+            Agent = agent.Agent(HP,trans_net_active = True, steer_net_active = False)
             if Agent.nets.restore_error:#cannot restore - return true
                 return True
             
@@ -133,7 +133,7 @@ def run_train_MB(HP,dataManager,envData,index = None):
             found_flag = False
             for i in nums:
                 HP.net_name = 'tf_model_'+str(i)
-                Agent = agent.Agent(HP)
+                Agent = agent.Agent(HP,trans_net_active = True, steer_net_active = False)
                 
                 if Agent.nets.restore_error:#False if OK
                     found_flag = True
@@ -143,7 +143,7 @@ def run_train_MB(HP,dataManager,envData,index = None):
                     break
             print("train,global_train_count:",global_train_count)
     else:
-        Agent = agent.Agent(HP)
+        Agent = agent.Agent(HP,trans_net_active = True, steer_net_active = False)
     #train agent on simulator
     env = environment1.OptimalVelocityPlanner(dataManager,env_mode=HP.env_mode)
     if env.opened:     
@@ -229,8 +229,8 @@ class programThread (threading.Thread):
       
     def run(self):
         print ("Starting " + self.name)
-        run(self.HP,self.guiShared)
-        #run_all(self.HP,self.guiShared)
+        #run(self.HP,self.guiShared)
+        run_all(self.HP,self.guiShared)
         print ("Exiting " + self.name)
 
         
@@ -238,7 +238,7 @@ class programThread (threading.Thread):
 
 
 if __name__ == "__main__": 
-    algo_type = "SDDPG"#"MB"#"SDDPG"
+    algo_type = "MB"#"MB"#"SDDPG"
 
     if algo_type == "SDDPG":
         HP = hyper_parameters.SafteyHyperParameters()

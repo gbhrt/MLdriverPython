@@ -86,7 +86,7 @@ class SafteyHyperParameters:
         self.constant_velocity = None #5.0
         self.DQN_flag = False
         #self.pure_persuit_flag = False
-        self.restore_flag = False  
+        self.restore_flag = True  
         self.skip_run = False
         self.reset_every = 3
         self.save_every = 100
@@ -108,18 +108,18 @@ class SafteyHyperParameters:
 class ModelBasedHyperParameters:#global settings of the program.
     def __init__(self):
        
-        self.program_mode =  "train_in_env"#"test_net_performance" train_in_env, test_net_performance, test_actions  timing
+        self.program_mode =  "train_in_env"#"test_net_performance" train_in_env, test_actions  timing
         if self.program_mode == "test_net_performance" or self.program_mode == "test_actions":
             self.gui_flag = False
         else:
             self.gui_flag = True
         self.MF_policy_flag = False
-        self.emergency_action_flag = True
+        self.emergency_action_flag = False
         self.emergency_steering_type = 2#1 - stright, 2 - 0.5 from original steering, 3-steer net
         #########################
         #for the shared main:
         self.env_mode = "model_based"
-        self.evaluation_flag = True
+        self.evaluation_flag = False
         self.always_no_noise_flag = False
         self.reduce_vel = 0.0
         self.num_of_runs = 100000
@@ -127,8 +127,8 @@ class ModelBasedHyperParameters:#global settings of the program.
         self.evaluation_every = 999999999
         self.add_feature_to_action = False
         #####################
-        self.max_steps = 1001
-        self.train_flag = False
+        self.max_steps = 10000000
+        self.train_flag = True
         #self.noise_flag = True
         #self.always_no_noise_flag = False
         self.analytic_action = False
@@ -147,12 +147,12 @@ class ModelBasedHyperParameters:#global settings of the program.
         self.save_every_time = 5000 #minutes
         self.seed = [1111]
         self.net_name = "tf_model"
-        self.save_name = "MB3"
+        self.save_name = "test1"#"MB_R_long2"
         self.folder_path = os.getcwd()+ "/files/models/model_based/"
         #self.save_file_path = os.getcwd()+ "/files/models/model_based/"+self.save_name+"/"
         self.save_file_path = self.folder_path +self.save_name+"/"
 
-        self.restore_name = "MB3"#
+        self.restore_name = "MB_R_long1"#"MB_R_long1"#MB_R_long2
         #self.restore_file_path = os.getcwd()+ "/files/models/model_based/"+self.restore_name+"/"
         self.restore_file_path = self.folder_path +self.restore_name+"/"
 

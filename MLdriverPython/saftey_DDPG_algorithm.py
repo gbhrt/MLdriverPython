@@ -237,14 +237,14 @@ def train(env,HP,net_drive,dataManager,net_stabilize = None,guiShared = None,see
                         if global_train_count % HP.save_every_train_number == 0 and global_train_count > 0:
                             #env.stop_flag = True
                             break
-                    if global_train_count % HP.save_every_train_number == 0 and global_train_count > 0:
+                    if global_train_count % HP.save_every_train_number == 0 and global_train_count > 0 and not HP.evaluation_flag:
                             #env.stop_flag = True
                             print("break and save")
                             break
                             #HP.train_flag = False
      
 
-            if global_train_count > 100000:
+            if global_train_count > 100000 and not HP.evaluation_flag:
                 break
                     
                 
