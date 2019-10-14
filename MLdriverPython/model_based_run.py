@@ -52,7 +52,7 @@ def run(guiShared,HP,dataManager):
     elif HP.program_mode == "test_net_performance":
         Agent = agent.Agent(HP,trans_net_active = True, steer_net_active = False)
     else:
-        Agent = agent.Agent(HP,trans_net_active = True, steer_net_active = False)
+        Agent = agent.Agent(HP,trans_net_active = True, steer_net_active = True if HP.emergency_steering_type == 3 else False)#False
 
     if HP.program_mode == "train_in_env":
         #initialize environment:

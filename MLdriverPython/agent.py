@@ -20,6 +20,7 @@ import sys
 def convert_to_MF_state(state,targetPoint):
     return state.Vehicle.values + state.Vehicle.rel_pos+[state.Vehicle.rel_ang]+[targetPoint.abs_pos]+[targetPoint.vel]
 
+
 class VehicleState:
     values = []
     abs_pos = []#x,y
@@ -41,7 +42,7 @@ class Nets:#define the input and outputs to networks, and the nets itself.
             X_n = len(trainHP.vehicle_ind_data)+2# + acc-action, steer-action
             Y_n = len(trainHP.vehicle_ind_data) + 3 #+dx, dy, dang
             #self.TransNet = model_based_network(X_n,Y_n,trainHP.alpha)
-            self.TransNet,self.transgraph = keras_model.create_model(X_n,Y_n,trainHP.alpha,normalize = trainHP.normalize_flag,mean= trainHP.features_mean,var = trainHP.features_var)
+            self.TransNet,self.transgraph = keras_model.create_model(X_n,Y_n,trainHP.alpha,seperate_nets = True, normalize = trainHP.normalize_flag,mean= trainHP.features_mean,var = trainHP.features_var)
         
             self.TransNet._make_predict_function()
         if self.acc_net_active:
@@ -51,7 +52,7 @@ class Nets:#define the input and outputs to networks, and the nets itself.
         if self.steer_net_active:
             X_n = len(trainHP.vehicle_ind_data) + 2 # + acc-action, desired roll
             Y_n = 1#steer
-            self.SteerNet,_ = keras_model.create_model(X_n,Y_n,trainHP.alpha)
+            self.SteerNet,_ = keras_model.create_model(X_n,Y_n,trainHP.alpha,seperate_nets = False)
         self.restore_error = False
     def restore_all(self,restore_file_path,name):
         try:
@@ -122,7 +123,7 @@ class TrainHyperParameters:
         self.emergency_steering_type = 2#1 - stright, 2 - 0.5 from original steering, 3-steer net
         
 
-        self.max_cost = 100
+        self.max_cost = 300#100
         self.rollout_n = 10
         if self.MF_policy_flag:
             self.MF_alpha_actor = 0.0001
@@ -151,9 +152,13 @@ class Agent:# includes the networks, policies, replay buffer, learning hyper par
         if self.trainHP.MF_policy_flag:
             self.MF_net = MF_Net(self.trainHP,HP,envData)
         self.nets = Nets(self.trainHP,trans_net_active,steer_net_active,acc_net_active)
-        if self.HP.restore_flag:
-            self.nets.restore_all(self.HP.restore_file_path,self.HP.net_name)
+        #self.train_nets = Nets(self.trainHP,trans_net_active,steer_net_active,acc_net_active)
         self.trainShared = shared.trainShared()
+        if self.HP.restore_flag:
+            #self.train_nets.restore_all(self.HP.restore_file_path,self.HP.net_name)
+            #self.copy_nets()
+            self.nets.restore_all(self.HP.restore_file_path,self.HP.net_name)
+        
         return
     def save_nets(self):
         with self.trainShared.Lock:
@@ -167,6 +172,7 @@ class Agent:# includes the networks, policies, replay buffer, learning hyper par
         print("start_training", self.HP.train_flag)
         #train the networks
         if self.HP.train_flag:
+            #self.trainThread = train_thread.trainThread(self.train_nets,self.Replay,self.trainHP,self.HP,self.trainShared)
             self.trainThread = train_thread.trainThread(self.nets,self.Replay,self.trainHP,self.HP,self.trainShared)
             self.trainThread.start()
             #if self.trainHP.MF_policy_flag:
@@ -207,9 +213,10 @@ class Agent:# includes the networks, policies, replay buffer, learning hyper par
         self.trainShared.algorithmIsIn.clear()#indicates that are ready to take the lock
         with self.trainShared.Lock:
             self.trainShared.algorithmIsIn.set()
-            acc,steer,StateVehicle_vec,actions_vec,StateVehicle_emergency_vec,actions_emergency_vec,emergency_action = act.comp_MB_action(self.nets,state,acc,steer,self.trainHP)
-            planningData = self.convert_to_planningData(state.env,StateVehicle_vec,actions_vec,StateVehicle_emergency_vec,actions_emergency_vec,emergency_action)
-            return acc,steer,planningData #act.comp_MB_action(self.nets.TransNet,env,state,acc,steer)
+            with self.nets.transgraph.as_default():  
+                acc,steer,StateVehicle_vec,actions_vec,StateVehicle_emergency_vec,actions_emergency_vec,emergency_action = act.comp_MB_action(self.nets,state,acc,steer,self.trainHP)
+        planningData = self.convert_to_planningData(state.env,StateVehicle_vec,actions_vec,StateVehicle_emergency_vec,actions_emergency_vec,emergency_action)
+        return acc,steer,planningData #act.comp_MB_action(self.nets.TransNet,env,state,acc,steer)
     
     def get_MF_action(self,state):
         self.targetPoint = target_point.comp_targetPoint(self.nets,state,self.trainHP)#tmp - must be computed independly from steps
@@ -218,9 +225,9 @@ class Agent:# includes the networks, policies, replay buffer, learning hyper par
         return action[0],action[1]
 
     def add_to_replay(self,state,acc,steer,done,time_error,fail):
-        self.trainShared.algorithmIsIn.clear()#indicates that are ready to take the lock
-        with self.trainShared.Lock:
-            self.trainShared.algorithmIsIn.set()
+        #self.trainShared.algorithmIsIn.clear()#indicates that are ready to take the lock
+        with self.trainShared.ReplayLock:
+            #self.trainShared.algorithmIsIn.set()
             #replay memory: [vehicle-state, rel_pos,action,done]
             self.Replay.add(copy.deepcopy((state.Vehicle.values,state.Vehicle.rel_pos+[state.Vehicle.rel_ang],[acc,steer],done,time_error,fail)))#      
               
@@ -241,3 +248,13 @@ class Agent:# includes the networks, policies, replay buffer, learning hyper par
             S.Vehicle.values.append(env_state[feature])
 
         return S
+    def copy_nets(self):
+        t = time.clock()
+        with self.trainShared.Lock:
+            if self.nets.trans_net_active:
+                self.nets.TransNet.set_weights(self.train_nets.TransNet.get_weights()) 
+            if self.nets.steer_net_active:
+                self.nets.SteerNet.set_weights(self.train_nets.SteerNet.get_weights()) 
+            if self.nets.acc_net_active:
+                self.nets.AccNet.set_weights(self.train_nets.AccNet.get_weights()) 
+        print("copy time:", time.clock() - t)

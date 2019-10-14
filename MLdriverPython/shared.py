@@ -37,6 +37,7 @@ class guiShared():#classes.planningData
 class trainShared:
     def __init__(self):
         self.Lock = threading.Lock()
+        self.ReplayLock = threading.Lock()
         self.algorithmIsIn = threading.Event()
         self.request_exit = False
         self.exit = False

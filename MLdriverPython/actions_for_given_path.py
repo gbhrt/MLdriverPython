@@ -11,7 +11,7 @@ def driving_action(state,nets,trainHP,roll_var):
     roll_var += trainHP.one_step_var
     for acc_i,try_acc in enumerate(acc_to_try):
         roll_var = trainHP.init_var+trainHP.one_step_var  # initialize for every search
-        print("try acc:",try_acc)
+        #print("try acc:",try_acc)
                 
         tmp_a_vec = [[try_acc,steer]]#this action will operate on the saved state if not fail
         tmp_state_vec = []
@@ -80,7 +80,7 @@ def emergency_cost(state,acc,steer,nets,trainHP,roll_var):
 
 
 def comp_MB_action(nets,state,acc,steer,trainHP):
-    print("___________________new acc compution____________________________")
+    #print("___________________new acc compution____________________________")
 
     state_env =  state.env 
     StateVehicle_vec = [state.Vehicle] 
@@ -124,7 +124,7 @@ def comp_MB_action(nets,state,acc,steer,trainHP):
             StateVehicle_vec += tmp_state_vec
             actions_vec += tmp_a_vec
             if trainHP.emergency_action_flag:
-                print("in emergency")
+                #print("in emergency")
                 #check if the emergency policy is safe after applying the action on the first step
                 e_cost,tmp_state_vec,tmp_a_vec = emergency_cost(state,next_acc,next_steer,nets,trainHP,roll_var)
                 StateVehicle_emergency_vec+=tmp_state_vec
@@ -152,8 +152,8 @@ def comp_MB_action(nets,state,acc,steer,trainHP):
             #    next_steer = steer
             #    emergency_action = False
 
-        else:# first step will cause fail
-            print("unavoidable fail - after first step")
+        ##else:# first step will cause fail
+            ##print("unavoidable fail - after first step")
             #emergency_pred_vec = pred_vec#save just initial state and sirst step
             #emergency_pred_vec_n = []
             #pred_vec_n = []
@@ -168,13 +168,13 @@ def comp_MB_action(nets,state,acc,steer,trainHP):
         #    emergency_action = True
             
 
-    else:#initial state is already unstable
-        print("unstable initial state - before first step")
+    ##else:#initial state is already unstable
+        ##print("unstable initial state - before first step")
 
     if emergency_action_active:
         next_steer = actions.emergency_steer_policy(state.Vehicle,state.env,trainHP,SteerNet =  nets.SteerNet if nets.steer_net_active else None) #steering from the next state, send it to the vehicle at the next state
         next_acc  = actions.emergency_acc_policy()#always -1
-        print("emergency policy is executed!")
+        ##print("emergency policy is executed!")
 
     if state.Vehicle.values[0]<trainHP.prior_safe_velocity:
         next_acc = 1.0

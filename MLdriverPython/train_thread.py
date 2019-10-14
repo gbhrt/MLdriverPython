@@ -15,8 +15,8 @@ def train(nets,Replay,trainHP,HP,trainShared):
         time.sleep(0.01)
     while trainShared.train:
 
-        trainShared.algorithmIsIn.wait()#wait that the other thread enabled the lock
-        with trainShared.Lock:
+        
+        with trainShared.ReplayLock:
             #rand_state, rand_a, rand_next_state, rand_end,_ = Replay.sample(HP.batch_size)
             #batch_X, batch_Y_, _,_ = Replay.sample(trainHP.batch_size)
             #sample_indexes = random.sample(range(1, len(Replay.memory) - 1),trainHP.batch_size)
@@ -48,7 +48,8 @@ def train(nets,Replay,trainHP,HP,trainShared):
                     SteerNet_Y_.append(action[1])
 
                 cnt+=1
-
+        #trainShared.algorithmIsIn.wait()#wait that the other thread enabled the lock
+        with trainShared.Lock:
             #update neural networs:
             #pLib.model_based_update(rand_state, rand_a, rand_next_state,rand_end,net,HP,env
             with nets.transgraph.as_default():                #
@@ -62,7 +63,7 @@ def train(nets,Replay,trainHP,HP,trainShared):
                 if nets.acc_net_active:
                     nets.AccNet.train_on_batch(np.array(AccNet_X),np.array(AccNet_Y_))
                 if trainShared.train_count % 1000 == 0:
-                    print("train:",trainShared.train_count)
+                    print("--------------------------train:",trainShared.train_count)
                     if nets.trans_net_active:
                         print("Trans loss:",nets.TransNet.evaluate(np.array(TransNet_X),np.array(TransNet_Y_)))
                     if nets.steer_net_active:
@@ -130,7 +131,7 @@ def MF_train(nets,Replay,trainHP,HP,trainShared,MF_net):
 
     while trainShared.train:
         trainShared.algorithmIsIn.wait()#wait that the other thread enabled the lock
-        with trainShared.Lock:
+        with trainShared.ReplayLock:
             #rand_state, rand_a, rand_next_state, rand_end,_ = Replay.sample(HP.batch_size)
             #batch_X, batch_Y_, _,_ = Replay.sample(trainHP.batch_size)
             #sample_indexes = random.sample(range(1, len(Replay.memory) - 1),trainHP.batch_size)
@@ -163,7 +164,7 @@ def MF_train(nets,Replay,trainHP,HP,trainShared,MF_net):
                 SteerNet_Y_.append(action[1])
 
                 cnt+=1
-
+        with trainShared.Lock:
             #update neural networs:
             #pLib.model_based_update(rand_state, rand_a, rand_next_state,rand_end,net,HP,env
             with nets.transgraph.as_default():

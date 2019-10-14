@@ -18,6 +18,13 @@ def train(env,HP,Agent,dataManager,guiShared,seed = None,global_train_count = 0)
   
     #pre-defined parameters:
     Agent.start_training()
+    print("start training")
+    env_state = env.reset(seed = seed)
+    acc,steer = 0.0,0.0
+    state = Agent.get_state(env_state)
+    acc,steer,planningData= Agent.comp_action(state,acc,steer)
+    print("init acc")
+    #time.sleep(5)
     if seed != None:
         HP.seed = seed
     ###################
@@ -118,13 +125,14 @@ def train(env,HP,Agent,dataManager,guiShared,seed = None,global_train_count = 0)
                 #    done = True #break
 
                 #t= time.clock()
-                with guiShared.Lock:
-                    guiShared.planningData.append(planningData)
-                    guiShared.roll = copy.copy(dataManager.roll)
-                    guiShared.real_path = copy.deepcopy(dataManager.real_path)
-                    #print("path:",guiShared.real_path.position)
-                    guiShared.steer = steer
-                    guiShared.update_data_flag = True
+                if HP.gui_flag:
+                    with guiShared.Lock:
+                        guiShared.planningData.append(planningData)
+                        guiShared.roll = copy.copy(dataManager.roll)
+                        guiShared.real_path = copy.deepcopy(dataManager.real_path)
+                        #print("path:",guiShared.real_path.position)
+                        guiShared.steer = steer
+                        guiShared.update_data_flag = True
                 #print("update gui time:",time.clock() - t)
                 
                 env_state, reward, done, info = env.step(acc,steer = steer)#input the estimated next actions to execute after delta t and getting next state
@@ -217,6 +225,9 @@ def train(env,HP,Agent,dataManager,guiShared,seed = None,global_train_count = 0)
         #        print("seed:",seed)
         #        if test_path_ind >= len(HP.seed):
         #            test_path_ind = 0
+
+        #Agent.copy_nets()
+
         if global_train_count % HP.save_every_train_number == 0 and not HP.evaluation_flag:# and global_train_count > 0):
             HP.net_name = 'tf_model_'+str(global_train_count)
 
@@ -231,7 +242,7 @@ def train(env,HP,Agent,dataManager,guiShared,seed = None,global_train_count = 0)
         #dataManager.save_readeable_data()
 
         #stop at the end of the episode for training
-        if not HP.evaluation_flag:
+        if not HP.evaluation_flag and HP.pause_for_training:
             train_count_at_end = 5000
             current_traint_count = Agent.trainShared.train_count
             while Agent.trainShared.train_count - current_traint_count < train_count_at_end:

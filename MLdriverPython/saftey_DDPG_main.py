@@ -149,7 +149,6 @@ def run_train_MB(HP,dataManager,envData,index = None):
     if env.opened:     
         Agent.trainHP.num_of_runs = HP.num_of_runs
         model_based_algorithm.train(env,HP,Agent,dataManager,guiShared,global_train_count = global_train_count)
-        #saftey_DDPG_algorithm.train(env,HP,net,dataManager,guiShared = guiShared,global_train_count = global_train_count)    
     return False
 
 def run_train(HP,dataManager,envData,index = None):

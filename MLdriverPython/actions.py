@@ -78,6 +78,7 @@ def emergency_steer_policy(state_Vehicle,state_env,trainHP,SteerNet = None):
     elif trainHP.emergency_steering_type == 2:
         steer = 0.5*lib.comp_steer_general(state_env[0],state_env[1],state_Vehicle.abs_pos,state_Vehicle.abs_ang,state_Vehicle.values[0])
     elif trainHP.emergency_steering_type == 3:
+        steer = 0
         acc = -1.0
         steer_max = get_dsteer_max(SteerNet,state_Vehicle.values,acc,1,trainHP)
         steer_min = get_dsteer_max(SteerNet,state_Vehicle.values,acc,-1,trainHP)
@@ -295,7 +296,6 @@ def comp_local_steer(nets,StateVehicle,targetPoint,trainHP,stop_flag,ax = None):
 
 
 def step(stateVehicle,acc,steer,TransNet,trainHP):#get a state and actions, return next state
-
     steer = np.clip(steer,-0.7,0.7)
     x = [stateVehicle.values+[acc,steer]]
     y = TransNet.predict(np.array(x))[0]
@@ -395,7 +395,7 @@ def comp_action(nets,StateVehicle,trainHP,targetPoint,stop_flag,ax = None):#comp
 
     if not acc_flag:
         failed_flag,acc,steer,StateVehicle_vec,targetPoint_vec = stop_toward_target(nets,StateVehicle,targetPoint,acc_flag,trainHP,stop_flag,ax)
-    print("acc:",acc,"steer:",steer)
+    #print("acc:",acc,"steer:",steer)
 
 
     #check if it is possible to accelerate

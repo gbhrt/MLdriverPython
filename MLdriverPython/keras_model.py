@@ -1,18 +1,20 @@
 import tensorflow as tf
 
-def create_model(X_n,Y_n,alpha,batch_normalization = True,seperate_nets = True,normalize = False, mean = None, var = None):
+def create_model(X_n,Y_n,alpha,batch_normalization = True,seperate_nets = True,normalize = False, steer_net = False, mean = None, var = None):
     hidden_layer_nodes1 = 100
     hidden_layer_nodes2 = 100
     hidden_layer_nodes3 = 100
     hidden_layer_nodes4 = 100
 
     separate_layers_nodes = 20
-   # tf.reset_default_graph()  
+    #tf.reset_default_graph()  
+    #g = tf.Graph()
+    #with g.as_default():
     if normalize:
         input = tf.keras.Input(shape = [X_n])
         #*tf.keras.backend.shape(input)
         mean_mat = tf.keras.backend.constant([mean])
-       # mat = input - mean_mat
+        # mat = input - mean_mat
         mat = tf.keras.layers.Add()([input,mean_mat])
         #layer = tf.keras.layers.Lambda(
         model = tf.keras.Model(inputs=input,outputs=mat)
@@ -38,7 +40,7 @@ def create_model(X_n,Y_n,alpha,batch_normalization = True,seperate_nets = True,n
             net = tf.keras.layers.Dense(hidden_layer_nodes2, activation=tf.keras.activations.relu)(net)
             net = tf.keras.layers.Dense(hidden_layer_nodes3, activation=tf.keras.activations.relu)(net)
             output = tf.keras.layers.Dense(Y_n)(net)
-           # model = tf.keras.Model(inputs=input,outputs=output)
+            # model = tf.keras.Model(inputs=input,outputs=output)
         else:
             #input = tf.keras.Input(shape = [X_n])
             net = tf.keras.layers.BatchNormalization()(input)
@@ -52,6 +54,7 @@ def create_model(X_n,Y_n,alpha,batch_normalization = True,seperate_nets = True,n
             #net = tf.keras.layers.BatchNormalization()(net)
             net = tf.keras.layers.Activation('relu')(net)
             output = tf.keras.layers.Dense(Y_n)(net)
+
 
     model = tf.keras.Model(inputs=input,outputs=output)
     #model = tf.keras.models.Sequential([
