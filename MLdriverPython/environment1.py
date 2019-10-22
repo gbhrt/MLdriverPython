@@ -64,7 +64,7 @@ class OptimalVelocityPlannerData:
         self.max_angular_acc_z = 100
 
         self.max_pitch = 0.3#0.3
-        self.max_roll = 0.1#0.05#0.3# last 0.2
+        self.max_roll = 0.1#0.05#0.3# last 0.2 #0.1 is good
         self.max_slip = 10
         self.max_plan_slip = 0.1
         self.max_plan_roll = 0.05

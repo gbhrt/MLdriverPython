@@ -45,7 +45,9 @@ def train(env,HP,Agent,dataManager,guiShared,seed = None,global_train_count = 0)
     lt = 0#temp
     last_time_stamp = 0
     for i in range(Agent.trainHP.num_of_runs): #number of runs - run ends at the end of the main path and if vehicle deviation error is to big
-        if waitFor.stop == [True] or guiShared.request_exit:
+        if guiShared is not None: request_exit = guiShared.request_exit
+        else: request_exit = False
+        if waitFor.stop == [True] or request_exit:
             break
         
         # initialize every episode:
@@ -60,8 +62,8 @@ def train(env,HP,Agent,dataManager,guiShared,seed = None,global_train_count = 0)
             i-=1
             continue
         state = Agent.get_state(env_state)
-
-        guiShared.restart()
+        if guiShared is not None:
+            guiShared.restart()
         if env.error:
             i-=1
             continue
@@ -70,7 +72,10 @@ def train(env,HP,Agent,dataManager,guiShared,seed = None,global_train_count = 0)
         acc,steer,planningData= Agent.comp_action(state,acc,steer)#for the first time (required because the first time is longer)
 
         env.pl.init_timer()
-        while  waitFor.stop != [True] and guiShared.request_exit == False:#while not stoped, the loop break if reached the end or the deviation is to big          
+        if guiShared is not None: request_exit = guiShared.request_exit
+        else: request_exit = False
+            
+        while  waitFor.stop != [True] and not request_exit:#while not stoped, the loop break if reached the end or the deviation is to big          
             step_count+=1
             #choose and make action:
             if HP.analytic_action:
@@ -85,12 +90,12 @@ def train(env,HP,Agent,dataManager,guiShared,seed = None,global_train_count = 0)
                     else:
                         last_tim = 0
                 env.command(acc,steer)
-
-                with guiShared.Lock:
-                    #guiShared.planningData.append(planningData)
-                    guiShared.roll = copy.copy(dataManager.roll)
-                    guiShared.real_path = copy.deepcopy(dataManager.real_path)
-                    guiShared.update_data_flag = True
+                if guiShared is not None:
+                    with guiShared.Lock:
+                        #guiShared.planningData.append(planningData)
+                        guiShared.roll = copy.copy(dataManager.roll)
+                        guiShared.real_path = copy.deepcopy(dataManager.real_path)
+                        guiShared.update_data_flag = True
 
                 next_state, reward, done, info = env.step(acc)#input the estimated next actions to execute after delta t and getting next state
                 
@@ -159,9 +164,10 @@ def train(env,HP,Agent,dataManager,guiShared,seed = None,global_train_count = 0)
             last_time_stamp = env.pl.simulator.vehicle.input_time
             
             global_train_count+=1
-            if global_train_count % HP.save_every_train_number == 0 and global_train_count > 0:
+            if global_train_count % HP.save_every_train_number == 0 or global_train_count == 1:
                 #print("break in global_train_count % HP.save_every_train_number == 0 and global_train_count > 0:")
                 break
+            
             #state = copy.deepcopy(next_state)
             
             #print("copy state time:",time.clock() - env.lt)
@@ -193,16 +199,17 @@ def train(env,HP,Agent,dataManager,guiShared,seed = None,global_train_count = 0)
             dataManager.update_paths()
             relative_reward = dataManager.comp_relative_reward1(env.pl.in_vehicle_reference_path,last_ind,last_tim)
             dataManager.relative_reward.append(relative_reward)
-            with guiShared.Lock:
-                guiShared.episodes_data.append(relative_reward)
-                #print("planningData.vec_emergency_action:",planningData.vec_emergency_action,'info[0]:',info[0])
-                if info[0] == 'kipp' or info[0] == 'deviate':
-                    guiShared.episodes_fails.append(1)
-                elif any(guiShared.planningData.vec_emergency_action):
-                    guiShared.episodes_fails.append(2)
-                else:
-                    guiShared.episodes_fails.append(0)
-                guiShared.update_episodes_flag = True
+            if guiShared is not None:
+                with guiShared.Lock:
+                    guiShared.episodes_data.append(relative_reward)
+                    #print("planningData.vec_emergency_action:",planningData.vec_emergency_action,'info[0]:',info[0])
+                    if info[0] == 'kipp' or info[0] == 'deviate':
+                        guiShared.episodes_fails.append(1)
+                    elif any(guiShared.planningData.vec_emergency_action):
+                        guiShared.episodes_fails.append(2)
+                    else:
+                        guiShared.episodes_fails.append(0)
+                    guiShared.update_episodes_flag = True
             
             #HP.noise_flag =True
         print("episode: ", i, " total reward: ", total_reward, "episode steps: ",step_count)
@@ -228,21 +235,24 @@ def train(env,HP,Agent,dataManager,guiShared,seed = None,global_train_count = 0)
 
         #Agent.copy_nets()
 
-        if global_train_count % HP.save_every_train_number == 0 and not HP.evaluation_flag:# and global_train_count > 0):
-            HP.net_name = 'tf_model_'+str(global_train_count)
+        if (global_train_count % HP.save_every_train_number == 0 or global_train_count == 1) and not HP.evaluation_flag:# and global_train_count > 0):
+            if global_train_count == 1:
+                HP.net_name = 'tf_model_'+str(0)
+            else:
+                HP.net_name = 'tf_model_'+str(global_train_count)
 
             Agent.save_nets()
         if (i % HP.save_every == 0 and i > 0): 
             dataManager.save_data()
         if HP.plot_flag and waitFor.command == [b'1']:
             dataManager.plot_all()
-
-        while guiShared.pause_after_episode_flag:
-            time.sleep(0.1)
+        if guiShared is not None:
+            while guiShared.pause_after_episode_flag:
+                time.sleep(0.1)
         #dataManager.save_readeable_data()
 
         #stop at the end of the episode for training
-        if not HP.evaluation_flag and HP.pause_for_training:
+        if not HP.evaluation_flag and HP.pause_for_training and global_train_count >10 :# global_train_count >10  tmp to ensure that training is already started
             train_count_at_end = 5000
             current_traint_count = Agent.trainShared.train_count
             while Agent.trainShared.train_count - current_traint_count < train_count_at_end:

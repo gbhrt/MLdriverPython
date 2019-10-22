@@ -7,7 +7,7 @@ import numpy as np
 
 def train(nets,Replay,trainHP,HP,trainShared):
     while not trainShared.request_exit:
-        if len(Replay.memory) > 2 and HP.train_flag:############ len(Replay.memory) > HP.batch_size and 
+        if len(Replay.memory) > 5 and HP.train_flag:############ len(Replay.memory) > HP.batch_size and 
             trainShared.train = True
             last_save_time = time.time()
             trainShared.train_count = 0

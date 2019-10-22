@@ -128,8 +128,8 @@ def add_zero_data_manager(folder,names_vec):
 def get_data(folder,names_vec):
     HP = HyperParameters()
 
-    #train_indexes = [100*j for j in range(1,19)]
-    train_indexes = [5000*j for j in range(0,19)]
+    train_indexes = [100*j for j in range(0,11)]
+    #train_indexes = [5000*j for j in range(0,19)]
     #train_indexes = [15000]
     rewards_vec = []
     var_vec =[]
@@ -206,7 +206,7 @@ def average_training_processes(rewards_vec):
 
 if __name__ == "__main__":
     #folder = "new_state"#\old reward backup"
-    folder = "paper_fix"#"fix_paper"
+    #folder = "paper_fix"#"fix_paper"
     size = 15
     names_vec = []
 
@@ -237,9 +237,9 @@ if __name__ == "__main__":
 
     ###################REVO paper final##############################
     #folder = 'REVO_paper_final'
-    names_vec.append([['REVO6','REVO7','REVO8','REVO9','REVO10'],['REVO','green']])#corrected
-    names_vec.append([['REVO+A1','REVO+A2','REVO+A3','REVO+A4','REVO+A8'],['REVO+A','black']])#corrected ,
-    names_vec.append([['REVO+F1','REVO+F2','REVO+F3','REVO+F4','REVO+F5'],['REVO+F','blue']])#corrected,'REVO+F5' ,'REVO+F2','REVO+F3','REVO+F4' REVO+F1, data_manager_15000 was empty, replaced by 20000
+    #names_vec.append([['REVO6','REVO7','REVO8','REVO9','REVO10'],['REVO','green']])#corrected
+    #names_vec.append([['REVO+A1','REVO+A2','REVO+A3','REVO+A4','REVO+A8'],['REVO+A','black']])#corrected ,
+    #names_vec.append([['REVO+F1','REVO+F2','REVO+F3','REVO+F4','REVO+F5'],['REVO+F','blue']])#corrected,'REVO+F5' ,'REVO+F2','REVO+F3','REVO+F4' REVO+F1, data_manager_15000 was empty, replaced by 20000
     ####################################################################
     
     #names_vec.append([['REVO+FA1','REVO+FA2' ,'REVO+FA3','REVO+FA4','REVO+FA5'],['REVO+FA','orange']])#corrected   'REVO+FA1' ,'REVO+FA3','REVO+FA4'
@@ -279,14 +279,17 @@ if __name__ == "__main__":
     
     #names_vec.append([['also_steer1'],['REVO',None]])#90000
     ###########################model based 25.9.19############
-    #folder = "model_based"
+    folder = "model_based"
+    
+    names_vec.append([['MB_R_30','MB_R_31','MB_R_32','MB_R_33'],['Model Based RL',None]])
+    #names_vec.append([['MB_R_003_1','MB_R_003_2','MB_R_003_3','MB_R_003_4','MB_R_003_5',],['Model Based RL',None]])#,'MB_R_003_2'
     #names_vec.append([['MB_R_4'],['Model Based RL',None]])
 
     #add_zero_data_manager(folder,names_vec)
     #correct_relative_reward(folder,names_vec)
 
     reward_vec_indexes,rewards_vec,indexes,fails_vec,var,series_colors,series_names = get_data(folder,names_vec)
-    indexes = [ind/2 for ind in indexes]#
+    #indexes = [ind/2 for ind in indexes]#
     avg_rewards_vec,var_rewards_vec = average_training_processes(rewards_vec)
     avg_fails_vec,var_fails_vec = average_training_processes(fails_vec)
    
@@ -320,7 +323,7 @@ if __name__ == "__main__":
     #        plt.scatter(indexes[:len(single_fails)],single_fails,c = color,alpha = 0.5)
     for fails,var,color,label in zip(avg_fails_vec,var_fails_vec,series_colors,series_names):
         plt.plot(indexes[:len(fails)],fails,color = color,label = label)
-        #plt.errorbar(indexes[:len(fails)],fails,var,c = color,alpha = 0.7)
+        plt.errorbar(indexes[:len(fails)],fails,var,c = color,alpha = 0.7)
     plt.legend()
 
 

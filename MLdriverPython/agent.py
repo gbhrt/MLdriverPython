@@ -113,8 +113,8 @@ class TrainHyperParameters:
         self.max_plan_deviation = 10
         self.max_plan_roll = 0.1
         self.init_var = 0.0#uncertainty of the roll measurment
-        self.one_step_var = 0.02 #0.01
-        self.const_var = 0.05#roll variance at the future states, constant because closed loop control?
+        self.one_step_var =0.02# 0.02 is good
+        self.const_var = 0.03#roll variance at the future states, constant because closed loop control?
         self.prior_safe_velocity = 0.02#if the velocity is lower than this value - it is priori Known that it is OK to accelerate
        
         #self.emergency_const_var = 0.05
@@ -123,7 +123,7 @@ class TrainHyperParameters:
         self.emergency_steering_type = 2#1 - stright, 2 - 0.5 from original steering, 3-steer net
         
 
-        self.max_cost = 300#100
+        self.max_cost = 100
         self.rollout_n = 10
         if self.MF_policy_flag:
             self.MF_alpha_actor = 0.0001
