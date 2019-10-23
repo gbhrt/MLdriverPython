@@ -223,7 +223,7 @@ class Planner(PathManager):#planner - get and send data to simulator. input - mi
             #print("self.simulator.vehicle.angle[1]:",self.simulator.vehicle.angle[1])
         else:
             steer_ang1 = steer
-        print('acc:',command,'steer:',steer_ang1)
+        #print('acc:',command,'steer:',steer_ang1)
         self.simulator.send_drive_commands(command,steer_ang1) #send commands
         return steer_ang1
     

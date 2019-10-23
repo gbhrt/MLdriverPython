@@ -46,32 +46,35 @@ def show_path(folder,name,train_num,plot_VOD = True,alpha = 1.0):
         #plt.title("episode number: "+str(i*5+5),fontsize = size)
         print("run:",i*5+5)
         if plot_VOD:
-            plt.plot(np.array(analytic_path.distance)[:max_dis_ind],np.array(analytic_path.analytic_velocity)[:max_dis_ind],c = 'r',label = "VOD")#,linewidth = 1.0
+            plt.plot(np.array(analytic_path.distance)[:max_dis_ind],np.array(analytic_path.analytic_velocity)[:max_dis_ind],c = 'r',label = "Direct")
+            #plt.plot(np.array(analytic_path.distance)[:max_dis_ind],np.array(analytic_path.analytic_velocity)[:max_dis_ind],c = 'r',label = "VOD")#,linewidth = 1.0
         else:
             plt.plot(np.array(analytic_path.distance)[:max_dis_ind],np.array(analytic_path.analytic_velocity)[:max_dis_ind],c = 'r')
             #plt.plot(dataManager.paths[i][1],dataManager.paths[i][0],c = "orange", label = "REVO+FA")#'tab:purple' (1.0,1.0,0.0)
-        plt.plot(dataManager.paths[i][1],dataManager.paths[i][0],alpha = alpha, label = "REVO+A",color = "black")#'tab:purple' (1.0,1.0,0.0) "Train "+str(train_num)
-
+        #plt.plot(dataManager.paths[i][1],dataManager.paths[i][0],alpha = alpha, label = "REVO+A",color = "black")#'tab:purple' (1.0,1.0,0.0) "Train "+str(train_num)
+        plt.plot(dataManager.paths[i][1],dataManager.paths[i][0],alpha = alpha, label = "RL",color = "green")
         #plt.plot(dataManager.paths[i][1],dataManager.paths[i][0])
         #plt.plot(np.array(analytic_path.distance)[:max_dis_ind],np.array(analytic_path.analytic_velocity_limit)[:max_dis_ind],c = (0.0,0.0,0.0))#linewidth = 1.0
         #plt.plot(np.array(analytic_path.distance)[:max_dis_ind],np.array(analytic_path.analytic_velocity)[:max_dis_ind],c = 'r')#,linewidth = 1.0
         plt.xlabel('Distance [m]',fontsize = size)
         plt.ylabel('Velocity [m/s]',fontsize = size)
        
-        #plt.figure(2)
-        #plt.plot(np.array(analytic_path.position)[:,0][:max_dis_ind],np.array(analytic_path.position)[:,1][:max_dis_ind], 'g')
-        #plt.xlabel('x [m]',fontsize = size)
-        #plt.ylabel('y [m]',fontsize = size)
-        #plt.legend()
-        #plt.show()
+        plt.figure(2)
+        fig,ax = plt.subplots(1)
+        ax.axis('equal')
+        ax.plot(np.array(analytic_path.position)[:,0][:max_dis_ind],np.array(analytic_path.position)[:,1][:max_dis_ind], 'black')
+        ax.set_xlabel('x [m]',fontsize = size)
+        ax.set_ylabel('y [m]',fontsize = size)
+        fig.legend()
+        plt.show()
 
 if __name__ == "__main__":
     folder = "paper_fix" 
-    name1 = "same_REVO+F1"#bevo_1"#"add_analytic_feature_random_2"#"final_1"  "final_random_1" - final_analytic_random_1 not clear
-    name2 = "same_REVO5"
+    #name1 = "same_REVO+F1"#bevo_1"#"add_analytic_feature_random_2"#"final_1"  "final_random_1" - final_analytic_random_1 not clear
+    #name2 = "same_REVO5"
 
-    #name1 = "REVO9"
-    name1 = "REVO+FA5"
+    name1 = "REVO+A4"
+    #name1 = "REVO+FA5"
 
     #name = 'REVO+FA1'
    # nums = [5000,10000,20000,50000,75000]

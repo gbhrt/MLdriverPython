@@ -108,7 +108,7 @@ class SafteyHyperParameters:
 class ModelBasedHyperParameters:#global settings of the program.
     def __init__(self):
        
-        self.program_mode =  "test_net_performance"#"test_net_performance" train_in_env, test_actions  timing
+        self.program_mode =  "train_in_env"#"test_net_performance" train_in_env, test_actions  timing
         if self.program_mode == "test_net_performance" or self.program_mode == "test_actions":
             self.gui_flag = False
         else:

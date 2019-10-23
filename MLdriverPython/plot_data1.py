@@ -237,9 +237,9 @@ if __name__ == "__main__":
 
     ###################REVO paper final##############################
     #folder = 'REVO_paper_final'
-    names_vec.append([['REVO6','REVO7','REVO8','REVO9','REVO10'],['REVO','green']])#corrected
-    names_vec.append([['REVO+A1','REVO+A2','REVO+A3','REVO+A4','REVO+A8'],['REVO+A','black']])#corrected ,
-    names_vec.append([['REVO+F1','REVO+F2','REVO+F3','REVO+F4','REVO+F5'],['REVO+F','blue']])#corrected,'REVO+F5' ,'REVO+F2','REVO+F3','REVO+F4' REVO+F1, data_manager_15000 was empty, replaced by 20000
+    names_vec.append([['REVO6','REVO7','REVO8','REVO9','REVO10'],['RL','green']])#corrected 'REVO'
+    #names_vec.append([['REVO+A1','REVO+A2','REVO+A3','REVO+A4','REVO+A8'],['RL + Direct','black']])#corrected , 'REVO+A'
+    #names_vec.append([['REVO+F1','REVO+F2','REVO+F3','REVO+F4','REVO+F5'],['REVO+F','blue']])#corrected,'REVO+F5' ,'REVO+F2','REVO+F3','REVO+F4' REVO+F1, data_manager_15000 was empty, replaced by 20000
     ####################################################################
     
     #names_vec.append([['REVO+FA1','REVO+FA2' ,'REVO+FA3','REVO+FA4','REVO+FA5'],['REVO+FA','orange']])#corrected   'REVO+FA1' ,'REVO+FA3','REVO+FA4'
@@ -306,7 +306,7 @@ if __name__ == "__main__":
         plt.plot(indexes[:len(rewards)],rewards,'o',color = color,label = label)
         plt.errorbar(indexes[:len(rewards)],rewards,var,c = color,alpha = 0.7)#reward_indexes[0]
         #print("var:",var[0])
-    plt.plot([0,indexes[len(rewards)-1]],[1,1],linewidth = 2.0,c = 'r',label = 'VOD')
+    plt.plot([0,indexes[len(rewards)-1]],[1,1],linewidth = 2.0,c = 'r',label = 'Direct')#'VOD'
     plt.legend()
 
     plt.figure(2)
