@@ -16,11 +16,11 @@ import agent
 
 def run_all(HP,guiShared):
     envData = environment1.OptimalVelocityPlannerData(env_mode = HP.env_mode)
-    if HP.env_mode == "model_based":
+    if HP.env_mode == "model_based" and HP.gui_flag:
         guiShared.max_roll = envData.max_plan_roll
         guiShared.max_time = envData.step_time*envData.max_episode_steps+5#add time for braking
     names_vec = []
-    names_vec.append([['MB_R_doublicated'],'MB_R',None])
+    names_vec.append([['MB_R_003_3','MB_R_003_4','MB_R_003_5'],'MB_R',None])
     #names_vec.append([['also_steer1'],'REVO',50000])#trained MF acc and steer policy
     random.seed(0)
     HP.seed = random.sample(range(1000),101)#the 101 path is not executed
@@ -51,9 +51,11 @@ def run_all(HP,guiShared):
             HP.save_every_train_number = 500000000
 
         if method == "MB_R":#model based regular - without stabilization
+            HP.max_steps = 1000
             HP.emergency_action_flag = False
             HP.emergency_steering_type = 1#1 - stright, 2 - 0.5 from original steering, 3-steer net
         elif method == "MB_S":
+            HP.max_steps = 1000
             HP.emergency_action_flag = True
             HP.emergency_steering_type = 1#1 - stright, 2 - 0.5 from original steering, 3-steer net
         description = method 
@@ -104,7 +106,7 @@ def run_all(HP,guiShared):
                     HP.train_flag = True
                     HP.always_no_noise_flag = False
                     HP.restore_flag = False
-                    HP.num_of_runs = 1000
+                    HP.num_of_runs = 100#limited by training number 
                     
 
                     dataManager = data_manager1.DataManager(HP.save_file_path,HP.restore_file_path,HP.restore_flag)
@@ -129,7 +131,7 @@ def run_train_MB(HP,dataManager,envData,index = None):
             
 
         else:#try to restore the last one
-            nums = [HP.save_every_train_number*j for j in range(1,21)]
+            nums = [HP.save_every_train_number*j for j in range(1,11)]
             found_flag = False
             for i in nums:
                 HP.net_name = 'tf_model_'+str(i)
