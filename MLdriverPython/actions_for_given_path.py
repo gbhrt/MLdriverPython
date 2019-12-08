@@ -1,6 +1,7 @@
 import actions
 import copy
 import library as lib 
+import agent
 
 
 def driving_action(state,nets,trainHP,roll_var):
@@ -44,6 +45,21 @@ def driving_action(state,nets,trainHP,roll_var):
         #try_acc = 1.0
     return try_acc,steer,tmp_state_vec,tmp_a_vec
 
+def direct_emergency_cost(state,acc,steer,Direct,trainHP,roll_var,emergency_action_active = False):
+    #assuming that if the next state is stable it is possible to stay stable by applying constant steering
+    
+    #next_vehicle_state,rel_pos,rel_ang = Direct.predict_one(state.Vehicle.values,[acc,steer])
+    emergencyState = agent.State()
+    emergencyState.Vehicle = actions.emergency_step(state.Vehicle,acc,steer,Direct)
+    if(Direct.check_stability1(emergencyState.Vehicle.values,factor = 0.5 if emergency_action_active else 1.0)):
+        cost = 0
+    else:
+        cost = 200
+
+    S_Vehicle = copy.deepcopy(state.Vehicle)
+    tmp_state_vec,tmp_a_vec = [S_Vehicle]*5,[[acc,steer]]*5#tmp
+    return cost, tmp_state_vec,tmp_a_vec
+
 def emergency_cost(state,acc,steer,nets,trainHP,roll_var):
     #S.Vehicle = tmp_state_vec[0]
     S_Vehicle = copy.deepcopy(state.Vehicle)
@@ -79,9 +95,9 @@ def emergency_cost(state,acc,steer,nets,trainHP,roll_var):
     return cost, tmp_state_vec,tmp_a_vec
 
 
-def comp_MB_action(nets,state,acc,steer,trainHP):
+def comp_MB_action(nets,state,acc,steer,trainHP, Direct = None,last_emergency_action_active = False):
+    print("last_emergency_action_active:",last_emergency_action_active)
     #print("___________________new acc compution____________________________")
-
     state_env =  state.env 
     StateVehicle_vec = [state.Vehicle] 
     actions_vec = [[acc,steer]]
@@ -89,6 +105,9 @@ def comp_MB_action(nets,state,acc,steer,trainHP):
     actions_emergency_vec = [[acc,steer]]
     
     emergency_action_active = trainHP.emergency_action_flag#initialize to true just if in emergency mode
+    if trainHP.direct_stabilize:
+        emergencyState = agent.State()
+        emergencyState.Vehicle = copy.deepcopy(state.Vehicle)
     #emergency_action_active = False#tmp
     #delta_var = 0.002
     #init_var = 0.0#uncertainty of the roll measurment
@@ -108,9 +127,13 @@ def comp_MB_action(nets,state,acc,steer,trainHP):
         #predict the next unavoidable state (actions already done):      
         state.Vehicle = actions.step(state.Vehicle,acc,steer,nets.TransNet,trainHP)
         StateVehicle_vec.append(state.Vehicle)
-        StateVehicle_emergency_vec.append(state.Vehicle)
+        if trainHP.direct_stabilize:
+            emergencyState.Vehicle = actions.emergency_step(state.Vehicle,acc,steer,Direct)
+            StateVehicle_emergency_vec.append(emergencyState.Vehicle)
+        else:
+            StateVehicle_emergency_vec.append(state.Vehicle)
+
         state.env[1] = lib.find_index_on_path(state.env[0],state.Vehicle.abs_pos)   
-         
         roll_var += trainHP.one_step_var
         #stability at the next state (unavoidable state):
         if  trainHP.emergency_action_flag:
@@ -119,14 +142,21 @@ def comp_MB_action(nets,state,acc,steer,trainHP):
         else:
             roll_flag,dev_flag = 0,0
         if roll_flag == 0 and dev_flag == 0:#first step was Ok
-
             next_acc,next_steer,tmp_state_vec,tmp_a_vec = driving_action(state,nets,trainHP,roll_var)
             StateVehicle_vec += tmp_state_vec
             actions_vec += tmp_a_vec
             if trainHP.emergency_action_flag:
                 #print("in emergency")
                 #check if the emergency policy is safe after applying the action on the first step
-                e_cost,tmp_state_vec,tmp_a_vec = emergency_cost(state,next_acc,next_steer,nets,trainHP,roll_var)
+                if trainHP.direct_stabilize:
+                    e_cost,tmp_state_vec,tmp_a_vec = direct_emergency_cost(emergencyState,next_acc,next_steer,Direct,trainHP,roll_var,last_emergency_action_active)
+                    if e_cost >= trainHP.max_cost and next_acc > -1.0: 
+                        print("try to stabilize by braking")
+                        next_acc = -1.0
+                        e_cost,tmp_state_vec,tmp_a_vec = direct_emergency_cost(emergencyState,next_acc,next_steer,Direct,trainHP,roll_var,last_emergency_action_active)
+
+                else:
+                    e_cost,tmp_state_vec,tmp_a_vec = emergency_cost(state,next_acc,next_steer,nets,trainHP,roll_var)
                 StateVehicle_emergency_vec+=tmp_state_vec
                 actions_emergency_vec+=tmp_a_vec
 
@@ -172,7 +202,10 @@ def comp_MB_action(nets,state,acc,steer,trainHP):
         ##print("unstable initial state - before first step")
 
     if emergency_action_active:
-        next_steer = actions.emergency_steer_policy(state.Vehicle,state.env,trainHP,SteerNet =  nets.SteerNet if nets.steer_net_active else None) #steering from the next state, send it to the vehicle at the next state
+        next_steer = actions.emergency_steer_policy(state.Vehicle if not trainHP.direct_stabilize else emergencyState.Vehicle,
+                                                    state.env,trainHP,SteerNet =  nets.SteerNet if nets.steer_net_active else None) #steering from the next state, send it to the vehicle at the next state
+        
+        
         next_acc  = actions.emergency_acc_policy()#always -1
         ##print("emergency policy is executed!")
 

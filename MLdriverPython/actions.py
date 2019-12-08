@@ -67,8 +67,8 @@ def steer_policy(state_Vehicle,state_env,trainHP,SteerNet = None):
     #steer_max = np.clip(0.7-state.Vehicle.values[0]*0.1,0,0.7)
     #steer_min = np.clip(-(0.7-state.Vehicle.values[0]*0.1),-0.7,0)
     #np.clip(steer,steer_min,steer_max).item()
-    
-    return lib.comp_steer_general(state_env[0],state_env[1],state_Vehicle.abs_pos,state_Vehicle.abs_ang,state_Vehicle.values[0])
+    steer = lib.comp_steer_general(state_env[0],state_env[1],state_Vehicle.abs_pos,state_Vehicle.abs_ang,state_Vehicle.values[0])
+    return np.clip(steer,-0.7,0.7).item()
 
 #def emergency_steer_policy(state):
 #    return 0.0
@@ -83,6 +83,12 @@ def emergency_steer_policy(state_Vehicle,state_env,trainHP,SteerNet = None):
         steer_max = get_dsteer_max(SteerNet,state_Vehicle.values,acc,1,trainHP)
         steer_min = get_dsteer_max(SteerNet,state_Vehicle.values,acc,-1,trainHP)
         steer = np.clip(steer,steer_min,steer_max).item()
+    elif trainHP.emergency_steering_type == 4:
+        steer = state_Vehicle.values[1]#continue same state
+    elif trainHP.emergency_steering_type == 5:#propotional to roll angle
+        k = 3.5
+        steer =np.clip(k*state_Vehicle.values[2],-0.7,0.7).item()
+
     else:
         print("error - emergency_steering_type not exist")
     return steer
@@ -307,6 +313,18 @@ def step(stateVehicle,acc,steer,TransNet,trainHP):#get a state and actions, retu
     nextState.Vehicle.abs_pos,nextState.Vehicle.abs_ang = predict_lib.comp_abs_pos_ang(nextState.Vehicle.rel_pos,nextState.Vehicle.rel_ang,stateVehicle.abs_pos,stateVehicle.abs_ang)
     
     return nextState.Vehicle
+
+def emergency_step(stateVehicle,acc,steer,Direct):#get a state and actions, return next state
+    steer = np.clip(steer,-0.7,0.7)
+    next_vehicle_state,rel_pos,rel_ang = Direct.predict_one(stateVehicle.values,[acc,steer])
+    nextState = agent.State()
+    nextState.Vehicle.values = [stateVehicle.values[i]+next_vehicle_state[i] for i in range(len(next_vehicle_state))]
+    nextState.Vehicle.rel_pos = rel_pos
+    nextState.Vehicle.rel_ang = rel_ang
+    #nextState.Vehicle.abs_pos,nextState.Vehicle.abs_ang = predict_lib.comp_abs_pos_ang(nextState.Vehicle.rel_pos,nextState.Vehicle.rel_ang,stateVehicle.abs_pos,stateVehicle.abs_ang)
+    nextState.Vehicle.abs_pos,nextState.Vehicle.abs_ang = rel_pos,rel_ang
+    return nextState.Vehicle
+
 
 def stop_toward_target(nets,StateVehicle,targetPoint,acc_flag,trainHP,stop_flag,ax = None):
     line = None

@@ -7,6 +7,7 @@ import library as lib
 import json
 import os
 import random
+import direct_method
 #from sklearn import preprocessing
 import time
 import agent
@@ -453,7 +454,9 @@ def one_step_pred_plot(Agent,replay_memory):
 
     print(Agent.nets.TransNet.evaluate(np.array(TransNet_X),np.array(TransNet_Y_)))
 
-    TransNet_Y = Agent.nets.TransNet.predict(np.array(TransNet_X))
+    #TransNet_Y = Agent.nets.TransNet.predict(np.array(TransNet_X))
+    Direct = direct_method.directModel()
+    TransNet_Y = Direct.predict(TransNet_X)
 
     vehicle_state_vec,action_vec,vehicle_state_next_vec,rel_pos_vec,vehicle_state_next_pred_vec,rel_pos_pred_vec = [],[],[],[],[],[]
     for x,y_,y in zip(TransNet_X,TransNet_Y_,TransNet_Y):
@@ -498,6 +501,9 @@ def train_nets(Agent):
             Agent.trainShared.algorithmIsIn.set()
         time.sleep(1)
     Agent.stop_training()
+
+
+#def direct():
 
 def test_net(Agent): 
     train = False
@@ -570,6 +576,8 @@ def test_net(Agent):
 
     #TransNet_Y = Agent.nets.TransNet.predict(np.array(TransNet_X))[0]
     #print(TransNet_Y)
+    
+    
     #plot_n_step_state(Agent,replay_memory)
 
     #plot_n_step_var(Agent,replay_memory)

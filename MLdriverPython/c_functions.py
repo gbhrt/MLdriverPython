@@ -36,7 +36,7 @@ class cFunctions:
         mass = 3200
         vel_max = 30
         fc = 1.0
-        height = 1.7#0.94#0.86
+        height = 1.7#1.7#0.94#0.86 all test for the proposal done with 1.7
         width = 2.08
 
         self.max_acc= f_max/mass

@@ -16,6 +16,7 @@ import target_point
 import actions_for_given_path as act
 from DDPG_net import DDPG_network
 import sys
+import direct_method
 
 def convert_to_MF_state(state,targetPoint):
     return state.Vehicle.values + state.Vehicle.rel_pos+[state.Vehicle.rel_ang]+[targetPoint.abs_pos]+[targetPoint.vel]
@@ -90,7 +91,7 @@ class MF_Net:#define the input and outputs to networks, and the nets itself.
             net.restore(HP.restore_file_path)#cannot restore - return true
 
 class TrainHyperParameters:
-    def __init__(self):
+    def __init__(self,HP):
         self.MF_policy_flag = False
         self.num_of_runs = 5000
         self.alpha = 0.0001# #learning rate
@@ -106,6 +107,7 @@ class TrainHyperParameters:
         else:
             self.features_mean = None
             self.features_var = None
+        self.direct_stabilize = HP.direct_stabilize
         self.plan_roll = 0.03
         #self.emergency_plan_roll = 0.07
         self.target_tolerance = 0.02
@@ -114,13 +116,14 @@ class TrainHyperParameters:
         self.max_plan_roll = 0.1
         self.init_var = 0.0#uncertainty of the roll measurment
         self.one_step_var =0.02# 0.02 is good
-        self.const_var = 0.03#roll variance at the future states, constant because closed loop control?
+        self.const_var = 0.05#roll variance at the future states, constant because closed loop control?
         self.prior_safe_velocity = 0.02#if the velocity is lower than this value - it is priori Known that it is OK to accelerate
        
         #self.emergency_const_var = 0.05
-
-        self.emergency_action_flag = True
-        self.emergency_steering_type = 2#1 - stright, 2 - 0.5 from original steering, 3-steer net
+      
+        self.emergency_action_flag = HP.emergency_action_flag
+        self.emergency_steering_type = HP.emergency_steering_type#1 - stright, 2 - 0.5 from original steering, 3-steer net
+     
         
 
         self.max_cost = 100
@@ -140,14 +143,13 @@ class TrainHyperParameters:
 class Agent:# includes the networks, policies, replay buffer, learning hyper parameters
     def __init__(self,HP,envData = None,trans_net_active = True,steer_net_active = True,acc_net_active = False):
         self.HP = HP
-        self.trainHP = TrainHyperParameters()
-        self.trainHP.emergency_action_flag = HP.emergency_action_flag
-        self.trainHP.emergency_steering_type = HP.emergency_steering_type#1 - stright, 2 - 0.5 from original steering, 3-steer net
-
+        self.trainHP = TrainHyperParameters(self.HP)
+      
         self.Replay = agent_lib.Replay(self.trainHP.replay_memory_size)
         if self.HP.restore_flag:
             self.Replay.restore(self.HP.restore_file_path)
 
+        self.Direct = direct_method.directModel()
         #define all nets:
         if self.trainHP.MF_policy_flag:
             self.MF_net = MF_Net(self.trainHP,HP,envData)
@@ -209,14 +211,16 @@ class Agent:# includes the networks, policies, replay buffer, learning hyper par
         return planningData
 
 
-    def comp_action(self,state,acc,steer):#env
+    def comp_action(self,state,acc,steer,last_emergency_action_active = False):#env
         self.trainShared.algorithmIsIn.clear()#indicates that are ready to take the lock
         with self.trainShared.Lock:
             self.trainShared.algorithmIsIn.set()
             with self.nets.transgraph.as_default():  
-                acc,steer,StateVehicle_vec,actions_vec,StateVehicle_emergency_vec,actions_emergency_vec,emergency_action = act.comp_MB_action(self.nets,state,acc,steer,self.trainHP)
+                acc,steer,StateVehicle_vec,actions_vec,StateVehicle_emergency_vec,actions_emergency_vec,emergency_action = act.comp_MB_action(self.nets,state,acc,steer,self.trainHP,
+                                                                                                                                              Direct = self.Direct if self.trainHP.direct_stabilize else None,
+                                                                                                                                              last_emergency_action_active = last_emergency_action_active)
         planningData = self.convert_to_planningData(state.env,StateVehicle_vec,actions_vec,StateVehicle_emergency_vec,actions_emergency_vec,emergency_action)
-        return acc,steer,planningData #act.comp_MB_action(self.nets.TransNet,env,state,acc,steer)
+        return acc,steer,planningData,emergency_action #act.comp_MB_action(self.nets.TransNet,env,state,acc,steer)
     
     def get_MF_action(self,state):
         self.targetPoint = target_point.comp_targetPoint(self.nets,state,self.trainHP)#tmp - must be computed independly from steps

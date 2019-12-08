@@ -1,28 +1,26 @@
-
 import time
 import numpy as np
 import library as lib
 import classes
 import copy
 import random
-#from plot import Plot
 import predict_lib
 #import subprocess
 import math
 import os
-
+import direct_method
 
 def train(env,HP,Agent,dataManager,guiShared,seed = None,global_train_count = 0): #the global train number in MB is the step number, training is async, for compability to other methods
 
     #subprocess.Popen('C:/Users/gavri/Desktop/sim_15_3_18/sim15_3_18 -quit -batchmode -nographics')
-  
+    Direct = direct_method.directModel()
     #pre-defined parameters:
     Agent.start_training()
     print("start training")
     env_state = env.reset(seed = seed)
     acc,steer = 0.0,0.0
     state = Agent.get_state(env_state)
-    acc,steer,planningData= Agent.comp_action(state,acc,steer)
+    acc,steer,planningData, emergency_action_active= Agent.comp_action(state,acc,steer)
     print("init acc")
     #time.sleep(5)
     if seed != None:
@@ -69,7 +67,7 @@ def train(env,HP,Agent,dataManager,guiShared,seed = None,global_train_count = 0)
             continue
         #episode_start_time = time.time()
         acc,steer = 0.0,0.0
-        acc,steer,planningData= Agent.comp_action(state,acc,steer)#for the first time (required because the first time is longer)
+        acc,steer,planningData,emergency_action_active= Agent.comp_action(state,acc,steer)#for the first time (required because the first time is longer)
 
         env.pl.init_timer()
         if guiShared is not None: request_exit = guiShared.request_exit
@@ -100,8 +98,8 @@ def train(env,HP,Agent,dataManager,guiShared,seed = None,global_train_count = 0)
                 next_state, reward, done, info = env.step(acc)#input the estimated next actions to execute after delta t and getting next state
                 
             else:#not HP.analytic_action
-                acc,steer,planningData = Agent.comp_action(state,acc,steer)#env is temp  ,roll_flag,dev_flag 
-                
+                acc,steer,planningData,emergency_action_active = Agent.comp_action(state,acc,steer,emergency_action_active)#env is temp  ,roll_flag,dev_flag 
+                print("acc:",acc,"steer:",steer)
                 #acc,steer,planningData,roll_flag,dev_flag = Agent.comp_action(state,acc,steer)
 
 
@@ -144,7 +142,9 @@ def train(env,HP,Agent,dataManager,guiShared,seed = None,global_train_count = 0)
                 
                 #print("after step 2 time:",time.clock() - env.lt)
                 state = Agent.get_state(env_state)
+                #Direct.check_stability(state.Vehicle.values)
 
+            
             reward_vec.append(reward)
             # print("after append:", time.time() - env.lt)
             #add data to replay buffer:

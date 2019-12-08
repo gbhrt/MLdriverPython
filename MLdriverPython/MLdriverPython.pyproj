@@ -59,6 +59,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="DDPG_net - Copy.py" />
+    <Compile Include="direct_method.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="saftey_DDPG_algorithm.py" />
     <Compile Include="drive_test.py">
       <SubType>Code</SubType>
