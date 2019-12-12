@@ -62,7 +62,7 @@ def train(nets,Replay,trainHP,HP,trainShared):
                     nets.SteerNet.train_on_batch(np.array(SteerNet_X),np.array(SteerNet_Y_))
                 if nets.acc_net_active:
                     nets.AccNet.train_on_batch(np.array(AccNet_X),np.array(AccNet_Y_))
-                if trainShared.train_count % 1000 == 0:
+                if trainShared.train_count % 100000000 == 0 and trainShared.train_count!=0:
                     print("--------------------------train:",trainShared.train_count)
                     if nets.trans_net_active:
                         print("Trans loss:",nets.TransNet.evaluate(np.array(TransNet_X),np.array(TransNet_Y_)))

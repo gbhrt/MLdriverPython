@@ -1,5 +1,6 @@
 import math
 import numpy as np
+import library as lib
 class directModel:
     def __init__(self):
         self.steering_vel = 100#rad/sec
@@ -15,12 +16,25 @@ class directModel:
         self.g = 9.81
         self.ac_max = self.g*self.width*0.5/self.height * 2.5#maximal cetripetal force
         print("ac_max :",self.ac_max )
+        self.max_roll = 0.07
         return 
 
     def check_stability1(self,vehicle_state,factor = 1.0):
-        if abs(vehicle_state[2]) > 0.2:
+        if abs(vehicle_state[2]) > self.max_roll*factor:#0.2:
             return False
         return True
+    def check_stability2(self,state_Vehicle,state_env,max_plan_deviation,roll_var,factor = 1.0):
+        dev_flag,roll_flag = 0,0
+        path = state_env[0]
+        index = state_env[1]
+
+        dev_from_path = lib.dist(path.position[index][0],path.position[index][1],state_Vehicle.abs_pos[0],state_Vehicle.abs_pos[1])#absolute deviation from the path
+        if dev_from_path > max_plan_deviation:
+            dev_flag = 1
+
+        if abs(state_Vehicle.values[2])+roll_var > self.max_roll*factor: #check the current roll 
+            roll_flag = math.copysign(1,state_Vehicle.values[2])
+        return roll_flag,dev_flag
 
 
     def check_stability(self,vehicle_state,factor = 1.0):#action

@@ -279,7 +279,3 @@ def choose_action(action_space,Pi,steps = None,epsilon = 0.1):
     #a = np.argmax(Pi)
 
     return a
-
-
-
-

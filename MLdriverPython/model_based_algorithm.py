@@ -15,12 +15,13 @@ def train(env,HP,Agent,dataManager,guiShared,seed = None,global_train_count = 0)
     #subprocess.Popen('C:/Users/gavri/Desktop/sim_15_3_18/sim15_3_18 -quit -batchmode -nographics')
     Direct = direct_method.directModel()
     #pre-defined parameters:
-    Agent.start_training()
+    #Agent.start_training()
+    first_flag = True
     print("start training")
     env_state = env.reset(seed = seed)
     acc,steer = 0.0,0.0
     state = Agent.get_state(env_state)
-    acc,steer,planningData, emergency_action_active= Agent.comp_action(state,acc,steer)
+    acc,steer,planningData = Agent.comp_action(state,acc,steer)
     print("init acc")
     #time.sleep(5)
     if seed != None:
@@ -67,7 +68,7 @@ def train(env,HP,Agent,dataManager,guiShared,seed = None,global_train_count = 0)
             continue
         #episode_start_time = time.time()
         acc,steer = 0.0,0.0
-        acc,steer,planningData,emergency_action_active= Agent.comp_action(state,acc,steer)#for the first time (required because the first time is longer)
+        acc,steer,planningData= Agent.comp_action(state,acc,steer)#for the first time (required because the first time is longer)
 
         env.pl.init_timer()
         if guiShared is not None: request_exit = guiShared.request_exit
@@ -98,7 +99,7 @@ def train(env,HP,Agent,dataManager,guiShared,seed = None,global_train_count = 0)
                 next_state, reward, done, info = env.step(acc)#input the estimated next actions to execute after delta t and getting next state
                 
             else:#not HP.analytic_action
-                acc,steer,planningData,emergency_action_active = Agent.comp_action(state,acc,steer,emergency_action_active)#env is temp  ,roll_flag,dev_flag 
+                acc,steer,planningData = Agent.comp_action(state,acc,steer)#env is temp  ,roll_flag,dev_flag 
                 print("acc:",acc,"steer:",steer)
                 #acc,steer,planningData,roll_flag,dev_flag = Agent.comp_action(state,acc,steer)
 
@@ -164,7 +165,7 @@ def train(env,HP,Agent,dataManager,guiShared,seed = None,global_train_count = 0)
             last_time_stamp = env.pl.simulator.vehicle.input_time
             
             global_train_count+=1
-            if global_train_count % HP.save_every_train_number == 0 or global_train_count == 1:
+            if global_train_count % HP.save_every_train_number == 0:# or global_train_count == 1:#uncomment for saving the initial state for evaluation process
                 #print("break in global_train_count % HP.save_every_train_number == 0 and global_train_count > 0:")
                 break
             
@@ -184,6 +185,12 @@ def train(env,HP,Agent,dataManager,guiShared,seed = None,global_train_count = 0)
 
         #after episode end:
         env.stop_vehicle_complete()
+        if first_flag:
+            Agent.start_training()#after first episode to avoid long first training in the middle of driving
+            first_flag = False
+
+        Agent.update_episode_var(step_count-1)
+        
         total_reward = sum(reward_vec)
         if not HP.gym_flag: #and not HP.noise_flag:
             #if step_count<env.max_episode_steps and info[0] == 'ok':
@@ -252,7 +259,7 @@ def train(env,HP,Agent,dataManager,guiShared,seed = None,global_train_count = 0)
         #dataManager.save_readeable_data()
 
         #stop at the end of the episode for training
-        if not HP.evaluation_flag and HP.pause_for_training and global_train_count >10 :# global_train_count >10  tmp to ensure that training is already started
+        if not HP.evaluation_flag and HP.pause_for_training and global_train_count > 10 :# global_train_count >10  tmp to ensure that training is already started
             train_count_at_end = 5000
             current_traint_count = Agent.trainShared.train_count
             while Agent.trainShared.train_count - current_traint_count < train_count_at_end:

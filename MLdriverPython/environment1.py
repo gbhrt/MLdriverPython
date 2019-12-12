@@ -393,7 +393,7 @@ class OptimalVelocityPlanner(OptimalVelocityPlannerData):
             self.pl.stop_vehicle()
           #  print("after stop")
         self.episode_steps = 0
-        self.last_time = [time.clock()]
+        
         self.pl.restart()#not sure
        # print("after restart")
         self.error = self.pl.simulator.get_vehicle_data()#read data after time step from last action
@@ -436,6 +436,7 @@ class OptimalVelocityPlanner(OptimalVelocityPlannerData):
             #self.dataManager.add(('curvature',(self.pl.desired_path.curvature)))
         print("reset done")
         self.reset_count+=1
+        self.last_time = [time.clock()]
         return state
 
     def command(self,action,steer = None):# the algo assume that the action is in the last state, must be close as possible to the end of the

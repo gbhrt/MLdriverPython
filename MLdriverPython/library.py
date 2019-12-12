@@ -582,6 +582,24 @@ class waitFor:
         _thread.start_new_thread(self.input_thread, (self.stop,self.command,))
         return
 
+
+    
+def convert_replay_to_states(replay_memory):
+    states = []
+    next_states = []
+    actions = []
+    pos = []
+    done = []
+    
+    for ind in range(len(replay_memory)-1):
+        if replay_memory[ind][3] == True or replay_memory[ind+1][4]: # done flag
+            print("error - done flag")
+            break
+        states.append( replay_memory[ind][0])
+        actions.append(replay_memory[ind][2])
+        next_states.append(replay_memory[ind+1][0])
+        pos.append(replay_memory[ind+1][1])
+    return states,actions,next_states,pos
 ###########################################################
 
 

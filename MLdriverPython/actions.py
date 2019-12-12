@@ -84,8 +84,10 @@ def emergency_steer_policy(state_Vehicle,state_env,trainHP,SteerNet = None):
         steer_min = get_dsteer_max(SteerNet,state_Vehicle.values,acc,-1,trainHP)
         steer = np.clip(steer,steer_min,steer_max).item()
     elif trainHP.emergency_steering_type == 4:
+        #print("continue same steering")
         steer = state_Vehicle.values[1]#continue same state
     elif trainHP.emergency_steering_type == 5:#propotional to roll angle
+        #print("stabilize by P")
         k = 3.5
         steer =np.clip(k*state_Vehicle.values[2],-0.7,0.7).item()
 

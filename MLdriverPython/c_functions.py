@@ -6,9 +6,9 @@ from ctypes import *
 class cFunctions:
     def __init__(self):
         try:
-            self.c_lib = CDLL('c_lib.dll')#windows
+            self.c_lib = CDLL(os.getcwd()+'/c_lib.dll')#windows
         except:
-            self.c_lib = CDLL('c_lib.so')#linux
+            self.c_lib = CDLL(os.getcwd()+'/c_lib.so')#linux
         #self.c_lib = CDLL('c_lib.so')
         #func = c_lib['compute_limit_curve']
         #self.c_lib.compute_limit_curve.argtypes = (c_int, POINTER(c_float),POINTER(c_float),POINTER(c_float),POINTER(c_float))

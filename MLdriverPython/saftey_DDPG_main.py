@@ -6,7 +6,7 @@ import os
 import environment1
 import data_manager1
 import hyper_parameters 
-from DDPG_net import DDPG_network
+#from DDPG_net import DDPG_network
 import saftey_DDPG_algorithm
 import model_based_algorithm
 import tkinker_gui
@@ -20,7 +20,7 @@ def run_all(HP,guiShared):
         guiShared.max_roll = envData.max_plan_roll
         guiShared.max_time = envData.step_time*envData.max_episode_steps+5#add time for braking
     names_vec = []
-    names_vec.append([['MB_R_003_3','MB_R_003_4','MB_R_003_5'],'MB_R',None])
+    names_vec.append([['MB_R_1','MB_R_2','MB_R_3','MB_R_4','MB_R_5'],'MB_R',None])
     #names_vec.append([['also_steer1'],'REVO',50000])#trained MF acc and steer policy
     random.seed(0)
     HP.seed = random.sample(range(1000),101)#the 101 path is not executed
@@ -66,7 +66,7 @@ def run_all(HP,guiShared):
             description]
         HP.save_every_train_number = 100#5000
         
-        for evalutaion_flag in [True]:#False,
+        for evalutaion_flag in [False,True]:#False,
             HP.evaluation_flag = evalutaion_flag
 
             for name in names:

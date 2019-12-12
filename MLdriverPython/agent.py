@@ -14,7 +14,7 @@ import library as lib
 import numpy as np
 import target_point
 import actions_for_given_path as act
-from DDPG_net import DDPG_network
+#from DDPG_net import DDPG_network
 import sys
 import direct_method
 
@@ -115,10 +115,12 @@ class TrainHyperParameters:
         self.max_plan_deviation = 10
         self.max_plan_roll = 0.1
         self.init_var = 0.0#uncertainty of the roll measurment
-        self.one_step_var =0.02# 0.02 is good
-        self.const_var = 0.05#roll variance at the future states, constant because closed loop control?
+        #self.one_step_var =0.02# 0.02 is good
+        #self.const_var = 0.05#roll variance at the future states, constant because closed loop control?
+        self.one_step_var =0.1
+        self.const_var = 0.1
         self.prior_safe_velocity = 0.02#if the velocity is lower than this value - it is priori Known that it is OK to accelerate
-       
+        self.stabilize_factor = 1.1
         #self.emergency_const_var = 0.05
       
         self.emergency_action_flag = HP.emergency_action_flag
@@ -127,7 +129,7 @@ class TrainHyperParameters:
         
 
         self.max_cost = 100
-        self.rollout_n = 10
+        self.rollout_n = 13#10
         if self.MF_policy_flag:
             self.MF_alpha_actor = 0.0001
             self.MF_alpha_critic = 0.001
@@ -135,16 +137,21 @@ class TrainHyperParameters:
             self.conv_flag = False
             self.state_n = len(self.vehicle_ind_data)+3
             self.action_n = 2
+            
 
 
-
+class PlanningState:
+    def __init__(self,trainHP):
+        self.trust_T = 20
+        self.roll_var = [trainHP.init_var]+[min(trainHP.init_var+trainHP.one_step_var*n,trainHP.const_var ) for n in range(1,trainHP.rollout_n+10)]
+        self.last_emergency_action_active = False
  
 
 class Agent:# includes the networks, policies, replay buffer, learning hyper parameters
     def __init__(self,HP,envData = None,trans_net_active = True,steer_net_active = True,acc_net_active = False):
         self.HP = HP
         self.trainHP = TrainHyperParameters(self.HP)
-      
+        self.planningState = PlanningState(self.trainHP)
         self.Replay = agent_lib.Replay(self.trainHP.replay_memory_size)
         if self.HP.restore_flag:
             self.Replay.restore(self.HP.restore_file_path)
@@ -211,16 +218,18 @@ class Agent:# includes the networks, policies, replay buffer, learning hyper par
         return planningData
 
 
-    def comp_action(self,state,acc,steer,last_emergency_action_active = False):#env
+    def comp_action(self,state,acc,steer):#env
         self.trainShared.algorithmIsIn.clear()#indicates that are ready to take the lock
         with self.trainShared.Lock:
             self.trainShared.algorithmIsIn.set()
             with self.nets.transgraph.as_default():  
                 acc,steer,StateVehicle_vec,actions_vec,StateVehicle_emergency_vec,actions_emergency_vec,emergency_action = act.comp_MB_action(self.nets,state,acc,steer,self.trainHP,
-                                                                                                                                              Direct = self.Direct if self.trainHP.direct_stabilize else None,
-                                                                                                                                              last_emergency_action_active = last_emergency_action_active)
+                                                                                                                                              planningState = self.planningState,
+                                                                                                                                              Direct = self.Direct if self.trainHP.direct_stabilize else None
+                                                                                                                                              )
+        self.planningState.last_emergency_action_active = emergency_action
         planningData = self.convert_to_planningData(state.env,StateVehicle_vec,actions_vec,StateVehicle_emergency_vec,actions_emergency_vec,emergency_action)
-        return acc,steer,planningData,emergency_action #act.comp_MB_action(self.nets.TransNet,env,state,acc,steer)
+        return acc,steer,planningData #act.comp_MB_action(self.nets.TransNet,env,state,acc,steer)
     
     def get_MF_action(self,state):
         self.targetPoint = target_point.comp_targetPoint(self.nets,state,self.trainHP)#tmp - must be computed independly from steps
@@ -262,3 +271,34 @@ class Agent:# includes the networks, policies, replay buffer, learning hyper par
             if self.nets.acc_net_active:
                 self.nets.AccNet.set_weights(self.train_nets.AccNet.get_weights()) 
         print("copy time:", time.clock() - t)
+
+    def update_episode_var(self,episode_lenght):
+        episode_lenght = 2000
+        with self.trainShared.ReplayLock:
+            episode_lenght = min(episode_lenght,len(self.Replay.memory))
+            episode_replay_memory = self.Replay.memory[-episode_lenght:]
+
+        with self.trainShared.Lock:
+            n = self.trainHP.rollout_n
+            n_state_vec,n_state_vec_pred,n_pos_vec,n_pos_vec_pred,n_ang_vec,n_ang_vec_pred = predict_lib.get_all_n_step_states(self,episode_replay_memory, n)
+
+        var_vec,mean_vec,pos_var_vec,pos_mean_vec,ang_var_vec,ang_mean_vec = predict_lib.comp_var(self, n_state_vec,n_state_vec_pred,n_pos_vec,n_pos_vec_pred,n_ang_vec,n_ang_vec_pred)
+
+            #vehicle_state_next_vec,vehicle_state_next_pred_vec,rel_pos_vec,rel_pos_pred_vec = predict_lib.one_step_prediction(self,episode_replay_memory)
+        val_var = var_vec[1]
+        #val_var = []
+        #val_mean = []
+        #for feature,ind in self.trainHP.vehicle_ind_data.items():
+        #    real = np.array(rel_pos_vec)[:,ind]
+        #    pred = np.array(rel_pos_pred_vec)[:,ind]
+        #    error = pred - real
+        #    val_var.append(np.sqrt(np.var(error)))
+        #    #val_var.append(np.sqrt( (error**2).mean()))
+        #    val_mean.append(np.mean(error))
+
+        #roll_var = [0]+[var[self.trainHP.vehicle_ind_data["roll"]] for var in var_vec]+[var_vec[-1][self.trainHP.vehicle_ind_data["roll"]]]*(20-len(var_vec)-1)#0.1
+        roll_var = [0]+[var[self.trainHP.vehicle_ind_data["roll"]] for var in var_vec]+[0.1]*(20-len(var_vec)-1)#0.1
+        print("roll_var:",roll_var)
+        
+        self.planningState.roll_var = roll_var
+

@@ -128,8 +128,8 @@ def add_zero_data_manager(folder,names_vec):
 def get_data(folder,names_vec):
     HP = HyperParameters()
 
-    #train_indexes = [100*j for j in range(1,19)]
-    train_indexes = [5000*j for j in range(0,19)]
+    train_indexes = [100*j for j in range(1,19)]
+    #train_indexes = [5000*j for j in range(0,19)]
     #train_indexes = [15000]
     rewards_vec = []
     var_vec =[]
@@ -206,7 +206,7 @@ def average_training_processes(rewards_vec):
 
 if __name__ == "__main__":
     #folder = "new_state"#\old reward backup"
-    folder = "paper_fix"#"fix_paper"
+    #folder = "paper_fix"
     size = 15
     names_vec = []
 
@@ -235,9 +235,11 @@ if __name__ == "__main__":
 
     #names_vec.append([['copyREVO+FA3'],['REVO+FA','orange']])
 
+
+    
     ###################REVO paper final##############################
     #folder = 'REVO_paper_final'
-    names_vec.append([['REVO6','REVO7','REVO8','REVO9','REVO10'],['RL','green']])#corrected 'REVO'
+    #names_vec.append([['REVO6','REVO7','REVO8','REVO9','REVO10'],['RL','green']])#corrected 'REVO'
     #names_vec.append([['REVO+A1','REVO+A2','REVO+A3','REVO+A4','REVO+A8'],['RL + Direct','black']])#corrected , 'REVO+A'
     #names_vec.append([['REVO+F1','REVO+F2','REVO+F3','REVO+F4','REVO+F5'],['REVO+F','blue']])#corrected,'REVO+F5' ,'REVO+F2','REVO+F3','REVO+F4' REVO+F1, data_manager_15000 was empty, replaced by 20000
     ####################################################################
@@ -279,8 +281,9 @@ if __name__ == "__main__":
     
     #names_vec.append([['also_steer1'],['REVO',None]])#90000
     ###########################model based 25.9.19############
-    #folder = "model_based"
+    folder = "model_based"
     #names_vec.append([['MB_R_4'],['Model Based RL',None]])
+    names_vec.append([['MB_R_2'],['Model Based RL',None]])#,'MB_R_2'
 
     #add_zero_data_manager(folder,names_vec)
     #correct_relative_reward(folder,names_vec)
