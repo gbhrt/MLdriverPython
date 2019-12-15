@@ -396,7 +396,7 @@ class OptimalVelocityPlanner(OptimalVelocityPlannerData):
         
         self.pl.restart()#not sure
        # print("after restart")
-        self.error = self.pl.simulator.get_vehicle_data()#read data after time step from last action
+        self.error =  self.pl.simulator.get_vehicle_data()#read data after time step from last action
         if self.error:
             return "error"
        # print("after restart self.error",self.error)
@@ -427,6 +427,10 @@ class OptimalVelocityPlanner(OptimalVelocityPlannerData):
         if self.error:
             return "error"
         
+        self.last_pos[0] = self.pl.simulator.vehicle.position[0]
+        self.last_pos[1] = self.pl.simulator.vehicle.position[1]
+        self.last_pos[2] = self.pl.simulator.vehicle.position[2]
+        self.last_ang[1] = self.pl.simulator.vehicle.angle[1]
         state = self.get_state()
 
         #self.dataManager.update_real_path(pl = self.pl,velocity_limit = self.local_path.analytic_velocity_limit[0],analytic_vel = self.local_path.analytic_velocity[0]\

@@ -9,6 +9,7 @@ import predict_lib
 import math
 import os
 import direct_method
+import comp_error
 
 def train(env,HP,Agent,dataManager,guiShared,seed = None,global_train_count = 0): #the global train number in MB is the step number, training is async, for compability to other methods
 
@@ -100,7 +101,7 @@ def train(env,HP,Agent,dataManager,guiShared,seed = None,global_train_count = 0)
                 
             else:#not HP.analytic_action
                 acc,steer,planningData = Agent.comp_action(state,acc,steer)#env is temp  ,roll_flag,dev_flag 
-                print("acc:",acc,"steer:",steer)
+                #print("acc:",acc,"steer:",steer)
                 #acc,steer,planningData,roll_flag,dev_flag = Agent.comp_action(state,acc,steer)
 
 
@@ -189,7 +190,13 @@ def train(env,HP,Agent,dataManager,guiShared,seed = None,global_train_count = 0)
             Agent.start_training()#after first episode to avoid long first training in the middle of driving
             first_flag = False
 
-        Agent.update_episode_var(step_count-1)
+        compute_var_done = [False]
+        compErrorThread = comp_error.compError(Agent,step_count-1,compute_var_done)
+        compErrorThread.start()
+        while not compute_var_done[0]:
+            env.pl.stop_vehicle()#for maintain connection to simulator (prevent timeout)
+            time.sleep(0.1)
+        #Agent.update_episode_var(step_count-1)
         
         total_reward = sum(reward_vec)
         if not HP.gym_flag: #and not HP.noise_flag:
@@ -256,6 +263,7 @@ def train(env,HP,Agent,dataManager,guiShared,seed = None,global_train_count = 0)
         if guiShared is not None:
             while guiShared.pause_after_episode_flag:
                 time.sleep(0.1)
+                env.pl.stop_vehicle()#for maintain connection to simulator (prevent timeout)
         #dataManager.save_readeable_data()
 
         #stop at the end of the episode for training

@@ -52,6 +52,9 @@
     <Compile Include="compare_performance.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="comp_error.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="cProfile_test.py">
       <SubType>Code</SubType>
     </Compile>

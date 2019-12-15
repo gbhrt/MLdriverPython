@@ -104,7 +104,7 @@ def emergency_cost(state,acc,steer,nets,trainHP,roll_var):
 
 
 def comp_MB_action(nets,state,acc,steer,trainHP,planningState = None, Direct = None):
-    print("trust_T:",planningState.trust_T)
+    #print("trust_T:",planningState.trust_T)
 
     #print("planningState.last_emergency_action_active:",planningState.last_emergency_action_active)
     if planningState.last_emergency_action_active:

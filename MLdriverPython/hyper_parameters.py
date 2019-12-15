@@ -114,7 +114,7 @@ class ModelBasedHyperParameters:#global settings of the program.
         else:
             self.gui_flag = True
         self.MF_policy_flag = False
-        self.emergency_action_flag = True
+        self.emergency_action_flag = False
         self.emergency_steering_type = 4#1 - stright, 2 - 0.5 from original steering, 3-steer net, 4-same steering, 5-roll proportional
         self.direct_stabilize = True  
         #########################
@@ -144,7 +144,7 @@ class ModelBasedHyperParameters:#global settings of the program.
         self.plot_flag = True
         self.restore_flag = False
         self.skip_run = False
-        self.reset_every = 3
+        self.reset_every = 1
         self.save_every = 10000000000
         self.save_every_time = 5000 #minutes
         self.seed = [1111]

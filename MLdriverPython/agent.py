@@ -282,9 +282,8 @@ class Agent:# includes the networks, policies, replay buffer, learning hyper par
             n = self.trainHP.rollout_n
             n_state_vec,n_state_vec_pred,n_pos_vec,n_pos_vec_pred,n_ang_vec,n_ang_vec_pred = predict_lib.get_all_n_step_states(self,episode_replay_memory, n)
 
-        var_vec,mean_vec,pos_var_vec,pos_mean_vec,ang_var_vec,ang_mean_vec = predict_lib.comp_var(self, n_state_vec,n_state_vec_pred,n_pos_vec,n_pos_vec_pred,n_ang_vec,n_ang_vec_pred)
-
-            #vehicle_state_next_vec,vehicle_state_next_pred_vec,rel_pos_vec,rel_pos_pred_vec = predict_lib.one_step_prediction(self,episode_replay_memory)
+        var_vec,mean_vec,pos_var_vec,pos_mean_vec,ang_var_vec,ang_mean_vec = predict_lib.comp_var(self, n_state_vec,n_state_vec_pred,n_pos_vec,n_pos_vec_pred,n_ang_vec,n_ang_vec_pred,type = "mean_error")
+        #vehicle_state_next_vec,vehicle_state_next_pred_vec,rel_pos_vec,rel_pos_pred_vec = predict_lib.one_step_prediction(self,episode_replay_memory)
         val_var = var_vec[1]
         #val_var = []
         #val_mean = []

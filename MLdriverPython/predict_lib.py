@@ -3,6 +3,7 @@ import numpy as np
 import library as lib
 from math import copysign
 
+
 def steer_policy(abs_pos,abs_ang,path,index,vel):
     return lib.comp_steer_general(path,index,abs_pos,abs_ang,vel)
 def emergency_steer_policy():
@@ -386,7 +387,7 @@ def get_all_n_step_states(Agent,replay_memory, n):#from 1 step to n steps
     return all_n_state_vec,all_n_state_vec_pred,all_n_pos_vec,all_n_pos_vec_pred,all_n_ang_vec,all_n_ang_vec_pred
 
 
-def comp_var(Agent, n_state_vec,n_state_vec_pred,n_pos_vec,n_pos_vec_pred,n_ang_vec,n_ang_vec_pred):
+def comp_var(Agent, n_state_vec,n_state_vec_pred,n_pos_vec,n_pos_vec_pred,n_ang_vec,n_ang_vec_pred,type = "mean_error"):
     var_vec = []
     mean_vec = []
     pos_var_vec = []
@@ -410,8 +411,11 @@ def comp_var(Agent, n_state_vec,n_state_vec_pred,n_pos_vec,n_pos_vec_pred,n_ang_
             real = np.array(final_state_vec)[:,ind]
             pred = np.array(final_state_vec_pred)[:,ind]
             error = pred - real
-            #val_var.append(np.sqrt( np.var(error)))
-            val_var.append(np.sqrt( (error**2).mean()))
+            if type == "mean_error":
+                val_var.append((np.abs(error)).mean())
+            else:
+                val_var.append(np.sqrt( np.var(error)))
+            
             val_mean.append(np.mean(error))
         pos_var = []
         pos_mean = []
@@ -419,8 +423,11 @@ def comp_var(Agent, n_state_vec,n_state_vec_pred,n_pos_vec,n_pos_vec_pred,n_ang_
             real = np.array(final_pos_vec)[:,ind]
             pred = np.array(final_pos_vec_pred)[:,ind]
             error = pred - real
-            #pos_var.append(np.sqrt( np.var(error)))
-            pos_var.append(np.sqrt( (error**2).mean()))
+            if type == "mean_error":
+                pos_var.append((np.abs(error)).mean())
+            else:
+                pos_var.append(np.sqrt( np.var(error)))
+            #pos_var.append(np.sqrt( (error**2).mean()))
             pos_mean.append(np.mean(error))
 
         real = np.array(final_ang_vec)
@@ -428,8 +435,11 @@ def comp_var(Agent, n_state_vec,n_state_vec_pred,n_pos_vec,n_pos_vec_pred,n_ang_
         pred = np.array(final_ang_vec_pred)
         
         error = pred - real
-        #ang_var = np.sqrt( np.var(error))
-        ang_var = np.sqrt( (error**2).mean())
+        if type == "mean_error":
+            ang_var = (np.abs(error)).mean()
+        else:
+            ang_var = np.sqrt( np.var(error))
+
         ang_mean = np.mean(error)
 
 
