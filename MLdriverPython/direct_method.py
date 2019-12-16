@@ -23,7 +23,7 @@ class directModel:
         if abs(vehicle_state[2]) > self.max_roll*factor:#0.2:
             return False
         return True
-    def check_stability2(self,state_Vehicle,state_env,max_plan_deviation,roll_var,factor = 1.0):
+    def check_stability3(self,state_Vehicle,state_env,max_plan_deviation,roll_var,factor = 1.0):
         dev_flag,roll_flag = 0,0
         path = state_env[0]
         index = state_env[1]
@@ -35,6 +35,35 @@ class directModel:
         if abs(state_Vehicle.values[2])+roll_var > self.max_roll*factor: #check the current roll 
             roll_flag = math.copysign(1,state_Vehicle.values[2])
         return roll_flag,dev_flag
+
+    def check_stability2(self,state_Vehicle,state_env,max_plan_deviation,var = 0.0,factor = 1.0):
+        dev_flag,roll_flag = 0,0
+        path = state_env[0]
+        index = state_env[1]
+
+        dev_from_path = lib.dist(path.position[index][0],path.position[index][1],state_Vehicle.abs_pos[0],state_Vehicle.abs_pos[1])#absolute deviation from the path
+        if dev_from_path > max_plan_deviation:
+            dev_flag = 1
+
+        #if abs(state_Vehicle.values[2])+roll_var > self.max_roll*factor: #check the current roll 
+        #    roll_flag = math.copysign(1,state_Vehicle.values[2])
+
+        if abs(state_Vehicle.values[1]) < 0.001:
+            radius = 1000
+        else:
+            radius = math.sqrt((self.lenght*0.5)**2+(self.lenght/math.tan(state_Vehicle.values[1]))**2)
+        if radius <0.1:
+            print("error radius too small")
+            ac = 100
+        else:
+            ac = state_Vehicle.values[0]**2/radius
+        if ac+var > self.ac_max*factor:
+            print("caution - not stable---------------------")
+            roll_flag = 1
+        print("vel:",state_Vehicle.values[0],"steer:",state_Vehicle.values[1],"centipetal acceleration:",ac/self.ac_max)
+        return roll_flag,dev_flag
+
+    #def comp_LTR(vel,lenght,):
 
 
     def check_stability(self,vehicle_state,factor = 1.0):#action
