@@ -11,7 +11,7 @@ def driving_action(state,nets,trainHP,Direct = None,planningState = None):
     acc_to_try =[1.0,-1.0]#[1.0,0.0,-1.0]
 
     for acc_i,try_acc in enumerate(acc_to_try):
-        #roll_var = planningState.roll_var[1] #trainHP.init_var+trainHP.one_step_var  # initialize for every search
+        #roll_var = planningState.var[1] #trainHP.init_var+trainHP.one_step_var  # initialize for every search
         #print("try acc:",try_acc)
                 
         tmp_a_vec = [[try_acc,steer]]#this action will operate on the saved state if not fail
@@ -32,9 +32,9 @@ def driving_action(state,nets,trainHP,Direct = None,planningState = None):
             acc_command = actions.acc_policy()#always -1
             tmp_a_vec.append([acc_command,steer_command])
             if Direct is None:  
-                roll_flag,dev_flag = actions.check_stability(S_Vehicle,state.env,roll_var = planningState.roll_var[i+2],max_plan_roll = trainHP.max_plan_roll,max_plan_deviation = trainHP.max_plan_deviation)
+                roll_flag,dev_flag = actions.check_stability(S_Vehicle,state.env,roll_var = planningState.var[i+2],max_plan_roll = trainHP.max_plan_roll,max_plan_deviation = trainHP.max_plan_deviation)
             else:
-                roll_flag,dev_flag = Direct.check_stability2(S_Vehicle,state.env,trainHP.max_plan_deviation,planningState.roll_var[i+2],0.5 if planningState.last_emergency_action_active else 1.0)
+                roll_flag,dev_flag = Direct.check_stability2(S_Vehicle,state.env,trainHP.max_plan_deviation,planningState.var[i+2],0.5 if planningState.last_emergency_action_active else 1.0)
 
             if roll_flag != 0 or dev_flag != 0:
                 #print("break:",roll_flag,dev_flag)
@@ -134,9 +134,9 @@ def comp_MB_action(nets,state,acc,steer,trainHP,planningState = None, Direct = N
     #stability at the initial state:
     if  trainHP.emergency_action_flag and planningState.trust_T == 0:#more accurate: trust_T == -1
         if Direct is None:
-            roll_flag,dev_flag = actions.check_stability(state.Vehicle,state.env,roll_var = planningState.roll_var[0],max_plan_roll = max_plan_roll,max_plan_deviation = max_plan_deviation)
+            roll_flag,dev_flag = actions.check_stability(state.Vehicle,state.env,roll_var = planningState.var[0],max_plan_roll = max_plan_roll,max_plan_deviation = max_plan_deviation)
         else:
-            roll_flag,dev_flag = Direct.check_stability2(state.Vehicle,state.env,trainHP.max_plan_deviation,planningState.roll_var[0],0.5 if planningState.last_emergency_action_active else trainHP.stabilize_factor)
+            roll_flag,dev_flag = Direct.check_stability2(state.Vehicle,state.env,trainHP.max_plan_deviation,planningState.var[0],0.5 if planningState.last_emergency_action_active else trainHP.stabilize_factor)
         #roll_flag,dev_flag = 0,0#tmp
     else:
         roll_flag,dev_flag = 0,0
@@ -155,9 +155,9 @@ def comp_MB_action(nets,state,acc,steer,trainHP,planningState = None, Direct = N
         #stability at the next state (unavoidable state):
         if  trainHP.emergency_action_flag and planningState.trust_T == 0:
             if Direct is None:
-                roll_flag,dev_flag = actions.check_stability(state.Vehicle,state.env,roll_var = planningState.roll_var[1],max_plan_roll = max_plan_roll,max_plan_deviation = max_plan_deviation)
+                roll_flag,dev_flag = actions.check_stability(state.Vehicle,state.env,roll_var = planningState.var[1],max_plan_roll = max_plan_roll,max_plan_deviation = max_plan_deviation)
             else:
-                roll_flag,dev_flag = Direct.check_stability2(state.Vehicle,state.env,trainHP.max_plan_deviation,planningState.roll_var[1],0.5 if planningState.last_emergency_action_active else trainHP.stabilize_factor)
+                roll_flag,dev_flag = Direct.check_stability2(state.Vehicle,state.env,trainHP.max_plan_deviation,planningState.var[1],0.5 if planningState.last_emergency_action_active else trainHP.stabilize_factor)
             #roll_flag,dev_flag = 0,0#tmp
         else:
             roll_flag,dev_flag = 0,0
@@ -175,10 +175,10 @@ def comp_MB_action(nets,state,acc,steer,trainHP,planningState = None, Direct = N
                         if planningState.trust_T > 0:
                             emergencyState.Vehicle = StateVehicle_vec[planningState.trust_T]
                             a,s = actions_vec[planningState.trust_T][0],actions_vec[planningState.trust_T][1]
-                            roll_var = planningState.roll_var[planningState.trust_T]
+                            roll_var = planningState.var[planningState.trust_T]
                         else:
                             a,s = next_acc,next_steer
-                            roll_var = planningState.roll_var[1]
+                            roll_var = planningState.var[1]
 
                             
                         #else: emergencyState.Vehicle already computed
@@ -193,7 +193,7 @@ def comp_MB_action(nets,state,acc,steer,trainHP,planningState = None, Direct = N
                         e_cost = 0
 
                 else:
-                    e_cost,tmp_state_vec,tmp_a_vec = emergency_cost(state,next_acc,next_steer,nets,trainHP,planningState.roll_var[1])
+                    e_cost,tmp_state_vec,tmp_a_vec = emergency_cost(state,next_acc,next_steer,nets,trainHP,planningState.var[1])
                 StateVehicle_emergency_vec+=tmp_state_vec
                 actions_emergency_vec+=tmp_a_vec
 

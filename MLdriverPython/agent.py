@@ -143,7 +143,7 @@ class TrainHyperParameters:
 class PlanningState:
     def __init__(self,trainHP):
         self.trust_T = 20
-        self.roll_var = [trainHP.init_var]+[min(trainHP.init_var+trainHP.one_step_var*n,trainHP.const_var ) for n in range(1,trainHP.rollout_n+10)]
+        self.var = [trainHP.init_var]+[min(trainHP.init_var+trainHP.one_step_var*n,trainHP.const_var ) for n in range(1,trainHP.rollout_n+10)]
         self.last_emergency_action_active = False
  
 
@@ -272,6 +272,8 @@ class Agent:# includes the networks, policies, replay buffer, learning hyper par
                 self.nets.AccNet.set_weights(self.train_nets.AccNet.get_weights()) 
         print("copy time:", time.clock() - t)
 
+
+
     def update_episode_var(self,episode_lenght):
         episode_lenght = 2000
         with self.trainShared.ReplayLock:
@@ -281,23 +283,21 @@ class Agent:# includes the networks, policies, replay buffer, learning hyper par
         with self.trainShared.Lock:
             n = self.trainHP.rollout_n
             n_state_vec,n_state_vec_pred,n_pos_vec,n_pos_vec_pred,n_ang_vec,n_ang_vec_pred = predict_lib.get_all_n_step_states(self,episode_replay_memory, n)
+        #compute variance/abs_error for all raw features
+        # var_vec,mean_vec,pos_var_vec,pos_mean_vec,ang_var_vec,ang_mean_vec = predict_lib.comp_var(self, n_state_vec,n_state_vec_pred,n_pos_vec,n_pos_vec_pred,n_ang_vec,n_ang_vec_pred,type = "mean_error")
+        # val_var = var_vec[1]
+        # #roll_var = [0]+[var[self.trainHP.vehicle_ind_data["roll"]] for var in var_vec]+[var_vec[-1][self.trainHP.vehicle_ind_data["roll"]]]*(20-len(var_vec)-1)#0.1
+        # roll_var = [0]+[var[self.trainHP.vehicle_ind_data["roll"]] for var in var_vec]+[0.1]*(20-len(var_vec)-1)#0.1
+        # print("roll_var:",roll_var)
+        # self.planningState.var = roll_var
 
-        var_vec,mean_vec,pos_var_vec,pos_mean_vec,ang_var_vec,ang_mean_vec = predict_lib.comp_var(self, n_state_vec,n_state_vec_pred,n_pos_vec,n_pos_vec_pred,n_ang_vec,n_ang_vec_pred,type = "mean_error")
-        #vehicle_state_next_vec,vehicle_state_next_pred_vec,rel_pos_vec,rel_pos_pred_vec = predict_lib.one_step_prediction(self,episode_replay_memory)
-        val_var = var_vec[1]
-        #val_var = []
-        #val_mean = []
-        #for feature,ind in self.trainHP.vehicle_ind_data.items():
-        #    real = np.array(rel_pos_vec)[:,ind]
-        #    pred = np.array(rel_pos_pred_vec)[:,ind]
-        #    error = pred - real
-        #    val_var.append(np.sqrt(np.var(error)))
-        #    #val_var.append(np.sqrt( (error**2).mean()))
-        #    val_mean.append(np.mean(error))
+        #compute the variance/abs_error of the centripetal acceleration. 
+        var_vec = predict_lib.comp_ac_var(self, n_state_vec,n_state_vec_pred,type = "mean_error")
+        var_vec = [0]+var_vec+[1.0]*(20-len(var_vec)-1)#0.1
+        print("var_vec:",var_vec)
+        self.planningState.var = var_vec
 
-        #roll_var = [0]+[var[self.trainHP.vehicle_ind_data["roll"]] for var in var_vec]+[var_vec[-1][self.trainHP.vehicle_ind_data["roll"]]]*(20-len(var_vec)-1)#0.1
-        roll_var = [0]+[var[self.trainHP.vehicle_ind_data["roll"]] for var in var_vec]+[0.1]*(20-len(var_vec)-1)#0.1
-        print("roll_var:",roll_var)
+
         
-        self.planningState.roll_var = roll_var
+        
 

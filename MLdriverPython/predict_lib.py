@@ -374,7 +374,8 @@ def get_all_n_step_states(Agent,replay_memory, n):#from 1 step to n steps
             n_pos_vec_pred.append(pos_vec_pred[j][i])
             n_ang_vec.append(ang_vec[j][i])
             n_ang_vec_pred.append(ang_vec_pred[j][i])
-
+        if len(n_state_vec) == 0:#if no sample reached that lenght, we can break 
+            break
         all_n_state_vec.append(n_state_vec)
         all_n_state_vec_pred.append(n_state_vec_pred)
         all_n_pos_vec.append(n_pos_vec)
@@ -386,6 +387,24 @@ def get_all_n_step_states(Agent,replay_memory, n):#from 1 step to n steps
 
     return all_n_state_vec,all_n_state_vec_pred,all_n_pos_vec,all_n_pos_vec_pred,all_n_ang_vec,all_n_ang_vec_pred
 
+def comp_ac_var(Agent, n_state_vec,n_state_vec_pred,type = "mean_error"):
+    var_vec = []
+    for final_state_vec,final_state_vec_pred in zip(n_state_vec,n_state_vec_pred):     
+        vel_vec = np.array(final_state_vec)[:,Agent.trainHP.vehicle_ind_data["vel_y"]]
+        steer_vec = np.array(final_state_vec)[:,Agent.trainHP.vehicle_ind_data["steer"]]
+        real = np.array([Agent.Direct.comp_LTR(vel,steer) for vel,steer in zip(vel_vec,steer_vec)])
+
+        vel_vec = np.array(final_state_vec_pred)[:,Agent.trainHP.vehicle_ind_data["vel_y"]]
+        steer_vec = np.array(final_state_vec_pred)[:,Agent.trainHP.vehicle_ind_data["steer"]]
+        pred = np.array([Agent.Direct.comp_LTR(vel,steer) for vel,steer in zip(vel_vec,steer_vec)])
+        error = pred - real
+        if type == "mean_error":
+            var_vec.append((np.abs(error)).mean())
+        else:
+            var_vec.append(np.sqrt( np.var(error)))
+
+    return var_vec
+            
 
 def comp_var(Agent, n_state_vec,n_state_vec_pred,n_pos_vec,n_pos_vec_pred,n_ang_vec,n_ang_vec_pred,type = "mean_error"):
     var_vec = []

@@ -11,10 +11,10 @@ class directModel:
 
         self.fc = 1.0
         self.lenght = 3.6
-        self.height = 1.7#0.94#0.86
+        self.height = 1.4#0.94#0.86
         self.width = 2.08
         self.g = 9.81
-        self.ac_max = self.g*self.width*0.5/self.height * 2.5#maximal cetripetal force
+        self.ac_max = self.g*self.width*0.5/self.height * 1.0#maximal cetripetal force
         print("ac_max :",self.ac_max )
         self.max_roll = 0.07
         return 
@@ -36,6 +36,19 @@ class directModel:
             roll_flag = math.copysign(1,state_Vehicle.values[2])
         return roll_flag,dev_flag
 
+    def comp_LTR(self,vel,steer):
+        if abs(steer) < 0.001:
+            radius = 1000
+        else:
+            radius = math.sqrt((self.lenght*0.5)**2+(self.lenght/math.tan(steer))**2)
+        if radius <0.1:
+            print("error radius too small")
+            ac = 100
+        else:
+            ac = vel**2/radius
+
+        return ac/self.ac_max
+
     def check_stability2(self,state_Vehicle,state_env,max_plan_deviation,var = 0.0,factor = 1.0):
         dev_flag,roll_flag = 0,0
         path = state_env[0]
@@ -47,23 +60,15 @@ class directModel:
 
         #if abs(state_Vehicle.values[2])+roll_var > self.max_roll*factor: #check the current roll 
         #    roll_flag = math.copysign(1,state_Vehicle.values[2])
+        LTR = self.comp_LTR(state_Vehicle.values[0],state_Vehicle.values[1])
 
-        if abs(state_Vehicle.values[1]) < 0.001:
-            radius = 1000
-        else:
-            radius = math.sqrt((self.lenght*0.5)**2+(self.lenght/math.tan(state_Vehicle.values[1]))**2)
-        if radius <0.1:
-            print("error radius too small")
-            ac = 100
-        else:
-            ac = state_Vehicle.values[0]**2/radius
-        if ac+var > self.ac_max*factor:
+        if LTR+var > 1.0*factor:
             print("caution - not stable---------------------")
             roll_flag = 1
-        print("vel:",state_Vehicle.values[0],"steer:",state_Vehicle.values[1],"centipetal acceleration:",ac/self.ac_max)
+        #print("vel:",state_Vehicle.values[0],"steer:",state_Vehicle.values[1],"centipetal acceleration:",ac/self.ac_max)
         return roll_flag,dev_flag
 
-    #def comp_LTR(vel,lenght,):
+   
 
 
     def check_stability(self,vehicle_state,factor = 1.0):#action
