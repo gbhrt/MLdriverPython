@@ -446,9 +446,9 @@ def test_net(Agent):
     #plot_n_step_state(Agent,replay_memory)
 
 
-    plot_n_step_var(Agent,replay_memory)
+    #plot_n_step_var(Agent,replay_memory)
     
-   # one_step_pred_plot(Agent,replay_memory)
+    one_step_pred_plot(Agent,replay_memory)
 
     #train_X,train_Y_,_,_ = convert_data(ReplayTrain,envData)
 

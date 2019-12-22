@@ -14,7 +14,6 @@ import comp_error
 def train(env,HP,Agent,dataManager,guiShared,seed = None,global_train_count = 0): #the global train number in MB is the step number, training is async, for compability to other methods
 
     #subprocess.Popen('C:/Users/gavri/Desktop/sim_15_3_18/sim15_3_18 -quit -batchmode -nographics')
-    Direct = direct_method.directModel()
     #pre-defined parameters:
     #Agent.start_training()
     first_flag = True
@@ -144,7 +143,6 @@ def train(env,HP,Agent,dataManager,guiShared,seed = None,global_train_count = 0)
                 
                 #print("after step 2 time:",time.clock() - env.lt)
                 state = Agent.get_state(env_state)
-                #Direct.check_stability(state.Vehicle.values)
 
             
             reward_vec.append(reward)

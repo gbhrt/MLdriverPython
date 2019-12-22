@@ -104,6 +104,7 @@ def change_to_rad(alist):
 
 def rotateVec(vec,ang):
     rvec = np.asarray([0.,0.,0.])
+    
     rvec[0] = math.cos(ang)*vec[0] - math.sin(ang)*vec[1]
     rvec[1] = math.sin(ang)*vec[0] + math.cos(ang)*vec[1]
     if len(vec) == 3:

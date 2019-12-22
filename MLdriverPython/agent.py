@@ -93,13 +93,14 @@ class MF_Net:#define the input and outputs to networks, and the nets itself.
 class TrainHyperParameters:
     def __init__(self,HP):
         self.MF_policy_flag = False
+        self.direct_predict_active = True
         self.num_of_runs = 5000
         self.alpha = 0.0001# #learning rate
         self.batch_size = 64
         self.replay_memory_size = 100000
         self.train_num = 100# how many times to train in every step
         self.run_random_num = 'inf'
-        self.vehicle_ind_data = OrderedDict([('vel_y',0),('steer',1), ('roll',2)])  
+        self.vehicle_ind_data = OrderedDict([('vel_y',0),('steer',1), ('roll',2), ('vel_x',3)])  
         self.normalize_flag = False
         if self.normalize_flag == True:
             self.features_mean = [7,0,0,0,0]#input feature + action
@@ -156,7 +157,7 @@ class Agent:# includes the networks, policies, replay buffer, learning hyper par
         if self.HP.restore_flag:
             self.Replay.restore(self.HP.restore_file_path)
 
-        self.Direct = direct_method.directModel()
+        self.Direct = direct_method.directModel(self.trainHP)
         #define all nets:
         if self.trainHP.MF_policy_flag:
             self.MF_net = MF_Net(self.trainHP,HP,envData)
@@ -204,14 +205,14 @@ class Agent:# includes the networks, policies, replay buffer, learning hyper par
         planningData.vec_path.append(state_env[0])
         #print("state.env:",state.env.position)
         planningData.vec_predicded_path.append([StateVehicle.abs_pos for StateVehicle in StateVehicle_vec])
-        planningData.vec_planned_roll.append([StateVehicle.values[2] for StateVehicle in StateVehicle_vec])
-        planningData.vec_planned_vel.append([StateVehicle.values[0] for StateVehicle in StateVehicle_vec])
+        planningData.vec_planned_roll.append([StateVehicle.values[self.trainHP.vehicle_ind_data["roll"]] for StateVehicle in StateVehicle_vec])
+        planningData.vec_planned_vel.append([StateVehicle.values[self.trainHP.vehicle_ind_data["vel_y"]] for StateVehicle in StateVehicle_vec])
         planningData.vec_planned_acc.append([action[0] for action in actions_vec])
         planningData.vec_planned_steer.append([action[1] for action in actions_vec])
         if StateVehicle_emergency_vec is not None:
             planningData.vec_emergency_predicded_path.append([StateVehicle.abs_pos for StateVehicle in StateVehicle_emergency_vec])
-            planningData.vec_emergency_planned_roll.append([StateVehicle.values[2] for StateVehicle in StateVehicle_emergency_vec])
-            planningData.vec_emergency_planned_vel.append([StateVehicle.values[0] for StateVehicle in StateVehicle_emergency_vec])
+            planningData.vec_emergency_planned_roll.append([StateVehicle.values[self.trainHP.vehicle_ind_data["roll"]] for StateVehicle in StateVehicle_emergency_vec])
+            planningData.vec_emergency_planned_vel.append([StateVehicle.values[self.trainHP.vehicle_ind_data["vel_y"]] for StateVehicle in StateVehicle_emergency_vec])
             planningData.vec_emergency_planned_acc.append([action[0] for action in actions_emergency_vec])
             planningData.vec_emergency_planned_steer.append([action[1] for action in actions_emergency_vec])
             planningData.vec_emergency_action.append(emergency_action)

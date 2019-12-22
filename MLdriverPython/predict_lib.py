@@ -240,10 +240,13 @@ def one_step_prediction(Agent,replay_memory):
     #print(Agent.nets.SteerNet.evaluate(np.array(SteerNet_X),np.array(SteerNet_Y_)))
     #SteerNet_Y = Agent.nets.SteerNet.predict(np.array(SteerNet_X))
     #plot_comparison(np.array(SteerNet_Y_)[:,0], np.array(SteerNet_Y)[:,0],"steer action")
+    if Agent.trainHP.direct_predict_active:
+        predictor = Agent.Direct
+    else:
+        predictor = Agent.nets.TransNet
+    print(predictor.evaluate(np.array(TransNet_X),np.array(TransNet_Y_)))
 
-    print(Agent.nets.TransNet.evaluate(np.array(TransNet_X),np.array(TransNet_Y_)))
-
-    TransNet_Y = Agent.nets.TransNet.predict(np.array(TransNet_X))
+    TransNet_Y = predictor.predict(np.array(TransNet_X))
     #Direct = direct_method.directModel()
     #TransNet_Y = Direct.predict(TransNet_X)
 

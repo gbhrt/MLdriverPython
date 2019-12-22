@@ -67,7 +67,8 @@ def steer_policy(state_Vehicle,state_env,trainHP,SteerNet = None):
     #steer_max = np.clip(0.7-state.Vehicle.values[0]*0.1,0,0.7)
     #steer_min = np.clip(-(0.7-state.Vehicle.values[0]*0.1),-0.7,0)
     #np.clip(steer,steer_min,steer_max).item()
-    steer = lib.comp_steer_general(state_env[0],state_env[1],state_Vehicle.abs_pos,state_Vehicle.abs_ang,state_Vehicle.values[0])
+
+    steer = lib.comp_steer_general(state_env[0],state_env[1],state_Vehicle.abs_pos,state_Vehicle.abs_ang,state_Vehicle.values[trainHP.vehicle_ind_data["vel_y"]])
     return np.clip(steer,-0.7,0.7).item()
 
 #def emergency_steer_policy(state):
@@ -76,7 +77,7 @@ def emergency_steer_policy(state_Vehicle,state_env,trainHP,SteerNet = None):
     if trainHP.emergency_steering_type == 1:
         steer = 0
     elif trainHP.emergency_steering_type == 2:
-        steer = 0.5*lib.comp_steer_general(state_env[0],state_env[1],state_Vehicle.abs_pos,state_Vehicle.abs_ang,state_Vehicle.values[0])
+        steer = 0.5*lib.comp_steer_general(state_env[0],state_env[1],state_Vehicle.abs_pos,state_Vehicle.abs_ang,state_Vehicle.values[trainHP.vehicle_ind_data["vel_y"]])
     elif trainHP.emergency_steering_type == 3:
         steer = 0
         acc = -1.0
@@ -85,11 +86,11 @@ def emergency_steer_policy(state_Vehicle,state_env,trainHP,SteerNet = None):
         steer = np.clip(steer,steer_min,steer_max).item()
     elif trainHP.emergency_steering_type == 4:
         #print("continue same steering")
-        steer = state_Vehicle.values[1]#continue same state
+        steer = state_Vehicle.values[trainHP.vehicle_ind_data["steer"]]#continue same state
     elif trainHP.emergency_steering_type == 5:#propotional to roll angle
         #print("stabilize by P")
         k = 3.5
-        steer =np.clip(k*state_Vehicle.values[2],-0.7,0.7).item()
+        steer =np.clip(k*state_Vehicle.values[trainHP.vehicle_ind_data["roll"]],-0.7,0.7).item()
 
     else:
         print("error - emergency_steering_type not exist")
@@ -111,11 +112,11 @@ def clip_steering(state,acc,steer,SteerNet,trainHP):
         cliped = True
     return cliped
 
-def check_stability(state_Vehicle,state_env,roll_var = 0.0,max_plan_roll = None,max_plan_deviation = None):
+def check_stability(state_Vehicle,state_env,trainHP,roll_var = 0.0,max_plan_roll = None,max_plan_deviation = None):
     dev_flag,roll_flag = 0,0
     path = state_env[0]
     index = state_env[1]
-    roll = state_Vehicle.values[2]
+    roll = state_Vehicle.values[trainHP.vehicle_ind_data["roll"]]
     #print("roll",roll,"roll var",roll_var)
     dev_from_path = lib.dist(path.position[index][0],path.position[index][1],state_Vehicle.abs_pos[0],state_Vehicle.abs_pos[1])#absolute deviation from the path
     if abs(roll)+roll_var > max_plan_roll: #check the current roll 
@@ -306,12 +307,14 @@ def comp_local_steer(nets,StateVehicle,targetPoint,trainHP,stop_flag,ax = None):
 def step(stateVehicle,acc,steer,TransNet,trainHP):#get a state and actions, return next state
     steer = np.clip(steer,-0.7,0.7)
     x = [stateVehicle.values+[acc,steer]]
+
     y = TransNet.predict(np.array(x))[0]
     nextState = agent.State()
     delta_values = y[:len(trainHP.vehicle_ind_data)].tolist()
     nextState.Vehicle.values = [stateVehicle.values[i]+delta_values[i] for i in range(len(delta_values))]
     nextState.Vehicle.rel_pos = y[len(trainHP.vehicle_ind_data):len(trainHP.vehicle_ind_data)+2]
     nextState.Vehicle.rel_ang = y[len(trainHP.vehicle_ind_data)+2:]
+
     nextState.Vehicle.abs_pos,nextState.Vehicle.abs_ang = predict_lib.comp_abs_pos_ang(nextState.Vehicle.rel_pos,nextState.Vehicle.rel_ang,stateVehicle.abs_pos,stateVehicle.abs_ang)
     
     return nextState.Vehicle
@@ -334,7 +337,7 @@ def stop_toward_target(nets,StateVehicle,targetPoint,acc_flag,trainHP,stop_flag,
     StateVehicle_vec = [copy.deepcopy(StateVehicle)]
     targetPoint_vec = [copy.deepcopy(targetPoint)]
     cnt = 0
-    while ((targetPoint.rel_pos[1] > 0 and StateVehicle.values[0]>targetPoint.vel) or first_flag) and not stop_flag:
+    while ((targetPoint.rel_pos[1] > 0 and StateVehicle.values[trainHP.vehicle_ind_data["vel_y"]]>targetPoint.vel) or first_flag) and not stop_flag:
         #print("----------------------compute new step--------------------------. stop_flag:",stop_flag)
         if print_flag: print("----------------------compute new step--------------------------")
         if print_flag: print("current state:")
@@ -377,17 +380,17 @@ def stop_toward_target(nets,StateVehicle,targetPoint,acc_flag,trainHP,stop_flag,
             print("cannot reach target")
     if pause_by_user_flag: input("press to continue")
 
-    failed_flag = True if (targetPoint.rel_pos[1] < 0 and StateVehicle.values[0]>targetPoint.vel) or not reach_flag else False # the vehicle will pass the target with too high velocity
+    failed_flag = True if (targetPoint.rel_pos[1] < 0 and StateVehicle.values[trainHP.vehicle_ind_data["vel_y"]]>targetPoint.vel) or not reach_flag else False # the vehicle will pass the target with too high velocity
     print("failed_flag:",failed_flag)
     return failed_flag,first_acc,first_steer,StateVehicle_vec,targetPoint_vec
 
 
 def comp_abs_dsteer(nets,StateVehicle,targetPoint,trainHP,stop_flag,ax = None):
     steer,reach_flag = comp_local_steer(nets,StateVehicle,targetPoint,trainHP,stop_flag,ax)
-    current_steer = StateVehicle.values[1]
+    current_steer = StateVehicle.values[trainHP.vehicle_ind_data["steer"]]
     acc = -1.0#maybe 1.0
     StateVehicle = step(StateVehicle,acc,steer,nets.TransNet,trainHP)
-    next_steer = StateVehicle.values[1]
+    next_steer = StateVehicle.values[trainHP.vehicle_ind_data["steer"]]
 
     return abs(next_steer) - abs(current_steer)
 
