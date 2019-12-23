@@ -105,6 +105,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="model_based_run.py" />
+    <Compile Include="simple_env.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="simulator_thread.py">
       <SubType>Code</SubType>
     </Compile>

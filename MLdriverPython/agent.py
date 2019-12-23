@@ -100,7 +100,7 @@ class TrainHyperParameters:
         self.replay_memory_size = 100000
         self.train_num = 100# how many times to train in every step
         self.run_random_num = 'inf'
-        self.vehicle_ind_data = OrderedDict([('vel_y',0),('steer',1), ('roll',2), ('vel_x',3)])  
+        self.vehicle_ind_data = OrderedDict([('vel_y',0),('steer',1), ('roll',2), ('vel_x',3), ('angular_vel_z',4)])  #, ('angular_vel_z',4)
         self.normalize_flag = False
         if self.normalize_flag == True:
             self.features_mean = [7,0,0,0,0]#input feature + action

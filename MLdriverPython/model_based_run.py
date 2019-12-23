@@ -16,6 +16,7 @@ import agent
 import test_net_performance
 import test_actions
 import cProfile_test
+#import simple_env
 
 
 def run(guiShared,HP,dataManager): 
@@ -72,6 +73,9 @@ def run(guiShared,HP,dataManager):
     elif HP.program_mode == "timing":
         env = environment1.OptimalVelocityPlanner(dataManager,env_mode = "model_based")
         cProfile_test.test(Agent,env)
+    #elif HP.program_mode == "simple":
+    #    env = environment1.OptimalVelocityPlanner(dataManager,env_mode = "model_based")
+    #    cProfile_test.test(Agent,env)
     else:
         print("program_mode unkwnon:",HP.program_mode)
 

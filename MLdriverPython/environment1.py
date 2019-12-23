@@ -47,7 +47,7 @@ class OptimalVelocityPlannerData:
 
         self.visualized_points = int(self.feature_points/0.05) + 10 #how many points show on the map and lenght of local path
 
-        self.max_deviation =  10 # [m] if more then maximum - end episode 
+        self.max_deviation =  100#10 # [m] if more then maximum - end episode 
         self.max_plan_deviation = 10
         
         self.max_velocity_x = 30
@@ -326,7 +326,7 @@ class OptimalVelocityPlanner(OptimalVelocityPlannerData):
         ####
         self.path_name = 'paths//circle_r7_json.txt'#"paths//straight_path_limit_json.txt"     #long random path: path3.txt  #long straight path: straight_path.txt
         self.path_source = "create_random" #"create"#  "regular" #"create_random" #saved_random"
-      
+
         self.reset_count = 0
         self.reset_every = 5
    

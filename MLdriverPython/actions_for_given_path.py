@@ -257,9 +257,9 @@ def comp_MB_action(nets,state,acc,steer,trainHP,planningState = None, Direct = N
     if state.Vehicle.values[trainHP.vehicle_ind_data["vel_y"]]<trainHP.prior_safe_velocity:
         next_acc = 1.0
 
-    if state.Vehicle.values[trainHP.vehicle_ind_data["vel_y"]] > 4:
-        next_acc = -1.0
+    if state.Vehicle.values[trainHP.vehicle_ind_data["vel_y"]] > 5:
+        next_acc = 0.0
 
-
+    next_steer = 0.4
     return next_acc,next_steer,StateVehicle_vec,actions_vec,StateVehicle_emergency_vec,actions_emergency_vec,emergency_action_active
     #return next_acc,next_steer,planningData,roll_flag,dev_flag

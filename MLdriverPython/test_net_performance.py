@@ -371,7 +371,7 @@ def train_nets(Agent):
 #def direct():
 
 def test_net(Agent): 
-    train = False
+    train = True
     split_buffer = True
     separate_nets = False
     variance_mode = False

@@ -12,7 +12,8 @@ class directModel:
 
         self.fc = 1.0
         self.lenght = 3.6
-        self.height = 1.4#0.94#0.86
+        self.lr = self.lenght/2
+        self.height = 1.7#0.94#0.86
         self.width = 2.08
         self.g = 9.81
         self.ac_max = self.g*self.width*0.5/self.height * 1.0#maximal cetripetal force
@@ -74,7 +75,7 @@ class directModel:
         if abs(vehicle_state[self.trainHP.vehicle_ind_data["steer"]]) < 0.001:
             radius = 1000
         else:
-            radius = math.sqrt((self.lenght*0.5)**2+(self.lenght/math.tan(vehicle_state[self.trainHP.vehicle_ind_data["steer"]]))**2)
+            radius = math.sqrt((self.lr)**2+(self.lenght/math.tan(vehicle_state[self.trainHP.vehicle_ind_data["steer"]]))**2)
         return radius
 
     def check_stability(self,vehicle_state,factor = 1.0):#action
@@ -106,10 +107,17 @@ class directModel:
 
         Vy = vehicle_state[self.trainHP.vehicle_ind_data["vel_y"]]
         Vx = vehicle_state[self.trainHP.vehicle_ind_data["vel_x"]]
-        slip_ang = np.arctan(Vx/Vy)
-        V = np.sqrt(Vy**2 + Vx**2)
-        R = self.comp_radius(vehicle_state) 
-        dang = V*self.dt/R
+        #Vy2 = next_vehicle_state[self.trainHP.vehicle_ind_data["vel_y"]]
+        slip_ang1 = np.arctan(Vx/Vy)
+        slip_ang = abs(np.arctan(self.lr/self.lenght*np.tan(vehicle_state[self.trainHP.vehicle_ind_data["steer"]])))
+        #print("slip_ang:",slip_ang,"slip_ang1:",slip_ang1)
+        V = Vy#np.sqrt(Vy**2 + Vx**2)
+        R1 = self.comp_radius(vehicle_state) 
+        R = abs(V/vehicle_state[self.trainHP.vehicle_ind_data["angular_vel_z"]])
+        print("R:",R,"R1:",R1,"V:",V,"steer",vehicle_state[self.trainHP.vehicle_ind_data["steer"]],"omega:",vehicle_state[self.trainHP.vehicle_ind_data["angular_vel_z"]])
+        #print("omega_computed:",Vy/R,"omega_measured:",vehicle_state[self.trainHP.vehicle_ind_data["angular_vel_z"]])
+        #dang1 = V*self.dt/R
+        dang = abs(vehicle_state[self.trainHP.vehicle_ind_data["angular_vel_z"]]*self.dt)
         dx1 = R*(1- np.cos(dang))
         dy1 = R*np.sin(dang)
 
