@@ -114,12 +114,14 @@ class directModel:
         V = Vy#np.sqrt(Vy**2 + Vx**2)
         R1 = self.comp_radius(vehicle_state) 
         R = abs(V/vehicle_state[self.trainHP.vehicle_ind_data["angular_vel_z"]])
-        print("R:",R,"R1:",R1,"V:",V,"steer",vehicle_state[self.trainHP.vehicle_ind_data["steer"]],"omega:",vehicle_state[self.trainHP.vehicle_ind_data["angular_vel_z"]])
+        #print("R:",R,"R1:",R1,"V:",V,"steer",vehicle_state[self.trainHP.vehicle_ind_data["steer"]],"omega:",vehicle_state[self.trainHP.vehicle_ind_data["angular_vel_z"]])
         #print("omega_computed:",Vy/R,"omega_measured:",vehicle_state[self.trainHP.vehicle_ind_data["angular_vel_z"]])
         #dang1 = V*self.dt/R
         dang = abs(vehicle_state[self.trainHP.vehicle_ind_data["angular_vel_z"]]*self.dt)
         dx1 = R*(1- np.cos(dang))
         dy1 = R*np.sin(dang)
+        #dx1 = Vx*self.dt
+        #dy1 = Vy*self.dt
 
         pos = lib.rotateVec([dx1,dy1],slip_ang)
         dx0,dy0 = pos[0],pos[1]

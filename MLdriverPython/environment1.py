@@ -550,6 +550,7 @@ class OptimalVelocityPlanner(OptimalVelocityPlannerData):
         acc = (v2**2 - v1**2 )/(2*d)#acceleration [m/s^2]
        # print("acc:",acc)
         return [np.clip(acc/8,-1,1)]
+        #return [np.clip(acc*100,-1,1)]
 
     def comp_analytic_acceleration(self,pos_state):
         print("vel:",pos_state[0]*self.max_velocity_y)

@@ -94,6 +94,7 @@ class TrainHyperParameters:
     def __init__(self,HP):
         self.MF_policy_flag = False
         self.direct_predict_active = True
+        self.update_var_flag = False
         self.num_of_runs = 5000
         self.alpha = 0.0001# #learning rate
         self.batch_size = 64
@@ -116,10 +117,10 @@ class TrainHyperParameters:
         self.max_plan_deviation = 10
         self.max_plan_roll = 0.1
         self.init_var = 0.0#uncertainty of the roll measurment
-        #self.one_step_var =0.02# 0.02 is good
-        #self.const_var = 0.05#roll variance at the future states, constant because closed loop control?
-        self.one_step_var =0.1
-        self.const_var = 0.1
+        self.one_step_var =0.02# 0.02 is good
+        self.const_var = 0.05#roll variance at the future states, constant because closed loop control?
+        #self.one_step_var =0.1
+        #self.const_var = 0.1
         self.prior_safe_velocity = 0.02#if the velocity is lower than this value - it is priori Known that it is OK to accelerate
         self.stabilize_factor = 1.1
         #self.emergency_const_var = 0.05
@@ -226,7 +227,7 @@ class Agent:# includes the networks, policies, replay buffer, learning hyper par
             with self.nets.transgraph.as_default():  
                 acc,steer,StateVehicle_vec,actions_vec,StateVehicle_emergency_vec,actions_emergency_vec,emergency_action = act.comp_MB_action(self.nets,state,acc,steer,self.trainHP,
                                                                                                                                               planningState = self.planningState,
-                                                                                                                                              Direct = self.Direct if self.trainHP.direct_stabilize else None
+                                                                                                                                              Direct = self.Direct if (self.trainHP.direct_stabilize or self.trainHP.direct_predict_active) else None
                                                                                                                                               )
         self.planningState.last_emergency_action_active = emergency_action
         planningData = self.convert_to_planningData(state.env,StateVehicle_vec,actions_vec,StateVehicle_emergency_vec,actions_emergency_vec,emergency_action)
