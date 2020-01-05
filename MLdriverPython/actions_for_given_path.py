@@ -34,7 +34,7 @@ def driving_action(state,nets,trainHP,Direct = None,planningState = None):
             
             acc_command = actions.acc_policy()#always -1
             tmp_a_vec.append([acc_command,steer_command])
-            if Direct is None:  
+            if not trainHP.direct_constrain:  
                 roll_flag,dev_flag = actions.check_stability(S_Vehicle,state.env,trainHP,roll_var = planningState.var[i+2],max_plan_roll = trainHP.max_plan_roll,max_plan_deviation = trainHP.max_plan_deviation)
             else:
                 roll_flag,dev_flag = Direct.check_stability2(S_Vehicle,state.env,trainHP.max_plan_deviation,planningState.var[i+2],0.5 if planningState.last_emergency_action_active else 1.0)
@@ -136,7 +136,7 @@ def comp_MB_action(nets,state,acc,steer,trainHP,planningState = None, Direct = N
     
     #stability at the initial state:
     
-        if Direct is None:
+        if not trainHP.direct_constrain:
             current_roll_flag,current_dev_flag = actions.check_stability(state.Vehicle,state.env,trainHP,roll_var = planningState.var[0],max_plan_roll = max_plan_roll,max_plan_deviation = max_plan_deviation)
         else:
             current_roll_flag,current_dev_flag = Direct.check_stability2(state.Vehicle,state.env,trainHP.max_plan_deviation,planningState.var[0],0.5 if planningState.last_emergency_action_active else trainHP.stabilize_factor)
@@ -162,7 +162,7 @@ def comp_MB_action(nets,state,acc,steer,trainHP,planningState = None, Direct = N
         #roll_var += trainHP.one_step_var
         #stability at the next state (unavoidable state):
         if  trainHP.emergency_action_flag and planningState.trust_T == 0:
-            if Direct is None:
+            if not trainHP.direct_constrain:
                 roll_flag,dev_flag = actions.check_stability(state.Vehicle,state.env,trainHP,roll_var = planningState.var[1],max_plan_roll = max_plan_roll,max_plan_deviation = max_plan_deviation)
             else:
                 roll_flag,dev_flag = Direct.check_stability2(state.Vehicle,state.env,trainHP.max_plan_deviation,planningState.var[1],0.5 if planningState.last_emergency_action_active else trainHP.stabilize_factor)

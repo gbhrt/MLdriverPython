@@ -278,7 +278,7 @@ def get_n_step_states(Agent,replay_memory, n):
         vehicle_state_vec,action_vec,abs_pos_vec,abs_ang_vec = real_to_abs_n_steps(replay_memory_short)
         if len(vehicle_state_vec) < n:
             continue
-        pred_vehicle_state_vec,pred_abs_pos_vec,pred_abs_ang_vec = predict_n_steps(Agent,vehicle_state_vec[0],abs_pos_vec[0],abs_ang_vec[0],action_vec)
+        pred_vehicle_state_vec,pred_abs_pos_vec,pred_abs_ang_vec = predict_n_steps(Agent.nets,Agent.trainHP,vehicle_state_vec[0],abs_pos_vec[0],abs_ang_vec[0],action_vec)
 
         final_state_vec.append(vehicle_state_vec[-1])
         final_state_vec_pred.append(pred_vehicle_state_vec[-1])
@@ -312,19 +312,19 @@ def real_to_abs_n_steps(replay_memory_short):#get a short segment from replay me
             break
     return vehicle_state_vec,action_vec,abs_pos_vec,abs_ang_vec
 
-def predict_n_steps(Agent,vehicle_state,abs_pos,abs_ang,action_vec):#
+def predict_n_steps(TransNet,trainHP,vehicle_state,abs_pos,abs_ang,action_vec):#
     vehicle_state_vec = [vehicle_state]
     abs_ang_vec = [abs_ang]
     abs_pos_vec = [abs_pos]#abs relative to the segment begining
     for ind in range(len(action_vec)-1):
         X= [vehicle_state_vec[ind]+action_vec[ind]]
-        y = Agent.nets.TransNet.predict(np.array(X))[0]
+        y = TransNet.predict(np.array(X))[0]
 
-        delta_values = y[:len(Agent.trainHP.vehicle_ind_data)].tolist()
+        delta_values = y[:len(trainHP.vehicle_ind_data)].tolist()
         vehicle_state_vec.append( [vehicle_state_vec[-1][i]+delta_values[i] for i in range(len(delta_values))])
 
-        rel_pos = y[len(Agent.trainHP.vehicle_ind_data):len(Agent.trainHP.vehicle_ind_data)+2]
-        rel_ang = y[len(Agent.trainHP.vehicle_ind_data)+2:]
+        rel_pos = y[len(trainHP.vehicle_ind_data):len(trainHP.vehicle_ind_data)+2]
+        rel_ang = y[len(trainHP.vehicle_ind_data)+2:]
 
         abs_pos,abs_ang = comp_abs_pos_ang(rel_pos,rel_ang,abs_pos_vec[-1],abs_ang_vec[-1])
         abs_pos_vec.append(abs_pos)
@@ -332,7 +332,7 @@ def predict_n_steps(Agent,vehicle_state,abs_pos,abs_ang,action_vec):#
 
     return vehicle_state_vec,abs_pos_vec,abs_ang_vec
 
-def get_all_n_step_states(Agent,replay_memory, n):#from 1 step to n steps
+def get_all_n_step_states(TransNet,trainHP,replay_memory, n):#from 1 step to n steps
     state_vec = []
     state_vec_pred = []
     pos_vec = []
@@ -344,7 +344,7 @@ def get_all_n_step_states(Agent,replay_memory, n):#from 1 step to n steps
         replay_memory_short = replay_memory[i:i+n]
         vehicle_state_vec,action_vec,abs_pos_vec,abs_ang_vec = real_to_abs_n_steps(replay_memory_short)
         action_vec = action_vec[:len(vehicle_state_vec)]
-        pred_vehicle_state_vec,pred_abs_pos_vec,pred_abs_ang_vec = predict_n_steps(Agent,vehicle_state_vec[0],abs_pos_vec[0],abs_ang_vec[0],action_vec)
+        pred_vehicle_state_vec,pred_abs_pos_vec,pred_abs_ang_vec = predict_n_steps(TransNet,trainHP,vehicle_state_vec[0],abs_pos_vec[0],abs_ang_vec[0],action_vec)
 
         state_vec.append(vehicle_state_vec)
         state_vec_pred.append(pred_vehicle_state_vec)

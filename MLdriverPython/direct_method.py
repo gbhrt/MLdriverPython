@@ -13,7 +13,7 @@ class directModel:
         self.fc = 1.0
         self.lenght = 3.6
         self.lr = self.lenght/2
-        self.height = 1.7#0.94#0.86
+        self.height = 1.7#0.86 #0.94#
         self.width = 2.08
         self.g = 9.81
         self.ac_max = self.g*self.width*0.5/self.height * 1.0#maximal cetripetal force
@@ -51,6 +51,14 @@ class directModel:
 
         return ac/self.ac_max
 
+    def comp_LTR2(self,vel,steer,state_env):
+        path = state_env[0]
+        index = state_env[1]
+        curv = path.curvature[index]
+        ac = curv*vel
+        return ac/self.ac_max
+
+
     def check_stability2(self,state_Vehicle,state_env,max_plan_deviation,var = 0.0,factor = 1.0):
         dev_flag,roll_flag = 0,0
         path = state_env[0]
@@ -63,7 +71,7 @@ class directModel:
         #if abs(state_Vehicle.values[2])+roll_var > self.max_roll*factor: #check the current roll 
         #    roll_flag = math.copysign(1,state_Vehicle.values[2])
         LTR = self.comp_LTR(state_Vehicle.values[self.trainHP.vehicle_ind_data["vel_y"]],state_Vehicle.values[self.trainHP.vehicle_ind_data["steer"]])
-
+        #LTR = self.comp_LTR2(state_Vehicle.values[self.trainHP.vehicle_ind_data["vel_y"]],state_Vehicle.values[self.trainHP.vehicle_ind_data["steer"]],state_env)
         if LTR+var > 1.0*factor:
             #print("caution - not stable---------------------")
             roll_flag = 1
@@ -95,38 +103,40 @@ class directModel:
         return True
 
     def predict_one(self,vehicle_state,action):#vehicle_state - vel,steer,roll. action - acc,steer
+        steer = vehicle_state[self.trainHP.vehicle_ind_data["steer"]]
         next_vehicle_state = [0]*len(self.trainHP.vehicle_ind_data)
         next_vehicle_state[self.trainHP.vehicle_ind_data["vel_y"]] = action[0]*self.acceleration*self.dt#max(0,)#v+a*dt
-        dsteer = action[1] - vehicle_state[self.trainHP.vehicle_ind_data["steer"]]
+        dsteer = action[1] - steer
 
         next_vehicle_state[self.trainHP.vehicle_ind_data["steer"]] = math.copysign( min(self.steering_vel*self.dt,abs(dsteer)),dsteer)
 
         #next_vehicle_state[1] = action[1] - vehicle_state[1]
-        next_vehicle_state[self.trainHP.vehicle_ind_data["roll"]] = 0
-        next_vehicle_state[self.trainHP.vehicle_ind_data["vel_x"]] = 0
-
+        ##next_vehicle_state[self.trainHP.vehicle_ind_data["roll"]] = 0
+        #next_vehicle_state[self.trainHP.vehicle_ind_data["vel_x"]] = 0
+        
+        steer += next_vehicle_state[self.trainHP.vehicle_ind_data["steer"]]
         Vy = vehicle_state[self.trainHP.vehicle_ind_data["vel_y"]]
-        Vx = vehicle_state[self.trainHP.vehicle_ind_data["vel_x"]]
+        #Vx = vehicle_state[self.trainHP.vehicle_ind_data["vel_x"]]
         #Vy2 = next_vehicle_state[self.trainHP.vehicle_ind_data["vel_y"]]
-        slip_ang1 = np.arctan(Vx/Vy)
-        slip_ang = abs(np.arctan(self.lr/self.lenght*np.tan(vehicle_state[self.trainHP.vehicle_ind_data["steer"]])))
+        #slip_ang1 = np.arctan(Vx/Vy)
+        slip_ang = np.arctan(np.tan(steer)*self.lr/self.lenght)
         #print("slip_ang:",slip_ang,"slip_ang1:",slip_ang1)
-        V = Vy#np.sqrt(Vy**2 + Vx**2)
-        R1 = self.comp_radius(vehicle_state) 
-        R = abs(V/vehicle_state[self.trainHP.vehicle_ind_data["angular_vel_z"]])
+        V = Vy/np.cos(slip_ang)   #np.sqrt(Vy**2 + Vx**2)
+        R = self.comp_radius(vehicle_state) 
+        #R = abs(V/vehicle_state[self.trainHP.vehicle_ind_data["angular_vel_z"]])
         #print("R:",R,"R1:",R1,"V:",V,"steer",vehicle_state[self.trainHP.vehicle_ind_data["steer"]],"omega:",vehicle_state[self.trainHP.vehicle_ind_data["angular_vel_z"]])
         #print("omega_computed:",Vy/R,"omega_measured:",vehicle_state[self.trainHP.vehicle_ind_data["angular_vel_z"]])
-        #dang1 = V*self.dt/R
-        dang = abs(vehicle_state[self.trainHP.vehicle_ind_data["angular_vel_z"]]*self.dt)
+        dang = (max(0,V*self.dt+0.5*self.acceleration*self.dt**2))/R
+        #dang = abs(vehicle_state[self.trainHP.vehicle_ind_data["angular_vel_z"]]*self.dt)
         dx1 = R*(1- np.cos(dang))
         dy1 = R*np.sin(dang)
         #dx1 = Vx*self.dt
         #dy1 = Vy*self.dt
 
-        pos = lib.rotateVec([dx1,dy1],slip_ang)
-        dx0,dy0 = pos[0],pos[1]
+        pos = lib.rotateVec([dx1,dy1],-abs(slip_ang))
+        dx0,dy0 = -math.copysign(pos[0],steer),pos[1]
         #print("V:",V,"R:",R,"dang:",dang,"dx:",dx,"dy:",dy,"steer:",vehicle_state[1],"math.copysign( dx,vehicle_state[1]):",math.copysign( dx,vehicle_state[1]))
-        rel_pos,rel_ang = [-math.copysign( dx0,vehicle_state[self.trainHP.vehicle_ind_data["steer"]]),dy0],-math.copysign(dang,vehicle_state[self.trainHP.vehicle_ind_data["steer"]])
+        rel_pos,rel_ang = [dx0,dy0],-math.copysign(dang,steer)
         return next_vehicle_state,rel_pos,rel_ang
 
     def predict(self,X):
