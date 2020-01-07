@@ -242,6 +242,9 @@ def one_step_prediction(Agent,replay_memory):
     #plot_comparison(np.array(SteerNet_Y_)[:,0], np.array(SteerNet_Y)[:,0],"steer action")
     if Agent.trainHP.direct_predict_active:
         predictor = Agent.Direct
+        #for vehicle_state,
+        #pred_vehicle_state_vec,pred_abs_pos_vec,pred_abs_ang_vec = predict_n_steps(predictor,trainHP,vehicle_state_vec[0],abs_pos_vec[0],abs_ang_vec[0],action_vec)
+
     else:
         predictor = Agent.nets.TransNet
     print(predictor.evaluate(np.array(TransNet_X),np.array(TransNet_Y_)))
@@ -404,7 +407,7 @@ def comp_ac_var(Agent, n_state_vec,n_state_vec_pred,type = "mean_error"):
         if type == "mean_error":
             var_vec.append((np.abs(error)).mean())
         else:
-            var_vec.append(np.sqrt( np.var(error)))
+            var_vec.append(np.sqrt( np.var(error))*3)#3*variance - 99.73 samples are inside
 
     return var_vec
             

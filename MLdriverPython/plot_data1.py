@@ -152,8 +152,9 @@ def get_data(folder,names_vec):
             single_fails = []
             for i in train_indexes:#for every test at a fixed parameter set (fixed training point)
                 restore_path = os.getcwd()+ "/files/models/"+str(folder)+"/"+name+"/"
+                tmp_names = ['VOD_var_check_'+str(var_constant) for var_constant in [0.01*i for i in range(1,10)]]
                 #if name ==  "VOD_01_1" or name == "VOD_022_1" or name == "VOD_020_1" or name == "VOD_010_1":
-                if name in(["VOD_00","VOD_002","VOD_004","VOD_006","VOD_008","VOD_01","VOD_012","VOD_014","VOD_016","VOD_018","VOD_02","VOD_015","VOD_005","VOD_0175"]):
+                if name in["VOD_00","VOD_002","VOD_004","VOD_006","VOD_008","VOD_01","VOD_012","VOD_014","VOD_016","VOD_018","VOD_02","VOD_015","VOD_005","VOD_0175"] or name in tmp_names:
                     restore_name = 'data_manager_0'
                 else:
                     restore_name = 'data_manager_'+str(i)#'data_manager'
@@ -283,8 +284,12 @@ if __name__ == "__main__":
     ###########################model based 25.9.19############
     folder = "model_based"
     #names_vec.append([['MB_R_4'],['Model Based RL',None]])
-    names_vec.append([['MB_R_2'],['Model Based RL',None]])#,'MB_R_2'
+    #names_vec.append([['MB_R_2'],['Model Based RL',None]])#,'MB_R_2'
 
+    names = ['VOD_var_check_'+str(var_constant) for var_constant in [0.01*i for i in range(1,10)]]
+    for name in names:
+        names_vec.append([[name],[name,None]])
+    
     #add_zero_data_manager(folder,names_vec)
     #correct_relative_reward(folder,names_vec)
 

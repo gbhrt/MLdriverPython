@@ -122,10 +122,11 @@ class TrainHyperParameters:
             self.one_step_var =1.0
             self.const_var =1.0
         else:
-            self.one_step_var =0.02# 0.02 is good
-            self.const_var = 0.05#roll variance at the future states, constant because closed loop control?
+            #0.5 not move. 0.2 < 0.5 of VOD. 0.1 =0.85 of VOD. 0 1+-0.05 of VOD com height = 1.7
+            self.one_step_var =0.1# 0.02 is good
+            self.const_var = 1000.0#0.05#roll variance at the future states, constant because closed loop control?
         self.prior_safe_velocity = 0.02#if the velocity is lower than this value - it is priori Known that it is OK to accelerate
-        self.stabilize_factor = 1.1
+        self.stabilize_factor = 1.0
         #self.emergency_const_var = 0.05
       
         self.emergency_action_flag = HP.emergency_action_flag
@@ -153,9 +154,11 @@ class PlanningState:
  
 
 class Agent:# includes the networks, policies, replay buffer, learning hyper parameters
-    def __init__(self,HP,envData = None,trans_net_active = True,steer_net_active = True,acc_net_active = False):
+    def __init__(self,HP,envData = None,trans_net_active = True,steer_net_active = True,acc_net_active = False,one_step_var = None):
         self.HP = HP
         self.trainHP = TrainHyperParameters(self.HP)
+        if one_step_var is not None:
+            self.trainHP.one_step_var = one_step_var
         self.planningState = PlanningState(self.trainHP)
         self.Replay = agent_lib.Replay(self.trainHP.replay_memory_size)
         if self.HP.restore_flag:
@@ -301,7 +304,7 @@ class Agent:# includes the networks, policies, replay buffer, learning hyper par
         # self.planningState.var = roll_var
 
         #compute the variance/abs_error of the centripetal acceleration. 
-        var_vec = predict_lib.comp_ac_var(self, n_state_vec,n_state_vec_pred,type = "mean_error")
+        var_vec = predict_lib.comp_ac_var(self, n_state_vec,n_state_vec_pred,type = "var")#"mean_error"
         var_vec = [0]+var_vec+[1.0]*(20-len(var_vec)-1)#0.1
         print("var_vec:",var_vec)
         self.planningState.var = var_vec

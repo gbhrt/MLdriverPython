@@ -43,6 +43,7 @@ class DataManager():
         self.init_train_num = 0
         self.paths = []
         self.run_data =[]
+        self.violation_count = []
         
         
         
@@ -353,7 +354,9 @@ class DataManager():
     def save_data(self):
         try: 
             with open(self.save_name, 'w') as f:
-                json.dump((self.run_num,self.train_num,self.rewards,self.lenght,self.relative_reward, self.episode_end_mode,self.path_seed,self.paths ),f)
+                #json.dump((self.run_num,self.train_num,self.rewards,self.lenght,self.relative_reward, self.episode_end_mode,self.path_seed,self.paths ),f)
+                json.dump((self.run_num,self.train_num,self.rewards,self.lenght,self.relative_reward, self.episode_end_mode,self.path_seed,self.paths,self.violation_count),f)
+
             print("data manager saved")            
         except:
             print("cannot save data manager")
@@ -361,7 +364,9 @@ class DataManager():
     def load_data(self):
         try:
             with open(self.restore_name, 'r') as f:
-                self.run_num,self.train_num,self.rewards,self.lenght,self.relative_reward, self.episode_end_mode,self.path_seed,self.paths = json.load(f)#,self.paths
+                #self.run_num,self.train_num,self.rewards,self.lenght,self.relative_reward, self.episode_end_mode,self.path_seed,self.paths = json.load(f)#,self.paths
+                self.run_num,self.train_num,self.rewards,self.lenght,self.relative_reward, self.episode_end_mode,self.path_seed,self.paths,self.violation_count = json.load(f)#,self.paths
+
             print("data manager restored")
             return False
         except:

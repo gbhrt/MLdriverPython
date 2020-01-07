@@ -50,7 +50,7 @@ def train(env,HP,Agent,dataManager,guiShared,seed = None,global_train_count = 0)
             break
         
         # initialize every episode:
-
+        violation_count = 0
         step_count = 0
         reward_vec = []
         t1 = 0
@@ -100,6 +100,8 @@ def train(env,HP,Agent,dataManager,guiShared,seed = None,global_train_count = 0)
                 
             else:#not HP.analytic_action
                 acc,steer,planningData = Agent.comp_action(state,acc,steer)#env is temp  ,roll_flag,dev_flag 
+                roll_flag, _ = Agent.Direct.check_stability2(state.Vehicle,state.env,Agent.trainHP.max_plan_deviation)
+                violation_count+=roll_flag
                 #print("acc:",acc,"steer:",steer)
                 #acc,steer,planningData,roll_flag,dev_flag = Agent.comp_action(state,acc,steer)
 
@@ -202,7 +204,7 @@ def train(env,HP,Agent,dataManager,guiShared,seed = None,global_train_count = 0)
             #if step_count<env.max_episode_steps and info[0] == 'ok':
             #    print("error - step_count<env.max_episode_steps and info[0] == ok")
             #    input()
-
+            dataManager.violation_count.append(violation_count)
             dataManager.episode_end_mode.append(info[0])
             dataManager.rewards.append(total_reward)
             dataManager.lenght.append(step_count)

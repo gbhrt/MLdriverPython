@@ -136,13 +136,14 @@ def comp_MB_action(nets,state,acc,steer,trainHP,planningState = None, Direct = N
     
     #stability at the initial state:
     
-        if not trainHP.direct_constrain:
-            current_roll_flag,current_dev_flag = actions.check_stability(state.Vehicle,state.env,trainHP,roll_var = planningState.var[0],max_plan_roll = max_plan_roll,max_plan_deviation = max_plan_deviation)
-        else:
-            current_roll_flag,current_dev_flag = Direct.check_stability2(state.Vehicle,state.env,trainHP.max_plan_deviation,planningState.var[0],0.5 if planningState.last_emergency_action_active else trainHP.stabilize_factor)
-            if current_roll_flag:
-                 print("caution - not stable---------------------")
-            #roll_flag,dev_flag = 0,0#tmp
+    if not trainHP.direct_constrain:
+        current_roll_flag,current_dev_flag = actions.check_stability(state.Vehicle,state.env,trainHP,roll_var = planningState.var[0],max_plan_roll = max_plan_roll,max_plan_deviation = max_plan_deviation)
+    else:
+        current_roll_flag,current_dev_flag = Direct.check_stability2(state.Vehicle,state.env,trainHP.max_plan_deviation,planningState.var[0],0.5 if planningState.last_emergency_action_active else trainHP.stabilize_factor)
+        #print("current_roll_flag:",current_roll_flag)
+        if current_roll_flag == 1:
+            print("caution - not stable---------------------")
+        #roll_flag,dev_flag = 0,0#tmp
     if  trainHP.emergency_action_flag and planningState.trust_T == 0:#more accurate: trust_T == -1
         roll_flag,dev_flag = current_roll_flag,current_dev_flag
     else:
@@ -261,5 +262,6 @@ def comp_MB_action(nets,state,acc,steer,trainHP,planningState = None, Direct = N
     #    next_acc = 0.0
 
     #next_steer = 0.4
+    #next_acc = 1.0
     return next_acc,next_steer,StateVehicle_vec,actions_vec,StateVehicle_emergency_vec,actions_emergency_vec,emergency_action_active
     #return next_acc,next_steer,planningData,roll_flag,dev_flag

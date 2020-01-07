@@ -241,7 +241,7 @@ def plot_n_step_state(Agent,replay_memory):
             break
         replay_memory_short = replay_memory[i:i+n]
         vehicle_state_vec,action_vec,abs_pos_vec,abs_ang_vec = real_to_abs_n_steps(replay_memory_short)
-        pred_vehicle_state_vec,pred_abs_pos_vec,pred_abs_ang_vec = predict_n_steps(Agent,vehicle_state_vec[0],abs_pos_vec[0],abs_ang_vec[0],action_vec)
+        pred_vehicle_state_vec,pred_abs_pos_vec,pred_abs_ang_vec = predict_lib.predict_n_steps(Agent,vehicle_state_vec[0],abs_pos_vec[0],abs_ang_vec[0],action_vec)
         x,y = zip(*abs_pos_vec)
         p_x,p_y = zip(*pred_abs_pos_vec)
         #compare_states = zip(vehicle_state_vec,pred_vehicle_state_vec)
@@ -281,7 +281,7 @@ def plot_n_step_var(Agent,replay_memory):
     max_n = 10
     n_list = list(range(2,max_n))
 
-    n_state_vec,n_state_vec_pred,n_pos_vec,n_pos_vec_pred,n_ang_vec,n_ang_vec_pred = predict_lib.get_all_n_step_states(Agent.Direct if Agent.trainHP.direct_predict_active else Agent.nets.TransNet, self.trainHP,replay_memory, max_n)
+    n_state_vec,n_state_vec_pred,n_pos_vec,n_pos_vec_pred,n_ang_vec,n_ang_vec_pred = predict_lib.get_all_n_step_states(Agent.Direct if Agent.trainHP.direct_predict_active else Agent.nets.TransNet, Agent.trainHP,replay_memory, max_n)
 
     var_vec,mean_vec,pos_var_vec,pos_mean_vec,ang_var_vec,ang_mean_vec = predict_lib.comp_var(Agent, n_state_vec,n_state_vec_pred,n_pos_vec,n_pos_vec_pred,n_ang_vec,n_ang_vec_pred)
 
@@ -316,7 +316,8 @@ def plot_n_step_var(Agent,replay_memory):
     axes[len(Agent.trainHP.vehicle_ind_data)+2].errorbar(n_list,mean,alpha = 0.7)#,var
     axes[len(Agent.trainHP.vehicle_ind_data)+2].fill_between(n_list,mean+var,mean-var,color = "#dddddd" )
 
-    for ind,feature in enumerate([r'$v[m/s]$',r'$\delta[rad]$',r'$\theta_y[rad]$']): 
+    #for ind,feature in enumerate([r'$v[m/s]$',r'$\delta[rad]$',r'$\theta_y[rad]$']): 
+    for ind,feature in enumerate(Agent.trainHP.vehicle_ind_data.keys()): 
         axes[ind].set_ylabel(feature, fontsize=fontsize)
         var = np.array(var_vec)[:,ind]
         mean = np.array(mean_vec)[:,ind]
@@ -372,7 +373,7 @@ def train_nets(Agent):
 #def direct():
 
 def test_net(Agent): 
-    train = False
+    train = True
     split_buffer = True
     separate_nets = False
     variance_mode = False

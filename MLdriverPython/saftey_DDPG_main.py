@@ -20,7 +20,10 @@ def run_all(HP,guiShared):
         guiShared.max_roll = envData.max_plan_roll
         guiShared.max_time = envData.step_time*envData.max_episode_steps+5#add time for braking
     names_vec = []
-    names_vec.append([['MB_R_1','MB_R_2','MB_R_3','MB_R_4','MB_R_5'],'MB_R',None])
+    #names_vec.append([['MB_R_1','MB_R_2','MB_R_3','MB_R_4','MB_R_5'],'MB_R',None])
+    var_constants_vec = [0.01*i for i in range(1,10)]
+    names = ['VOD_var_check_'+str(var_constant) for var_constant in var_constants_vec]
+    names_vec.append([names,'VOD',None])
     #names_vec.append([['also_steer1'],'REVO',50000])#trained MF acc and steer policy
     random.seed(0)
     HP.seed = random.sample(range(1000),101)#the 101 path is not executed
@@ -37,18 +40,39 @@ def run_all(HP,guiShared):
             envData.analytic_feature_flag = True
             HP.add_feature_to_action  = False
 
-        if method =='VOD':
-            envData.analytic_feature_flag = False
-            HP.add_feature_to_action  = False
-            HP.analytic_action = True
-            HP.evaluation_flag = True
-            #reduce_vec = [0.02*i for i in range(1,10)]
-            reduce_vec = [0.175]
-            HP.train_flag = False
-            HP.always_no_noise_flag = True
-            HP.restore_flag = False
-            HP.num_of_runs = 100
-            HP.save_every_train_number = 500000000
+        #if method =='VOD':
+        #    envData.analytic_feature_flag = False
+        #    HP.add_feature_to_action  = False
+        #    HP.analytic_action = True
+        #    HP.evaluation_flag = True
+        #    #reduce_vec = [0.02*i for i in range(1,10)]
+        #    reduce_vec = [0.175]
+        #    HP.train_flag = False
+        #    HP.always_no_noise_flag = True
+        #    HP.restore_flag = False
+        #    HP.num_of_runs = 100
+        #    HP.save_every_train_number = 500000000
+
+        if method == 'VOD':          
+            for name,var_constant in zip(names,var_constants_vec):
+                HP.restore_name = name
+                HP.restore_file_path = HP.folder_path+HP.restore_name+"/"
+                HP.save_name = name
+                HP.save_file_path = HP.folder_path+HP.save_name+"/"
+                HP.num_of_runs = 5#100
+                #HP.reduce_vel = reduce
+                run_data = []
+                Agent = agent.Agent(HP,trans_net_active = True, steer_net_active = False,one_step_var = var_constant)
+                Agent.trainHP.direct_predict_active = True
+                Agent.trainHP.update_var_flag = False
+                dataManager = data_manager1.DataManager(HP.save_file_path,HP.restore_file_path,restore_flag =False,save_name = 'data_manager_0')
+
+                #train agent on simulator
+                env = environment1.OptimalVelocityPlanner(dataManager,env_mode=HP.env_mode)
+                if env.opened:     
+                    Agent.trainHP.num_of_runs = HP.num_of_runs
+                    model_based_algorithm.train(env,HP,Agent,dataManager,guiShared,global_train_count = 0)
+                continue
 
         if method == "MB_R":#model based regular - without stabilization
             HP.max_steps = 1000
