@@ -20,7 +20,9 @@ def change_failes_value(rewards,mode):
 
 def get_avg_fails(dataManager):
     return (dataManager.episode_end_mode.count('kipp')+dataManager.episode_end_mode.count('deviate'))*100/len(dataManager.episode_end_mode)
+def get_avg_violation_count(dataManager):
     
+    return sum(dataManager.violation_count)/len(dataManager.violation_count)
 
 def get_abs_vel(dataManager):
     run_time =  0.2*101
@@ -77,8 +79,8 @@ def get_relative_reward(dataManager):
     return relative_reward
 
 def get_avg_reward(dataManager):
-    filtered_reward = [value for value in dataManager.relative_reward if value != -1]
-    #filtered_reward = [value for value in dataManager.relative_reward if value != 0]
+    #filtered_reward = [value for value in dataManager.relative_reward if value != -1]
+    filtered_reward = [value for value in dataManager.relative_reward if value != 0]
     if len(filtered_reward)>0:
         return sum(filtered_reward)/len(filtered_reward),np.sqrt(np.var(filtered_reward))
     return -1,0
@@ -125,7 +127,7 @@ def add_zero_data_manager(folder,names_vec):
             dataManager.save_data()
 
 
-def get_data(folder,names_vec):
+def get_data(folder,names_vec, return_violation_count = False):
     HP = HyperParameters()
 
     train_indexes = [100*j for j in range(1,19)]
@@ -135,6 +137,7 @@ def get_data(folder,names_vec):
     var_vec =[]
     reward_vec_indexes = []
     fails_vec = []
+    violation_count_vec = []
     series_colors = []
     series_names = []
     for names in names_vec:#for every series of data (e.g. REVO or REVO+A)
@@ -142,6 +145,7 @@ def get_data(folder,names_vec):
         var =[]
         reward_indexes = []
         fails = []
+        violation_count = []
         series_colors.append(names[1][1])
         series_names.append(names[1][0])
         for name in names[0]:#for every training process(e.g. REVO1)
@@ -150,6 +154,7 @@ def get_data(folder,names_vec):
             single_var = []
             single_reward_indexes = []
             single_fails = []
+            single_violation_count = []
             for i in train_indexes:#for every test at a fixed parameter set (fixed training point)
                 restore_path = os.getcwd()+ "/files/models/"+str(folder)+"/"+name+"/"
                 tmp_names = ['VOD_var_check_'+str(var_constant) for var_constant in [0.01*i for i in range(1,10)]]
@@ -170,17 +175,23 @@ def get_data(folder,names_vec):
                     single_var.append(var_reward)
                     single_reward_indexes.append(i)
                 single_fails.append(get_avg_fails(dataManager))
+                if return_violation_count:
+                    single_violation_count.append(get_avg_violation_count(dataManager))
                 print(name," ",i,"abs_vel:",vel,"var_abs_vel:",abs_var,"avg_reward:",avg_reward,"var_reward:",var_reward,"single_fails:",single_fails[-1],"len:",len(dataManager.path_seed))
             rewards.append(single_rewards)
             var.append(single_var)
             reward_indexes.append(single_reward_indexes)
             fails.append(single_fails)
+            violation_count.append(single_violation_count)
         rewards_vec.append(rewards)
         var_vec.append(var)
         reward_vec_indexes.append(reward_indexes)
         fails_vec.append(fails)
-
-    return reward_vec_indexes,rewards_vec,train_indexes,fails_vec,var_vec,series_colors,series_names
+        violation_count_vec.append(violation_count)
+    if return_violation_count:
+        return reward_vec_indexes,rewards_vec,train_indexes,fails_vec,var_vec,series_colors,series_names,violation_count_vec
+    else:
+        return reward_vec_indexes,rewards_vec,train_indexes,fails_vec,var_vec,series_colors,series_names
 
 def average_training_processes(rewards_vec):
     avg_rewards_vec = []
@@ -212,7 +223,8 @@ if __name__ == "__main__":
     names_vec = []
 
     ##names = ["VOD_00","VOD_002","VOD_004","VOD_006","VOD_008","VOD_01"]
-    #names = ["VOD_00","VOD_005","VOD_01","VOD_015","VOD_0175","VOD_02"]
+    #folder = "paper_fix"#in REVO paper
+    #names = ["VOD_00","VOD_005","VOD_01","VOD_015","VOD_0175","VOD_02"]#in REVO paper
     #for name in names:
     #    names_vec.append([[name],[name,None]])
     #reward_vec_indexes,rewards_vec,indexes,fails_vec,var,series_colors,series_names = get_data(folder,names_vec)
@@ -289,7 +301,26 @@ if __name__ == "__main__":
     names = ['VOD_var_check_'+str(var_constant) for var_constant in [0.01*i for i in range(1,10)]]
     for name in names:
         names_vec.append([[name],[name,None]])
-    
+    reward_vec_indexes,rewards_vec,indexes,fails_vec,var,series_colors,series_names,violation_count_vec = get_data(folder,names_vec,return_violation_count = True)
+    vel = [reward[0][0] for reward in rewards_vec]
+    fail = [fails[0][0] for fails in fails_vec]
+    violation_count = [violation_counts[0][0] for violation_counts in violation_count_vec]
+
+    vel = [vel[i] / vel[0] for i in range(len(vel))]
+    plt.figure(3)
+    plt.xlabel('Velocity factor',fontsize = size)
+    plt.ylabel('Fails [%]',fontsize = size)
+    plt.plot(vel,violation_count,'o',c = 'g',label = 'violation_count')
+    plt.plot(vel,violation_count,c = 'g')
+    plt.plot(vel,fail,'o',c = 'r',label = 'VOD')
+    plt.plot(vel,fail,c = 'r')
+    #plt.plot([1.12],[0.6],'o',c = 'green',label = 'REVO')
+    #plt.plot([1.11],[0.8],'o',c = 'blue',label = 'REVO+F')
+    #plt.plot([1.08],[0.6],'o',c = 'black',label = 'REVO+A')
+    plt.legend()
+    plt.show()
+    ########################################################################
+
     #add_zero_data_manager(folder,names_vec)
     #correct_relative_reward(folder,names_vec)
 
