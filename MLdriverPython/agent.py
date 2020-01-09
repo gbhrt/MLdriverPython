@@ -17,6 +17,7 @@ import actions_for_given_path as act
 #from DDPG_net import DDPG_network
 import sys
 import direct_method
+import json
 
 def convert_to_MF_state(state,targetPoint):
     return state.Vehicle.values + state.Vehicle.rel_pos+[state.Vehicle.rel_ang]+[targetPoint.abs_pos]+[targetPoint.vel]
@@ -151,12 +152,15 @@ class PlanningState:
         self.trust_T = 20
         self.var = [trainHP.init_var]+[min(trainHP.init_var+trainHP.one_step_var*n,trainHP.const_var ) for n in range(1,trainHP.rollout_n+10)]
         self.last_emergency_action_active = False
+
+
  
 
 class Agent:# includes the networks, policies, replay buffer, learning hyper parameters
     def __init__(self,HP,envData = None,trans_net_active = True,steer_net_active = True,acc_net_active = False,one_step_var = None):
         self.HP = HP
         self.trainHP = TrainHyperParameters(self.HP)
+        self.var_name = "var"
         if one_step_var is not None:
             self.trainHP.one_step_var = one_step_var
         self.planningState = PlanningState(self.trainHP)
@@ -308,6 +312,33 @@ class Agent:# includes the networks, policies, replay buffer, learning hyper par
         var_vec = [0]+var_vec+[1.0]*(20-len(var_vec)-1)#0.1
         print("var_vec:",var_vec)
         self.planningState.var = var_vec
+
+    def save_var(self):
+        path = self.HP.save_file_path +self.var_name+"/"
+        pathlib.Path(path).mkdir(parents=True, exist_ok=True) 
+        print("var path: ", path+"var.txt")
+        try: 
+            with open(path+"var.txt", 'w') as f:
+                #json.dump((self.run_num,self.train_num,self.rewards,self.lenght,self.relative_reward, self.episode_end_mode,self.path_seed,self.paths ),f)
+                json.dump((self.planningState.var),f)
+
+            print("var saved")            
+        except:
+            print("cannot save var", sys.exc_info()[0])
+    def load_var(self):
+        path = self.HP.restore_file_path +self.var_name+"/"
+        print("var path: ", path+"var.txt")
+        try:
+            with open(path+"var.txt", 'r') as f:
+                #self.run_num,self.train_num,self.rewards,self.lenght,self.relative_reward, self.episode_end_mode,self.path_seed,self.paths = json.load(f)#,self.paths
+                self.planningState.var = json.load(f)#,self.paths
+
+            print("var restored")
+            return False
+        except:
+            print ("cannot restore var:", sys.exc_info()[0])
+            return True
+
 
 
         

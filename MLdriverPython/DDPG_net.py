@@ -11,7 +11,7 @@ class DDPG_network(NetLib):
        
 
         tf.reset_default_graph()     
-        self.graph = tf.compat.v1.get_default_graph()# tf.get_default_graph()
+        self.graph = tf.get_default_graph()# tf.get_default_graph()
         if seed != None:
             tf.set_random_seed(seed)
         self.state = tf.placeholder(tf.float32, [None,state_n] )

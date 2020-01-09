@@ -22,7 +22,7 @@ def get_avg_fails(dataManager):
     return (dataManager.episode_end_mode.count('kipp')+dataManager.episode_end_mode.count('deviate'))*100/len(dataManager.episode_end_mode)
 def get_avg_violation_count(dataManager):
     
-    return sum(dataManager.violation_count)/len(dataManager.violation_count)
+    return 100*sum(dataManager.violation_count)/sum(dataManager.lenght)
 
 def get_abs_vel(dataManager):
     run_time =  0.2*101
@@ -130,7 +130,8 @@ def add_zero_data_manager(folder,names_vec):
 def get_data(folder,names_vec, return_violation_count = False):
     HP = HyperParameters()
 
-    train_indexes = [100*j for j in range(1,19)]
+    #train_indexes = [100*j for j in range(1,19)]
+    train_indexes = [1000*j for j in range(1,5)]
     #train_indexes = [5000*j for j in range(0,19)]
     #train_indexes = [15000]
     rewards_vec = []
@@ -157,7 +158,7 @@ def get_data(folder,names_vec, return_violation_count = False):
             single_violation_count = []
             for i in train_indexes:#for every test at a fixed parameter set (fixed training point)
                 restore_path = os.getcwd()+ "/files/models/"+str(folder)+"/"+name+"/"
-                tmp_names = ['VOD_var_check_'+str(var_constant) for var_constant in [0.01*i for i in range(1,10)]]
+                tmp_names = ['VOD_var_check_'+str(var_constant) for var_constant in [0.01*i for i in range(1,18)]]
                 #if name ==  "VOD_01_1" or name == "VOD_022_1" or name == "VOD_020_1" or name == "VOD_010_1":
                 if name in["VOD_00","VOD_002","VOD_004","VOD_006","VOD_008","VOD_01","VOD_012","VOD_014","VOD_016","VOD_018","VOD_02","VOD_015","VOD_005","VOD_0175"] or name in tmp_names:
                     restore_name = 'data_manager_0'
@@ -177,6 +178,7 @@ def get_data(folder,names_vec, return_violation_count = False):
                 single_fails.append(get_avg_fails(dataManager))
                 if return_violation_count:
                     single_violation_count.append(get_avg_violation_count(dataManager))
+                    print("violation_count:", single_violation_count[-1])
                 print(name," ",i,"abs_vel:",vel,"var_abs_vel:",abs_var,"avg_reward:",avg_reward,"var_reward:",var_reward,"single_fails:",single_fails[-1],"len:",len(dataManager.path_seed))
             rewards.append(single_rewards)
             var.append(single_var)
@@ -298,33 +300,43 @@ if __name__ == "__main__":
     #names_vec.append([['MB_R_4'],['Model Based RL',None]])
     #names_vec.append([['MB_R_2'],['Model Based RL',None]])#,'MB_R_2'
 
-    names = ['VOD_var_check_'+str(var_constant) for var_constant in [0.01*i for i in range(1,10)]]
-    for name in names:
-        names_vec.append([[name],[name,None]])
-    reward_vec_indexes,rewards_vec,indexes,fails_vec,var,series_colors,series_names,violation_count_vec = get_data(folder,names_vec,return_violation_count = True)
-    vel = [reward[0][0] for reward in rewards_vec]
-    fail = [fails[0][0] for fails in fails_vec]
-    violation_count = [violation_counts[0][0] for violation_counts in violation_count_vec]
+    names_vec.append([['MB_R_acc_1'],['Model Based RL',None]])
 
-    vel = [vel[i] / vel[0] for i in range(len(vel))]
-    plt.figure(3)
-    plt.xlabel('Velocity factor',fontsize = size)
-    plt.ylabel('Fails [%]',fontsize = size)
-    plt.plot(vel,violation_count,'o',c = 'g',label = 'violation_count')
-    plt.plot(vel,violation_count,c = 'g')
-    plt.plot(vel,fail,'o',c = 'r',label = 'VOD')
-    plt.plot(vel,fail,c = 'r')
-    #plt.plot([1.12],[0.6],'o',c = 'green',label = 'REVO')
-    #plt.plot([1.11],[0.8],'o',c = 'blue',label = 'REVO+F')
-    #plt.plot([1.08],[0.6],'o',c = 'black',label = 'REVO+A')
-    plt.legend()
-    plt.show()
+    #names = ['VOD_var_check_'+str(var_constant) for var_constant in [0.01*i for i in range(1,10)]]
+    #for name in names:
+    #    names_vec.append([[name],[name,None]])
+    #reward_vec_indexes,rewards_vec,indexes,fails_vec,var,series_colors,series_names,violation_count_vec = get_data(folder,names_vec,return_violation_count = True)
+    #vel = [reward[0][0] for reward in rewards_vec]
+    #fail = [fails[0][0] for fails in fails_vec]
+    #violation_count = [violation_counts[0][0] for violation_counts in violation_count_vec]
+
+    #fig, ax1 = plt.subplots()
+    #color = 'tab:red'
+    #ax1.set_xlabel('Velocity factor',fontsize = size)
+    #ax1.set_ylabel('Fails [%]',fontsize = size)
+    #ax1.plot(vel,fail,'o',c = color,label = 'VOD')
+    #ax1.plot(vel,fail,c = color,)
+    #ax1.tick_params(axis='y', labelcolor=color)
+    #ax1.plot([1.202],[0.0],'*',c = color,label = 'Model based')
+
+    #ax2 = ax1.twinx()  # instantiate a second axes that shares the same x-axis
+
+    #color = 'tab:blue'
+    #ax2.set_ylabel('Violation count [%]',fontsize = size, color=color)  # we already handled the x-label with ax1
+    #ax2.plot(vel,violation_count, color=color)
+    #ax2.plot(vel,violation_count,'o', color=color,label = 'violation_count')
+    #ax2.tick_params(axis='y', labelcolor=color)
+
+    #ax2.plot([1.202],[0.06],'*',c = color,label = 'Model based')
+    #fig.tight_layout()  # otherwise the right y-label is slightly clipped
+    #plt.show()
+
     ########################################################################
 
     #add_zero_data_manager(folder,names_vec)
     #correct_relative_reward(folder,names_vec)
 
-    reward_vec_indexes,rewards_vec,indexes,fails_vec,var,series_colors,series_names = get_data(folder,names_vec)
+    reward_vec_indexes,rewards_vec,indexes,fails_vec,var,series_colors,series_names, _ = get_data(folder,names_vec,return_violation_count = True)
     indexes = [ind/2 for ind in indexes]#
     avg_rewards_vec,var_rewards_vec = average_training_processes(rewards_vec)
     avg_fails_vec,var_fails_vec = average_training_processes(fails_vec)

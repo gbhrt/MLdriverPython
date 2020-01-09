@@ -18,6 +18,7 @@ class HyperParameters:
         self.sample_ratio = 1.0
         self.epsilon = 0.1
         #########################
+        self.stabilize_flag = False
         self.evaluation_flag = False
         self.reduce_vel = 0.0
         self.add_feature_to_action  = False
@@ -48,6 +49,7 @@ class HyperParameters:
         if self.always_no_noise_flag:
             self.noise_flag = False
 
+
 class SafteyHyperParameters:
     def __init__(self):
         self.gui_flag = True
@@ -67,7 +69,7 @@ class SafteyHyperParameters:
         self.epsilon = 0.1
         self.minQ = -0.5
         #########################
-        self.env_mode = "SDDPG"#SDDPG DDPG_target SDDPG_pure_persuit
+        self.env_mode = "SDDPG_pure_persuit"#SDDPG DDPG_target SDDPG_pure_persuit
         self.evaluation_flag = False
         self.reduce_vel = 0.0
         self.add_feature_to_action  = False
@@ -86,7 +88,7 @@ class SafteyHyperParameters:
         self.constant_velocity = None #5.0
         self.DQN_flag = False
         #self.pure_persuit_flag = False
-        self.restore_flag = True  
+        self.restore_flag = False  
         self.skip_run = False
         self.reset_every = 3
         self.save_every = 100

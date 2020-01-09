@@ -187,7 +187,25 @@ def get_SDDPG_reward(ang,velocity,max_vel,roll,mode,deviation,lower_bound = 0.0)
     #    #reward =  - abs(deviation*0.03)+0.02*velocity/max_vel
     #    reward =  - abs(deviation*0.03)+0.02*progress/(max_vel*0.2/0.05)
     return reward
-def get_reward(velocity,max_vel,mode,lower_bound = 0.0,analytic_velocity = None,roll = None,max_alowed_roll = None,max_roll =None): 
+def comp_LTR(vel,steer):
+    if abs(steer) < 0.001:
+        radius = 1000
+    else:
+        radius = math.sqrt((3.6*0.5)**2+(3.6/math.tan(steer))**2)
+    if radius <0.1:
+        print("error radius too small")
+        ac = 100
+    else:
+        ac = vel**2/radius
+
+    return ac/(9.81*2.08*0.5/1.0)#maximal cetripetal force
+def get_direct_stability(velocity,steer):
+    LTR = comp_LTR(velocity,steer)
+    if LTR > 1.0:
+        return False
+    else:
+        return True
+def get_reward(velocity,max_vel,mode,lower_bound = 0.0,analytic_velocity = None,roll = None,max_alowed_roll = None,max_roll =None,steer = None): 
     if analytic_velocity is not None:
         #reward = -abs((velocity - analytic_velocity)/max_vel)
         if velocity < analytic_velocity:
@@ -205,6 +223,10 @@ def get_reward(velocity,max_vel,mode,lower_bound = 0.0,analytic_velocity = None,
     #if roll is not None:
     #    if roll > max_alowed_roll:
     #        reward = 0.02*velocity/max_vel - roll/max_roll
+    if steer is not None:
+        violation_flag = get_direct_stability(velocity,steer)
+        reward = -0.5
+
     if mode == 'kipp'or mode == 'deviate':
         reward = -1.0
     #elif mode == 'path_end':#problem - agent dont know that he is at the end

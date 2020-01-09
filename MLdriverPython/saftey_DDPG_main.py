@@ -6,12 +6,13 @@ import os
 import environment1
 import data_manager1
 import hyper_parameters 
-#from DDPG_net import DDPG_network
+from DDPG_net import DDPG_network
 import saftey_DDPG_algorithm
 import model_based_algorithm
 import tkinker_gui
 import shared
 import agent
+import copy
 
 
 def run_all(HP,guiShared):
@@ -21,9 +22,10 @@ def run_all(HP,guiShared):
         guiShared.max_time = envData.step_time*envData.max_episode_steps+5#add time for braking
     names_vec = []
     #names_vec.append([['MB_R_1','MB_R_2','MB_R_3','MB_R_4','MB_R_5'],'MB_R',None])
-    var_constants_vec = [0.01*i for i in range(1,10)]
-    names = ['VOD_var_check_'+str(var_constant) for var_constant in var_constants_vec]
-    names_vec.append([names,'VOD',None])
+    #var_constants_vec = [0.01*i for i in range(1,10)]
+    #names = ['VOD_var_check_'+str(var_constant) for var_constant in var_constants_vec]
+    #names_vec.append([names,'VOD',None])
+    names_vec.append([['MB_R_var'],'MB_R',None])
     #names_vec.append([['also_steer1'],'REVO',50000])#trained MF acc and steer policy
     random.seed(0)
     HP.seed = random.sample(range(1000),101)#the 101 path is not executed
@@ -75,7 +77,7 @@ def run_all(HP,guiShared):
                 continue
 
         if method == "MB_R":#model based regular - without stabilization
-            HP.max_steps = 1000
+            HP.max_steps = 300#1000
             HP.emergency_action_flag = False
             HP.emergency_steering_type = 1#1 - stright, 2 - 0.5 from original steering, 3-steer net
         elif method == "MB_S":
@@ -90,7 +92,7 @@ def run_all(HP,guiShared):
             description]
         HP.save_every_train_number = 100#5000
         
-        for evalutaion_flag in [False,True]:#False,
+        for evalutaion_flag in [True]:#False,
             HP.evaluation_flag = evalutaion_flag
 
             for name in names:
@@ -150,6 +152,10 @@ def run_train_MB(HP,dataManager,envData,index = None):
         if HP.evaluation_flag:
             HP.net_name = 'tf_model_'+str(index)
             Agent = agent.Agent(HP,trans_net_active = True, steer_net_active = False)
+            Agent.trainHP.update_var_flag = False
+            #tmp fix for getting saved var from datamanager
+            Agent.var_name = 'var_'+str(index)
+            Agent.load_var()
             if Agent.nets.restore_error:#cannot restore - return true
                 return True
             
@@ -158,9 +164,10 @@ def run_train_MB(HP,dataManager,envData,index = None):
             nums = [HP.save_every_train_number*j for j in range(1,11)]
             found_flag = False
             for i in nums:
+                
                 HP.net_name = 'tf_model_'+str(i)
                 Agent = agent.Agent(HP,trans_net_active = True, steer_net_active = False)
-                
+
                 if Agent.nets.restore_error:#False if OK
                     found_flag = True
 
@@ -170,6 +177,7 @@ def run_train_MB(HP,dataManager,envData,index = None):
             print("train,global_train_count:",global_train_count)
     else:
         Agent = agent.Agent(HP,trans_net_active = True, steer_net_active = False)
+
     #train agent on simulator
     env = environment1.OptimalVelocityPlanner(dataManager,env_mode=HP.env_mode)
     if env.opened:     
@@ -268,7 +276,7 @@ if __name__ == "__main__":
     if algo_type == "SDDPG":
         HP = hyper_parameters.SafteyHyperParameters()
     elif algo_type == "DDPG":
-        HP = HyperParameters()
+        HP = hyper_parameters.HyperParameters()
     elif algo_type == "MB":
         HP = hyper_parameters.ModelBasedHyperParameters()
     else:

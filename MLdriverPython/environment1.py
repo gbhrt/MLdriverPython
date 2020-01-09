@@ -502,7 +502,7 @@ class OptimalVelocityPlanner(OptimalVelocityPlannerData):
                 #self.pl.index
             reward = get_SDDPG_reward(self.local_path.angle[0],self.pl.simulator.vehicle.velocity[1],self.max_velocity_y,self.pl.simulator.vehicle.angle[2],self.mode,deviation)
         else:
-            reward = get_reward(self.pl.simulator.vehicle.velocity[1],self.max_velocity_y,self.mode)#,analytic_velocity = self.local_path.analytic_velocity[0])#
+            reward = get_reward(self.pl.simulator.vehicle.velocity[1],self.max_velocity_y,self.mode,steer = self.pl.simulator.vehicle.steering)#,analytic_velocity = self.local_path.analytic_velocity[0])#
 
         if self.episode_steps > self.max_episode_steps:
             self.mode = 'max_steps'

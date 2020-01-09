@@ -197,6 +197,7 @@ def train(env,HP,Agent,dataManager,guiShared,seed = None,global_train_count = 0)
             while not compute_var_done[0]:
                 env.pl.stop_vehicle()#for maintain connection to simulator (prevent timeout)
                 time.sleep(0.1)
+        
         #Agent.update_episode_var(step_count-1)
         
         total_reward = sum(reward_vec)
@@ -253,10 +254,13 @@ def train(env,HP,Agent,dataManager,guiShared,seed = None,global_train_count = 0)
         if (global_train_count % HP.save_every_train_number == 0 or global_train_count == 1) and not HP.evaluation_flag:# and global_train_count > 0):
             if global_train_count == 1:
                 HP.net_name = 'tf_model_'+str(0)
+                Agent.var_name = 'var_'+str(0)
             else:
                 HP.net_name = 'tf_model_'+str(global_train_count)
+                Agent.var_name = 'var_'+str(global_train_count)
 
             Agent.save_nets()
+            Agent.save_var()
         if (i % HP.save_every == 0 and i > 0): 
             dataManager.save_data()
         if HP.plot_flag and waitFor.command == [b'1']:
