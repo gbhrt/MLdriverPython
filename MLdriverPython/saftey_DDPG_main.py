@@ -25,7 +25,7 @@ def run_all(HP,guiShared):
     #var_constants_vec = [0.01*i for i in range(1,10)]
     #names = ['VOD_var_check_'+str(var_constant) for var_constant in var_constants_vec]
     #names_vec.append([names,'VOD',None])
-    names_vec.append([['MB_R_var'],'MB_R',None])
+    names_vec.append([['MB_R_const_var004_1'],'MB_R',None])
     #names_vec.append([['also_steer1'],'REVO',50000])#trained MF acc and steer policy
     random.seed(0)
     HP.seed = random.sample(range(1000),101)#the 101 path is not executed
@@ -77,7 +77,7 @@ def run_all(HP,guiShared):
                 continue
 
         if method == "MB_R":#model based regular - without stabilization
-            HP.max_steps = 300#1000
+            HP.max_steps = 1000
             HP.emergency_action_flag = False
             HP.emergency_steering_type = 1#1 - stright, 2 - 0.5 from original steering, 3-steer net
         elif method == "MB_S":
@@ -92,7 +92,7 @@ def run_all(HP,guiShared):
             description]
         HP.save_every_train_number = 100#5000
         
-        for evalutaion_flag in [True]:#False,
+        for evalutaion_flag in [False,True]:#False,
             HP.evaluation_flag = evalutaion_flag
 
             for name in names:

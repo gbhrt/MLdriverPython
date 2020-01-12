@@ -96,7 +96,7 @@ class TrainHyperParameters:
         self.MF_policy_flag = False
         self.direct_predict_active = False
         self.direct_constrain = True #stabilization constrain computed by direct model (centrpetal force limit) or roll constrain
-        self.update_var_flag = True 
+        self.update_var_flag = False 
         self.num_of_runs = 5000
         self.alpha = 0.0001# #learning rate
         self.batch_size = 64
@@ -124,7 +124,7 @@ class TrainHyperParameters:
             self.const_var =1.0
         else:
             #0.5 not move. 0.2 < 0.5 of VOD. 0.1 =0.85 of VOD. 0 1+-0.05 of VOD com height = 1.7
-            self.one_step_var =0.1# 0.02 is good
+            self.one_step_var =0.04# 0.02 is good
             self.const_var = 1000.0#0.05#roll variance at the future states, constant because closed loop control?
         self.prior_safe_velocity = 0.02#if the velocity is lower than this value - it is priori Known that it is OK to accelerate
         self.stabilize_factor = 1.0

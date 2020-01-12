@@ -130,8 +130,8 @@ def add_zero_data_manager(folder,names_vec):
 def get_data(folder,names_vec, return_violation_count = False):
     HP = HyperParameters()
 
-    #train_indexes = [100*j for j in range(1,19)]
-    train_indexes = [1000*j for j in range(1,5)]
+    train_indexes = [100*j for j in range(1,20)]
+    #train_indexes = [1000*j for j in range(1,5)]
     #train_indexes = [5000*j for j in range(0,19)]
     #train_indexes = [15000]
     rewards_vec = []
@@ -300,7 +300,7 @@ if __name__ == "__main__":
     #names_vec.append([['MB_R_4'],['Model Based RL',None]])
     #names_vec.append([['MB_R_2'],['Model Based RL',None]])#,'MB_R_2'
 
-    names_vec.append([['MB_R_acc_1'],['Model Based RL',None]])
+    names_vec.append([['MB_R_const_var01_1'],['Model Based RL',None]])
 
     #names = ['VOD_var_check_'+str(var_constant) for var_constant in [0.01*i for i in range(1,10)]]
     #for name in names:
@@ -337,7 +337,7 @@ if __name__ == "__main__":
     #correct_relative_reward(folder,names_vec)
 
     reward_vec_indexes,rewards_vec,indexes,fails_vec,var,series_colors,series_names, _ = get_data(folder,names_vec,return_violation_count = True)
-    indexes = [ind/2 for ind in indexes]#
+    #indexes = [ind/2 for ind in indexes]#
     avg_rewards_vec,var_rewards_vec = average_training_processes(rewards_vec)
     avg_fails_vec,var_fails_vec = average_training_processes(fails_vec)
    

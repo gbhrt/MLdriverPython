@@ -189,7 +189,14 @@ def train(env,HP,Agent,dataManager,guiShared,seed = None,global_train_count = 0)
         if first_flag:
             Agent.start_training()#after first episode to avoid long first training in the middle of driving
             first_flag = False
-
+       #stop at the end of the episode for training
+        if not HP.evaluation_flag and HP.pause_for_training and global_train_count > 10 :# global_train_count >10  tmp to ensure that training is already started
+            train_count_at_end = 5000
+            current_traint_count = Agent.trainShared.train_count
+            while Agent.trainShared.train_count - current_traint_count < train_count_at_end:
+                time.sleep(5)
+                env.pl.stop_vehicle()#for maintain connection to simulator (prevent timeout)
+                
         if Agent.trainHP.update_var_flag:
             compute_var_done = [False]
             compErrorThread = comp_error.compError(Agent,step_count-1,compute_var_done)
@@ -271,13 +278,7 @@ def train(env,HP,Agent,dataManager,guiShared,seed = None,global_train_count = 0)
                 env.pl.stop_vehicle()#for maintain connection to simulator (prevent timeout)
         #dataManager.save_readeable_data()
 
-        #stop at the end of the episode for training
-        if not HP.evaluation_flag and HP.pause_for_training and global_train_count > 10 :# global_train_count >10  tmp to ensure that training is already started
-            train_count_at_end = 5000
-            current_traint_count = Agent.trainShared.train_count
-            while Agent.trainShared.train_count - current_traint_count < train_count_at_end:
-                time.sleep(5)
-                env.pl.stop_vehicle()#for maintain connection to simulator (prevent timeout)
+ 
 
 
         dataManager.restart()

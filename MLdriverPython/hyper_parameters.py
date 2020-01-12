@@ -114,7 +114,7 @@ class ModelBasedHyperParameters:#global settings of the program.
         if self.program_mode == "test_net_performance" or self.program_mode == "test_actions":
             self.gui_flag = False
         else:
-            self.gui_flag = True
+            self.gui_flag = False
         self.MF_policy_flag = False
         self.emergency_action_flag = False
         self.emergency_steering_type = 4#1 - stright, 2 - 0.5 from original steering, 3-steer net, 4-same steering, 5-roll proportional
@@ -130,7 +130,7 @@ class ModelBasedHyperParameters:#global settings of the program.
         self.evaluation_every = 999999999
         self.add_feature_to_action = False
         #####################
-        self.pause_for_training = False
+        self.pause_for_training = True
         self.max_steps = 200000
         self.train_flag = True
         #self.noise_flag = True
