@@ -158,9 +158,10 @@ def get_data(folder,names_vec, return_violation_count = False):
             single_violation_count = []
             for i in train_indexes:#for every test at a fixed parameter set (fixed training point)
                 restore_path = os.getcwd()+ "/files/models/"+str(folder)+"/"+name+"/"
-                tmp_names = ['VOD_var_check_'+str(var_constant) for var_constant in [0.01*i for i in range(1,18)]]
-                #if name ==  "VOD_01_1" or name == "VOD_022_1" or name == "VOD_020_1" or name == "VOD_010_1":
-                if name in["VOD_00","VOD_002","VOD_004","VOD_006","VOD_008","VOD_01","VOD_012","VOD_014","VOD_016","VOD_018","VOD_02","VOD_015","VOD_005","VOD_0175"] or name in tmp_names:
+                # tmp_names = ['VOD_var_check_'+str(var_constant) for var_constant in [0.01*i for i in range(1,18)]]
+                # #if name ==  "VOD_01_1" or name == "VOD_022_1" or name == "VOD_020_1" or name == "VOD_010_1":
+                # if name in["VOD_00","VOD_002","VOD_004","VOD_006","VOD_008","VOD_01","VOD_012","VOD_014","VOD_016","VOD_018","VOD_02","VOD_015","VOD_005","VOD_0175"] or name in tmp_names:
+                if "VOD" in name:
                     restore_name = 'data_manager_0'
                 else:
                     restore_name = 'data_manager_'+str(i)#'data_manager'
@@ -300,36 +301,36 @@ if __name__ == "__main__":
     #names_vec.append([['MB_R_4'],['Model Based RL',None]])
     #names_vec.append([['MB_R_2'],['Model Based RL',None]])#,'MB_R_2'
 
-    names_vec.append([['MB_R_const_var01_1'],['Model Based RL',None]])
+    #names_vec.append([['MB_R_const_var004_1'],['Model Based RL',None]])#MB_R_const_var01_1
+    names = ['VOD_var_check_'+str(var_constant) for var_constant in [0.01*i for i in range(1,10)]]
+    #names = ['VOD_var_check_const_'+str(var_constant) for var_constant in [0.01*i for i in range(1,30)]]
+    for name in names:
+       names_vec.append([[name],[name,None]])
+    reward_vec_indexes,rewards_vec,indexes,fails_vec,var,series_colors,series_names,violation_count_vec = get_data(folder,names_vec,return_violation_count = True)
+    vel = [reward[0][0] for reward in rewards_vec]
+    fail = [fails[0][0] for fails in fails_vec]
+    violation_count = [violation_counts[0][0] for violation_counts in violation_count_vec]
 
-    #names = ['VOD_var_check_'+str(var_constant) for var_constant in [0.01*i for i in range(1,10)]]
-    #for name in names:
-    #    names_vec.append([[name],[name,None]])
-    #reward_vec_indexes,rewards_vec,indexes,fails_vec,var,series_colors,series_names,violation_count_vec = get_data(folder,names_vec,return_violation_count = True)
-    #vel = [reward[0][0] for reward in rewards_vec]
-    #fail = [fails[0][0] for fails in fails_vec]
-    #violation_count = [violation_counts[0][0] for violation_counts in violation_count_vec]
+    fig, ax1 = plt.subplots()
+    color = 'tab:red'
+    ax1.set_xlabel('Velocity factor',fontsize = size)
+    ax1.set_ylabel('Fails [%]',fontsize = size)
+    ax1.plot(vel,fail,'o',c = color,label = 'VOD')
+    ax1.plot(vel,fail,c = color,)
+    ax1.tick_params(axis='y', labelcolor=color)
+    ax1.plot([1.202],[0.0],'*',c = color,label = 'Model based')
 
-    #fig, ax1 = plt.subplots()
-    #color = 'tab:red'
-    #ax1.set_xlabel('Velocity factor',fontsize = size)
-    #ax1.set_ylabel('Fails [%]',fontsize = size)
-    #ax1.plot(vel,fail,'o',c = color,label = 'VOD')
-    #ax1.plot(vel,fail,c = color,)
-    #ax1.tick_params(axis='y', labelcolor=color)
-    #ax1.plot([1.202],[0.0],'*',c = color,label = 'Model based')
+    ax2 = ax1.twinx()  # instantiate a second axes that shares the same x-axis
 
-    #ax2 = ax1.twinx()  # instantiate a second axes that shares the same x-axis
+    color = 'tab:blue'
+    ax2.set_ylabel('Violation count [%]',fontsize = size, color=color)  # we already handled the x-label with ax1
+    ax2.plot(vel,violation_count, color=color)
+    ax2.plot(vel,violation_count,'o', color=color,label = 'violation_count')
+    ax2.tick_params(axis='y', labelcolor=color)
 
-    #color = 'tab:blue'
-    #ax2.set_ylabel('Violation count [%]',fontsize = size, color=color)  # we already handled the x-label with ax1
-    #ax2.plot(vel,violation_count, color=color)
-    #ax2.plot(vel,violation_count,'o', color=color,label = 'violation_count')
-    #ax2.tick_params(axis='y', labelcolor=color)
-
-    #ax2.plot([1.202],[0.06],'*',c = color,label = 'Model based')
-    #fig.tight_layout()  # otherwise the right y-label is slightly clipped
-    #plt.show()
+    ax2.plot([1.202],[0.06],'*',c = color,label = 'Model based')
+    fig.tight_layout()  # otherwise the right y-label is slightly clipped
+    plt.show()
 
     ########################################################################
 

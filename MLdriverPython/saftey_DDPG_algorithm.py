@@ -250,12 +250,12 @@ def train(env,HP,net_drive,dataManager,net_stabilize = None,guiShared = None,see
                 
 
             if guiShared is not None:
-                Q_matrix = net_drive.get_Qa([state]*len(actions),actions).flatten()
+                # Q_matrix = net_drive.get_Qa([state]*len(actions),actions).flatten()
                
-                if  HP.env_mode == "SDDPG_pure_persuit":    
-                    Q_matrix = np.reshape(Q_matrix,(len(Q_matrix),1))
-                else:
-                    Q_matrix = np.reshape(Q_matrix,(l,l))
+                # if  HP.env_mode == "SDDPG_pure_persuit":    
+                #     Q_matrix = np.reshape(Q_matrix,(len(Q_matrix),1))
+                # else:
+                #     Q_matrix = np.reshape(Q_matrix,(l,l))
                 # if HP.stabilize_flag:
                 #     Q_matrix_stabilize = net_stabilize.get_Qa([state]*len(actions),actions).flatten()
                 #     if HP.env_mode == "SDDPG_pure_persuit":
@@ -265,7 +265,7 @@ def train(env,HP,net_drive,dataManager,net_stabilize = None,guiShared = None,see
 
                 planningData = classes.planningData()
                 planningData.vec_path.append(env.local_path)
-                planningData.vec_Q.append(Q_matrix)# Q_matrix_stabilize
+                # planningData.vec_Q.append(Q_matrix)# Q_matrix_stabilize
                 planningData.action_vec.append(action)
                 planningData.action_noise_vec.append(a)
                 planningData.vec_emergency_action.append(emergency_action)
@@ -295,7 +295,7 @@ def train(env,HP,net_drive,dataManager,net_stabilize = None,guiShared = None,see
             if not evaluation_flag:
                 time_step_error = info[1]
                 if not time_step_error:
-                    print('reward:',reward)
+                    #print('reward:',reward)
                     if HP.stabilize_flag:
                         Replay.add((state,a,reward,reward_stabilize,next_state,done))
                     else:

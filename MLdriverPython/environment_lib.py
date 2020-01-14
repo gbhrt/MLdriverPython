@@ -168,21 +168,28 @@ def get_SDDPG_reward_stabilize(velocity,max_vel,roll,mode,deviation,lower_bound 
     else:
         reward =  0.01*(-abs(velocity)/max_vel - abs(roll))#0.02*
     return reward
-def get_SDDPG_reward(ang,velocity,max_vel,roll,mode,deviation,lower_bound = 0.0):
+def get_SDDPG_reward(ang,velocity,max_vel,roll,mode,deviation,lower_bound = 0.0,steer = None):
     #print("progress:",progress,"deviation:",deviation)
+    if steer is not None:
+        violation_flag = get_direct_stability(velocity,steer)
+    else:
+        violation_flag = False
     if mode == 'kipp'or mode == 'deviate':
         reward = -1.0
     elif velocity <= lower_bound:
         reward = -0.2
-
+    elif violation_flag:
+        print("violation_flag")
+        reward = -0.5
     elif abs(deviation) > 4.0:
         print("deviation > 4.0")
         reward = -0.1
-    elif  abs(roll) > 0.1:
-        reward = -0.5
+
+    # elif  abs(roll) > 0.1:
+    #     reward = -0.5
     else:
         reward = velocity/max_vel# *np.cos(ang)#progress/(max_vel*0.2/0.05)
-
+    #print("reward:",reward)
     #else:
     #    #reward =  - abs(deviation*0.03)+0.02*velocity/max_vel
     #    reward =  - abs(deviation*0.03)+0.02*progress/(max_vel*0.2/0.05)
