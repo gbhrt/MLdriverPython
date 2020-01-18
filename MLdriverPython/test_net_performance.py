@@ -13,13 +13,20 @@ import time
 import agent
 import agent_lib
 import predict_lib
+from statsmodels.graphics.gofplots import qqplot
 
 def save_data(file_name,data):
     with open(file_name, 'w') as f:#append data to the file
         json.dump(data,f)
 
+
+        
+def plot_qqplot(data,name):
+    qqplot(data, line='s',label = name)
+    plt.legend()
+
 def plot_distribution(data,name):
-    var = np.sqrt(np.var(data))
+    var = np.std(data,dtype=np.float64)
     plt.figure(name+" distribution")
     plt.title(name,fontsize = 30)
     plt.tick_params(labelsize=20)
@@ -346,8 +353,10 @@ def one_step_pred_plot(Agent,replay_memory):
         pred = np.array(rel_pos_pred_vec)[:,ind]
         error = pred - real
         print("mse:",feature,np.sqrt((error**2).mean()))
+        plot_qqplot(error,feature)
         plot_distribution(error,feature)
         plot_comparison(real, pred,feature)
+
 
     # for ind,feature in enumerate([r'$v$',r'$\delta$',r'$\theta_y$']):
     for ind,feature in enumerate([r'$v$',r'$\delta$']):
@@ -357,6 +366,26 @@ def one_step_pred_plot(Agent,replay_memory):
         error = pred - real
         print("mse:",feature,np.sqrt((error**2).mean()))
         plot_distribution(error,feature)
+        plot_qqplot(error,feature)
+    #LTR
+    steer_vec_real = np.array(vehicle_state_next_vec)[:,Agent.trainHP.vehicle_ind_data["steer"]]
+    vel_vec_real = np.array(vehicle_state_next_vec)[:,Agent.trainHP.vehicle_ind_data["vel_y"]]
+    LTR_vec_real = [Agent.Direct.comp_LTR(vel,steer) for steer, vel in zip(steer_vec_real,vel_vec_real)]
+    steer_vec_pred = np.array(vehicle_state_next_pred_vec)[:,Agent.trainHP.vehicle_ind_data["steer"]]
+    vel_vec_pred = np.array(vehicle_state_next_pred_vec)[:,Agent.trainHP.vehicle_ind_data["vel_y"]]
+    LTR_vec_pred = [Agent.Direct.comp_LTR(vel,steer) for steer, vel in zip(steer_vec_pred,vel_vec_pred)]
+    error = np.array(LTR_vec_pred) - np.array(LTR_vec_real)
+    plot_qqplot(error,"LTR")
+    plot_distribution(error,"LTR")
+    plot_comparison(LTR_vec_real, LTR_vec_pred,"LTR")
+
+    var = Agent.planningState.var[1]
+    num = 0
+    for e in error:
+        if abs(e) > var:
+            num+=1
+
+    print("percent of deviation from saftey margin:",num)    
     plt.show()
 
 def train_nets(Agent):
@@ -373,7 +402,7 @@ def train_nets(Agent):
 #def direct():
 
 def test_net(Agent): 
-    train = True
+    train = False
     split_buffer = True
     separate_nets = False
     variance_mode = False
@@ -435,10 +464,12 @@ def test_net(Agent):
        train_nets(Agent)
 
     Agent.Replay.memory = full_replay_memory
+    
     Agent.save()
 
     replay_memory = full_replay_memory#full_replay_memory[:int(0.3*len(full_replay_memory))]#test_replay_memory# #test_replay_memory#test_replay_memory
 
+    #Agent.update_episode_var()#len(replay_memory)
     #TransNet_X = [[1,1,1,1,1]]
 
     #TransNet_Y = Agent.nets.TransNet.predict(np.array(TransNet_X))[0]

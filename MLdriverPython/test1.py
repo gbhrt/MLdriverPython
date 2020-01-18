@@ -4,8 +4,26 @@
 #import matplotlib.pyplot as plt
 #import pandas as pd
 import numpy as np
-import tensorflow as tf
-import threading
+#import tensorflow as tf
+#import threading
+from scipy.stats import chi2
+import matplotlib.pyplot as plt
+
+n = 100
+std = 5.86
+
+#standard deviation:
+tmp = (n-1)*std**2
+std_min = np.sqrt(tmp/chi2.ppf(0.995, n-1))#0.975
+std_max = np.sqrt(tmp/chi2.ppf(0.005, n-1))#0.025
+print("std_min:",std_min,"std_max:",std_max)
+
+#mean:
+z = 2.576#for 99% confidence
+mean_dev = z*std/np.sqrt(n)
+print("mean_dev:",mean_dev)
+
+
 
 
 
@@ -118,33 +136,33 @@ import threading
 
 
 
-model = tf.keras.models.Sequential([
-    tf.keras.layers.Dense(20, activation=tf.keras.activations.relu,input_shape = (2,) ),
-tf.keras.layers.Dense(20, activation=tf.keras.activations.relu),
-tf.keras.layers.Dense(20, activation=tf.keras.activations.relu),
-tf.keras.layers.Dense(1)
-])
+#model = tf.keras.models.Sequential([
+#    tf.keras.layers.Dense(20, activation=tf.keras.activations.relu,input_shape = (2,) ),
+#tf.keras.layers.Dense(20, activation=tf.keras.activations.relu),
+#tf.keras.layers.Dense(20, activation=tf.keras.activations.relu),
+#tf.keras.layers.Dense(1)
+#])
 
-model.compile(optimizer=tf.keras.optimizers.Adam(),
-        loss=tf.keras.losses.mean_squared_error,
-        metrics=['accuracy'])
+#model.compile(optimizer=tf.keras.optimizers.Adam(),
+#        loss=tf.keras.losses.mean_squared_error,
+#        metrics=['accuracy'])
 
-graph = tf.get_default_graph()
+#graph = tf.get_default_graph()
 
-model.summary()
-print(model.evaluate(np.array([[1,2],[2,4]]),np.array([1,2])))
-model.train_on_batch(np.array([[1,2],[2,4]]),np.array([1,2]))
-print(model.predict(np.array([[1,2],[2,4]]),batch_size = 2))#
-
-
-def train():
-    for i in range(100):
-        with graph.as_default():
-            model.train_on_batch(np.array([[1,2],[2,4]]),np.array([1,2]))
-            print("train model")
+#model.summary()
+#print(model.evaluate(np.array([[1,2],[2,4]]),np.array([1,2])))
+#model.train_on_batch(np.array([[1,2],[2,4]]),np.array([1,2]))
+#print(model.predict(np.array([[1,2],[2,4]]),batch_size = 2))#
 
 
-t = threading.Thread(target=train)
-t.start()
+#def train():
+#    for i in range(100):
+#        with graph.as_default():
+#            model.train_on_batch(np.array([[1,2],[2,4]]),np.array([1,2]))
+#            print("train model")
+
+
+#t = threading.Thread(target=train)
+#t.start()
 
 

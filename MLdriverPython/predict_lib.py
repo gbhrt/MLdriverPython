@@ -2,6 +2,7 @@ import copy
 import numpy as np
 import library as lib
 from math import copysign
+from scipy.stats import chi2
 
 
 def steer_policy(abs_pos,abs_ang,path,index,vel):
@@ -406,8 +407,25 @@ def comp_ac_var(Agent, n_state_vec,n_state_vec_pred,type = "mean_error"):
         error = pred - real
         if type == "mean_error":
             var_vec.append((np.abs(error)).mean())
+        elif type == "std":
+            var_vec.append(np.std(error, dtype=np.float64)*3)#3*variance - 99.73 samples are inside
         else:
-            var_vec.append(np.sqrt( np.var(error))*3)#3*variance - 99.73 samples are inside
+            std = np.std(error, dtype=np.float64)
+            n = len(error)
+            #mean:
+            z= 2.576#99% Confidence Interval of mean
+            abs_mean = abs (np.mean(error,dtype=np.float64))
+            mean_dev = z*std/np.sqrt(n)
+            #standard deviation:
+            tmp = (n-1)*std**2
+            #std_min = np.sqrt(tmp/chi2.ppf(0.995, n-1))#0.975
+            std_max = np.sqrt(tmp/chi2.ppf(0.005, n-1))#0.025
+
+            max_dev = abs_mean+mean_dev+std_max*3
+            var_vec.append(max_dev)
+            
+
+
 
     return var_vec
             
