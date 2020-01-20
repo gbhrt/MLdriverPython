@@ -394,7 +394,7 @@ def get_all_n_step_states(TransNet,trainHP,replay_memory, n):#from 1 step to n s
 
     return all_n_state_vec,all_n_state_vec_pred,all_n_pos_vec,all_n_pos_vec_pred,all_n_ang_vec,all_n_ang_vec_pred
 
-def comp_ac_var(Agent, n_state_vec,n_state_vec_pred,type = "mean_error"):
+def comp_ac_var(Agent, n_state_vec,n_state_vec_pred,type = "mean_error",print_error = False):
     var_vec = []
     for final_state_vec,final_state_vec_pred in zip(n_state_vec,n_state_vec_pred):     
         vel_vec = np.array(final_state_vec)[:,Agent.trainHP.vehicle_ind_data["vel_y"]]
@@ -413,16 +413,25 @@ def comp_ac_var(Agent, n_state_vec,n_state_vec_pred,type = "mean_error"):
             std = np.std(error, dtype=np.float64)
             n = len(error)
             #mean:
+            #source: https://www.mathsisfun.com/data/confidence-interval.html
             z= 2.576#99% Confidence Interval of mean
             abs_mean = abs (np.mean(error,dtype=np.float64))
             mean_dev = z*std/np.sqrt(n)
             #standard deviation:
+            #source: http://www.milefoot.com/math/stat/ci-variances.htm
             tmp = (n-1)*std**2
             #std_min = np.sqrt(tmp/chi2.ppf(0.995, n-1))#0.975
             std_max = np.sqrt(tmp/chi2.ppf(0.005, n-1))#0.025
 
             max_dev = abs_mean+mean_dev+std_max*3
             var_vec.append(max_dev)
+        if print_error:
+            num = 0
+            for e in error:
+                if abs(e) > var_vec[-1]:
+                    num+=1
+            print("deviation from saftey margin:",num/len(error)*100,"%",end = ",")
+            print("") 
             
 
 
