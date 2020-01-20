@@ -22,10 +22,10 @@ def run_all(HP,guiShared):
         guiShared.max_time = envData.step_time*envData.max_episode_steps+5#add time for braking
     names_vec = []
     #names_vec.append([['MB_R_1','MB_R_2','MB_R_3','MB_R_4','MB_R_5'],'MB_R',None])
-    var_constants_vec = [0.01*i for i in range(10,30)]
-    names = ['VOD_var_check_const_'+str(var_constant) for var_constant in var_constants_vec]
-    names_vec.append([names,'VOD',None])
-    #names_vec.append([['MB_R_const_var004_1'],'MB_R',None])
+    #var_constants_vec = [0.01*i for i in range(10,30)]
+    #names = ['VOD_var_check_const_'+str(var_constant) for var_constant in var_constants_vec]
+    #names_vec.append([names,'VOD',None])
+    names_vec.append([['MB_long01'],'MB_R',0])
     #names_vec.append([['also_steer1'],'REVO',50000])#trained MF acc and steer policy
     random.seed(0)
     HP.seed = random.sample(range(1000),101)#the 101 path is not executed
@@ -94,7 +94,7 @@ def run_all(HP,guiShared):
             description]
         HP.save_every_train_number = 100#5000
         
-        for evalutaion_flag in [False,True]:#False,
+        for evalutaion_flag in [True]:#False,
             HP.evaluation_flag = evalutaion_flag
 
             for name in names:
@@ -264,8 +264,8 @@ class programThread (threading.Thread):
       
     def run(self):
         print ("Starting " + self.name)
-        run(self.HP,self.guiShared)
-        #run_all(self.HP,self.guiShared)
+        #run(self.HP,self.guiShared)
+        run_all(self.HP,self.guiShared)
         print ("Exiting " + self.name)
 
         
@@ -273,7 +273,7 @@ class programThread (threading.Thread):
 
 
 if __name__ == "__main__": 
-    algo_type = "SDDPG"#"MB"#"SDDPG"
+    algo_type = "MB"#"MB"#"SDDPG"
 
     if algo_type == "SDDPG":
         HP = hyper_parameters.SafteyHyperParameters()

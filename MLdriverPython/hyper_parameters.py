@@ -152,7 +152,7 @@ class ModelBasedHyperParameters:#global settings of the program.
         self.seed = [1111]
         self.net_name = "tf_model"
         self.save_name = "MB_learn_var"#"MB_R_long2" MB_R_DS1
-        self.folder_path = os.getcwd()+ "/files/models/model_based/"
+        self.folder_path = os.getcwd()+ "/files/models/MB_paper/"
         #self.save_file_path = os.getcwd()+ "/files/models/model_based/"+self.save_name+"/"f
         self.save_file_path = self.folder_path +self.save_name+"/"
 
