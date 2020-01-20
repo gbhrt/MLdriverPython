@@ -40,15 +40,19 @@ def get_abs_vel(dataManager):
     var = sum(var_vec)/len(var_vec)
     return abs_vel,var
 
-def get_relative_reward_real_vod(dataManager,VOD_reward):
-    run_time =  0.2*101
+def get_relative_to_baseline_reward(dataManager,baseline_dist,lenght):
+    run_time =  0.2*lenght
     relative_reward = []
-    for real_path,seed,end_mode,VOD_dist in zip(dataManager.paths,dataManager.path_seed, dataManager.episode_end_mode,VOD_reward):
+    for real_path,seed,end_mode,baseline_dist in zip(dataManager.paths,dataManager.path_seed, dataManager.episode_end_mode,baseline_dist):
         if end_mode == 'kipp' or end_mode == 'deviate' or len(real_path[1]) == 0:
-            relative_reward.append(-1)
+            relative_reward.append(0)
         else:
-            real_dist = real_path[1][99]
-            relative_reward.append(real_dist/VOD_dist)
+            real_dist = real_path[1][lenght-1]
+            if abs(baseline_dist) > 1e-6:
+                relative_reward.append(real_dist/baseline_dist)
+            else:
+                print("error - baseline distance is 0")
+                relative_reward.append(10000)
     return relative_reward
 def get_relative_reward(dataManager):
     run_time =  0.2*100
@@ -82,25 +86,46 @@ def get_avg_reward(dataManager):
     #filtered_reward = [value for value in dataManager.relative_reward if value != -1]
     filtered_reward = [value for value in dataManager.relative_reward if value != 0]
     if len(filtered_reward)>0:
-        return sum(filtered_reward)/len(filtered_reward),np.sqrt(np.var(filtered_reward))
+        return sum(filtered_reward)/len(filtered_reward),np.std(filtered_reward)
     return -1,0
 
-def get_VOD_dist(folder):
-    restore_path = os.getcwd()+ "/files/models/"+str(folder)+"/VOD/"
+def get_baseline_dist(folder,baseline,lenght):
+    restore_path = os.getcwd()+ "/files/models/"+str(folder)+"/"+baseline+"/"
     restore_name = 'data_manager'
-    VOD_dist = []
+    baseline_dist = []
     dataManager = data_manager1.DataManager(restore_path,restore_path,True,save_name = restore_name,restore_name = restore_name)#
+    print("seeds:",dataManager.path_seed)
     for real_path,seed,end_mode in zip(dataManager.paths,dataManager.path_seed, dataManager.episode_end_mode):
         if end_mode == 'kipp' or end_mode == 'deviate' or len(real_path[1]) == 0:
-            print('error - VOD failed')
+            print('error - baseline failed')
         else:
-            VOD_dist.append(real_path[1][99])
-    return VOD_dist
+            baseline_dist.append(real_path[1][lenght-1])
+    
+    return baseline_dist
 
-def correct_relative_reward(folder,names_vec):
-    HP = HyperParameters()
-    VOD_dist = get_VOD_dist(folder)
-    train_indexes = [100*j for j in range(1,10)]#[5000*j for j in range(1,21)]
+#def correct_relative_reward(folder,names_vec,train_indexes,baseline):
+#    lenght = 100
+#    #HP = HyperParameters()
+#    baseline_dist = get_baseline_dist(folder,baseline,lenght)
+    
+#    for names in names_vec:#for every series of data (e.g. REVO or REVO+A)
+#        for name in names[0]:#for every training process(e.g. REVO1)
+#            for i in train_indexes:#for every test at a fixed parameter set (fixed training point)
+#                restore_path = os.getcwd()+ "/files/models/"+str(folder)+"/"+name+"/"
+#                restore_name = 'data_manager_'+str(i)
+#                dataManager = data_manager1.DataManager(restore_path,restore_path,True,save_name = restore_name,restore_name = restore_name)#
+#                if dataManager.error:
+#                    print("cannot restore dataManager")
+#                    continue
+#                dataManager.relative_reward  = get_relative_reward(dataManager) 
+#                #dataManager.relative_reward  = get_relative_reward_real_vod(dataManager,VOD_dist)
+#                dataManager.save_data()
+#                del dataManager
+#    return 
+def comp_relative_reward(folder,names_vec,train_indexes,baseline):
+    lenght = 100
+    baseline_dist = get_baseline_dist(folder,baseline,lenght)
+    print("baseline_dist:",baseline_dist)
     for names in names_vec:#for every series of data (e.g. REVO or REVO+A)
         for name in names[0]:#for every training process(e.g. REVO1)
             for i in train_indexes:#for every test at a fixed parameter set (fixed training point)
@@ -110,8 +135,10 @@ def correct_relative_reward(folder,names_vec):
                 if dataManager.error:
                     print("cannot restore dataManager")
                     continue
-                dataManager.relative_reward  = get_relative_reward(dataManager) 
-                #dataManager.relative_reward  = get_relative_reward_real_vod(dataManager,VOD_dist)
+                print("seeds:",dataManager.path_seed)
+                #dataManager.relative_reward  = get_relative_reward(dataManager) 
+                dataManager.relative_reward  = get_relative_to_baseline_reward(dataManager,baseline_dist,lenght)
+                print("dataManager.relative_reward:",dataManager.relative_reward )
                 dataManager.save_data()
                 del dataManager
     return 
@@ -127,10 +154,10 @@ def add_zero_data_manager(folder,names_vec):
             dataManager.save_data()
 
 
-def get_data(folder,names_vec, return_violation_count = False, take_0_flag = False):
+def get_data(folder,names_vec,train_indexes, return_violation_count = False):#, take_0_flag = False
     HP = HyperParameters()
 
-    train_indexes = [100*j for j in range(1,20)]
+    
     #train_indexes = [1000*j for j in range(1,5)]
     #train_indexes = [5000*j for j in range(0,19)]
     #train_indexes = [15000]
@@ -161,11 +188,11 @@ def get_data(folder,names_vec, return_violation_count = False, take_0_flag = Fal
                 # tmp_names = ['VOD_var_check_'+str(var_constant) for var_constant in [0.01*i for i in range(1,18)]]
                 # #if name ==  "VOD_01_1" or name == "VOD_022_1" or name == "VOD_020_1" or name == "VOD_010_1":
                 # if name in["VOD_00","VOD_002","VOD_004","VOD_006","VOD_008","VOD_01","VOD_012","VOD_014","VOD_016","VOD_018","VOD_02","VOD_015","VOD_005","VOD_0175"] or name in tmp_names:
-                if take_0_flag:#"VOD" in name:
-                    i = 0
-                    restore_name = 'data_manager_'+str(i)
-                else:
-                    restore_name = 'data_manager_'+str(i)#'data_manager'
+                #if take_0_flag:#"VOD" in name:
+                #    i = 0
+                #    restore_name = 'data_manager_'+str(i)
+                #else:
+                restore_name = 'data_manager_'+str(i)#'data_manager'
                 dataManager = data_manager1.DataManager(restore_path,restore_path,True,restore_name = restore_name,save_name = restore_name)#
                 if dataManager.error:
                     print("cannot restore dataManager",name,"num:",i)
@@ -221,6 +248,82 @@ def average_training_processes(rewards_vec):
         avg_rewards_vec.append(rewards_avg)  
     return avg_rewards_vec,vars_vec
 
+def plot_fails_vel_comparison():
+    folder = "MB_paper"#"MB_paper" model_based
+    #names_vec.append([['MB_R_4'],['Model Based RL',None]])
+    #names_vec.append([['MB_R_2'],['Model Based RL',None]])#,'MB_R_2'
+
+    plt.figure(1)
+    plt.xlabel('Velocity factor',fontsize = size)
+    plt.ylabel('Fails [%]',fontsize = size)
+
+    names = ['VOD_var_check_const_'+str(var_constant) for var_constant in [0.01*i for i in range(1,30)]]
+    names_vec = []
+    for name in names:
+       names_vec.append([[name],[name,None]])
+    reward_vec_indexes,rewards_vec,indexes,fails_vec,var,series_colors,series_names,violation_count_vec = get_data(folder,names_vec,[0],return_violation_count = True)
+    vel = [reward[0][0] for reward in rewards_vec]
+    fail = [fails[0][0] for fails in fails_vec]
+    violation_count = [violation_counts[0][0] for violation_counts in violation_count_vec]
+    plt.plot(vel,fail,c = 'r',label = 'VOD_const')
+    plt.plot(vel,fail,'o',c = 'r')
+
+    names = ['VOD_var_check_'+str(var_constant) for var_constant in [0.01*i for i in range(1,10)]]#19
+    names_vec = []
+    for name in names:
+       names_vec.append([[name],[name,None]])
+    reward_vec_indexes,rewards_vec,indexes,fails_vec,var,series_colors,series_names,violation_count_vec = get_data(folder,names_vec,[0],return_violation_count = True)
+    vel = [reward[0][0] for reward in rewards_vec]
+    fail = [fails[0][0] for fails in fails_vec]
+    violation_count = [violation_counts[0][0] for violation_counts in violation_count_vec]
+    plt.plot(vel,fail,c = 'b',label = 'VOD_linear')
+    plt.plot(vel,fail,'o',c = 'b')
+
+    names = ['MB_var_check_linear_'+str(var_constant) for var_constant in [0.01*i for i in range(0,10)]]#14
+    names_vec = []
+    for name in names:
+       names_vec.append([[name],[name,None]])
+    reward_vec_indexes,rewards_vec,indexes,fails_vec,var,series_colors,series_names,violation_count_vec = get_data(folder,names_vec,[0],return_violation_count = True)
+    vel = [reward[0][0] for reward in rewards_vec]
+    fail = [fails[0][0] for fails in fails_vec]
+    violation_count = [violation_counts[0][0] for violation_counts in violation_count_vec]
+    plt.plot(vel,fail,c = 'g',label = 'MB linear')
+    plt.plot(vel,fail,'o',c = 'g')
+
+    names = ['MB_long01']
+    names_vec = []
+    for name in names:
+       names_vec.append([[name],[name,None]])
+    reward_vec_indexes,rewards_vec,indexes,fails_vec,var,series_colors,series_names,violation_count_vec = get_data(folder,names_vec,[0],return_violation_count = True)
+    vel = [reward[0][0] for reward in rewards_vec]
+    fail = [fails[0][0] for fails in fails_vec]
+    violation_count = [violation_counts[0][0] for violation_counts in violation_count_vec]
+    #plt.plot(vel,fail,c = 'g',label = 'MB_long01')
+    plt.plot(vel,fail,'*',c = 'black',label = 'MB_long01')
+    
+
+
+    #fig, ax1 = plt.subplots()
+    #color = 'tab:red'
+    #ax1.set_xlabel('Velocity factor',fontsize = size)
+    #ax1.set_ylabel('Fails [%]',fontsize = size)
+    #ax1.plot(vel,fail,'o',c = color,label = 'VOD')
+    #ax1.plot(vel,fail,c = color,)
+    #ax1.tick_params(axis='y', labelcolor=color)
+    #ax1.plot([1.202],[0.0],'*',c = color,label = 'Model based')
+
+    #ax2 = ax1.twinx()  # instantiate a second axes that shares the same x-axis
+
+    #color = 'tab:blue'
+    #ax2.set_ylabel('Violation count [%]',fontsize = size, color=color)  # we already handled the x-label with ax1
+    #ax2.plot(vel,violation_count, color=color)
+    #ax2.plot(vel,violation_count,'o', color=color,label = 'violation_count')
+    #ax2.tick_params(axis='y', labelcolor=color)
+
+    #ax2.plot([1.202],[0.06],'*',c = color,label = 'Model based')
+    #fig.tight_layout()  # otherwise the right y-label is slightly clipped
+    plt.legend()
+    plt.show()
 if __name__ == "__main__":
     #folder = "new_state"#\old reward backup"
     #folder = "paper_fix"
@@ -299,77 +402,31 @@ if __name__ == "__main__":
     
     #names_vec.append([['also_steer1'],['REVO',None]])#90000
     ###########################model based 25.9.19############
-    folder = "MB_paper"#"MB_paper" model_based
-    #names_vec.append([['MB_R_4'],['Model Based RL',None]])
-    #names_vec.append([['MB_R_2'],['Model Based RL',None]])#,'MB_R_2'
-
-    plt.figure(1)
-    plt.xlabel('Velocity factor',fontsize = size)
-    plt.ylabel('Fails [%]',fontsize = size)
-
-    names = ['VOD_var_check_const_'+str(var_constant) for var_constant in [0.01*i for i in range(1,30)]]
-    names_vec = []
-    for name in names:
-       names_vec.append([[name],[name,None]])
-    reward_vec_indexes,rewards_vec,indexes,fails_vec,var,series_colors,series_names,violation_count_vec = get_data(folder,names_vec,return_violation_count = True,take_0_flag = True)
-    vel1 = [reward[0][0] for reward in rewards_vec]
-    fail1 = [fails[0][0] for fails in fails_vec]
-    violation_count = [violation_counts[0][0] for violation_counts in violation_count_vec]
-    plt.plot(vel1,fail1,c = 'r',label = 'VOD_const')
-    plt.plot(vel1,fail1,'o',c = 'r',label = 'VOD_const')
-
-    names = ['VOD_var_check_'+str(var_constant) for var_constant in [0.01*i for i in range(1,10)]]#19
-    names_vec = []
-    for name in names:
-       names_vec.append([[name],[name,None]])
-    reward_vec_indexes,rewards_vec,indexes,fails_vec,var,series_colors,series_names,violation_count_vec = get_data(folder,names_vec,return_violation_count = True,take_0_flag = True)
-    vel = [reward[0][0] for reward in rewards_vec]
-    fail = [fails[0][0] for fails in fails_vec]
-    violation_count = [violation_counts[0][0] for violation_counts in violation_count_vec]
-    plt.plot(vel,fail,c = 'b',label = 'VOD_linear')
-    plt.plot(vel,fail,'o',c = 'b',label = 'VOD_linear')
-
-    names = ['MB_var_check_linear_'+str(var_constant) for var_constant in [0.01*i for i in range(0,10)]]#14
-    names_vec = []
-    for name in names:
-       names_vec.append([[name],[name,None]])
-    reward_vec_indexes,rewards_vec,indexes,fails_vec,var,series_colors,series_names,violation_count_vec = get_data(folder,names_vec,return_violation_count = True,take_0_flag = True)
-    vel = [reward[0][0] for reward in rewards_vec]
-    fail = [fails[0][0] for fails in fails_vec]
-    violation_count = [violation_counts[0][0] for violation_counts in violation_count_vec]
-    plt.plot(vel,fail,c = 'g',label = 'MB linear')
-    plt.plot(vel,fail,'o',c = 'g',label = 'MB linear')
-    
-
-
-    #fig, ax1 = plt.subplots()
-    #color = 'tab:red'
-    #ax1.set_xlabel('Velocity factor',fontsize = size)
-    #ax1.set_ylabel('Fails [%]',fontsize = size)
-    #ax1.plot(vel,fail,'o',c = color,label = 'VOD')
-    #ax1.plot(vel,fail,c = color,)
-    #ax1.tick_params(axis='y', labelcolor=color)
-    #ax1.plot([1.202],[0.0],'*',c = color,label = 'Model based')
-
-    #ax2 = ax1.twinx()  # instantiate a second axes that shares the same x-axis
-
-    #color = 'tab:blue'
-    #ax2.set_ylabel('Violation count [%]',fontsize = size, color=color)  # we already handled the x-label with ax1
-    #ax2.plot(vel,violation_count, color=color)
-    #ax2.plot(vel,violation_count,'o', color=color,label = 'violation_count')
-    #ax2.tick_params(axis='y', labelcolor=color)
-
-    #ax2.plot([1.202],[0.06],'*',c = color,label = 'Model based')
-    #fig.tight_layout()  # otherwise the right y-label is slightly clipped
-    plt.legend()
-    plt.show()
+    #plot_fails_vel_comparison()
 
     ########################################################################
+    folder = "MB_paper"
+    #plot_fails_vel_comparison()
+    #baseline = "baseline"
+    #names_vec = []
+    #names = ['MB_var_check_linear_'+str(var_constant) for var_constant in [0.01*i for i in range(0,14)]]#14
+    #for name in names:
+    #   names_vec.append([[name],[name,None]])
+    #names = ['VOD_var_check_const_'+str(var_constant) for var_constant in [0.01*i for i in range(1,30)]]
+    #for name in names:
+    #   names_vec.append([[name],[name,None]])
+    #names = ['VOD_var_check_'+str(var_constant) for var_constant in [0.01*i for i in range(1,19)]]
+    #for name in names:
+    #   names_vec.append([[name],[name,None]])
+    #comp_relative_reward(folder,names_vec,[0],baseline)#[5000*j for j in range(1,21)])
 
     #add_zero_data_manager(folder,names_vec)
-    #correct_relative_reward(folder,names_vec)
-
-    reward_vec_indexes,rewards_vec,indexes,fails_vec,var,series_colors,series_names, _ = get_data(folder,names_vec,return_violation_count = True)
+    
+    #plot_fails_vel_comparison()
+    names_vec = []
+    names_vec.append([['MB_test'],['MB',None]])
+    train_indexes = [100*j for j in range(1,4)]
+    reward_vec_indexes,rewards_vec,indexes,fails_vec,var,series_colors,series_names, _ = get_data(folder,names_vec,train_indexes,return_violation_count = True)
     #indexes = [ind/2 for ind in indexes]#
     avg_rewards_vec,var_rewards_vec = average_training_processes(rewards_vec)
     avg_fails_vec,var_fails_vec = average_training_processes(fails_vec)

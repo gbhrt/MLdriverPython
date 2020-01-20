@@ -11,11 +11,13 @@ import os
 import direct_method
 import comp_error
 
-def train(env,HP,Agent,dataManager,guiShared,seed = None,global_train_count = 0): #the global train number in MB is the step number, training is async, for compability to other methods
+def train(env,HP,Agent,dataManager,guiShared,const_seed_flag = False,global_train_count = 0): #the global train number in MB is the step number, training is async, for compability to other methods
 
     #subprocess.Popen('C:/Users/gavri/Desktop/sim_15_3_18/sim15_3_18 -quit -batchmode -nographics')
     #pre-defined parameters:
     #Agent.start_training()
+    if const_seed_flag:
+        seed = HP.seed[0]
     first_flag = True
     print("start training")
     env_state = env.reset(seed = seed)
@@ -24,8 +26,6 @@ def train(env,HP,Agent,dataManager,guiShared,seed = None,global_train_count = 0)
     acc,steer,planningData = Agent.comp_action(state,acc,steer)
     print("init acc")
     #time.sleep(5)
-    if seed != None:
-        HP.seed = seed
     ###################
     total_step_count = 0
     random_action_flag = True
@@ -39,7 +39,7 @@ def train(env,HP,Agent,dataManager,guiShared,seed = None,global_train_count = 0)
 
 
     #global_train_count = 0
-    seed = HP.seed[0]
+    
 
     lt = 0#temp
     last_time_stamp = 0
@@ -50,6 +50,14 @@ def train(env,HP,Agent,dataManager,guiShared,seed = None,global_train_count = 0)
             break
         
         # initialize every episode:
+        if not HP.run_same_path and HP.evaluation_flag and const_seed_flag:
+            if i<len(HP.seed):
+                seed = HP.seed[i]
+            else:
+                print("given seed list is too short! take random seed")
+                seed = int.from_bytes(os.urandom(8), byteorder="big")
+
+
         violation_count = 0
         step_count = 0
         reward_vec = []
@@ -237,10 +245,10 @@ def train(env,HP,Agent,dataManager,guiShared,seed = None,global_train_count = 0)
             #HP.noise_flag =True
         print("episode: ", i, " total reward: ", total_reward, "episode steps: ",step_count)
         
-        if not HP.run_same_path:
-            seed = int.from_bytes(os.urandom(8), byteorder="big")
-        else:#not needed 
-            seed = HP.seed[0]
+        #if not HP.run_same_path:
+        #    seed = int.from_bytes(os.urandom(8), byteorder="big")
+        #else:#not needed 
+        #    seed = HP.seed[0]
 
         #if (i % HP.zero_noise_every == 0 and i > 0) or HP.always_no_noise_flag:
         #    HP.noise_flag = False

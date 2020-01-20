@@ -22,10 +22,18 @@ def run_all(HP,guiShared):
         guiShared.max_time = envData.step_time*envData.max_episode_steps+5#add time for braking
     names_vec = []
     #names_vec.append([['MB_R_1','MB_R_2','MB_R_3','MB_R_4','MB_R_5'],'MB_R',None])
-    #var_constants_vec = [0.01*i for i in range(10,30)]
-    #names = ['VOD_var_check_const_'+str(var_constant) for var_constant in var_constants_vec]
-    #names_vec.append([names,'VOD',None])
-    names_vec.append([['MB_long01'],'MB_R',0])
+
+    #var_constants_vec = [0.01*i for i in range(0,15)]
+    #linear_var = True
+    #names = ['VOD_var_check_linear1_'+str(var_constant) for var_constant in var_constants_vec]
+
+    var_constants_vec = [0.01*i for i in range(0,30)]
+    linear_var = False
+    names = ['VOD_var_check_const1_'+str(var_constant) for var_constant in var_constants_vec]
+
+    names_vec.append([names,'VOD',None])
+    #names_vec.append([['MB_long01'],'MB_R',0])
+    #names_vec.append([['MB_test'],'MB_R',None])
     #names_vec.append([['also_steer1'],'REVO',50000])#trained MF acc and steer policy
     random.seed(0)
     HP.seed = random.sample(range(1000),101)#the 101 path is not executed
@@ -65,7 +73,10 @@ def run_all(HP,guiShared):
                 HP.num_of_runs = 100
                 #HP.reduce_vel = reduce
                 run_data = []
-                Agent = agent.Agent(HP,trans_net_active = True, steer_net_active = False,one_step_var = var_constant)#var_constant
+                if linear_var:  
+                    Agent = agent.Agent(HP,trans_net_active = True, steer_net_active = False,one_step_var = var_constant)#var_constant
+                else:
+                    Agent = agent.Agent(HP,trans_net_active = True, steer_net_active = False,const_var = var_constant)
                 Agent.trainHP.direct_predict_active = True
                 Agent.trainHP.update_var_flag = False
                 dataManager = data_manager1.DataManager(HP.save_file_path,HP.restore_file_path,restore_flag =False,save_name = 'data_manager_0')
@@ -74,12 +85,12 @@ def run_all(HP,guiShared):
                 env = environment1.OptimalVelocityPlanner(dataManager,env_mode=HP.env_mode)
                 if env.opened:     
                     Agent.trainHP.num_of_runs = HP.num_of_runs
-                    model_based_algorithm.train(env,HP,Agent,dataManager,guiShared,global_train_count = 0)
+                    model_based_algorithm.train(env,HP,Agent,dataManager,guiShared,global_train_count = 0,const_seed_flag = True)
                 continue
             continue
 
         if method == "MB_R":#model based regular - without stabilization
-            HP.max_steps = 1000
+            HP.max_steps = 2000
             HP.emergency_action_flag = False
             HP.emergency_steering_type = 1#1 - stright, 2 - 0.5 from original steering, 3-steer net
         elif method == "MB_S":
@@ -94,7 +105,7 @@ def run_all(HP,guiShared):
             description]
         HP.save_every_train_number = 100#5000
         
-        for evalutaion_flag in [True]:#False,
+        for evalutaion_flag in [False,True]:#False,
             HP.evaluation_flag = evalutaion_flag
 
             for name in names:
@@ -184,7 +195,7 @@ def run_train_MB(HP,dataManager,envData,index = None):
     env = environment1.OptimalVelocityPlanner(dataManager,env_mode=HP.env_mode)
     if env.opened:     
         Agent.trainHP.num_of_runs = HP.num_of_runs
-        model_based_algorithm.train(env,HP,Agent,dataManager,guiShared,global_train_count = global_train_count)
+        model_based_algorithm.train(env,HP,Agent,dataManager,guiShared,global_train_count = global_train_count,const_seed_flag = True)
     return False
 
 def run_train(HP,dataManager,envData,index = None):
