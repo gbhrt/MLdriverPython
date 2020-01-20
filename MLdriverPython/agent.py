@@ -96,16 +96,14 @@ class TrainHyperParameters:
         self.MF_policy_flag = False
         self.direct_predict_active = False
         self.direct_constrain = True #stabilization constrain computed by direct model (centrpetal force limit) or roll constrain
-        self.update_var_flag = True 
+        self.update_var_flag = False 
         self.num_of_runs = 5000
         self.alpha = 0.0001# #learning rate
         self.batch_size = 64
         self.replay_memory_size = 100000
         self.train_num = 100# how many times to train in every step
         self.run_random_num = 'inf'
-        #self.vehicle_ind_data = OrderedDict([('vel_y',0),('steer',1)])  #, ('angular_vel_z',4)  , ('roll',2) ('vel_x',3),  ('angular_vel_z',4)
         self.vehicle_ind_data = OrderedDict([('vel_y',0),('steer',1)])  #, ('angular_vel_z',4)  , ('roll',2) ('vel_x',3),  ('angular_vel_z',4)
-
         self.normalize_flag = False
         if self.normalize_flag == True:
             self.features_mean = [7,0,0,0,0]#input feature + action
@@ -126,7 +124,7 @@ class TrainHyperParameters:
             self.const_var =1.0
         else:
             #0.5 not move. 0.2 < 0.5 of VOD. 0.1 =0.85 of VOD. 0 1+-0.05 of VOD com height = 1.7
-            self.one_step_var = 0.0367983#0.04# 0.02 is good
+            self.one_step_var =0.1#0.04# 0.02 is good
             self.const_var = 1000.0#0.05#roll variance at the future states, constant because closed loop control?
         self.prior_safe_velocity = 0.02#if the velocity is lower than this value - it is priori Known that it is OK to accelerate
         self.stabilize_factor = 1.0
@@ -159,16 +157,13 @@ class PlanningState:
  
 
 class Agent:# includes the networks, policies, replay buffer, learning hyper parameters
-    def __init__(self,HP,envData = None,trans_net_active = True,steer_net_active = True,acc_net_active = False,one_step_var = None,const_var = None):
+    def __init__(self,HP,envData = None,trans_net_active = True,steer_net_active = True,acc_net_active = False,one_step_var = None):
         self.HP = HP
         self.trainHP = TrainHyperParameters(self.HP)
         self.var_name = "var"
         if one_step_var is not None:
-            self.trainHP.one_step_var = one_step_var   
-            self.trainHP.const_var = 1000.0 
-        if const_var is not None:
-            self.trainHP.const_var = const_var
-            self.trainHP.one_step_var = 1000.0
+            #self.trainHP.one_step_var = one_step_var
+            self.trainHP.const_var = one_step_var
             
         self.planningState = PlanningState(self.trainHP)
         self.Replay = agent_lib.Replay(self.trainHP.replay_memory_size)
@@ -197,7 +192,7 @@ class Agent:# includes the networks, policies, replay buffer, learning hyper par
         self.Replay.save(self.HP.save_file_path)
 
     def start_training(self):
-        print("start_training", self.HP.train_flag)
+        print("start_training?", self.HP.train_flag)
         #train the networks
         if self.HP.train_flag:
             #self.trainThread = train_thread.trainThread(self.train_nets,self.Replay,self.trainHP,self.HP,self.trainShared)
@@ -295,9 +290,8 @@ class Agent:# includes the networks, policies, replay buffer, learning hyper par
 
 
 
-    def update_episode_var(self,episode_lenght = None):
-        if episode_lenght is None:
-            episode_lenght = len(self.Replay.memory)
+    def update_episode_var(self,episode_lenght):
+        episode_lenght = 2000
         with self.trainShared.ReplayLock:
             episode_lenght = min(episode_lenght,len(self.Replay.memory))
             episode_replay_memory = self.Replay.memory[-episode_lenght:]
@@ -316,7 +310,7 @@ class Agent:# includes the networks, policies, replay buffer, learning hyper par
         # self.planningState.var = roll_var
 
         #compute the variance/abs_error of the centripetal acceleration. 
-        var_vec = predict_lib.comp_ac_var(self, n_state_vec,n_state_vec_pred,type = "confidence_std",print_error = True)#"mean_error" confidence_std std
+        var_vec = predict_lib.comp_ac_var(self, n_state_vec,n_state_vec_pred,type = "var")#"mean_error"
         var_vec = [0]+var_vec+[1.0]*(20-len(var_vec)-1)#0.1
         print("var_vec:",var_vec)
         self.planningState.var = var_vec

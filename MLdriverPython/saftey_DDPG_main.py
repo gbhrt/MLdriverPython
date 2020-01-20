@@ -23,15 +23,17 @@ def run_all(HP,guiShared):
     names_vec = []
     #names_vec.append([['MB_R_1','MB_R_2','MB_R_3','MB_R_4','MB_R_5'],'MB_R',None])
 
-    #var_constants_vec = [0.01*i for i in range(0,15)]
-    #linear_var = True
+    var_constants_vec = [0.01*i for i in range(0,15)]
+    linear_var = True
     #names = ['VOD_var_check_linear1_'+str(var_constant) for var_constant in var_constants_vec]
+    names = ['MB_var_check_linear1_'+str(var_constant) for var_constant in var_constants_vec]
+    # var_constants_vec = [0.01*i for i in range(0,30)]
+    # linear_var = False
+    # names = ['VOD_var_check_const1_'+str(var_constant) for var_constant in var_constants_vec]
 
-    var_constants_vec = [0.01*i for i in range(0,30)]
-    linear_var = False
-    names = ['VOD_var_check_const1_'+str(var_constant) for var_constant in var_constants_vec]
+    # names_vec.append([names,'VOD',None])
+    names_vec.append([names,'MB_var',None])
 
-    names_vec.append([names,'VOD',None])
     #names_vec.append([['MB_long01'],'MB_R',0])
     #names_vec.append([['MB_test'],'MB_R',None])
     #names_vec.append([['also_steer1'],'REVO',50000])#trained MF acc and steer policy
@@ -71,13 +73,35 @@ def run_all(HP,guiShared):
                 HP.save_name = name
                 HP.save_file_path = HP.folder_path+HP.save_name+"/"
                 HP.num_of_runs = 100
-                #HP.reduce_vel = reduce
-                run_data = []
                 if linear_var:  
                     Agent = agent.Agent(HP,trans_net_active = True, steer_net_active = False,one_step_var = var_constant)#var_constant
                 else:
                     Agent = agent.Agent(HP,trans_net_active = True, steer_net_active = False,const_var = var_constant)
                 Agent.trainHP.direct_predict_active = True
+                Agent.trainHP.update_var_flag = False
+                dataManager = data_manager1.DataManager(HP.save_file_path,HP.restore_file_path,restore_flag =False,save_name = 'data_manager_0')
+
+                #train agent on simulator
+                env = environment1.OptimalVelocityPlanner(dataManager,env_mode=HP.env_mode)
+                if env.opened:     
+                    Agent.trainHP.num_of_runs = HP.num_of_runs
+                    model_based_algorithm.train(env,HP,Agent,dataManager,guiShared,global_train_count = 0,const_seed_flag = True)
+                continue
+            continue
+        if method == 'MB_var':          
+            for name,var_constant in zip(names,var_constants_vec):
+                HP.restore_flag = True
+                HP.pause_for_training = False
+                HP.restore_name = "MB_10_episodes"
+                HP.restore_file_path = HP.folder_path+HP.restore_name+"/"
+                HP.save_name = name
+                HP.save_file_path = HP.folder_path+HP.save_name+"/"
+                HP.num_of_runs = 100
+                if linear_var:  
+                    Agent = agent.Agent(HP,trans_net_active = True, steer_net_active = False,one_step_var = var_constant)#var_constant
+                else:
+                    Agent = agent.Agent(HP,trans_net_active = True, steer_net_active = False,const_var = var_constant)
+                Agent.trainHP.direct_predict_active = False
                 Agent.trainHP.update_var_flag = False
                 dataManager = data_manager1.DataManager(HP.save_file_path,HP.restore_file_path,restore_flag =False,save_name = 'data_manager_0')
 
