@@ -469,7 +469,8 @@ def test_net(Agent):
 
     replay_memory = full_replay_memory#full_replay_memory[:int(0.3*len(full_replay_memory))]#test_replay_memory# #test_replay_memory#test_replay_memory
 
-    #Agent.update_episode_var()#len(replay_memory)
+    Agent.update_episode_var()#len(replay_memory)
+    Agent.save_var()
     #TransNet_X = [[1,1,1,1,1]]
 
     #TransNet_Y = Agent.nets.TransNet.predict(np.array(TransNet_X))[0]

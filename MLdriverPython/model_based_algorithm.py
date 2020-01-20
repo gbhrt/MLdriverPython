@@ -199,7 +199,7 @@ def train(env,HP,Agent,dataManager,guiShared,seed = None,global_train_count = 0)
                 
         if Agent.trainHP.update_var_flag:
             compute_var_done = [False]
-            compErrorThread = comp_error.compError(Agent,step_count-1,compute_var_done)
+            compErrorThread = comp_error.compError(Agent,1000,compute_var_done)#step_count-1
             compErrorThread.start()
             while not compute_var_done[0]:
                 env.pl.stop_vehicle()#for maintain connection to simulator (prevent timeout)

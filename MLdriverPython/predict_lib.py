@@ -414,14 +414,15 @@ def comp_ac_var(Agent, n_state_vec,n_state_vec_pred,type = "mean_error",print_er
             n = len(error)
             #mean:
             #source: https://www.mathsisfun.com/data/confidence-interval.html
-            z= 2.576#99% Confidence Interval of mean
+            z= 3.291# 99.9% #2.576#99% Confidence Interval of mean
             abs_mean = abs (np.mean(error,dtype=np.float64))
             mean_dev = z*std/np.sqrt(n)
             #standard deviation:
             #source: http://www.milefoot.com/math/stat/ci-variances.htm
             tmp = (n-1)*std**2
             #std_min = np.sqrt(tmp/chi2.ppf(0.995, n-1))#0.975
-            std_max = np.sqrt(tmp/chi2.ppf(0.005, n-1))#0.025
+            #std_max = np.sqrt(tmp/chi2.ppf(0.005, n-1))# - 99%
+            std_max = np.sqrt(tmp/chi2.ppf(0.0005, n-1))#0.025 - 99.9%
 
             max_dev = abs_mean+mean_dev+std_max*3
             var_vec.append(max_dev)

@@ -5,6 +5,7 @@ class compError(threading.Thread):
     def __init__(self,Agent,step_count,done):
         self.Agent = Agent
         self.step_count = step_count
+        print("step_count:",step_count)
         self.done = done
         threading.Thread.__init__(self)
 
