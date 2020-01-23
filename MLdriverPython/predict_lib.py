@@ -1,7 +1,7 @@
 import copy
 import numpy as np
 import library as lib
-from math import copysign
+import math
 from scipy.stats import chi2
 
 
@@ -23,7 +23,7 @@ def check_stability(env,path,index,abs_pos,roll,roll_var = 0.0,max_plan_roll = N
     dev_flag,roll_flag = False,0
     dev_from_path = lib.dist(path.position[index][0],path.position[index][1],abs_pos[0],abs_pos[1])#absolute deviation from the path
     if abs(env.denormalize(roll,'roll'))+roll_var > max_plan_roll: #check the current roll 
-        roll_flag = copysign(1,roll)
+        roll_flag = math.copysign(1,roll)
     if dev_from_path > max_plan_deviation:
         dev_flag = True
         #max_plan_deviation = 10
@@ -130,7 +130,7 @@ def predict_n_next(n,net,env,init_state,acc_command,steer_command,acc_try = 1.0,
     delta_var = 0.0#0.002
     roll_var = max_plan_roll*delta_var
     if abs(init_state['roll'])+roll_var > max_plan_roll: #check the current roll 
-        roll_flag = copysign(1,init_state['roll'])
+        roll_flag = math.copysign(1,init_state['roll'])
     if dev_from_path > max_plan_deviation:
         dev_flag = True
         max_plan_deviation = 10
@@ -197,7 +197,7 @@ def predict_n_next(n,net,env,init_state,acc_command,steer_command,acc_try = 1.0,
             
             if abs(roll)+roll_var > max_plan_roll: 
                 print("fail rool or dev")
-                roll_flag = copysign(1,roll)
+                roll_flag = math.copysign(1,roll)
                 break
             if dev_from_path > max_plan_deviation:
                 dev_flag = True
@@ -420,9 +420,9 @@ def comp_ac_var(Agent, n_state_vec,n_state_vec_pred,type = "mean_error",print_er
             #standard deviation:
             #source: http://www.milefoot.com/math/stat/ci-variances.htm
             tmp = (n-1)*std**2
-            #std_min = np.sqrt(tmp/chi2.ppf(0.995, n-1))#0.975
-            #std_max = np.sqrt(tmp/chi2.ppf(0.005, n-1))# - 99%
-            std_max = np.sqrt(tmp/chi2.ppf(0.0005, n-1))#0.025 - 99.9%
+            #std_min = np.sqrt(tmp/chi2.ppf(0.995, n-1))#
+            #std_max = np.sqrt(tmp/chi2.ppf(0.005, n-1))# 99%
+            std_max = np.sqrt(tmp/chi2.ppf(0.0005, n-1))# 99.9%
 
             max_dev = abs_mean+mean_dev+std_max*3
             var_vec.append(max_dev)
@@ -433,10 +433,7 @@ def comp_ac_var(Agent, n_state_vec,n_state_vec_pred,type = "mean_error",print_er
                     num+=1
             print("deviation from saftey margin:",num/len(error)*100,"%",end = ",")
             print("") 
-            
-
-
-
+           
     return var_vec
             
 
@@ -504,5 +501,52 @@ def comp_var(Agent, n_state_vec,n_state_vec_pred,n_pos_vec,n_pos_vec_pred,n_ang_
         ang_mean_vec.append(ang_mean)
 
     return var_vec,mean_vec,pos_var_vec,pos_mean_vec,ang_var_vec,ang_mean_vec
+
+def comp_LTR_var(Agent, n_state_vec,n_state_vec_pred,type = "mean_error",max_factor = 1.0,print_error = False):
+    var_vec, mean_vec = [], []
+    for final_state_vec,final_state_vec_pred in zip(n_state_vec,n_state_vec_pred):     
+        vel_vec = np.array(final_state_vec)[:,Agent.trainHP.vehicle_ind_data["vel_y"]]
+        steer_vec = np.array(final_state_vec)[:,Agent.trainHP.vehicle_ind_data["steer"]]
+        real = np.array([Agent.Direct.comp_LTR(vel,steer) for vel,steer in zip(vel_vec,steer_vec)])
+
+        vel_vec = np.array(final_state_vec_pred)[:,Agent.trainHP.vehicle_ind_data["vel_y"]]
+        steer_vec = np.array(final_state_vec_pred)[:,Agent.trainHP.vehicle_ind_data["steer"]]
+        pred = np.array([Agent.Direct.comp_LTR(vel,steer) for vel,steer in zip(vel_vec,steer_vec)])
+        error = pred - real
+        if type == "max_error":
+            error.sort()
+            var = error[math.floor(max_factor*len(error)) -1]
+            var_vec.append(var)
+            mean_vec.append(np.mean(error,dtype=np.float64))
+
+        elif type == "std":
+            var_vec.append(np.std(error, dtype=np.float64)*3)#3*variance - 99.73 samples are inside
+        else:
+            std = np.std(error, dtype=np.float64)
+            n = len(error)
+            #mean:
+            #source: https://www.mathsisfun.com/data/confidence-interval.html
+            z= 3.291# 99.9% #2.576#99% Confidence Interval of mean
+            mean = np.mean(error,dtype=np.float64)
+            mean_dev = z*std/np.sqrt(n)
+            #standard deviation:
+            #source: http://www.milefoot.com/math/stat/ci-variances.htm
+            tmp = (n-1)*std**2
+            #std_min = np.sqrt(tmp/chi2.ppf(0.995, n-1))#
+            #std_max = np.sqrt(tmp/chi2.ppf(0.005, n-1))# 99%
+            std_max = np.sqrt(tmp/chi2.ppf(0.0005, n-1))# 99.9%
+
+            max_dev = abs(mean)+mean_dev+std_max*3
+            var_vec.append(max_dev)
+            mean_vec.append(mean)
+        if print_error:
+            num = 0
+            for e in error:
+                if abs(e) > var_vec[-1]:
+                    num+=1
+            print("deviation from saftey margin:",num/len(error)*100,"%",end = ",")
+            print("") 
+           
+    return var_vec,mean_vec
 
 

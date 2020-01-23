@@ -206,12 +206,14 @@ def comp_LTR(vel,steer):
         ac = vel**2/radius
 
     return ac/(9.81*2.08*0.5/1.0)#maximal cetripetal force
+
 def get_direct_stability(velocity,steer):
     LTR = comp_LTR(velocity,steer)
+    print("LTR:",LTR)
     if LTR > 1.0:
-        return False
-    else:
         return True
+    else:
+        return False
 def get_reward(velocity,max_vel,mode,lower_bound = 0.0,analytic_velocity = None,roll = None,max_alowed_roll = None,max_roll =None,steer = None): 
     if analytic_velocity is not None:
         #reward = -abs((velocity - analytic_velocity)/max_vel)

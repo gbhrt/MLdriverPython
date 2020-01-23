@@ -110,7 +110,7 @@ class SafteyHyperParameters:
 class ModelBasedHyperParameters:#global settings of the program.
     def __init__(self):
        
-        self.program_mode =  "train_in_env"#"test_net_performance" train_in_env, test_actions  timing
+        self.program_mode =  "test_net_performance"#"test_net_performance" train_in_env, test_actions  timing
         if self.program_mode == "test_net_performance" or self.program_mode == "test_actions":
             self.gui_flag = False
         else:
@@ -144,7 +144,7 @@ class ModelBasedHyperParameters:#global settings of the program.
         self.gym_flag = False
         self.render_flag = True
         self.plot_flag = True
-        self.restore_flag = False
+        self.restore_flag = True
         self.skip_run = False
         self.reset_every = 1
         self.save_every = 10000000000
@@ -156,7 +156,7 @@ class ModelBasedHyperParameters:#global settings of the program.
         #self.save_file_path = os.getcwd()+ "/files/models/model_based/"+self.save_name+"/"f
         self.save_file_path = self.folder_path +self.save_name+"/"
 
-        self.restore_name = "MB_learn_var"#"MB_R_long1"#MB_R_long2
+        self.restore_name = "MB_long0"#"MB_R_long1"#MB_R_long2
         #self.restore_file_path = os.getcwd()+ "/files/models/model_based/"+self.restore_name+"/"
         self.restore_file_path = self.folder_path +self.restore_name+"/"
 

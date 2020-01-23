@@ -253,56 +253,103 @@ def plot_fails_vel_comparison():
     #names_vec.append([['MB_R_4'],['Model Based RL',None]])
     #names_vec.append([['MB_R_2'],['Model Based RL',None]])#,'MB_R_2'
 
-    plt.figure(1)
-    plt.xlabel('Velocity factor',fontsize = size)
-    plt.ylabel('Fails [%]',fontsize = size)
 
-    names = ['VOD_var_check_const_'+str(var_constant) for var_constant in [0.01*i for i in range(1,30)]]
+    var_vec_VOD_const = [0.01*i for i in range(1,30)]
+    names = ['VOD_var_check_const_'+str(var) for var in var_vec_VOD_const]
     names_vec = []
     for name in names:
        names_vec.append([[name],[name,None]])
     reward_vec_indexes,rewards_vec,indexes,fails_vec,var,series_colors,series_names,violation_count_vec = get_data(folder,names_vec,[0],return_violation_count = True)
-    vel = [reward[0][0] for reward in rewards_vec]
-    fail = [fails[0][0] for fails in fails_vec]
-    violation_count = [violation_counts[0][0] for violation_counts in violation_count_vec]
-    plt.plot(vel,fail,c = 'r',label = 'VOD_const')
-    plt.plot(vel,fail,'o',c = 'r')
+    vel_VOD_const = [reward[0][0] for reward in rewards_vec]
+    fail_VOD_const = [fails[0][0] for fails in fails_vec]
+    violation_count_VOD_const = [violation_counts[0][0] for violation_counts in violation_count_vec]
 
-    names = ['VOD_var_check_'+str(var_constant) for var_constant in [0.01*i for i in range(1,10)]]#19
+    var_vec_VOD_linear = [0.01*i for i in range(1,10)]
+    names = ['VOD_var_check_'+str(var) for var in var_vec_VOD_linear]#19
     names_vec = []
     for name in names:
        names_vec.append([[name],[name,None]])
     reward_vec_indexes,rewards_vec,indexes,fails_vec,var,series_colors,series_names,violation_count_vec = get_data(folder,names_vec,[0],return_violation_count = True)
-    vel = [reward[0][0] for reward in rewards_vec]
-    fail = [fails[0][0] for fails in fails_vec]
-    violation_count = [violation_counts[0][0] for violation_counts in violation_count_vec]
-    plt.plot(vel,fail,c = 'b',label = 'VOD_linear')
-    plt.plot(vel,fail,'o',c = 'b')
+    vel_VOD_linear = [reward[0][0] for reward in rewards_vec]
+    fail_VOD_linear = [fails[0][0] for fails in fails_vec]
+    violation_count_VOD_linear = [violation_counts[0][0] for violation_counts in violation_count_vec]
 
-    names = ['MB_var_check_linear_'+str(var_constant) for var_constant in [0.01*i for i in range(0,10)]]#14
+    var_vec_MB_linear = [0.01*i for i in range(0,10)]
+    names = ['MB_var_check_linear_'+str(var) for var in var_vec_MB_linear]#14
     names_vec = []
     for name in names:
        names_vec.append([[name],[name,None]])
     reward_vec_indexes,rewards_vec,indexes,fails_vec,var,series_colors,series_names,violation_count_vec = get_data(folder,names_vec,[0],return_violation_count = True)
-    vel = [reward[0][0] for reward in rewards_vec]
-    fail = [fails[0][0] for fails in fails_vec]
-    violation_count = [violation_counts[0][0] for violation_counts in violation_count_vec]
-    plt.plot(vel,fail,c = 'g',label = 'MB linear')
-    plt.plot(vel,fail,'o',c = 'g')
+    vel_MB_linear = [reward[0][0] for reward in rewards_vec]
+    fail_MB_linear = [fails[0][0] for fails in fails_vec]
+    violation_count_MB_linear = [violation_counts[0][0] for violation_counts in violation_count_vec]
 
     names = ['MB_long01']
     names_vec = []
     for name in names:
        names_vec.append([[name],[name,None]])
     reward_vec_indexes,rewards_vec,indexes,fails_vec,var,series_colors,series_names,violation_count_vec = get_data(folder,names_vec,[0],return_violation_count = True)
-    vel = [reward[0][0] for reward in rewards_vec]
-    fail = [fails[0][0] for fails in fails_vec]
-    violation_count = [violation_counts[0][0] for violation_counts in violation_count_vec]
-    #plt.plot(vel,fail,c = 'g',label = 'MB_long01')
-    plt.plot(vel,fail,'*',c = 'black',label = 'MB_long01')
+    vel_MB_long = [reward[0][0] for reward in rewards_vec]
+    fail_MB_long = [fails[0][0] for fails in fails_vec]
+    violation_count_MB_long = [violation_counts[0][0] for violation_counts in violation_count_vec]
     
+    plt.figure("Velocity - Fails")
+    plt.xlabel('Velocity',fontsize = size)
+    plt.ylabel('Fails [%]',fontsize = size)
+    plt.plot(vel_VOD_const,fail_VOD_const,c = 'r',label = 'VOD_const')
+    plt.plot(vel_VOD_const,fail_VOD_const,'o',c = 'r')
+    plt.plot(vel_VOD_linear,fail_VOD_linear,c = 'b',label = 'VOD_linear')
+    plt.plot(vel_VOD_linear,fail_VOD_linear,'o',c = 'b')
+    plt.plot(vel_MB_linear,fail_MB_linear,c = 'g',label = 'MB linear')
+    plt.plot(vel_MB_linear,fail_MB_linear,'o',c = 'g')
+    plt.plot(vel_MB_long,fail_MB_long,'*',c = 'black',label = 'MB_long01')
+    plt.legend()
 
+    plt.figure("Velocity - Violation count")
+    plt.xlabel('Velocity',fontsize = size)
+    plt.ylabel('Violation count [%]',fontsize = size)
+    #plt.plot(vel_VOD_const,violation_count_VOD_const,c = 'r',label = 'VOD_const')
+    #plt.plot(vel_VOD_const,violation_count_VOD_const,'o',c = 'r')
+    plt.plot(vel_VOD_linear,violation_count_VOD_linear,c = 'b',label = 'VOD_linear')
+    plt.plot(vel_VOD_linear,violation_count_VOD_linear,'o',c = 'b')
+    plt.plot(vel_MB_linear,violation_count_MB_linear,c = 'g',label = 'MB linear')
+    plt.plot(vel_MB_linear,violation_count_MB_linear,'o',c = 'g')
+    plt.plot(vel_MB_long,violation_count_MB_long,'*',c = 'black',label = 'MB_long01')
+    plt.legend()
 
+    plt.figure("Factor - Vel")
+    plt.xlabel('Saftey Factor',fontsize = size)
+    plt.ylabel('Vel',fontsize = size)
+    #plt.plot(var_vec_VOD_const,vel_VOD_const,c = 'r',label = 'VOD_const')
+    #plt.plot(var_vec_VOD_const,vel_VOD_const,'o',c = 'r')
+    plt.plot(var_vec_VOD_linear,vel_VOD_linear,c = 'b',label = 'VOD_linear')
+    plt.plot(var_vec_VOD_linear,vel_VOD_linear,'o',c = 'b')
+    plt.plot(var_vec_MB_linear,vel_MB_linear,c = 'g',label = 'MB linear')
+    plt.plot(var_vec_MB_linear,vel_MB_linear,'o',c = 'g')
+    #plt.plot(var_vec_MB_long,violation_count_MB_long,'*',c = 'black',label = 'MB_long01')
+    plt.legend()
+
+    plt.figure("Factor - Violation count")
+    plt.xlabel('Saftey Factor',fontsize = size)
+    plt.ylabel('Violation count [%]',fontsize = size)
+    #plt.plot(var_vec_VOD_const,violation_count_VOD_const,c = 'r',label = 'VOD_const')
+    #plt.plot(var_vec_VOD_const,violation_count_VOD_const,'o',c = 'r')
+    plt.plot(var_vec_VOD_linear,violation_count_VOD_linear,c = 'b',label = 'VOD_linear')
+    plt.plot(var_vec_VOD_linear,violation_count_VOD_linear,'o',c = 'b')
+    plt.plot(var_vec_MB_linear,violation_count_MB_linear,c = 'g',label = 'MB linear')
+    plt.plot(var_vec_MB_linear,violation_count_MB_linear,'o',c = 'g')
+    plt.legend()
+
+    plt.figure("Factor - Fails")
+    plt.xlabel('Saftey Factor',fontsize = size)
+    plt.ylabel('Fails [%]',fontsize = size)
+    #plt.plot(var_vec_VOD_const,fail_VOD_const,c = 'r',label = 'VOD_const')
+    #plt.plot(var_vec_VOD_const,fail_VOD_const,'o',c = 'r')
+    plt.plot(var_vec_VOD_linear,fail_VOD_linear,c = 'b',label = 'VOD_linear')
+    plt.plot(var_vec_VOD_linear,fail_VOD_linear,'o',c = 'b')
+    plt.plot(var_vec_MB_linear,fail_MB_linear,c = 'g',label = 'MB linear')
+    plt.plot(var_vec_MB_linear,fail_MB_linear,'o',c = 'g')
+    plt.legend()
     #fig, ax1 = plt.subplots()
     #color = 'tab:red'
     #ax1.set_xlabel('Velocity factor',fontsize = size)
@@ -322,7 +369,7 @@ def plot_fails_vel_comparison():
 
     #ax2.plot([1.202],[0.06],'*',c = color,label = 'Model based')
     #fig.tight_layout()  # otherwise the right y-label is slightly clipped
-    plt.legend()
+    
     plt.show()
 if __name__ == "__main__":
     #folder = "new_state"#\old reward backup"
@@ -422,7 +469,7 @@ if __name__ == "__main__":
 
     #add_zero_data_manager(folder,names_vec)
     
-    #plot_fails_vel_comparison()
+    plot_fails_vel_comparison()
     names_vec = []
     names_vec.append([['MB_test'],['MB',None]])
     train_indexes = [100*j for j in range(1,4)]

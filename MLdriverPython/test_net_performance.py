@@ -281,7 +281,31 @@ def plot_n_step_state(Agent,replay_memory):
 
 
 
+def plot_n_step_LTR_var(Agent,replay_memory):
+    max_n = 15
+    n_list = list(range(2,max_n))
 
+    n_state_vec,n_state_vec_pred,n_pos_vec,n_pos_vec_pred,n_ang_vec,n_ang_vec_pred = predict_lib.get_all_n_step_states(Agent.Direct if Agent.trainHP.direct_predict_active else Agent.nets.TransNet, Agent.trainHP,replay_memory, max_n)
+
+    var_vec,mean_vec = predict_lib.comp_LTR_var(Agent, n_state_vec,n_state_vec_pred,type = "max_error",max_factor = 1.0,print_error = False)
+
+    fig,ax = plt.subplots()
+    
+    
+    n_list = list(range(1,max_n))#for ploting from 1 -1
+    fontsize = 20
+
+
+    ax.set_ylabel("LTR", fontsize=fontsize)
+    var = np.array(var_vec)
+    mean = np.array(mean_vec) 
+    ax.tick_params(labelsize=15)
+    ax.errorbar(n_list,mean,alpha = 0.7)#,var
+    ax.fill_between(n_list,0,var,color = "#dddddd" )
+
+
+    ax.set_xlabel('Step number',fontsize=fontsize)
+    plt.show()
 
 
 def plot_n_step_var(Agent,replay_memory):
@@ -467,10 +491,10 @@ def test_net(Agent):
     
     Agent.save()
 
-    replay_memory = full_replay_memory#full_replay_memory[:int(0.3*len(full_replay_memory))]#test_replay_memory# #test_replay_memory#test_replay_memory
-
-    Agent.update_episode_var()#len(replay_memory)
-    Agent.save_var()
+    replay_memory = full_replay_memory[:int(0.2*len(full_replay_memory))]#test_replay_memory# #test_replay_memory#test_replay_memory
+    #full_replay_memory#
+    #Agent.update_episode_var()#len(replay_memory)
+    #Agent.save_var()
     #TransNet_X = [[1,1,1,1,1]]
 
     #TransNet_Y = Agent.nets.TransNet.predict(np.array(TransNet_X))[0]
@@ -481,8 +505,8 @@ def test_net(Agent):
 
 
     #plot_n_step_var(Agent,replay_memory)
-    
-    one_step_pred_plot(Agent,replay_memory)
+    plot_n_step_LTR_var(Agent,replay_memory)
+    #one_step_pred_plot(Agent,replay_memory)
 
     #train_X,train_Y_,_,_ = convert_data(ReplayTrain,envData)
 

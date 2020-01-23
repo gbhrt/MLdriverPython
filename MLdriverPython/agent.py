@@ -97,6 +97,7 @@ class TrainHyperParameters:
         self.direct_predict_active = False
         self.direct_constrain = True #stabilization constrain computed by direct model (centrpetal force limit) or roll constrain
         self.update_var_flag = False 
+        self.var_update_steps = 2000
         self.num_of_runs = 5000
         self.alpha = 0.0001# #learning rate
         self.batch_size = 64
@@ -293,10 +294,12 @@ class Agent:# includes the networks, policies, replay buffer, learning hyper par
 
 
 
-    def update_episode_var(self,episode_lenght):
-        episode_lenght = 2000
+    def update_episode_var(self):
         with self.trainShared.ReplayLock:
-            episode_lenght = min(episode_lenght,len(self.Replay.memory))
+            if self.trainHP.var_update_steps is not None:
+                episode_lenght = min(episode_lenght,len(self.Replay.memory))
+            else:
+                episode_lenght = len(self.Replay.memory)
             episode_replay_memory = self.Replay.memory[-episode_lenght:]
 
         with self.trainShared.Lock:
