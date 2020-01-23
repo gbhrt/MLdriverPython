@@ -123,7 +123,7 @@ class ModelBasedHyperParameters:#global settings of the program.
         #for the shared main:
         self.env_mode = "model_based"
         self.evaluation_flag = False
-        self.always_no_noise_flag = False
+        self.always_no_noise_flag = True
         self.reduce_vel = 0.0
         self.num_of_runs = 100000
         self.save_every_train_number = 25000000

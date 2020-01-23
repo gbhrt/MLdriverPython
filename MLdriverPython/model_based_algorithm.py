@@ -56,6 +56,7 @@ def train(env,HP,Agent,dataManager,guiShared,const_seed_flag = False,global_trai
             else:
                 print("given seed list is too short! take random seed")
                 seed = int.from_bytes(os.urandom(8), byteorder="big")
+        print("seed:", seed)
 
 
         violation_count = 0

@@ -157,13 +157,16 @@ class PlanningState:
  
 
 class Agent:# includes the networks, policies, replay buffer, learning hyper parameters
-    def __init__(self,HP,envData = None,trans_net_active = True,steer_net_active = True,acc_net_active = False,one_step_var = None):
+    def __init__(self,HP,envData = None,trans_net_active = True,steer_net_active = True,acc_net_active = False,one_step_var = None,const_var = None):
         self.HP = HP
         self.trainHP = TrainHyperParameters(self.HP)
         self.var_name = "var"
         if one_step_var is not None:
-            #self.trainHP.one_step_var = one_step_var
-            self.trainHP.const_var = one_step_var
+            self.trainHP.one_step_var = one_step_var   
+            self.trainHP.const_var = 1000.0 
+        if const_var is not None:
+            self.trainHP.const_var = const_var
+            self.trainHP.one_step_var = 1000.0
             
         self.planningState = PlanningState(self.trainHP)
         self.Replay = agent_lib.Replay(self.trainHP.replay_memory_size)
