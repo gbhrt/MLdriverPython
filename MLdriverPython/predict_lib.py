@@ -512,10 +512,15 @@ def comp_LTR_var(Agent, n_state_vec,n_state_vec_pred,type = "mean_error",max_fac
         vel_vec = np.array(final_state_vec_pred)[:,Agent.trainHP.vehicle_ind_data["vel_y"]]
         steer_vec = np.array(final_state_vec_pred)[:,Agent.trainHP.vehicle_ind_data["steer"]]
         pred = np.array([Agent.Direct.comp_LTR(vel,steer) for vel,steer in zip(vel_vec,steer_vec)])
-        error = pred - real
+        error = np.abs( pred - real)
         if type == "max_error":
             error.sort()
-            var = error[math.floor(max_factor*len(error)) -1]
+            #var = error[math.floor(max_factor*len(error)) -1]
+            #var_vec.append(var)
+            #mean_vec.append(np.mean(error,dtype=np.float64))
+            var = []
+            for max_factor in [x * 0.1 for x in range(1, 11)]:
+                var.append(error[math.ceil(max_factor*len(error)) -1])
             var_vec.append(var)
             mean_vec.append(np.mean(error,dtype=np.float64))
 

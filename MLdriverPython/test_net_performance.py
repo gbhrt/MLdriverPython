@@ -297,10 +297,17 @@ def plot_n_step_LTR_var(Agent,replay_memory):
 
 
     ax.set_ylabel("LTR", fontsize=fontsize)
-    var = np.array(var_vec)
+    np_var_vec = np.array(var_vec)
+    print(np_var_vec)
+    np_var_vec_tr = np_var_vec.transpose()
+    
+    print(np_var_vec_tr)
     mean = np.array(mean_vec) 
-    ax.tick_params(labelsize=15)
-    ax.errorbar(n_list,mean,alpha = 0.7)#,var
+    #ax.tick_params(labelsize=15)
+    ax.set_xticks(np.arange(1, max_n+1, 1.0))
+    for var in np_var_vec_tr:
+        ax.errorbar(n_list,var)
+    #ax.errorbar(n_list,mean,alpha = 0.7)#,var
     ax.fill_between(n_list,0,var,color = "#dddddd" )
 
 
@@ -491,7 +498,7 @@ def test_net(Agent):
     
     Agent.save()
 
-    replay_memory = full_replay_memory[:int(0.2*len(full_replay_memory))]#test_replay_memory# #test_replay_memory#test_replay_memory
+    replay_memory = full_replay_memory#[:int(0.01*len(full_replay_memory))]#test_replay_memory# #test_replay_memory#test_replay_memory
     #full_replay_memory#
     #Agent.update_episode_var()#len(replay_memory)
     #Agent.save_var()
@@ -505,8 +512,8 @@ def test_net(Agent):
 
 
     #plot_n_step_var(Agent,replay_memory)
-    plot_n_step_LTR_var(Agent,replay_memory)
-    #one_step_pred_plot(Agent,replay_memory)
+    #plot_n_step_LTR_var(Agent,replay_memory)
+    one_step_pred_plot(Agent,replay_memory)
 
     #train_X,train_Y_,_,_ = convert_data(ReplayTrain,envData)
 

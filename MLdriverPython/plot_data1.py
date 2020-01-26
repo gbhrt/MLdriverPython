@@ -254,8 +254,8 @@ def plot_fails_vel_comparison():
     #names_vec.append([['MB_R_2'],['Model Based RL',None]])#,'MB_R_2'
 
 
-    var_vec_VOD_const = [0.01*i for i in range(1,30)]
-    names = ['VOD_var_check_const_'+str(var) for var in var_vec_VOD_const]
+    var_vec_VOD_const = [0.01*i for i in range(1,20)]
+    names = ['VOD_var_check_const1_'+str(var) for var in var_vec_VOD_const]
     names_vec = []
     for name in names:
        names_vec.append([[name],[name,None]])
@@ -264,8 +264,8 @@ def plot_fails_vel_comparison():
     fail_VOD_const = [fails[0][0] for fails in fails_vec]
     violation_count_VOD_const = [violation_counts[0][0] for violation_counts in violation_count_vec]
 
-    var_vec_VOD_linear = [0.01*i for i in range(1,10)]
-    names = ['VOD_var_check_'+str(var) for var in var_vec_VOD_linear]#19
+    var_vec_VOD_linear = [0.01*i for i in range(1,15)]
+    names = ['VOD_var_check_linear1_'+str(var) for var in var_vec_VOD_linear]#19
     names_vec = []
     for name in names:
        names_vec.append([[name],[name,None]])
@@ -469,10 +469,10 @@ if __name__ == "__main__":
 
     #add_zero_data_manager(folder,names_vec)
     
-    plot_fails_vel_comparison()
+    #plot_fails_vel_comparison()
     names_vec = []
-    names_vec.append([['MB_test'],['MB',None]])
-    train_indexes = [100*j for j in range(1,4)]
+    names_vec.append([['REVO_direct_reward_3','REVO_direct_reward_4'],['REVO',None]])
+    train_indexes = [2000*j for j in range(1,20)]
     reward_vec_indexes,rewards_vec,indexes,fails_vec,var,series_colors,series_names, _ = get_data(folder,names_vec,train_indexes,return_violation_count = True)
     #indexes = [ind/2 for ind in indexes]#
     avg_rewards_vec,var_rewards_vec = average_training_processes(rewards_vec)
