@@ -16,6 +16,7 @@ import copy
 
 
 def run_all(HP,guiShared):
+    #
     envData = environment1.OptimalVelocityPlannerData(env_mode = HP.env_mode)
     if HP.env_mode == "model_based" and HP.gui_flag:
         guiShared.max_roll = envData.max_plan_roll
