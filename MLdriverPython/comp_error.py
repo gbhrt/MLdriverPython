@@ -2,9 +2,8 @@ import threading
 
 
 class compError(threading.Thread):
-    def __init__(self,Agent,step_count,done):
+    def __init__(self,Agent,done):
         self.Agent = Agent
-        print("step_count:",step_count)
         self.done = done
         threading.Thread.__init__(self)
 

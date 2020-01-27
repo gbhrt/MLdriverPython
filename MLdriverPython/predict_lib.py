@@ -415,16 +415,19 @@ def comp_ac_var(Agent, n_state_vec,n_state_vec_pred,type = "mean_error",print_er
             #mean:
             #source: https://www.mathsisfun.com/data/confidence-interval.html
             z= 3.291# 99.9% #2.576#99% Confidence Interval of mean
-            abs_mean = abs (np.mean(error,dtype=np.float64))
+            mean = np.mean(error,dtype=np.float64)
             mean_dev = z*std/np.sqrt(n)
             #standard deviation:
             #source: http://www.milefoot.com/math/stat/ci-variances.htm
             tmp = (n-1)*std**2
             #std_min = np.sqrt(tmp/chi2.ppf(0.995, n-1))#
             #std_max = np.sqrt(tmp/chi2.ppf(0.005, n-1))# 99%
-            std_max = np.sqrt(tmp/chi2.ppf(0.0005, n-1))# 99.9%
-
-            max_dev = abs_mean+mean_dev+std_max*3
+            #std_max = np.sqrt(tmp/chi2.ppf(0.0005, n-1))# 99.9%
+            std_max = np.sqrt(tmp/chi2.ppf(0.000005, n-1))# 99.999%
+            
+            max_dev = std_max*4.417173#mean+mean_dev+
+            print("std:",std,"std_max:",std_max,"max_dev:",max_dev)
+            #99.999% 4.417173*std
             var_vec.append(max_dev)
         if print_error:
             num = 0
@@ -476,7 +479,7 @@ def comp_var(Agent, n_state_vec,n_state_vec_pred,n_pos_vec,n_pos_vec_pred,n_ang_
             if type == "mean_error":
                 pos_var.append((np.abs(error)).mean())
             else:
-                pos_var.append(np.sqrt( np.var(error)))
+                pos_var.append(np.std(error))
             #pos_var.append(np.sqrt( (error**2).mean()))
             pos_mean.append(np.mean(error))
 
@@ -512,7 +515,8 @@ def comp_LTR_var(Agent, n_state_vec,n_state_vec_pred,type = "mean_error",max_fac
         vel_vec = np.array(final_state_vec_pred)[:,Agent.trainHP.vehicle_ind_data["vel_y"]]
         steer_vec = np.array(final_state_vec_pred)[:,Agent.trainHP.vehicle_ind_data["steer"]]
         pred = np.array([Agent.Direct.comp_LTR(vel,steer) for vel,steer in zip(vel_vec,steer_vec)])
-        error = np.abs( pred - real)
+        error = pred - real
+        error = [-x for x in error if x < 0] or None# take just negative values
         if type == "max_error":
             error.sort()
             #var = error[math.floor(max_factor*len(error)) -1]

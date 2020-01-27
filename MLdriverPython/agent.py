@@ -96,7 +96,7 @@ class TrainHyperParameters:
         self.MF_policy_flag = False
         self.direct_predict_active = False
         self.direct_constrain = True #stabilization constrain computed by direct model (centrpetal force limit) or roll constrain
-        self.update_var_flag = False 
+        self.update_var_flag = True 
         self.var_update_steps = 2000
         self.num_of_runs = 5000
         self.alpha = 0.0001# #learning rate
@@ -297,10 +297,10 @@ class Agent:# includes the networks, policies, replay buffer, learning hyper par
     def update_episode_var(self):
         with self.trainShared.ReplayLock:
             if self.trainHP.var_update_steps is not None:
-                episode_lenght = min(episode_lenght,len(self.Replay.memory))
+                var_update_steps = min(self.trainHP.var_update_steps,len(self.Replay.memory))
             else:
-                episode_lenght = len(self.Replay.memory)
-            episode_replay_memory = self.Replay.memory[-episode_lenght:]
+                var_update_steps = len(self.Replay.memory)
+            episode_replay_memory = self.Replay.memory[-var_update_steps:]
 
         with self.trainShared.Lock:
             n = self.trainHP.rollout_n
@@ -316,7 +316,7 @@ class Agent:# includes the networks, policies, replay buffer, learning hyper par
         # self.planningState.var = roll_var
 
         #compute the variance/abs_error of the centripetal acceleration. 
-        var_vec = predict_lib.comp_ac_var(self, n_state_vec,n_state_vec_pred,type = "var")#"mean_error"
+        var_vec = predict_lib.comp_ac_var(self, n_state_vec,n_state_vec_pred,type = "saftey_std")#"mean_error"
         var_vec = [0]+var_vec+[1.0]*(20-len(var_vec)-1)#0.1
         print("var_vec:",var_vec)
         self.planningState.var = var_vec

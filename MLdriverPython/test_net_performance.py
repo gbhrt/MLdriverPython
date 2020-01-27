@@ -498,7 +498,7 @@ def test_net(Agent):
     
     Agent.save()
 
-    replay_memory = full_replay_memory#[:int(0.01*len(full_replay_memory))]#test_replay_memory# #test_replay_memory#test_replay_memory
+    replay_memory = full_replay_memory[:int(0.01*len(full_replay_memory))]#test_replay_memory# #test_replay_memory#test_replay_memory
     #full_replay_memory#
     #Agent.update_episode_var()#len(replay_memory)
     #Agent.save_var()
