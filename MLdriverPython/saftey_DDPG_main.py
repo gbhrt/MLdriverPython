@@ -261,9 +261,9 @@ def run_train(HP,dataManager,envData,index = None):
     env = environment1.OptimalVelocityPlanner(dataManager,env_mode=HP.env_mode)
     if env.opened:     
         if HP.stabilize_flag:
-            saftey_DDPG_algorithm.train(env,HP,net,dataManager,net_stabilize = net_stabilize,guiShared = guiShared,global_train_count = global_train_count)
+            saftey_DDPG_algorithm.train(env,HP,net,dataManager,net_stabilize = net_stabilize,guiShared = guiShared,global_train_count = global_train_count,const_seed_flag = True)
         else:
-            saftey_DDPG_algorithm.train(env,HP,net,dataManager,guiShared = guiShared,global_train_count = global_train_count)    
+            saftey_DDPG_algorithm.train(env,HP,net,dataManager,guiShared = guiShared,global_train_count = global_train_count,const_seed_flag = True)    
     return False
 
 

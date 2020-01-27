@@ -12,7 +12,7 @@ import os
 import classes
 
 
-def train(env,HP,net_drive,dataManager,net_stabilize = None,guiShared = None,seed = None,global_train_count = 0):
+def train(env,HP,net_drive,dataManager,net_stabilize = None,guiShared = None,const_seed_flag = False,global_train_count = 0):
     
 
     #"""
@@ -23,8 +23,8 @@ def train(env,HP,net_drive,dataManager,net_stabilize = None,guiShared = None,see
     #subprocess.Popen('C:/Users/gavri/Desktop/sim_15_3_18/sim15_3_18 -quit -batchmode -nographics')
   
     #pre-defined parameters:
-    if seed != None:
-        HP.seed[0] = seed
+
+    HP.seed[0] = seed
     ###################
 
     da = 0.2
@@ -74,6 +74,15 @@ def train(env,HP,net_drive,dataManager,net_stabilize = None,guiShared = None,see
     seed = HP.seed[0]
     reduce_vel = 0.0
     for i in range(HP.num_of_runs): #number of runs - run end at the end of the main path and if vehicle deviation error is to big
+        if not HP.run_same_path and HP.evaluation_flag and const_seed_flag:
+            if i<len(HP.seed):
+                seed = HP.seed[i]
+            else:
+                print("given seed list is too short! take random seed")
+                seed = int.from_bytes(os.urandom(8), byteorder="big")
+        else:
+            seed = int.from_bytes(os.urandom(8), byteorder="big")
+        
         if waitFor.stop == [True]:
             break
         # initialize every episode:

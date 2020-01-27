@@ -16,8 +16,8 @@ def train(env,HP,Agent,dataManager,guiShared,const_seed_flag = False,global_trai
     #subprocess.Popen('C:/Users/gavri/Desktop/sim_15_3_18/sim15_3_18 -quit -batchmode -nographics')
     #pre-defined parameters:
     #Agent.start_training()
-    if const_seed_flag:
-        seed = HP.seed[0]
+
+    seed = HP.seed[0]
     first_flag = True
     print("start training")
     env_state = env.reset(seed = seed)
@@ -56,6 +56,8 @@ def train(env,HP,Agent,dataManager,guiShared,const_seed_flag = False,global_trai
             else:
                 print("given seed list is too short! take random seed")
                 seed = int.from_bytes(os.urandom(8), byteorder="big")
+        else:
+            seed = int.from_bytes(os.urandom(8), byteorder="big")
         print("seed:", seed)
 
 
