@@ -316,7 +316,7 @@ class Agent:# includes the networks, policies, replay buffer, learning hyper par
         # self.planningState.var = roll_var
 
         #compute the variance/abs_error of the centripetal acceleration. 
-        var_vec = predict_lib.comp_ac_var(self, n_state_vec,n_state_vec_pred,type = "saftey_std")#"mean_error"
+        var_vec = predict_lib.comp_ac_var(self, n_state_vec,n_state_vec_pred,type = "max_error")#"mean_error"
         var_vec = [0]+var_vec+[1.0]*(20-len(var_vec)-1)#0.1
         print("var_vec:",var_vec)
         self.planningState.var = var_vec

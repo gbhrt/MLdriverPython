@@ -405,11 +405,12 @@ def comp_ac_var(Agent, n_state_vec,n_state_vec_pred,type = "mean_error",print_er
         steer_vec = np.array(final_state_vec_pred)[:,Agent.trainHP.vehicle_ind_data["steer"]]
         pred = np.array([Agent.Direct.comp_LTR(vel,steer) for vel,steer in zip(vel_vec,steer_vec)])
         error = pred - real
+        #error = (pred - real)/real
         if type == "mean_error":
             var_vec.append((np.abs(error)).mean())
         elif type == "std":
             var_vec.append(np.std(error, dtype=np.float64)*3)#3*variance - 99.73 samples are inside
-        else:
+        elif type == "saftey_std":
             std = np.std(error, dtype=np.float64)
             n = len(error)
             #mean:
@@ -429,6 +430,18 @@ def comp_ac_var(Agent, n_state_vec,n_state_vec_pred,type = "mean_error",print_er
             print("std:",std,"std_max:",std_max,"max_dev:",max_dev)
             #99.999% 4.417173*std
             var_vec.append(max_dev)
+
+                
+        elif type == "max_error":
+            error = [-x for x in error if x < 0] or None# take just negative values
+            error.sort()
+            #var = error[math.floor(max_factor*len(error)) -1]
+            max_factor = 0.9
+            var_vec.append(error[math.ceil(max_factor*len(error)) -1]*1.1)
+        else:
+            print("type not valid")
+            return var_vec
+
         if print_error:
             num = 0
             for e in error:
@@ -436,6 +449,7 @@ def comp_ac_var(Agent, n_state_vec,n_state_vec_pred,type = "mean_error",print_er
                     num+=1
             print("deviation from saftey margin:",num/len(error)*100,"%",end = ",")
             print("") 
+
            
     return var_vec
             

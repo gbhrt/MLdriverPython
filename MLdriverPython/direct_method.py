@@ -76,6 +76,7 @@ class directModel:
         LTR = self.comp_LTR(state_Vehicle.values[self.trainHP.vehicle_ind_data["vel_y"]],state_Vehicle.values[self.trainHP.vehicle_ind_data["steer"]])
         #LTR = self.comp_LTR2(state_Vehicle.values[self.trainHP.vehicle_ind_data["vel_y"]],state_Vehicle.values[self.trainHP.vehicle_ind_data["steer"]],state_env)
         if LTR+var > 1.0*factor:
+        #if LTR*var > 1.0*factor:
             #print("caution - not stable---------------------")
             roll_flag = 1
         #print("vel:",state_Vehicle.values[0],"steer:",state_Vehicle.values[1],"centipetal acceleration:",ac/self.ac_max)
