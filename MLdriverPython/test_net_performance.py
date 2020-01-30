@@ -13,6 +13,7 @@ import time
 import agent
 import agent_lib
 import predict_lib
+from math import copysign
 from statsmodels.graphics.gofplots import qqplot
 
 def save_data(file_name,data):
@@ -30,8 +31,8 @@ def plot_distribution(data,name):
     plt.figure(name+" distribution")
     plt.title(name,fontsize = 30)
     plt.tick_params(labelsize=20)
-    plt.hist(data,bins='auto',range=[-3*var, 3*var])
-    print("variance of",name,":",var)
+    plt.hist(data,bins='auto')# ,range=[-3*var, 3*var]
+    print("std of",name,":",var)
 
 def plot_comparison(real, predicted,name):
     
@@ -375,29 +376,33 @@ def one_step_pred_plot(Agent,replay_memory):
     vehicle_state_next_vec,vehicle_state_next_pred_vec,rel_pos_vec,rel_pos_pred_vec = predict_lib.one_step_prediction(Agent,replay_memory)
         
 
-    for feature,ind in Agent.trainHP.vehicle_ind_data.items():
-        plot_comparison(np.array(vehicle_state_next_vec)[:,ind], np.array(vehicle_state_next_pred_vec)[:,ind],feature)
+    #for feature,ind in Agent.trainHP.vehicle_ind_data.items():
+    #    plot_comparison(np.array(vehicle_state_next_vec)[:,ind], np.array(vehicle_state_next_pred_vec)[:,ind],feature)
         
 
-    for ind,feature in enumerate([r'$\Delta x$',r'$\Delta y$',r'$\Delta \theta_z$']):
-        real = np.array(rel_pos_vec)[:,ind]
-        pred = np.array(rel_pos_pred_vec)[:,ind]
-        error = pred - real
-        print("mse:",feature,np.sqrt((error**2).mean()))
-        plot_qqplot(error,feature)
-        plot_distribution(error,feature)
-        plot_comparison(real, pred,feature)
+    #for ind,feature in enumerate([r'$\Delta x$',r'$\Delta y$',r'$\Delta \theta_z$']):
+    #    real = np.array(rel_pos_vec)[:,ind]
+    #    pred = np.array(rel_pos_pred_vec)[:,ind]
+    #    error = pred - real
+    #    #error = (pred - real)/ np.array([r if abs( r) > 1e-5 else 1e-5 for r in real] ) 
+    #    print("mse:",feature,np.sqrt((error**2).mean())) 
+    #    plot_qqplot(error,feature)
+    #    plot_distribution(error,feature)
+    #    plot_comparison(real, pred,feature)
+        
 
 
-    # for ind,feature in enumerate([r'$v$',r'$\delta$',r'$\theta_y$']):
-    for ind,feature in enumerate([r'$v$',r'$\delta$']):
+    ## for ind,feature in enumerate([r'$v$',r'$\delta$',r'$\theta_y$']):
+    #for ind,feature in enumerate([r'$v$',r'$\delta$']):
 
-        real = np.array(vehicle_state_next_vec)[:,ind]
-        pred = np.array(vehicle_state_next_pred_vec)[:,ind]
-        error = pred - real
-        print("mse:",feature,np.sqrt((error**2).mean()))
-        plot_distribution(error,feature)
-        plot_qqplot(error,feature)
+    #    real = np.array(vehicle_state_next_vec)[:,ind]
+    #    pred = np.array(vehicle_state_next_pred_vec)[:,ind]
+    #    error = pred - real
+
+    #    #error = (pred - real)/ np.array([r if abs( r) > 1e-5 else 1e-5 for r in real] )    
+    #    print("mse:",feature,np.sqrt((error**2).mean()))
+    #    plot_distribution(error,feature)
+    #    plot_qqplot(error,feature)
     #LTR
     steer_vec_real = np.array(vehicle_state_next_vec)[:,Agent.trainHP.vehicle_ind_data["steer"]]
     vel_vec_real = np.array(vehicle_state_next_vec)[:,Agent.trainHP.vehicle_ind_data["vel_y"]]
@@ -405,10 +410,11 @@ def one_step_pred_plot(Agent,replay_memory):
     steer_vec_pred = np.array(vehicle_state_next_pred_vec)[:,Agent.trainHP.vehicle_ind_data["steer"]]
     vel_vec_pred = np.array(vehicle_state_next_pred_vec)[:,Agent.trainHP.vehicle_ind_data["vel_y"]]
     LTR_vec_pred = [Agent.Direct.comp_LTR(vel,steer) for steer, vel in zip(steer_vec_pred,vel_vec_pred)]
-    error = np.array(LTR_vec_pred) - np.array(LTR_vec_real)
+    error = (np.array(LTR_vec_pred) - np.array(LTR_vec_real))#/np.array([r if abs( r) > 1e-5 else copysign( 1e-5,r) for r in LTR_vec_real])
     plot_qqplot(error,"LTR")
     plot_distribution(error,"LTR")
     plot_comparison(LTR_vec_real, LTR_vec_pred,"LTR")
+
 
     var = Agent.planningState.var[1]
     num = 0
@@ -498,10 +504,11 @@ def test_net(Agent):
     
     Agent.save()
 
-    replay_memory = full_replay_memory[:int(0.01*len(full_replay_memory))]#test_replay_memory# #test_replay_memory#test_replay_memory
+    replay_memory = full_replay_memory#[:int(0.01*len(full_replay_memory))]#test_replay_memory# #test_replay_memory#test_replay_memory
     #full_replay_memory#
-    #Agent.update_episode_var()#len(replay_memory)
-    #Agent.save_var()
+    Agent.trainHP.var_update_steps = len(replay_memory)
+    Agent.update_episode_var()#len(replay_memory)
+    Agent.save_var()
     #TransNet_X = [[1,1,1,1,1]]
 
     #TransNet_Y = Agent.nets.TransNet.predict(np.array(TransNet_X))[0]
@@ -511,9 +518,9 @@ def test_net(Agent):
     #plot_n_step_state(Agent,replay_memory)
 
 
-    #plot_n_step_var(Agent,replay_memory)
+   # plot_n_step_var(Agent,replay_memory)
     #plot_n_step_LTR_var(Agent,replay_memory)
-    one_step_pred_plot(Agent,replay_memory)
+    #one_step_pred_plot(Agent,replay_memory)
 
     #train_X,train_Y_,_,_ = convert_data(ReplayTrain,envData)
 

@@ -40,10 +40,10 @@ def get_abs_vel(dataManager):
     var = sum(var_vec)/len(var_vec)
     return abs_vel,var
 
-def get_relative_to_baseline_reward(dataManager,baseline_dist,lenght):
+def get_relative_to_baseline_reward(dataManager,baseline_dist_vec,lenght):
     run_time =  0.2*lenght
     relative_reward = []
-    for real_path,seed,end_mode,baseline_dist in zip(dataManager.paths,dataManager.path_seed, dataManager.episode_end_mode,baseline_dist):
+    for real_path,seed,end_mode,baseline_dist in zip(dataManager.paths,dataManager.path_seed, dataManager.episode_end_mode,baseline_dist_vec):
         if end_mode == 'kipp' or end_mode == 'deviate' or len(real_path[1]) == 0:
             relative_reward.append(0)
         else:
@@ -193,6 +193,7 @@ def get_data(folder,names_vec,train_indexes, return_violation_count = False):#, 
                 #    restore_name = 'data_manager_'+str(i)
                 #else:
                 restore_name = 'data_manager_'+str(i)#'data_manager'
+                print("name:",name)
                 dataManager = data_manager1.DataManager(restore_path,restore_path,True,restore_name = restore_name,save_name = restore_name)#
                 if dataManager.error:
                     print("cannot restore dataManager",name,"num:",i)
@@ -254,7 +255,7 @@ def plot_fails_vel_comparison():
     #names_vec.append([['MB_R_2'],['Model Based RL',None]])#,'MB_R_2'
 
 
-    var_vec_VOD_const = [0.01*i for i in range(1,20)]
+    var_vec_VOD_const = [0.01*i for i in range(1,19)]
     names = ['VOD_var_check_const1_'+str(var) for var in var_vec_VOD_const]
     names_vec = []
     for name in names:
@@ -274,8 +275,8 @@ def plot_fails_vel_comparison():
     fail_VOD_linear = [fails[0][0] for fails in fails_vec]
     violation_count_VOD_linear = [violation_counts[0][0] for violation_counts in violation_count_vec]
 
-    var_vec_MB_linear = [0.01*i for i in range(0,10)]
-    names = ['MB_var_check_linear_'+str(var) for var in var_vec_MB_linear]#14
+    var_vec_MB_linear = [0.01*i for i in range(0,15)]
+    names = ['MB_var_check_linear1_'+str(var) for var in var_vec_MB_linear]#14
     names_vec = []
     for name in names:
        names_vec.append([[name],[name,None]])
@@ -454,22 +455,23 @@ if __name__ == "__main__":
     ########################################################################
     folder = "MB_paper"
     #plot_fails_vel_comparison()
-    #baseline = "baseline"
-    #names_vec = []
-    #names = ['MB_var_check_linear_'+str(var_constant) for var_constant in [0.01*i for i in range(0,14)]]#14
-    #for name in names:
-    #   names_vec.append([[name],[name,None]])
-    #names = ['VOD_var_check_const_'+str(var_constant) for var_constant in [0.01*i for i in range(1,30)]]
-    #for name in names:
-    #   names_vec.append([[name],[name,None]])
-    #names = ['VOD_var_check_'+str(var_constant) for var_constant in [0.01*i for i in range(1,19)]]
-    #for name in names:
-    #   names_vec.append([[name],[name,None]])
+    baseline = "baseline"
+    names_vec = []
+    names = ['MB_var_check_linear1_'+str(var_constant) for var_constant in [0.01*i for i in range(0,15)]]#14
+    for name in names:
+       names_vec.append([[name],[name,None]])
+    names = ['VOD_var_check_const1_'+str(var_constant) for var_constant in [0.01*i for i in range(1,19)]]
+    for name in names:
+       names_vec.append([[name],[name,None]])
+    names = ['VOD_var_check_linear1_'+str(var_constant) for var_constant in [0.01*i for i in range(1,15)]]
+    for name in names:
+       names_vec.append([[name],[name,None]])
+
     #comp_relative_reward(folder,names_vec,[0],baseline)#[5000*j for j in range(1,21)])
 
     #add_zero_data_manager(folder,names_vec)
     
-    #plot_fails_vel_comparison()
+    plot_fails_vel_comparison()
     names_vec = []
     names_vec.append([['REVO_direct_reward_3','REVO_direct_reward_4'],['REVO',None]])
     train_indexes = [2000*j for j in range(1,20)]

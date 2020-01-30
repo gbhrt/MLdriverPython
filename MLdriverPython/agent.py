@@ -301,6 +301,7 @@ class Agent:# includes the networks, policies, replay buffer, learning hyper par
             else:
                 var_update_steps = len(self.Replay.memory)
             episode_replay_memory = self.Replay.memory[-var_update_steps:]
+            print("len(episode_replay_memory):",len(episode_replay_memory))
 
         with self.trainShared.Lock:
             n = self.trainHP.rollout_n
@@ -316,7 +317,7 @@ class Agent:# includes the networks, policies, replay buffer, learning hyper par
         # self.planningState.var = roll_var
 
         #compute the variance/abs_error of the centripetal acceleration. 
-        var_vec = predict_lib.comp_ac_var(self, n_state_vec,n_state_vec_pred,type = "max_error")#"mean_error"
+        var_vec = predict_lib.comp_ac_var(self, n_state_vec,n_state_vec_pred,type = "max_error")#"mean_error" saftey_std
         var_vec = [0]+var_vec+[1.0]*(20-len(var_vec)-1)#0.1
         print("var_vec:",var_vec)
         self.planningState.var = var_vec
