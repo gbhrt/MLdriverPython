@@ -8,7 +8,7 @@ def driving_action(state,nets,trainHP,Direct = None,planningState = None):
     steer = actions.steer_policy(state.Vehicle,state.env,trainHP)#nets.SteerNet
 
     #integration on the next n steps:
-    acc_to_try =[1.0,-1.0]#[1.0,0.0,-1.0]
+    acc_to_try = [1.0,0.0,-1.0] #[1.0,-1.0]#
 
     for acc_i,try_acc in enumerate(acc_to_try):
         #roll_var = planningState.var[1] #trainHP.init_var+trainHP.one_step_var  # initialize for every search

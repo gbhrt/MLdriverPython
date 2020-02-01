@@ -437,7 +437,7 @@ def comp_ac_var(Agent, n_state_vec,n_state_vec_pred,type = "mean_error",print_er
             error.sort()
             #var = error[math.floor(max_factor*len(error)) -1]
             max_factor = 0.99
-            var_vec.append(error[math.ceil(max_factor*len(error)) -1])
+            var_vec.append(error[math.ceil(max_factor*len(error)) -1]*1.5)
         else:
             print("type not valid")
             return var_vec

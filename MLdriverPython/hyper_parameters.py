@@ -110,11 +110,11 @@ class SafteyHyperParameters:
 class ModelBasedHyperParameters:#global settings of the program.
     def __init__(self):
        
-        self.program_mode =  "test_net_performance"#"test_net_performance" train_in_env, test_actions  timing
+        self.program_mode =  "train_in_env"#"test_net_performance" train_in_env, test_actions  timing
         if self.program_mode == "test_net_performance" or self.program_mode == "test_actions":
             self.gui_flag = False
         else:
-            self.gui_flag = True
+            self.gui_flag = False
         self.MF_policy_flag = False
         self.emergency_action_flag = False
         self.emergency_steering_type = 4#1 - stright, 2 - 0.5 from original steering, 3-steer net, 4-same steering, 5-roll proportional
@@ -131,7 +131,7 @@ class ModelBasedHyperParameters:#global settings of the program.
         self.add_feature_to_action = False
         #####################
         self.pause_for_training = True
-        self.max_steps = 200000
+        self.max_steps = 1500
         self.train_flag = True
         #self.noise_flag = True
         #self.always_no_noise_flag = False
@@ -144,19 +144,19 @@ class ModelBasedHyperParameters:#global settings of the program.
         self.gym_flag = False
         self.render_flag = True
         self.plot_flag = True
-        self.restore_flag = True
+        self.restore_flag = False
         self.skip_run = False
         self.reset_every = 1
         self.save_every = 10000000000
         self.save_every_time = 5000 #minutes
         self.seed = [1111]
         self.net_name = "tf_model"
-        self.save_name = "MB_long02"#"MB_R_long2" MB_R_DS1
+        self.save_name = "MB_trained_on_3_actions"#"MB_R_long2" MB_R_DS1
         self.folder_path = os.getcwd()+ "/files/models/MB_paper/"
         #self.save_file_path = os.getcwd()+ "/files/models/model_based/"+self.save_name+"/"f
         self.save_file_path = self.folder_path +self.save_name+"/"
 
-        self.restore_name = "MB_long02"#"MB_R_long1"#MB_R_long2
+        self.restore_name = "MB_trained_on_3_actions"#"MB_R_long1"#MB_R_long2
         #self.restore_file_path = os.getcwd()+ "/files/models/model_based/"+self.restore_name+"/"
         self.restore_file_path = self.folder_path +self.restore_name+"/"
 

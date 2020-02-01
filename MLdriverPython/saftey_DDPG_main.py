@@ -24,18 +24,26 @@ def run_all(HP,guiShared):
     names_vec = []
     #names_vec.append([['MB_R_1','MB_R_2','MB_R_3','MB_R_4','MB_R_5'],'MB_R',None])
 
-    var_constants_vec = [0.01*i for i in range(0,15)]
-    #linear_var = True
-    #names = ['VOD_var_check_linear1_'+str(var_constant) for var_constant in var_constants_vec]
-    #names = ['MB_var_check_linear1_'+str(var_constant) for var_constant in var_constants_vec]
-    var_constants_vec = [0.01*i for i in range(0,30)]
+    var_constants_vec = [0.01*i for i in range(12,15)]
+    linear_var = True
+    #names = ['VOD_var_check_linear2_'+str(var_constant) for var_constant in var_constants_vec]
+    #names_vec.append([names,'VOD',None])
+    names = ['MB_var_check_linear2_'+str(var_constant) for var_constant in var_constants_vec]
+    names_vec.append([names,'MB_var',None])
+    var_constants_vec = [0.01*i for i in range(0,20)]
     linear_var = False
-    names = ['VOD_var_check_const1_'+str(var_constant) for var_constant in var_constants_vec]
-
+    names = ['VOD_var_check_const2_'+str(var_constant) for var_constant in var_constants_vec]
     names_vec.append([names,'VOD',None])
-    #names_vec.append([names,'MB_var',None])
+    names = ['MB_var_check_const2_'+str(var_constant) for var_constant in var_constants_vec]
+    names_vec.append([names,'MB_var',None])
+    #var_constants_vec = [0.01*i for i in range(0,30)]
+    #linear_var = False
+    #names = ['VOD_var_check_const1_'+str(var_constant) for var_constant in var_constants_vec]
 
-    #names_vec.append([['MB_long01'],'MB_R',0])
+    
+   
+
+    #names_vec.append([['MB_long02'],'MB_R',0])
     #names_vec.append([['MB_test'],'MB_R',None])
     #names_vec.append([['also_steer1'],'REVO',50000])#trained MF acc and steer policy
     random.seed(0)
@@ -96,7 +104,7 @@ def run_all(HP,guiShared):
                 HP.evaluation_flag = True
                 HP.restore_flag = True
                 HP.pause_for_training = False
-                HP.restore_name = "MB_10_episodes"
+                HP.restore_name = "MB_trained_on_3_actions"# trained for 5 minutes var 0.1 "MB_10_episodes"
                 HP.restore_file_path = HP.folder_path+HP.restore_name+"/"
                 HP.save_name = name
                 HP.save_file_path = HP.folder_path+HP.save_name+"/"
@@ -133,7 +141,7 @@ def run_all(HP,guiShared):
             description]
         HP.save_every_train_number = 100#5000
         
-        for evalutaion_flag in [False,True]:#False,
+        for evalutaion_flag in [True]:#False,
             HP.evaluation_flag = evalutaion_flag
 
             for name in names:
@@ -303,8 +311,8 @@ class programThread (threading.Thread):
       
     def run(self):
         print ("Starting " + self.name)
-        run(self.HP,self.guiShared)
-        #run_all(self.HP,self.guiShared)
+        #run(self.HP,self.guiShared)
+        run_all(self.HP,self.guiShared)
         print ("Exiting " + self.name)
 
         
@@ -312,7 +320,7 @@ class programThread (threading.Thread):
 
 
 if __name__ == "__main__": 
-    algo_type = "SDDPG"#"MB"#"SDDPG"
+    algo_type = "MB"#"MB"#"SDDPG"
 
     if algo_type == "SDDPG":
         HP = hyper_parameters.SafteyHyperParameters()
