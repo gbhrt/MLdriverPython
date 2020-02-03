@@ -209,7 +209,7 @@ def comp_LTR(vel,steer):
 
 def get_direct_stability(velocity,steer):
     LTR = comp_LTR(velocity,steer)
-    print("LTR:",LTR)
+    #print("LTR:",LTR)
     if LTR > 1.0:
         return True
     else:

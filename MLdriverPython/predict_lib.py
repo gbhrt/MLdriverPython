@@ -394,7 +394,7 @@ def get_all_n_step_states(TransNet,trainHP,replay_memory, n):#from 1 step to n s
 
     return all_n_state_vec,all_n_state_vec_pred,all_n_pos_vec,all_n_pos_vec_pred,all_n_ang_vec,all_n_ang_vec_pred
 
-def comp_ac_var(Agent, n_state_vec,n_state_vec_pred,type = "mean_error",print_error = False):
+def comp_ac_var(Agent, n_state_vec,n_state_vec_pred,type = "mean_error",factor = 1.0,print_error = False):
     var_vec = []
     for final_state_vec,final_state_vec_pred in zip(n_state_vec,n_state_vec_pred):     
         vel_vec = np.array(final_state_vec)[:,Agent.trainHP.vehicle_ind_data["vel_y"]]
@@ -426,7 +426,7 @@ def comp_ac_var(Agent, n_state_vec,n_state_vec_pred,type = "mean_error",print_er
             #std_max = np.sqrt(tmp/chi2.ppf(0.0005, n-1))# 99.9%
             std_max = np.sqrt(tmp/chi2.ppf(0.000005, n-1))# 99.999%
             
-            max_dev = std_max*4.417173#mean+mean_dev+
+            max_dev = std_max*factor#4.417173#mean+mean_dev+
             print("std:",std,"std_max:",std_max,"max_dev:",max_dev)
             #99.999% 4.417173*std
             var_vec.append(max_dev)

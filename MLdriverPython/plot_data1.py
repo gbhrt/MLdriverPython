@@ -295,6 +295,16 @@ def plot_fails_vel_comparison():
     fail_MB_const = [fails[0][0] for fails in fails_vec]
     violation_count_MB_const = [violation_counts[0][0] for violation_counts in violation_count_vec]
 
+    var_constants_vec = [i for i in range(3,15)]
+    names = ['MB_evaluate_var_'+str(var) for var in var_constants_vec]#14
+    names_vec = []
+    for name in names:
+       names_vec.append([[name],[name,None]])
+    reward_vec_indexes,rewards_vec,indexes,fails_vec,var,series_colors,series_names,violation_count_vec = get_data(folder,names_vec,[0],return_violation_count = True)
+    vel_MB_learn = [reward[0][0] for reward in rewards_vec]
+    fail_MB_learn = [fails[0][0] for fails in fails_vec]
+    violation_count_MB_learn = [violation_counts[0][0] for violation_counts in violation_count_vec]
+
     names = ['MB_long01']
     names_vec = []
     for name in names:
@@ -303,6 +313,8 @@ def plot_fails_vel_comparison():
     vel_MB_long = [reward[0][0] for reward in rewards_vec]
     fail_MB_long = [fails[0][0] for fails in fails_vec]
     violation_count_MB_long = [violation_counts[0][0] for violation_counts in violation_count_vec]
+
+    var_constants_vec = [i for i in range(3,15)]
     
     plt.figure("Velocity - Fails")
     plt.xlabel('Velocity',fontsize = size)
@@ -315,6 +327,8 @@ def plot_fails_vel_comparison():
     plt.plot(vel_MB_linear,fail_MB_linear,'o',c = 'g')
     plt.plot(vel_MB_const,fail_MB_const,c = 'orange',label = 'MB const')
     plt.plot(vel_MB_const,fail_MB_const,'o',c = 'orange')
+    #plt.plot(vel_MB_learn,fail_MB_learn,c = 'orange',label = 'MB const')
+    #plt.plot(vel_MB_learn,fail_MB_learn,'o',c = 'orange')
 
     plt.plot(vel_MB_long,fail_MB_long,'*',c = 'black',label = 'MB_long01')
     plt.legend()
@@ -470,8 +484,8 @@ if __name__ == "__main__":
     ########################################################################
     folder = "MB_paper"
     #plot_fails_vel_comparison()
-    #baseline = "baseline"
-    #names_vec = []
+    baseline = "baseline"
+    names_vec = []
     #names = ['MB_var_check_linear2_'+str(var_constant) for var_constant in [0.01*i for i in range(0,15)]]#14
     #for name in names:
     #   names_vec.append([[name],[name,None]])
@@ -484,14 +498,16 @@ if __name__ == "__main__":
     #names = ['VOD_var_check_linear2_'+str(var_constant) for var_constant in [0.01*i for i in range(0,15)]]
     #for name in names:
     #   names_vec.append([[name],[name,None]])
-
+    #names = ['MB_evaluate_var_'+str(var_constant) for var_constant in [i for i in range(3,15)]]
+    #for name in names:
+    #   names_vec.append([[name],[name,None]])
     #comp_relative_reward(folder,names_vec,[0],baseline)#[5000*j for j in range(1,21)])
 
     #add_zero_data_manager(folder,names_vec)
     
-    plot_fails_vel_comparison()
+    #plot_fails_vel_comparison()
     names_vec = []
-    names_vec.append([["MB_long02"],['MB',None]])#'REVO_direct_reward_3','REVO_direct_rew ard_4'
+    names_vec.append([["MB_learn_var_3_actions_2"],['MB',None]])#'REVO_direct_reward_3','REVO_direct_rew ard_4' MB_evaluate_var_10
     train_indexes = [0]
     #train_indexes = [100*j for j in range(1,20)]
     reward_vec_indexes,rewards_vec,indexes,fails_vec,var,series_colors,series_names, _ = get_data(folder,names_vec,train_indexes,return_violation_count = True)

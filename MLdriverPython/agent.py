@@ -150,7 +150,7 @@ class TrainHyperParameters:
 
 class PlanningState:
     def __init__(self,trainHP):
-        self.trust_T = 20
+        self.trust_T = 0
         self.var = [trainHP.init_var]+[min(trainHP.init_var+trainHP.one_step_var*n,trainHP.const_var ) for n in range(1,trainHP.rollout_n+10)]
         self.last_emergency_action_active = False
 
@@ -294,7 +294,7 @@ class Agent:# includes the networks, policies, replay buffer, learning hyper par
 
 
 
-    def update_episode_var(self):
+    def update_episode_var(self,factor = 1.0):
         with self.trainShared.ReplayLock:
             if self.trainHP.var_update_steps is not None:
                 var_update_steps = min(self.trainHP.var_update_steps,len(self.Replay.memory))
@@ -317,7 +317,8 @@ class Agent:# includes the networks, policies, replay buffer, learning hyper par
         # self.planningState.var = roll_var
 
         #compute the variance/abs_error of the centripetal acceleration. 
-        var_vec = predict_lib.comp_ac_var(self, n_state_vec,n_state_vec_pred,type = "max_error")#"mean_error" saftey_std
+        factor = 4
+        var_vec = predict_lib.comp_ac_var(self, n_state_vec,n_state_vec_pred,type = "saftey_std",factor = factor)#"mean_error" saftey_std
         var_vec = [0]+var_vec+[1.0]*(20-len(var_vec)-1)#0.1
         print("var_vec:",var_vec)
         self.planningState.var = var_vec

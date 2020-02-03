@@ -436,7 +436,18 @@ def train_nets(Agent):
     Agent.stop_training()
 
 
-#def direct():
+def filter_replay_memory(Agent,replay_memory):
+    rm = []
+    for ind in range(len(replay_memory)-1):
+        vehicle_state,rel_pos,action,done_flag,time_error,time_error1 = replay_memory[ind][0],replay_memory[ind][1],replay_memory[ind][2],replay_memory[ind][3],replay_memory[ind][4],replay_memory[ind][5]
+        LTR = Agent.Direct.comp_LTR(vehicle_state[Agent.trainHP.vehicle_ind_data["vel_y"]],vehicle_state[Agent.trainHP.vehicle_ind_data["steer"]])
+        if LTR <=1.0:
+            rm.append(replay_memory[ind])
+            print(vehicle_state, "LTR:",LTR)
+        else:
+            print(vehicle_state, "LTR:",LTR)
+    return rm
+
 
 def test_net(Agent): 
     train = False
@@ -506,6 +517,7 @@ def test_net(Agent):
 
     replay_memory = full_replay_memory#[:int(0.01*len(full_replay_memory))]#test_replay_memory# #test_replay_memory#test_replay_memory
     #full_replay_memory#
+    #replay_memory = filter_replay_memory(Agent,replay_memory)
     Agent.trainHP.var_update_steps = len(replay_memory)
     Agent.update_episode_var()#len(replay_memory)
     Agent.save_var()
@@ -520,7 +532,7 @@ def test_net(Agent):
 
    # plot_n_step_var(Agent,replay_memory)
     #plot_n_step_LTR_var(Agent,replay_memory)
-    #one_step_pred_plot(Agent,replay_memory)
+    one_step_pred_plot(Agent,replay_memory)
 
     #train_X,train_Y_,_,_ = convert_data(ReplayTrain,envData)
 
