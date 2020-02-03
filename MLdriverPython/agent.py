@@ -94,7 +94,7 @@ class MF_Net:#define the input and outputs to networks, and the nets itself.
 class TrainHyperParameters:
     def __init__(self,HP):
         self.MF_policy_flag = False
-        self.direct_predict_active = False
+        self.direct_predict_active = False#use bicycle model for state prediction
         self.direct_constrain = True #stabilization constrain computed by direct model (centrpetal force limit) or roll constrain
         self.update_var_flag = False 
         self.var_update_steps = 2000

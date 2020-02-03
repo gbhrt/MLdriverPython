@@ -118,7 +118,7 @@ class ModelBasedHyperParameters:#global settings of the program.
         self.MF_policy_flag = False
         self.emergency_action_flag = True
         self.emergency_steering_type = 4#1 - stright, 2 - 0.5 from original steering, 3-steer net, 4-same steering, 5-roll proportional
-        self.direct_stabilize = True  
+        self.direct_stabilize = True#use bicycle model for pridiction of states for stabilization   
         #########################
         #for the shared main:
         self.env_mode = "model_based"
@@ -130,7 +130,7 @@ class ModelBasedHyperParameters:#global settings of the program.
         self.evaluation_every = 999999999
         self.add_feature_to_action = False
         #####################
-        self.pause_for_training = True
+        self.pause_for_training = False
         self.max_steps = 1500
         self.train_flag = True
         #self.noise_flag = True
