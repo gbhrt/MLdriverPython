@@ -50,8 +50,15 @@ def run_all(HP,guiShared):
     #var_constants_vec = [i for i in range(3,15)]
     #names = ['MB_evaluate_var_'+str(var_constant) for var_constant in var_constants_vec]
     #names_vec.append([names,'evaluate_var',None])
+    var_constants_vec = [0.01*i for i in range(0,15)]
+    names = ['MB_stabilize_'+str(var_constant) for var_constant in var_constants_vec]
+    names_vec.append([names,'MB_var',None])
 
-    names_vec.append([['MB_learn_var_3_actions_2'],'MB_R',0])
+    names = ['VOD_var_check_linear3_'+str(var_constant) for var_constant in var_constants_vec]
+    names_vec.append([names,'VOD',None])
+    linear_var = True
+
+    #names_vec.append([['MB_learn_var_3_actions_2'],'MB_R',0])
     
     random.seed(0)
     HP.seed = random.sample(range(1000),101)#the 101 path is not executed
@@ -83,6 +90,7 @@ def run_all(HP,guiShared):
 
         if method == 'VOD':          
             for name,var_constant in zip(names,var_constants_vec):
+                HP.emergency_action_flag = False
                 HP.evaluation_flag = True
                 HP.pause_for_training = False
                 HP.restore_name = name
@@ -108,10 +116,11 @@ def run_all(HP,guiShared):
             continue
         if method == 'MB_var':          
             for name,var_constant in zip(names,var_constants_vec):
+                HP.emergency_action_flag = True
                 HP.evaluation_flag = True
                 HP.restore_flag = True
                 HP.pause_for_training = False
-                HP.restore_name = "MB_trained_on_3_actions"# trained for 5 minutes var 0.1 "MB_10_episodes"
+                HP.restore_name = "MB_trained_5_min"# trained for 5 minutes var 0.1 "MB_10_episodes"
                 HP.restore_file_path = HP.folder_path+HP.restore_name+"/"
                 HP.save_name = name
                 HP.save_file_path = HP.folder_path+HP.save_name+"/"

@@ -80,7 +80,7 @@ class directModel:
         #if LTR*(1+var) > 1.0*factor:
             #print("caution - not stable---------------------")
             roll_flag = 1
-        #print("vel:",state_Vehicle.values[0],"steer:",state_Vehicle.values[1],"centipetal acceleration:",ac/self.ac_max)
+            #print("vel:",state_Vehicle.values[self.trainHP.vehicle_ind_data["vel_y"]],"steer:",state_Vehicle.values[self.trainHP.vehicle_ind_data["steer"]],"LTR:",LTR)
         return roll_flag,dev_flag
 
    

@@ -125,8 +125,9 @@ class TrainHyperParameters:
             self.const_var =1.0
         else:
             #0.5 not move. 0.2 < 0.5 of VOD. 0.1 =0.85 of VOD. 0 1+-0.05 of VOD com height = 1.7
-            self.one_step_var =0.1#0.04# 0.02 is good
+            self.one_step_var =0.05#0.04# 0.02 is good
             self.const_var = 1000.0#0.05#roll variance at the future states, constant because closed loop control?
+            self.one_step_emergency_var = 0.07
         self.prior_safe_velocity = 0.02#if the velocity is lower than this value - it is priori Known that it is OK to accelerate
         self.stabilize_factor = 1.0
         #self.emergency_const_var = 0.05
@@ -152,6 +153,7 @@ class PlanningState:
     def __init__(self,trainHP):
         self.trust_T = 0
         self.var = [trainHP.init_var]+[min(trainHP.init_var+trainHP.one_step_var*n,trainHP.const_var ) for n in range(1,trainHP.rollout_n+10)]
+        self.stabilize_var = [trainHP.init_var]+[min(trainHP.init_var+trainHP.one_step_emergency_var*n,trainHP.const_var ) for n in range(1,trainHP.rollout_n+10)]
         self.last_emergency_action_active = False
 
 
