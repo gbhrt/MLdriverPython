@@ -488,7 +488,7 @@ def test_net(Agent):
     if not Agent.HP.restore_flag:#restore anyway
         Agent.Replay.restore(Agent.HP.restore_file_path)
     #Replay.memory = Replay.memory[:10000]
-    print("lenght of buffer: ",len(Agent.Replay.memory))
+    print("length of buffer: ",len(Agent.Replay.memory))
     if Agent.HP.restore_flag:
         Agent.nets.restore_all(Agent.HP.restore_file_path,Agent.HP.net_name)
     

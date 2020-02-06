@@ -74,7 +74,7 @@ def train(env,HP,net_drive,dataManager,net_stabilize = None,guiShared = None,con
     seed = HP.seed[0]
     reduce_vel = 0.0
     for i in range(HP.num_of_runs): #number of runs - run end at the end of the main path and if vehicle deviation error is to big
-        if not HP.run_same_path and HP.evaluation_flag and const_seed_flag:
+        if const_seed_flag:#not HP.run_same_path and HP.evaluation_flag and 
             if i<len(HP.seed):
                 seed = HP.seed[i]
             else:
@@ -344,7 +344,7 @@ def train(env,HP,net_drive,dataManager,net_stabilize = None,guiShared = None,con
             #dataManager.relative_reward.append(relative_dist)
             dataManager.episode_end_mode.append(info[0])
             dataManager.rewards.append(total_reward)
-            dataManager.lenght.append(step_count)
+            dataManager.length.append(step_count)
             dataManager.add_run_num(i)
             dataManager.add_train_num(global_train_count)
             dataManager.path_seed.append(env.path_seed)#current used seed (for paths)

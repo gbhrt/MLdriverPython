@@ -37,7 +37,7 @@ def driving_action(state,nets,trainHP,Direct = None,planningState = None,step_nu
             if not trainHP.direct_constrain:  
                 roll_flag,dev_flag = actions.check_stability(S_Vehicle,state.env,trainHP,roll_var = planningState.var[step_num],max_plan_roll = trainHP.max_plan_roll,max_plan_deviation = trainHP.max_plan_deviation)
             else:
-                roll_flag,dev_flag = Direct.check_stability2(S_Vehicle,state.env,trainHP.max_plan_deviation,planningState.var[i+2],1.0)#0.5 if planningState.last_emergency_action_active else 1.0
+                roll_flag,dev_flag = Direct.check_stability2(S_Vehicle,state.env,trainHP.max_plan_deviation,planningState.var[i+2],1.0)#0.5 if planningState.last_emergency_action_active==2 else 1.0
 
             if roll_flag != 0 or dev_flag != 0:
                 #print("break:",roll_flag,dev_flag)
@@ -56,12 +56,12 @@ def direct_emergency_cost(state,acc,steer,Direct,trainHP,planningState = None,st
     #next_vehicle_state,rel_pos,rel_ang = Direct.predict_one(state.Vehicle.values,[acc,steer])
     emergencyState = agent.State()
     emergencyState.Vehicle = actions.emergency_step(state.Vehicle,acc,steer,Direct)
-    #if(Direct.check_stability1(emergencyState.Vehicle.values,factor = 0.5 if planningState.last_emergency_action_active else 1.0)):
+    #if(Direct.check_stability1(emergencyState.Vehicle.values,factor = 0.5 if planningState.last_emergency_action_active==2 else 1.0)):
     #    cost = 0
     #else:
     #    cost = 200
     state.env[1] = lib.find_index_on_path(state.env[0],emergencyState.Vehicle.abs_pos) 
-    roll_flag,dev_flag = Direct.check_stability2(emergencyState.Vehicle,state.env,trainHP.max_plan_deviation,planningState.stabilize_var[step_num],1.0)#0.5 if planningState.last_emergency_action_active else trainHP.stabilize_factor
+    roll_flag,dev_flag = Direct.check_stability2(emergencyState.Vehicle,state.env,trainHP.max_plan_deviation,planningState.stabilize_var[step_num],1.0)#0.5 if planningState.last_emergency_action_active==2 else trainHP.stabilize_factor
     #print("roll_flag:",roll_flag)
     if roll_flag == 0 and dev_flag== 0:#regular policy and emergency policy are ok:
         cost = 0
@@ -94,7 +94,7 @@ def emergency_cost(state,acc,steer,trainHP,planningState = None,step_num = 0,net
         if not trainHP.direct_constrain:
             emergency_roll_flag,emergency_dev_flag = actions.check_stability(S_Vehicle,state.env,trainHP,roll_var = planningState.stabilize_var[step_num],max_plan_roll = trainHP.max_plan_roll,max_plan_deviation = trainHP.max_plan_deviation)
         else:
-            emergency_roll_flag,emergency_dev_flag = Direct.check_stability2(S_Vehicle,state.env,trainHP.max_plan_deviation,planningState.stabilize_var[step_num],1.0)#0.5 if planningState.last_emergency_action_active else trainHP.stabilize_factor
+            emergency_roll_flag,emergency_dev_flag = Direct.check_stability2(S_Vehicle,state.env,trainHP.max_plan_deviation,planningState.stabilize_var[step_num],1.0)#0.5 if planningState.last_emergency_action_active==2 else trainHP.stabilize_factor
  
         if emergency_roll_flag != 0 or emergency_dev_flag != 0:
             break      
@@ -110,7 +110,7 @@ def emergency_cost(state,acc,steer,trainHP,planningState = None,step_num = 0,net
 
 def comp_MB_action(nets,state,acc,steer,trainHP,planningState = None, Direct = None):
     #print("trust_T:",planningState.trust_T)
-    emergency_action_active = False
+    emergency_action_active = 0
     #print("planningState.last_emergency_action_active:",planningState.last_emergency_action_active)
     #if planningState.last_emergency_action_active:
     #    planningState.trust_T = 0
@@ -135,7 +135,7 @@ def comp_MB_action(nets,state,acc,steer,trainHP,planningState = None, Direct = N
     if not trainHP.direct_constrain:
         roll_flag,dev_flag = actions.check_stability(state.Vehicle,state.env,trainHP,roll_var = planningState.var[step_num],max_plan_roll = max_plan_roll,max_plan_deviation = max_plan_deviation)
     else:
-        roll_flag,dev_flag = Direct.check_stability2(state.Vehicle,state.env,trainHP.max_plan_deviation,planningState.var[step_num],1.0)#0.5 if planningState.last_emergency_action_active else trainHP.stabilize_factor
+        roll_flag,dev_flag = Direct.check_stability2(state.Vehicle,state.env,trainHP.max_plan_deviation,planningState.var[step_num],1.0)#0.5 if planningState.last_emergency_action_active == 2 else trainHP.stabilize_factor
 
     if roll_flag != 0 or dev_flag != 0:     
         print("unstable initial state - before first step -----------------------------------------")
@@ -143,7 +143,7 @@ def comp_MB_action(nets,state,acc,steer,trainHP,planningState = None, Direct = N
             next_steer = actions.emergency_steer_policy(state.Vehicle if not trainHP.direct_stabilize else emergencyState.Vehicle,state.env,trainHP,SteerNet =  nets.SteerNet if nets.steer_net_active else None)                                                       
             next_acc  = actions.emergency_acc_policy()#always -1
             #print("emergency policy is executed!")
-            emergency_action_active = True
+            emergency_action_active = 2
         else:        
             next_acc = -1.0
             next_steer = actions.steer_policy(state.Vehicle,state.env,trainHP)#,nets.SteerNet
@@ -165,7 +165,7 @@ def comp_MB_action(nets,state,acc,steer,trainHP,planningState = None, Direct = N
         if not trainHP.direct_constrain:
             roll_flag,dev_flag = actions.check_stability(state.Vehicle,state.env,trainHP,roll_var = planningState.var[step_num],max_plan_roll = max_plan_roll,max_plan_deviation = max_plan_deviation)
         else:
-            roll_flag,dev_flag = Direct.check_stability2(state.Vehicle,state.env,trainHP.max_plan_deviation,planningState.var[step_num],trainHP.stabilize_factor)#0.5 if planningState.last_emergency_action_active else trainHP.stabilize_factor
+            roll_flag,dev_flag = Direct.check_stability2(state.Vehicle,state.env,trainHP.max_plan_deviation,planningState.var[step_num],trainHP.stabilize_factor)#0.5 if planningState.last_emergency_action_active == 2 else trainHP.stabilize_factor
 
         if roll_flag != 0 or dev_flag != 0:#unavoidable state is not safe:            
             if trainHP.emergency_action_flag:#compute emergency actions from next state (the unavoidable state)
@@ -173,7 +173,7 @@ def comp_MB_action(nets,state,acc,steer,trainHP,planningState = None, Direct = N
                 next_steer = actions.emergency_steer_policy(state.Vehicle if not trainHP.direct_stabilize else emergencyState.Vehicle,state.env,trainHP,SteerNet =  nets.SteerNet if nets.steer_net_active else None)                                                       
                 next_acc  = actions.emergency_acc_policy()#always -1
                 #print("emergency policy is executed!")
-                emergency_action_active = True
+                emergency_action_active = 2
             else:     
                 print("unavoidable state is not safe - braking")
                 next_acc = -1.0
@@ -184,13 +184,13 @@ def comp_MB_action(nets,state,acc,steer,trainHP,planningState = None, Direct = N
                 if not trainHP.direct_constrain:
                     roll_flag,dev_flag = actions.check_stability(emergencyState.Vehicle,state.env,trainHP,roll_var = planningState.var[step_num],max_plan_roll = max_plan_roll,max_plan_deviation = max_plan_deviation)
                 else:
-                    roll_flag,dev_flag = Direct.check_stability2(emergencyState.Vehicle,state.env,trainHP.max_plan_deviation,planningState.var[step_num],trainHP.stabilize_factor)#0.5 if planningState.last_emergency_action_active else trainHP.stabilize_factor
+                    roll_flag,dev_flag = Direct.check_stability2(emergencyState.Vehicle,state.env,trainHP.max_plan_deviation,planningState.var[step_num],trainHP.stabilize_factor)#0.5 if planningState.last_emergency_action_active== 2 else trainHP.stabilize_factor
             if roll_flag != 0 or dev_flag != 0:#first step is not safe according to the emergency model       
                     print("first step is not safe - execute emergency policy")
                     next_steer = actions.emergency_steer_policy(state.Vehicle if not trainHP.direct_stabilize else emergencyState.Vehicle,state.env,trainHP,SteerNet =  nets.SteerNet if nets.steer_net_active else None)                                                       
                     next_acc  = actions.emergency_acc_policy()#always -1
                     #print("emergency policy is executed!")
-                    emergency_action_active = True
+                    emergency_action_active = 2
             else:
                 next_acc,next_steer,tmp_state_vec,tmp_a_vec = driving_action(state,nets,trainHP,Direct,planningState = planningState,step_num = step_num)
                 StateVehicle_vec += tmp_state_vec
@@ -224,7 +224,7 @@ def comp_MB_action(nets,state,acc,steer,trainHP,planningState = None, Direct = N
                             next_acc = -1.0
                             #e_cost,tmp_state_vec,tmp_a_vec = direct_emergency_cost(emergencyState,next_acc,next_steer,Direct,trainHP,planningState = planningState,step_num = 2)
                             e_cost,tmp_state_vec,tmp_a_vec,error_num = emergency_cost(emergencyState,next_acc,next_steer,trainHP,planningState = planningState,step_num = 2,nets = nets,Direct = Direct)#2 tmp
-                        
+                            emergency_action_active = 1
 
                     StateVehicle_emergency_vec+=tmp_state_vec
                     actions_emergency_vec+=tmp_a_vec
@@ -235,7 +235,7 @@ def comp_MB_action(nets,state,acc,steer,trainHP,planningState = None, Direct = N
                         next_steer = actions.emergency_steer_policy(state.Vehicle if not trainHP.direct_stabilize else emergencyState.Vehicle,state.env,trainHP,SteerNet =  nets.SteerNet if nets.steer_net_active else None)
                         next_acc  = actions.emergency_acc_policy()#always -1
                         #print("emergency policy is executed!")
-                        emergency_action_active = True
+                        emergency_action_active = 2
 
 
 

@@ -381,7 +381,7 @@ def get_all_n_step_states(TransNet,trainHP,replay_memory, n):#from 1 step to n s
             n_pos_vec_pred.append(pos_vec_pred[j][i])
             n_ang_vec.append(ang_vec[j][i])
             n_ang_vec_pred.append(ang_vec_pred[j][i])
-        if len(n_state_vec) == 0:#if no sample reached that lenght, we can break 
+        if len(n_state_vec) == 0:#if no sample reached that length, we can break 
             break
         all_n_state_vec.append(n_state_vec)
         all_n_state_vec_pred.append(n_state_vec_pred)

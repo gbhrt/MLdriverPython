@@ -150,7 +150,7 @@ class PathManager:#
         #    cpath.analytic_velocity_limit.append(path.analytic_velocity_limit[i])
         return cpath
 
-    def split_path(self,input_path_name,num_points,output_name):#input file name of a path, split to paths in num_points lenght. save to output_name_i
+    def split_path(self,input_path_name,num_points,output_name):#input file name of a path, split to paths in num_points length. save to output_name_i
         in_path = self.read_path(input_path_name)
         location = os.getcwd()
         paths_count = 0

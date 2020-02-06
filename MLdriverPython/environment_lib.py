@@ -60,8 +60,8 @@ def choose_position_points(local_path,number,distance_between_points):#return po
 
 def get_ddpg_target_state(pl = None,local_path = None,num_points = 1,distance_between = 1.0,max_velocity = 30.0,max_curvature = 0.12):
     #points = choose_position_points(local_path,num_points,distance_between)
-    #max_lenght = distance_between*num_points
-    #points = [pnt/max_lenght for pnt in points]
+    #max_length = distance_between*num_points
+    #points = [pnt/max_length for pnt in points]
     
 
     #index = lib.select_target_index(local_path, velocity = pl.simulator.vehicle.velocity[1])
@@ -78,8 +78,8 @@ def get_ddpg_state(pl = None,local_path = None,num_points = 1,distance_between =
 
     #path state:
     points = choose_position_points(local_path,num_points,distance_between)
-    max_lenght = distance_between*num_points
-    points = [pnt/max_lenght for pnt in points]
+    max_length = distance_between*num_points
+    points = [pnt/max_length for pnt in points]
 
     #curvature state:
     #points = choose_curvature_points(local_path,num_points,distance_between)

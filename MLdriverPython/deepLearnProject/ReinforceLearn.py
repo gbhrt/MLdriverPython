@@ -12,7 +12,7 @@ class StateSpace:
         self.n = 0
         self.features_num = 0
         return
-    def comp_lenght(self):
+    def comp_length(self):
         for item in self.data:
             self.n+=len(item)
 

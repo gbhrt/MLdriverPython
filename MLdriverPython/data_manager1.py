@@ -33,7 +33,7 @@ class DataManager():
         self.real_path = classes.Path()
         self.planned_path = classes.Path()
         self.rewards = []
-        self.lenght = []
+        self.length = []
         self.relative_reward = []
         self.episode_end_mode = []
         self.path_seed = []
@@ -44,7 +44,8 @@ class DataManager():
         self.paths = []
         self.run_data =[]
         self.violation_count = []
-
+        self.stabilize_count_brake = []
+        self.stabilize_count_steer = []
         self.var = []#variance of prediction 
         
         
@@ -232,8 +233,8 @@ class DataManager():
             #    plt.plot(self.run_num[:len(ave)],ave)
             #plt.plot(lib.running_average(self.relative_reward,5))
 
-            #plt.title("episodes lenght")
-            #plt.plot(self.lenght)
+            #plt.title("episodes length")
+            #plt.plot(self.length)
 
             #plt.figure(2)
             #plt.plot(np.array(self.planned_path.position)[:,0],np.array(self.planned_path.position)[:,1])
@@ -356,8 +357,8 @@ class DataManager():
     def save_data(self):
         try: 
             with open(self.save_name, 'w') as f:
-                #json.dump((self.run_num,self.train_num,self.rewards,self.lenght,self.relative_reward, self.episode_end_mode,self.path_seed,self.paths ),f)
-                json.dump((self.run_num,self.train_num,self.rewards,self.lenght,self.relative_reward, self.episode_end_mode,self.path_seed,self.paths,self.violation_count,self.var),f)
+                #json.dump((self.run_num,self.train_num,self.rewards,self.length,self.relative_reward, self.episode_end_mode,self.path_seed,self.paths ),f)
+                json.dump((self.run_num,self.train_num,self.rewards,self.length,self.relative_reward, self.episode_end_mode,self.path_seed,self.paths,self.violation_count,self.stabilize_count_brake,self.stabilize_count_steer),f)
 
             print("data manager saved")            
         except:
@@ -366,14 +367,29 @@ class DataManager():
     def load_data(self):
         try:
             with open(self.restore_name, 'r') as f:
-                #self.run_num,self.train_num,self.rewards,self.lenght,self.relative_reward, self.episode_end_mode,self.path_seed,self.paths = json.load(f)#,self.paths
-                #self.run_num,self.train_num,self.rewards,self.lenght,self.relative_reward, self.episode_end_mode,self.path_seed,self.paths,self.violation_count = json.load(f)#,self.paths
-                self.run_num,self.train_num,self.rewards,self.lenght,self.relative_reward, self.episode_end_mode,self.path_seed,self.paths,self.violation_count,self.var = json.load(f)#,self.paths
+                #self.run_num,self.train_num,self.rewards,self.length,self.relative_reward, self.episode_end_mode,self.path_seed,self.paths = json.load(f)#,self.paths
+                #self.run_num,self.train_num,self.rewards,self.length,self.relative_reward, self.episode_end_mode,self.path_seed,self.paths,self.violation_count = json.load(f)#,self.paths
+                #self.run_num,self.train_num,self.rewards,self.length,self.relative_reward, self.episode_end_mode,self.path_seed,self.paths,self.violation_count,self.var = json.load(f)#,self.paths
+                self.run_num,self.train_num,self.rewards,self.length,self.relative_reward, self.episode_end_mode,self.path_seed,self.paths,self.violation_count,self.stabilize_count_brake,self.stabilize_count_steer = json.load(f)#,self.paths
 
             print("data manager restored")
             return False
         except:
             print ("cannot restore data manager:", sys.exc_info()[0])
+
+            try:
+                with open(self.restore_name, 'r') as f:
+                    #self.run_num,self.train_num,self.rewards,self.length,self.relative_reward, self.episode_end_mode,self.path_seed,self.paths = json.load(f)#,self.paths
+                    #self.run_num,self.train_num,self.rewards,self.length,self.relative_reward, self.episode_end_mode,self.path_seed,self.paths,self.violation_count = json.load(f)#,self.paths
+                    self.run_num,self.train_num,self.rewards,self.length,self.relative_reward, self.episode_end_mode,self.path_seed,self.paths,self.violation_count,self.var = json.load(f)#,self.paths
+                    #self.run_num,self.train_num,self.rewards,self.length,self.relative_reward, self.episode_end_mode,self.path_seed,self.paths,self.violation_count,self.stabilize_count_brake,self.stabilize_count_steer = json.load(f)#,self.paths
+
+                print("data manager restored without self.stabilize_count_brake,self.stabilize_count_steer")
+                return False
+            except:
+                print ("cannot restore data manager:", sys.exc_info()[0])
             return True
+
+           
             #raise
     

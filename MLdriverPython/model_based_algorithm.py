@@ -50,7 +50,7 @@ def train(env,HP,Agent,dataManager,guiShared,const_seed_flag = False,global_trai
             break
         
         # initialize every episode:
-        if not HP.run_same_path and HP.evaluation_flag and const_seed_flag:
+        if const_seed_flag:#not HP.run_same_path and HP.evaluation_flag and 
             if i<len(HP.seed):
                 seed = HP.seed[i]
             else:
@@ -62,6 +62,8 @@ def train(env,HP,Agent,dataManager,guiShared,const_seed_flag = False,global_trai
 
 
         violation_count = 0
+        stabilize_count_brake = 0
+        stabilize_count_steer = 0
         step_count = 0
         reward_vec = []
         t1 = 0
@@ -113,6 +115,8 @@ def train(env,HP,Agent,dataManager,guiShared,const_seed_flag = False,global_trai
                 acc,steer,planningData = Agent.comp_action(state,acc,steer)#env is temp  ,roll_flag,dev_flag 
                 roll_flag, _ = Agent.Direct.check_stability2(state.Vehicle,state.env,Agent.trainHP.max_plan_deviation)
                 violation_count+=roll_flag
+                if planningData.vec_emergency_action[-1] == 1: stabilize_count_brake+=1 
+                elif planningData.vec_emergency_action[-1] == 2: stabilize_count_steer+=1
                 #print("acc:",acc,"steer:",steer)
                 #acc,steer,planningData,roll_flag,dev_flag = Agent.comp_action(state,acc,steer)
 
@@ -223,10 +227,12 @@ def train(env,HP,Agent,dataManager,guiShared,const_seed_flag = False,global_trai
             #if step_count<env.max_episode_steps and info[0] == 'ok':
             #    print("error - step_count<env.max_episode_steps and info[0] == ok")
             #    input()
-            dataManager.violation_count.append(violation_count)
             dataManager.episode_end_mode.append(info[0])
+            dataManager.violation_count.append(violation_count)
+            dataManager.stabilize_count_brake.append(stabilize_count_brake)
+            dataManager.stabilize_count_steer.append(stabilize_count_steer)
             dataManager.rewards.append(total_reward)
-            dataManager.lenght.append(step_count)
+            dataManager.length.append(step_count)
             dataManager.add_run_num(i)
             dataManager.add_train_num(global_train_count)
             dataManager.path_seed.append(env.path_seed)#current used seed (for paths)

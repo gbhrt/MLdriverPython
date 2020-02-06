@@ -291,7 +291,7 @@ def train(env,HP,net,dataManager,seed = None,global_train_count = 0):
             #dataManager.relative_reward.append(relative_dist)
             dataManager.episode_end_mode.append(info[0])
             dataManager.rewards.append(total_reward)
-            dataManager.lenght.append(step_count)
+            dataManager.length.append(step_count)
             dataManager.add_run_num(i)
             dataManager.add_train_num(global_train_count)
             dataManager.path_seed.append(env.path_seed)#current used seed (for paths)

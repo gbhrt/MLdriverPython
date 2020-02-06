@@ -14,8 +14,8 @@ class directModel:
         self.dt = 0.2
 
         self.fc = 1.0
-        self.lenght = 3.6
-        self.lr = self.lenght/2
+        self.length = 3.6
+        self.lr = self.length/2
         self.height = 1.0#1.7#0.86 #0.94#
         self.width = 2.08
         self.g = 9.81
@@ -45,7 +45,7 @@ class directModel:
         if abs(steer) < 0.001:
             radius = 1000
         else:
-            radius = math.sqrt((self.lenght*0.5)**2+(self.lenght/math.tan(steer))**2)
+            radius = math.sqrt((self.length*0.5)**2+(self.length/math.tan(steer))**2)
         if radius <0.1:
             print("error radius too small")
             ac = 100
@@ -88,7 +88,7 @@ class directModel:
         if abs(vehicle_state[self.trainHP.vehicle_ind_data["steer"]]) < 0.001:
             radius = 1000
         else:
-            radius = math.sqrt((self.lr)**2+(self.lenght/math.tan(vehicle_state[self.trainHP.vehicle_ind_data["steer"]]))**2)
+            radius = math.sqrt((self.lr)**2+(self.length/math.tan(vehicle_state[self.trainHP.vehicle_ind_data["steer"]]))**2)
         return radius
 
     def check_stability(self,vehicle_state,factor = 1.0):#action
@@ -124,7 +124,7 @@ class directModel:
         #Vx = vehicle_state[self.trainHP.vehicle_ind_data["vel_x"]]
         #Vy2 = next_vehicle_state[self.trainHP.vehicle_ind_data["vel_y"]]
         #slip_ang1 = np.arctan(Vx/Vy)
-        slip_ang = np.arctan(np.tan(steer)*self.lr/self.lenght)
+        slip_ang = np.arctan(np.tan(steer)*self.lr/self.length)
         #print("slip_ang:",slip_ang,"slip_ang1:",slip_ang1)
         V = Vy/np.cos(slip_ang)   #np.sqrt(Vy**2 + Vx**2)
         R = self.comp_radius(vehicle_state) 
@@ -172,7 +172,7 @@ class directModel:
     #    #Vx = vehicle_state[self.trainHP.vehicle_ind_data["vel_x"]]
     #    #Vy2 = next_vehicle_state[self.trainHP.vehicle_ind_data["vel_y"]]
     #    #slip_ang1 = np.arctan(Vx/Vy)
-    #    slip_ang = np.arctan(np.tan(steer)*self.lr/self.lenght)
+    #    slip_ang = np.arctan(np.tan(steer)*self.lr/self.length)
     #    #print("slip_ang:",slip_ang,"slip_ang1:",slip_ang1)
     #    V = Vy/np.cos(slip_ang)   #np.sqrt(Vy**2 + Vx**2)
     #    R = self.comp_radius(vehicle_state) 

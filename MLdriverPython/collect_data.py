@@ -17,7 +17,7 @@ def collect_random_data(buffer_size,path,name):
     pl = Planner(mode = "torque")
     waitFor = lib.waitFor()
     path_num = 10
-    path_lenght = 5000
+    path_length = 5000
     for i in range(path_num):
         pl.load_path(10000,source = "create_random")
         pl.simulator.get_vehicle_data()

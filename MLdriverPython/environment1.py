@@ -36,7 +36,7 @@ class OptimalVelocityPlannerData:
         self.feature_points = 25#60 # number of points on the path in the state +(1*self.end_indication_flag)
         self.feature_data_num = 1+(8*self.vehicle_data_features)  + (1*self.analytic_feature_flag)+ (1*self.roll_feature_flag) + (5*self.wheels_vel_feature_flag)# number of data in state (vehicle velocity, analytic data...)
         self.distance_between_points = 1.0 #meter 1.0
-        self.path_lenght = 9000#self.feature_points*self.distance_between_points
+        self.path_length = 9000#self.feature_points*self.distance_between_points
         self.step_time = 0.2
         if env_mode == 'SDDPG' or env_mode == 'DDPG_target':
             self.action_space_n = 2
@@ -45,7 +45,7 @@ class OptimalVelocityPlannerData:
         else:
             self.action_space_n = 1
 
-        self.visualized_points = int(self.feature_points/0.05) + 10 #how many points show on the map and lenght of local path
+        self.visualized_points = int(self.feature_points/0.05) + 10 #how many points show on the map and length of local path
 
         self.max_deviation =  100#10 # [m] if more then maximum - end episode 
         self.max_plan_deviation = 10
@@ -414,7 +414,7 @@ class OptimalVelocityPlanner(OptimalVelocityPlannerData):
             if self.max_plan_roll < max_episode_roll: self.max_plan_roll = max_episode_roll
              
 
-        path_error = self.pl.load_path(self.path_lenght, self.path_name,self.path_source,seed = seed)#,seed = 1236
+        path_error = self.pl.load_path(self.path_length, self.path_name,self.path_source,seed = seed)#,seed = 1236
         self.path_seed = seed
         if path_error == -1:#if cannot load path
             return "error"

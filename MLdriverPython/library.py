@@ -154,22 +154,22 @@ def select_target_index(path,velocity = None, index = 0):
     return target_index
 
 def comp_steer_local(local_target):
-    vehicle_lenght = 3.6
+    vehicle_length = 3.6
     ld2 = local_target[0]**2 + local_target[1]**2
     if ld2 == 0:
         return 0
     curv = 2*local_target[0]/ld2
-    steer_ang = -math.atan(curv*vehicle_lenght)
+    steer_ang = -math.atan(curv*vehicle_length)
     return steer_ang
 
 def comp_steer(vehicle_position,vehicle_angle,target):
-    vehicle_lenght = 3.6
+    vehicle_length = 3.6
     local_target = to_local(np.asarray(target),np.asarray(vehicle_position),vehicle_angle)#compute target in vehicle reference system
     #ld2 = local_target[0]**2 + local_target[1]**2
     #if ld2 == 0:
     #    return 0
     #curv = 2*local_target[0]/ld2
-    #steer_ang = -math.atan(curv*vehicle_lenght)
+    #steer_ang = -math.atan(curv*vehicle_length)
     return comp_steer_local(local_target)
 
 def comp_steer_target(path,vel, index = 0):
@@ -337,7 +337,7 @@ def createPath(type,size,startX,startY,startAng):
     path = classes.Path()
     startAng = startAng
     if type == "circle":
-        lenght = math.pi
+        length = math.pi
         R = size;
         start = np.asarray([startX,startY, 0])
         toCenter = np.asarray([0.,R, 0])
@@ -346,7 +346,7 @@ def createPath(type,size,startX,startY,startAng):
         
         #path.position[0].x = start[0]
         #path.position[0].y = start[1]
-        for th in range(int(lenght*100)):
+        for th in range(int(length*100)):
             point = vector3D()
             point.x = cen[0] + R*math.cos(th/100 - startAng)
             point.y = cen[1] + R*math.sin(th/100 - startAng)
@@ -354,11 +354,11 @@ def createPath(type,size,startX,startY,startAng):
     return path
 
 
-def split_to_paths(path,lenght_max):
+def split_to_paths(path,length_max):
     paths = []
     
-    for i in range(len(path.position)-lenght_max):
-        for j in range(i+1,lenght_max+i):
+    for i in range(len(path.position)-length_max):
+        for j in range(i+1,length_max+i):
             tmp_path = classes.Path()
             tmp_path.position = path.position[i:j].copy()
             tmp_path.angle = path.angle[i:j].copy()
@@ -381,17 +381,17 @@ def save_data(data,file_name):
             f.write("%s\t %s\t %s\t %s\t %s\n" % (dat.start_steering,dat.end_pos[0],dat.end_pos[1],dat.end_angle,dat.end_steering))
     return
 
-def split_to_data(path,lenght_max):
+def split_to_data(path,length_max):
     data = []
-    for i in range(len(path.position)-lenght_max):
-        for j in range(i+1,lenght_max+i):
+    for i in range(len(path.position)-length_max):
+        for j in range(i+1,length_max+i):
             tmp_data = SteerData()
             tmp_data.start_vel = path.velocity[i]
             tmp_data.start_steering = path.steering[i]
             tmp_data.end_pos = to_local(path.position[j],path.position[i],path.angle[i][1])
             
             tmp_data.end_angle = path.angle[j][1] - path.angle[i][1]
-            tmp_data.lenght = path.distance[j] - path.distance[i]
+            tmp_data.length = path.distance[j] - path.distance[i]
             data.append(tmp_data)
            
     return data

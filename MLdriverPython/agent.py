@@ -128,6 +128,7 @@ class TrainHyperParameters:
             self.one_step_var =0.05#0.04# 0.02 is good
             self.const_var = 1000.0#0.05#roll variance at the future states, constant because closed loop control?
             self.one_step_emergency_var = 0.07
+            self.const_emergency_var = 0.2
         self.prior_safe_velocity = 0.02#if the velocity is lower than this value - it is priori Known that it is OK to accelerate
         self.stabilize_factor = 1.0
         #self.emergency_const_var = 0.05
@@ -153,9 +154,9 @@ class PlanningState:
     def __init__(self,trainHP):
         self.trust_T = 0
         self.var = [trainHP.init_var]+[min(trainHP.init_var+trainHP.one_step_var*n,trainHP.const_var ) for n in range(1,trainHP.rollout_n+10)]
-        self.stabilize_var = [trainHP.init_var]+[min(trainHP.init_var+trainHP.one_step_emergency_var*n,trainHP.const_var ) for n in range(1,trainHP.rollout_n+10)]
-        self.last_emergency_action_active = False
-
+        self.stabilize_var = [trainHP.init_var]+[min(trainHP.init_var+trainHP.one_step_emergency_var*n,trainHP.const_emergency_var ) for n in range(1,trainHP.rollout_n+10)]
+        self.last_emergency_action_active = 0
+            
 
  
 
@@ -331,7 +332,7 @@ class Agent:# includes the networks, policies, replay buffer, learning hyper par
         print("var path: ", path+"var.txt")
         try: 
             with open(path+"var.txt", 'w') as f:
-                #json.dump((self.run_num,self.train_num,self.rewards,self.lenght,self.relative_reward, self.episode_end_mode,self.path_seed,self.paths ),f)
+                #json.dump((self.run_num,self.train_num,self.rewards,self.length,self.relative_reward, self.episode_end_mode,self.path_seed,self.paths ),f)
                 json.dump((self.planningState.var),f)
 
             print("var saved")            
@@ -342,7 +343,7 @@ class Agent:# includes the networks, policies, replay buffer, learning hyper par
         print("var path: ", path+"var.txt")
         try:
             with open(path+"var.txt", 'r') as f:
-                #self.run_num,self.train_num,self.rewards,self.lenght,self.relative_reward, self.episode_end_mode,self.path_seed,self.paths = json.load(f)#,self.paths
+                #self.run_num,self.train_num,self.rewards,self.length,self.relative_reward, self.episode_end_mode,self.path_seed,self.paths = json.load(f)#,self.paths
                 self.planningState.var = json.load(f)#,self.paths
 
             print("var restored")

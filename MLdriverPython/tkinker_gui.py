@@ -23,6 +23,7 @@ def plot_velocities(fig):#,path):
     lines.append(fig.plot([],[],label = "analytic velocity")[0])
     lines.append(fig.plot([],[],label = "vehicle velocity")[0])
     lines.append(fig.plot([],[],'.',color = 'red',label = "emergency action")[0])
+    lines.append(fig.plot([],[],'.',color = 'black',label = "emergency braking")[0])
     #plt.legend()
     return lines
 
@@ -34,13 +35,18 @@ def update_velocities(lines,path,vec_emergency_action,index):
     lines[0].set_data(np.array(path.time)[:index],np.array(path.analytic_velocity_limit)[:index])   
     lines[1].set_data(np.array(path.time)[:index],np.array(path.analytic_velocity)[:index])
     lines[2].set_data(path.time[:index],path.velocity[:index])
-    x,y=[],[]
+    x1,y1,x2,y2=[],[],[],[]
     for t,emergency_a in zip(path.time,vec_emergency_action):
-        if emergency_a:
-            x.append(t)
-            y.append(0)
+        if emergency_a == 2:
+            x2.append(t)
+            y2.append(0)
+        elif emergency_a == 1:
+            x1.append(t)
+            y1.append(0)
     #lines[3].set_data(x[:index],y[:index])
-    lines[3].set_data(x,y)
+    lines[3].set_data(x2,y2)
+    lines[4].set_data(x1,y1)
+
 
 class data_plots():
     def __init__(self,root,spinBox,guiShared,index):

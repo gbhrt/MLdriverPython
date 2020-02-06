@@ -41,9 +41,9 @@ def create_path_in_run(points,file_name):
     while j < points:
         steer_ang = random.uniform(-0.5,0.5)
         pl.simulator.send_drive_commands(vel,steer_ang)#send commands
-        lenght = random.randint(0,500)
-        print("steer ang: ",steer_ang," lenght: ", lenght)
-        for i in range(lenght):
+        length = random.randint(0,500)
+        print("steer ang: ",steer_ang," length: ", length)
+        for i in range(length):
             run_const()
         j+=i
         

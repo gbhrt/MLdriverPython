@@ -135,7 +135,7 @@ def plot_rewards(folder,names,shape=None,color=None,label = None,vod_label = Non
 
     for i in range(len(dataManager_vec)):
         fails = fails_vec[i].count(1)
-        print("fail:",  fails/len(dataManager_vec[i].episode_end_mode)*100,"[%]", "lenght:",len(dataManager_vec[i].episode_end_mode),"check episodes")#
+        print("fail:",  fails/len(dataManager_vec[i].episode_end_mode)*100,"[%]", "length:",len(dataManager_vec[i].episode_end_mode),"check episodes")#
         
     fails_density_vec = []
 

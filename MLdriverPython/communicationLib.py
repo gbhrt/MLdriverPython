@@ -64,20 +64,20 @@ class Comm:
         return
 
     
-    def deserialize(self,lenght,type):
+    def deserialize(self,length,type):
         try:
-            if lenght > 1:
-                data = [0. for _ in range(lenght)]
+            if length > 1:
+                data = [0. for _ in range(length)]
             else:
                 data = 0.
                 
-            if lenght == 1:#if not a list
+            if length == 1:#if not a list
                 next = self.input_data_str.find(bytes(',', 'UTF-8'))
                 tmp = self.input_data_str[0:next];
                 self.input_data_str = self.input_data_str[next+1:]
                 data = type(tmp);
             else:
-                for i in range(lenght):
+                for i in range(length):
                     next = self.input_data_str.find(bytes(',', 'UTF-8'))
                     tmp = self.input_data_str[0:next];
                     self.input_data_str = self.input_data_str[next+1:]

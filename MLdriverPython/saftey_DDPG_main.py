@@ -50,28 +50,36 @@ def run_all(HP,guiShared):
     #var_constants_vec = [i for i in range(3,15)]
     #names = ['MB_evaluate_var_'+str(var_constant) for var_constant in var_constants_vec]
     #names_vec.append([names,'evaluate_var',None])
+
+
+    #names = ['VOD_var_check_linear3_'+str(var_constant) for var_constant in var_constants_vec]
+    #names_vec.append([names,'VOD',None])
+    #linear_var = True
+
+    #nums = list(range(100))
+    #names = ['MB_learning_process_no_stabilize'+str(num) for num in nums]
+    #names_vec.append([names,'learning_process',None])
+    #names_vec.append([['MB_learn_var_3_actions_2'],'MB_R',0])
+    
     var_constants_vec = [0.01*i for i in range(0,15)]
     names = ['MB_stabilize_'+str(var_constant) for var_constant in var_constants_vec]
     names_vec.append([names,'MB_var',None])
-
-    names = ['VOD_var_check_linear3_'+str(var_constant) for var_constant in var_constants_vec]
-    names_vec.append([names,'VOD',None])
     linear_var = True
 
-    #names_vec.append([['MB_learn_var_3_actions_2'],'MB_R',0])
-    
-    random.seed(0)
-    HP.seed = random.sample(range(1000),101)#the 101 path is not executed
     HP.evaluation_every = 999999999
+    HP.max_steps = 99999999999
     for names,method,training_num in names_vec:
+        random.seed(0)
+        HP.seed = random.sample(range(1000),101)#the 101 path is not executed
+
         HP.analytic_action = False
         if method =='REVO':
             envData.analytic_feature_flag = False
             HP.add_feature_to_action  = False
-        if method =='REVO+A':
+        elif method =='REVO+A':
             envData.analytic_feature_flag = False
             HP.add_feature_to_action  = True
-        if method =='REVO+F':
+        elif method =='REVO+F':
             envData.analytic_feature_flag = True
             HP.add_feature_to_action  = False
 
@@ -88,7 +96,7 @@ def run_all(HP,guiShared):
         #    HP.num_of_runs = 100
         #    HP.save_every_train_number = 500000000
 
-        if method == 'VOD':          
+        elif method == 'VOD':          
             for name,var_constant in zip(names,var_constants_vec):
                 HP.emergency_action_flag = False
                 HP.evaluation_flag = True
@@ -114,9 +122,9 @@ def run_all(HP,guiShared):
                     model_based_algorithm.train(env,HP,Agent,dataManager,guiShared,global_train_count = 0,const_seed_flag = True)
                 continue
             continue
-        if method == 'MB_var':          
+        elif method == 'MB_var':          
             for name,var_constant in zip(names,var_constants_vec):
-                HP.emergency_action_flag = True
+                HP.emergency_action_flag = False#True
                 HP.evaluation_flag = True
                 HP.restore_flag = True
                 HP.pause_for_training = False
@@ -140,7 +148,8 @@ def run_all(HP,guiShared):
                     model_based_algorithm.train(env,HP,Agent,dataManager,guiShared,global_train_count = 0,const_seed_flag = True)
                 continue
             continue
-        if method == 'evaluate_var':
+        elif method == 'evaluate_var':
+            HP.emergency_action_flag = False
             for name,factor in zip(names,var_constants_vec):
                 HP.evaluation_flag = True
                 HP.restore_flag = True
@@ -161,8 +170,30 @@ def run_all(HP,guiShared):
                     Agent.trainHP.num_of_runs = HP.num_of_runs
                     model_based_algorithm.train(env,HP,Agent,dataManager,guiShared,global_train_count = 0,const_seed_flag = True)
                 continue
+            continue        
+        elif method == 'learning_process':
+            for name,num in zip(names,nums):
+                seed = HP.seed+HP.seed#full seed list
+                HP.seed = seed[num:num+len(HP.seed)]
+                HP.evaluation_flag = False
+                HP.restore_flag = False
+                HP.pause_for_training = True
+                HP.save_name = name
+                HP.save_file_path = HP.folder_path+HP.save_name+"/"
+                HP.num_of_runs = 20
+                Agent = agent.Agent(HP,trans_net_active = True, steer_net_active = False)
+                Agent.trainHP.update_var_flag = False
+                Agent.trainHP.var_update_steps = None
+                #Agent.update_episode_var(factor = factor)
+                #Agent.save_var()
+                dataManager = data_manager1.DataManager(HP.save_file_path,restore_flag =False,save_name = 'data_manager')
+                env = environment1.OptimalVelocityPlanner(dataManager,env_mode=HP.env_mode)
+                if env.opened:     
+                    Agent.trainHP.num_of_runs = HP.num_of_runs
+                    model_based_algorithm.train(env,HP,Agent,dataManager,guiShared,global_train_count = 0,const_seed_flag = True)
+                continue
             continue
-        if method == "MB_R":#model based regular - without stabilization
+        elif method == "MB_R":#model based regular - without stabilization
             HP.max_steps = 2000
             HP.emergency_action_flag = False
             HP.emergency_steering_type = 1#1 - stright, 2 - 0.5 from original steering, 3-steer net
@@ -268,7 +299,7 @@ def run_train_MB(HP,dataManager,envData,index = None):
     env = environment1.OptimalVelocityPlanner(dataManager,env_mode=HP.env_mode)
     if env.opened:     
         Agent.trainHP.num_of_runs = HP.num_of_runs
-        model_based_algorithm.train(env,HP,Agent,dataManager,guiShared,global_train_count = global_train_count,const_seed_flag = True)
+        model_based_algorithm.train(env,HP,Agent,dataManager,guiShared,global_train_count = global_train_count,const_seed_flag = True if HP.evaluation_flag else False)
     return False
 
 def run_train(HP,dataManager,envData,index = None):

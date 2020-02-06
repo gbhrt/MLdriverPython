@@ -227,7 +227,7 @@ class Planner(PathManager):#planner - get and send data to simulator. input - mi
         self.simulator.send_drive_commands(command,steer_ang1) #send commands
         return steer_ang1
     
-    def load_path(self,lenght,path_file_name = None,source = "regular", compute_velocity_limit_flag = False,seed = None):
+    def load_path(self,length,path_file_name = None,source = "regular", compute_velocity_limit_flag = False,seed = None):
         path_num = 0
         if source == "regular":
             self.reference_free_path = self.read_path(path_file_name)#get a path at any location
@@ -235,7 +235,7 @@ class Planner(PathManager):#planner - get and send data to simulator. input - mi
                 return -1
         elif source == "create_random":
             
-            self.reference_free_path.position = lib.create_random_path(lenght,0.05,seed = seed)
+            self.reference_free_path.position = lib.create_random_path(length,0.05,seed = seed)
 
         elif source == "saved_random":
             path_num,self.reference_free_path = self.get_next_random_path()
@@ -256,7 +256,7 @@ class Planner(PathManager):#planner - get and send data to simulator. input - mi
         #if source == "saved_random" or source == "create_random" or compute_velocity_limit_flag:
         lib.comp_velocity_limit_and_velocity(self.reference_free_path,skip = 10,reduce_factor = 1.0)
         #for i in range(len(self.reference_free_path.distance)):
-        #    if self.reference_free_path.distance[i] > lenght:
+        #    if self.reference_free_path.distance[i] > length:
         #        self.reference_free_path.analytic_velocity_limit[i] = 30
         for i in range(1,20):
             self.reference_free_path.analytic_velocity_limit[-i] = 0
@@ -299,14 +299,14 @@ class Planner(PathManager):#planner - get and send data to simulator. input - mi
     #    local_path.distance = copy.copy(self.desired_path.distance)
     #    return local_path
     def check_end(self,deviation = None,max_deviation = 4,max_roll = 0.2,max_pitch = 0.2, state = None,end_distance = None):
-        #print("main index", self.main_index, "lenght: ",len(self.in_vehicle_reference_path.position))
+        #print("main index", self.main_index, "length: ",len(self.in_vehicle_reference_path.position))
         end_tolerance = 0.3
         dis_from_end = self.in_vehicle_reference_path.distance[-1] - self.in_vehicle_reference_path.distance[self.main_index]
         
         #if  (dis_from_end < end_tolerance and self.simulator.vehicle.velocity[1] < 0.001)\
         #    or dis_from_end <= 0: #end if reach the end or when close to end and velocity is 0
         if self.main_index >= len(self.in_vehicle_reference_path.position)-1:#end of the main path
-        #if self.in_vehicle_reference_path.distance[self.main_index] > lenght:
+        #if self.in_vehicle_reference_path.distance[self.main_index] > length:
             print("end episode - end of the path")
             return 'path_end'
         #print("distance: ",self.in_vehicle_reference_path.distance[self.main_index],"end_distance:",end_distance)

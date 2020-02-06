@@ -40,7 +40,7 @@ if __name__ == "__main__":
     #velocity, steering angle, steering action, acceleration action,  rel x, rel y, rel ang, velocity next, steering next, roll
     Replay.restore(HP.restore_file_path)
     #Replay.memory = Replay.memory[:10000]
-    print("lenght of buffer: ",len(Replay.memory))
+    print("length of buffer: ",len(Replay.memory))
 
     #state, a, next_state, end,_ = map(list, zip(*Replay.memory))#all data
     vec_X, vec_Y_, end,_ = map(list, zip(*Replay.memory))

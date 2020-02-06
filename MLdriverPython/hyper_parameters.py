@@ -116,7 +116,7 @@ class ModelBasedHyperParameters:#global settings of the program.
         else:
             self.gui_flag = False
         self.MF_policy_flag = False
-        self.emergency_action_flag = True
+        self.emergency_action_flag = False
         self.emergency_steering_type = 1#1 - stright, 2 - 0.5 from original steering, 3-steer net, 4-same steering, 5-roll proportional
         self.direct_stabilize = True#use bicycle model for pridiction of states for stabilization   
         #########################
@@ -152,7 +152,7 @@ class ModelBasedHyperParameters:#global settings of the program.
         self.seed = [1111]
         self.net_name = "tf_model"
         self.save_name = "MB_trained_5_min"#"MB_R_long2" MB_R_DS1
-        self.folder_path = os.getcwd()+ "/files/models/MB_paper_stabilize/"
+        self.folder_path = os.getcwd()+ "/files/models/MB_paper_stabilize/MB_learning_process2/"
         #self.save_file_path = os.getcwd()+ "/files/models/model_based/"+self.save_name+"/"f
         self.save_file_path = self.folder_path +self.save_name+"/"
 
