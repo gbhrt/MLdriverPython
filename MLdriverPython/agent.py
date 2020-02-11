@@ -94,7 +94,7 @@ class MF_Net:#define the input and outputs to networks, and the nets itself.
 class TrainHyperParameters:
     def __init__(self,HP):
         self.MF_policy_flag = False
-        self.direct_predict_active = False#use bicycle model for state prediction
+        self.direct_predict_active = False# False use bicycle model for state prediction
         self.direct_constrain = True #stabilization constrain computed by direct model (centrpetal force limit) or roll constrain
         self.update_var_flag = False 
         self.var_update_steps = 2000
@@ -127,7 +127,7 @@ class TrainHyperParameters:
             #0.5 not move. 0.2 < 0.5 of VOD. 0.1 =0.85 of VOD. 0 1+-0.05 of VOD com height = 1.7
             self.one_step_var =0.05#0.04# 0.02 is good
             self.const_var = 1000.0#0.05#roll variance at the future states, constant because closed loop control?
-            self.one_step_emergency_var = 0.07
+            self.one_step_emergency_var = 0.05
             self.const_emergency_var = 0.2
         self.prior_safe_velocity = 0.02#if the velocity is lower than this value - it is priori Known that it is OK to accelerate
         self.stabilize_factor = 1.0
@@ -321,7 +321,7 @@ class Agent:# includes the networks, policies, replay buffer, learning hyper par
 
         #compute the variance/abs_error of the centripetal acceleration. 
         factor = 4
-        var_vec = predict_lib.comp_ac_var(self, n_state_vec,n_state_vec_pred,type = "saftey_std",factor = factor)#"mean_error" saftey_std
+        var_vec = predict_lib.comp_ac_var(self, n_state_vec,n_state_vec_pred,type = "safety_std",factor = factor)#"mean_error" safety_std
         var_vec = [0]+var_vec+[1.0]*(20-len(var_vec)-1)#0.1
         print("var_vec:",var_vec)
         self.planningState.var = var_vec

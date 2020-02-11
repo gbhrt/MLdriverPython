@@ -7,7 +7,7 @@ import environment1
 import data_manager1
 import hyper_parameters 
 from DDPG_net import DDPG_network
-import saftey_DDPG_algorithm
+import safety_DDPG_algorithm
 import model_based_algorithm
 import tkinker_gui
 import shared
@@ -56,15 +56,15 @@ def run_all(HP,guiShared):
     #names_vec.append([names,'VOD',None])
     #linear_var = True
 
-    #nums = list(range(100))
-    #names = ['MB_learning_process_no_stabilize'+str(num) for num in nums]
-    #names_vec.append([names,'learning_process',None])
+    nums = list(range(100))
+    names = ['MB_learning_process_stabilize1_0.05_'+str(num) for num in nums]
+    names_vec.append([names,'learning_process',None])
     #names_vec.append([['MB_learn_var_3_actions_2'],'MB_R',0])
     
-    var_constants_vec = [0.01*i for i in range(0,15)]
-    names = ['MB_stabilize_'+str(var_constant) for var_constant in var_constants_vec]
-    names_vec.append([names,'MB_var',None])
-    linear_var = True
+    #var_constants_vec = [0.01*i for i in range(0,15)]
+    #names = ['MB_no_stabilize_'+str(var_constant) for var_constant in var_constants_vec]
+    #names_vec.append([names,'MB_var',None])
+    #linear_var = True
 
     HP.evaluation_every = 999999999
     HP.max_steps = 99999999999
@@ -172,6 +172,7 @@ def run_all(HP,guiShared):
                 continue
             continue        
         elif method == 'learning_process':
+            HP.emergency_action_flag = True
             for name,num in zip(names,nums):
                 seed = HP.seed+HP.seed#full seed list
                 HP.seed = seed[num:num+len(HP.seed)]
@@ -338,9 +339,9 @@ def run_train(HP,dataManager,envData,index = None):
     env = environment1.OptimalVelocityPlanner(dataManager,env_mode=HP.env_mode)
     if env.opened:     
         if HP.stabilize_flag:
-            saftey_DDPG_algorithm.train(env,HP,net,dataManager,net_stabilize = net_stabilize,guiShared = guiShared,global_train_count = global_train_count,const_seed_flag = True)
+            safety_DDPG_algorithm.train(env,HP,net,dataManager,net_stabilize = net_stabilize,guiShared = guiShared,global_train_count = global_train_count,const_seed_flag = True)
         else:
-            saftey_DDPG_algorithm.train(env,HP,net,dataManager,guiShared = guiShared,global_train_count = global_train_count,const_seed_flag = True)    
+            safety_DDPG_algorithm.train(env,HP,net,dataManager,guiShared = guiShared,global_train_count = global_train_count,const_seed_flag = True)    
     return False
 
 
@@ -365,9 +366,9 @@ def run(HP,guiShared = None):
     env = environment1.OptimalVelocityPlanner(dataManager,env_mode=HP.env_mode)
     if env.opened:     
         if HP.stabilize_flag:
-            saftey_DDPG_algorithm.train(env,HP,net,dataManager,net_stabilize = net_stabilize,guiShared = guiShared)
+            safety_DDPG_algorithm.train(env,HP,net,dataManager,net_stabilize = net_stabilize,guiShared = guiShared)
         else:
-            saftey_DDPG_algorithm.train(env,HP,net,dataManager,guiShared = guiShared)
+            safety_DDPG_algorithm.train(env,HP,net,dataManager,guiShared = guiShared)
 
 
 class programThread (threading.Thread):
@@ -391,7 +392,7 @@ if __name__ == "__main__":
     algo_type = "MB"#"MB"#"SDDPG"
 
     if algo_type == "SDDPG":
-        HP = hyper_parameters.SafteyHyperParameters()
+        HP = hyper_parameters.safetyHyperParameters()
     elif algo_type == "DDPG":
         HP = hyper_parameters.HyperParameters()
     elif algo_type == "MB":

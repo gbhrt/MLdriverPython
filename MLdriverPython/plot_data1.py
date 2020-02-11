@@ -220,7 +220,8 @@ def get_training_process_data(folder,names_vec,train_indexes,baseline_folder,bas
         for episode_learning_process_rewards,episode_learning_process_violation_count ,episode_learning_process_fail,episode_learning_process_episode_length,episode_stabilize_count_brake,episode_stabilize_count_steer\
             in zip(tr_vec_learning_process_rewards,tr_vec_learning_process_violation_count,tr_vec_learning_process_fails,tr_vec_learning_process_episode_length,tr_vec_stabilize_count_brake,tr_vec_stabilize_count_steer):
             sum_episode_lengths = sum(episode_learning_process_episode_length)
-            rewards.append(sum(episode_learning_process_rewards)/len(episode_learning_process_rewards))
+            filtered_reward = [episode_learning_process_reward for episode_learning_process_reward in episode_learning_process_rewards if episode_learning_process_reward != 0 ]
+            rewards.append(sum(filtered_reward)/len(filtered_reward))
             var.append(np.std(episode_learning_process_rewards))
             violation_count.append(100*sum(episode_learning_process_violation_count)/sum_episode_lengths)
             fails.append(100*sum(episode_learning_process_fail)/len(episode_learning_process_episode_length))#sum_episode_lengths
@@ -343,7 +344,8 @@ def plot_fails_vel_comparison():
 
     var_vec_VOD_linear = [0.01*i for i in range(0,15)]
     #names = ['VOD_var_check_linear2_'+str(var) for var in var_vec_VOD_linear]#19
-    names = ['VOD_var_check_linear3_'+str(var) for var in var_vec_VOD_linear]#19
+    #names = ['VOD_var_check_linear3_'+str(var) for var in var_vec_VOD_linear]#19
+    names = ['MB_stabilize_'+str(var) for var in var_vec_VOD_linear]#19
     
     names_vec = []
     for name in names:
@@ -352,10 +354,11 @@ def plot_fails_vel_comparison():
     vel_VOD_linear = [reward[0][0] for reward in rewards_vec]
     fail_VOD_linear = [fails[0][0] for fails in fails_vec]
     violation_count_VOD_linear = [violation_counts[0][0] for violation_counts in violation_count_vec]
-
+    
+    #folder = 'MB_paper_stabilize/MB_learning_process2'
     var_vec_MB_linear = [0.01*i for i in range(0,15)]
     #names = ['MB_var_check_linear2_'+str(var) for var in var_vec_MB_linear]#14
-    names = ['MB_stabilize_'+str(var) for var in var_vec_MB_linear]#14
+    names = ['MB_no_stabilize_'+str(var) for var in var_vec_MB_linear]#14
     names_vec = []
     for name in names:
        names_vec.append([[name],[name,None]])
@@ -426,7 +429,7 @@ def plot_fails_vel_comparison():
     #plt.legend()
 
     plt.figure("Factor - Vel")
-    plt.xlabel('Saftey Factor',fontsize = size)
+    plt.xlabel('safety Factor',fontsize = size)
     plt.ylabel('Vel',fontsize = size)
     ##plt.plot(var_vec_VOD_const,vel_VOD_const,c = 'r',label = 'VOD_const')
     ##plt.plot(var_vec_VOD_const,vel_VOD_const,'o',c = 'r')
@@ -438,7 +441,7 @@ def plot_fails_vel_comparison():
     #plt.legend()
 
     plt.figure("Factor - Violation count")
-    plt.xlabel('Saftey Factor',fontsize = size)
+    plt.xlabel('safety Factor',fontsize = size)
     plt.ylabel('Violation count [%]',fontsize = size)
     ##plt.plot(var_vec_VOD_const,violation_count_VOD_const,c = 'r',label = 'VOD_const')
     ##plt.plot(var_vec_VOD_const,violation_count_VOD_const,'o',c = 'r')
@@ -449,7 +452,7 @@ def plot_fails_vel_comparison():
     #plt.legend()
 
     plt.figure("Factor - Fails")
-    plt.xlabel('Saftey Factor',fontsize = size)
+    plt.xlabel('safety Factor',fontsize = size)
     plt.ylabel('Fails [%]',fontsize = size)
     ##plt.plot(var_vec_VOD_const,fail_VOD_const,c = 'r',label = 'VOD_const')
     ##plt.plot(var_vec_VOD_const,fail_VOD_const,'o',c = 'r')
@@ -586,7 +589,7 @@ if __name__ == "__main__":
 
     #add_zero_data_manager(folder,names_vec)
     
-    plot_fails_vel_comparison()
+    #plot_fails_vel_comparison()
 
     #names_vec = []
     #names_vec.append([["MB_learn_var_3_actions_2"],['MB',None]])#'REVO_direct_reward_3','REVO_direct_rew ard_4' MB_evaluate_var_10
@@ -597,12 +600,23 @@ if __name__ == "__main__":
     #avg_rewards_vec,var_rewards_vec = average_training_processes(rewards_vec)
     #avg_fails_vec,var_fails_vec = average_training_processes(fails_vec)
     
-    folder = 'MB_paper_stabilize'
+    folder = 'MB_paper_stabilize'#/MB_learning_process2'
     names_vec = []
-    train_indexes = list(range(50))
+    #train_indexes = list(range(50))
     #names = ['VOD_learning_process_'+str(num) for num in train_indexes]
+    #names = ['MB_learning_process_no_stabilize1_'+str(num) for num in train_indexes]
+
+    #names = ['MB_learning_process2/MB_learning_process_no_stabilize1_'+str(num) for num in train_indexes]
+    #names_vec.append([names,['MB','blue']])
+    train_indexes = list(range(50))
+    names = ['MB_learning_process0.05/MB_learning_process_stabilize_0.05_'+str(num) for num in train_indexes]
+    names_vec.append([names,['stabilize 0.05','blue']])
+
+    train_indexes = list(range(50))
     names = ['MB_learning_process1MB_learning_process_'+str(num) for num in train_indexes]
-    names_vec.append([names,['MB',None]])#'REVO_direct_reward_3','REVO_direct_rew ard_4' MB_evaluate_var_10
+    names_vec.append([names,['MB stabilize','green']])#'REVO_direct_reward_3','REVO_direct_rew ard_4' MB_evaluate_var_10
+
+
 
     reward_vec_indexes,avg_rewards_vec,indexes,avg_fails_vec,var_rewards_vec,series_colors,series_names, violation_count_vec,var_fails_vec,stabilize_count_brake_vec,stabilize_count_steer_vec = get_training_process_data(folder,names_vec,train_indexes,baseline_folder,baseline)
     #indexes = [ind/2 for ind in indexes]#
@@ -624,7 +638,7 @@ if __name__ == "__main__":
     #        plt.scatter(trains[:len(single_rewards)],single_rewards,c = color,alpha = 0.5)#
     #plt.xlim(0,100000)
     for reward_indexes,rewards,var,color,label in zip(reward_vec_indexes,avg_rewards_vec,var_rewards_vec,series_colors,series_names):
-        plt.plot(indexes[:len(rewards)],rewards,'o',color = color,label = label)
+        plt.plot(indexes[:len(rewards)],rewards,color = color,label = label)
         plt.errorbar(indexes[:len(rewards)],rewards,var,c = color,alpha = 0.7)#reward_indexes[0]
         #print("var:",var[0])
     plt.plot([0,indexes[len(rewards)-1]],[1,1],linewidth = 2.0,c = 'r',label = 'Direct')#'VOD'
@@ -634,7 +648,7 @@ if __name__ == "__main__":
     plt.tick_params(labelsize=12)
     plt.xticks(indexes)
     #plt.xlim(0,100000)
-    plt.ylim(0,100)
+   # plt.ylim(0,100)
     plt.xlabel(xlabel,fontsize = size)
     plt.ylabel('Fails [%]',fontsize = size)
     #for fails,color in zip(fails_vec,series_colors):
@@ -649,7 +663,7 @@ if __name__ == "__main__":
     plt.tick_params(labelsize=12)
     plt.xticks(indexes)
     #plt.xlim(0,100000)
-    plt.ylim(0,100)
+    #plt.ylim(0,100)
     plt.xlabel(xlabel,fontsize = size)
     plt.ylabel('Violation count [%]',fontsize = size)
     #for fails,color in zip(fails_vec,series_colors):
@@ -670,9 +684,10 @@ if __name__ == "__main__":
     #for fails,color in zip(fails_vec,series_colors):
     #    for single_fails in fails:
     #        plt.scatter(indexes[:len(single_fails)],single_fails,c = color,alpha = 0.5)
-    for stabilize_count_brake,stabilize_count_steer,color,label in zip(stabilize_count_brake_vec,stabilize_count_steer_vec,series_colors,series_names):
-        plt.plot(indexes[:len(stabilize_count_brake)],stabilize_count_brake,color = color,label = label+' braking')
-        plt.plot(indexes[:len(stabilize_count_steer)],stabilize_count_steer,color = color,label = label+ ' steering')
+    #for stabilize_count_brake,stabilize_count_steer,color,label in zip(stabilize_count_brake_vec,stabilize_count_steer_vec,series_colors,series_names):
+    for stabilize_count_brake,stabilize_count_steer,color,label in zip(stabilize_count_brake_vec[1:],stabilize_count_steer_vec[1:],series_colors[1:],series_names[1:]):
+        plt.plot(indexes[:len(stabilize_count_brake)],stabilize_count_brake,color = None,label = label+' braking')
+        plt.plot(indexes[:len(stabilize_count_steer)],stabilize_count_steer,color = None,label = label+ ' steering')
         #plt.errorbar(indexes[:len(fails)],fails,var,c = color,alpha = 0.7)
     plt.legend()
 

@@ -410,7 +410,7 @@ def comp_ac_var(Agent, n_state_vec,n_state_vec_pred,type = "mean_error",factor =
             var_vec.append((np.abs(error)).mean())
         elif type == "std":
             var_vec.append(np.std(error, dtype=np.float64)*3)#3*variance - 99.73 samples are inside
-        elif type == "saftey_std":
+        elif type == "safety_std":
             std = np.std(error, dtype=np.float64)
             n = len(error)
             #mean:
@@ -447,7 +447,7 @@ def comp_ac_var(Agent, n_state_vec,n_state_vec_pred,type = "mean_error",factor =
             for e in error:
                 if abs(e) > var_vec[-1]:
                     num+=1
-            print("deviation from saftey margin:",num/len(error)*100,"%",end = ",")
+            print("deviation from safety margin:",num/len(error)*100,"%",end = ",")
             print("") 
 
            
@@ -569,7 +569,7 @@ def comp_LTR_var(Agent, n_state_vec,n_state_vec_pred,type = "mean_error",max_fac
             for e in error:
                 if abs(e) > var_vec[-1]:
                     num+=1
-            print("deviation from saftey margin:",num/len(error)*100,"%",end = ",")
+            print("deviation from safety margin:",num/len(error)*100,"%",end = ",")
             print("") 
            
     return var_vec,mean_vec

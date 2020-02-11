@@ -5,7 +5,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>67d1be9f-78bf-410b-b3ad-9001facbb70e</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>model_based_main.py</StartupFile>
+    <StartupFile>safety_DDPG_main.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -66,7 +66,7 @@
     <Compile Include="direct_method.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="saftey_DDPG_algorithm.py" />
+    <Compile Include="safety_DDPG_algorithm.py" />
     <Compile Include="drive_test.py">
       <SubType>Code</SubType>
     </Compile>
@@ -95,7 +95,7 @@
     <Compile Include="predict_lib.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="saftey_DDPG_main.py">
+    <Compile Include="safety_DDPG_main.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="shared.py">

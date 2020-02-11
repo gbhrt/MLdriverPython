@@ -26,10 +26,11 @@ def plot_qqplot(data,name):
     qqplot(data, line='s',label = name)
     plt.legend()
 
-def plot_distribution(data,name):
+def plot_distribution(data,name,same_figure = False):
     var = np.std(data,dtype=np.float64)
-    plt.figure(name+" distribution")
-    plt.title(name,fontsize = 30)
+    if not same_figure:
+        plt.figure(name+" distribution")
+        plt.title(name,fontsize = 30)
     plt.tick_params(labelsize=20)
     plt.hist(data,bins='auto')# ,range=[-3*var, 3*var]
     print("std of",name,":",var)
@@ -371,7 +372,7 @@ def plot_n_step_var(Agent,replay_memory):
 
 
 
-def one_step_pred_plot(Agent,replay_memory):  
+def one_step_pred_plot(Agent,replay_memory,compare_to_direct = False):  
 
     vehicle_state_next_vec,vehicle_state_next_pred_vec,rel_pos_vec,rel_pos_pred_vec = predict_lib.one_step_prediction(Agent,replay_memory)
         
@@ -412,8 +413,30 @@ def one_step_pred_plot(Agent,replay_memory):
     LTR_vec_pred = [Agent.Direct.comp_LTR(vel,steer) for steer, vel in zip(steer_vec_pred,vel_vec_pred)]
     error = (np.array(LTR_vec_pred) - np.array(LTR_vec_real))#/np.array([r if abs( r) > 1e-5 else copysign( 1e-5,r) for r in LTR_vec_real])
     plot_qqplot(error,"LTR")
-    plot_distribution(error,"LTR")
+    
     plot_comparison(LTR_vec_real, LTR_vec_pred,"LTR")
+    
+    ######################
+    if compare_to_direct and not Agent.trainHP.direct_predict_active:
+        Agent.trainHP.direct_predict_active = True
+        vehicle_state_next_vec,vehicle_state_next_pred_vec,rel_pos_vec,rel_pos_pred_vec = predict_lib.one_step_prediction(Agent,replay_memory)
+        steer_vec_real = np.array(vehicle_state_next_vec)[:,Agent.trainHP.vehicle_ind_data["steer"]]
+        vel_vec_real = np.array(vehicle_state_next_vec)[:,Agent.trainHP.vehicle_ind_data["vel_y"]]
+        LTR_vec_real = [Agent.Direct.comp_LTR(vel,steer) for steer, vel in zip(steer_vec_real,vel_vec_real)]
+        steer_vec_pred = np.array(vehicle_state_next_pred_vec)[:,Agent.trainHP.vehicle_ind_data["steer"]]
+        vel_vec_pred = np.array(vehicle_state_next_pred_vec)[:,Agent.trainHP.vehicle_ind_data["vel_y"]]
+        LTR_vec_pred = [Agent.Direct.comp_LTR(vel,steer) for steer, vel in zip(steer_vec_pred,vel_vec_pred)]
+        error_direct = (np.array(LTR_vec_pred) - np.array(LTR_vec_real))#/np.array([r if abs( r) > 1e-5 else copysign( 1e-5,r) for r in LTR_vec_real])
+        plot_distribution(error_direct,"LTR")
+        Agent.trainHP.direct_predict_active = False
+
+        plot_distribution(error,"LTR", same_figure = True)
+    ######################
+    else:
+        plot_distribution(error,"LTR")
+    
+    
+    
 
 
     var = Agent.planningState.var[1]
@@ -422,7 +445,7 @@ def one_step_pred_plot(Agent,replay_memory):
         if abs(e) > var:
             num+=1
 
-    print("percent of deviation from saftey margin:",num)    
+    print("percent of deviation from safety margin:",num)    
     plt.show()
 
 def train_nets(Agent):
@@ -518,9 +541,9 @@ def test_net(Agent):
     replay_memory = full_replay_memory#[:int(0.01*len(full_replay_memory))]#test_replay_memory# #test_replay_memory#test_replay_memory
     #full_replay_memory#
     #replay_memory = filter_replay_memory(Agent,replay_memory)
-    Agent.trainHP.var_update_steps = len(replay_memory)
-    Agent.update_episode_var()#len(replay_memory)
-    Agent.save_var()
+    #Agent.trainHP.var_update_steps = len(replay_memory)
+    #Agent.update_episode_var()#len(replay_memory)
+    #Agent.save_var()
     #TransNet_X = [[1,1,1,1,1]]
 
     #TransNet_Y = Agent.nets.TransNet.predict(np.array(TransNet_X))[0]
@@ -532,7 +555,7 @@ def test_net(Agent):
 
    # plot_n_step_var(Agent,replay_memory)
     #plot_n_step_LTR_var(Agent,replay_memory)
-    one_step_pred_plot(Agent,replay_memory)
+    one_step_pred_plot(Agent,replay_memory,compare_to_direct = True)
 
     #train_X,train_Y_,_,_ = convert_data(ReplayTrain,envData)
 

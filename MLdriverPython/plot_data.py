@@ -325,7 +325,7 @@ if __name__ == "__main__":
     #names2 = ["add_acc_feature5_2","add_acc_feature5_4","add_acc_feature5_6","add_acc_feature5_8","add_acc_feature5_10"]
     #no_friction_hard:
     #final:
-    folder = "saftey_DDPG1"#"no_friction_hard"#"paper_fix"
+    folder = "safety_DDPG1"#"no_friction_hard"#"paper_fix"
     names1 = ["SDDPG_pure_persuit4"]
     #names1 = ["REVO_1","REVO_2","REVO_3","REVO_4","REVO_5"]#
     #names2 = ["REVO_size_200_150_1","REVO_size_200_150_2","REVO_3","REVO_size_200_150_4","REVO_size_200_150_5"]#

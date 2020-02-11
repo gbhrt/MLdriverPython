@@ -50,7 +50,7 @@ class HyperParameters:
             self.noise_flag = False
 
 
-class SafteyHyperParameters:
+class safetyHyperParameters:
     def __init__(self):
         self.gui_flag = True
         #self.epsilon_start = 1.0
@@ -94,12 +94,12 @@ class SafteyHyperParameters:
         self.save_every = 100
         self.save_every_train_number = 25000000
         self.seed = [1111]#,1112,1113,1114,1115]
-        self.save_name ="SDDPG_direct_reward"#SDDPG_vel_and_steer_roll_reward2- roll reward, no saftey, ~0.8 of VOD 20-30% fails 
+        self.save_name ="SDDPG_direct_reward"#SDDPG_vel_and_steer_roll_reward2- roll reward, no safety, ~0.8 of VOD 20-30% fails 
         self.folder_path = os.getcwd()+ "/files/models/new_state/"
         #SDDPG_vel_and_steer_roll_reward3 -with roll feature, doesn't converge
         self.save_file_path = self.folder_path+self.save_name+"/"
 
-        self.restore_name = "SDDPG_direct_reward"#SDDPG_pure_persuit saftey good but limit velocity because reward to low. SDDPG_pure_persuit1 - good
+        self.restore_name = "SDDPG_direct_reward"#SDDPG_pure_persuit safety good but limit velocity because reward to low. SDDPG_pure_persuit1 - good
         #SDDPG_pure_persuit3 - conv_flag, path layer sizes 50,20
         #SDDPG_pure_persuit3 - conv_flag, path layer sizes 20,5
         self.restore_file_path = self.folder_path+self.restore_name+"/"
@@ -110,13 +110,13 @@ class SafteyHyperParameters:
 class ModelBasedHyperParameters:#global settings of the program.
     def __init__(self):
        
-        self.program_mode =  "train_in_env"#"test_net_performance" train_in_env, test_actions  timing
+        self.program_mode =  "test_net_performance"#"test_net_performance" train_in_env, test_actions  timing
         if self.program_mode == "test_net_performance" or self.program_mode == "test_actions":
             self.gui_flag = False
         else:
             self.gui_flag = False
         self.MF_policy_flag = False
-        self.emergency_action_flag = False
+        self.emergency_action_flag = True
         self.emergency_steering_type = 1#1 - stright, 2 - 0.5 from original steering, 3-steer net, 4-same steering, 5-roll proportional
         self.direct_stabilize = True#use bicycle model for pridiction of states for stabilization   
         #########################
@@ -151,12 +151,12 @@ class ModelBasedHyperParameters:#global settings of the program.
         self.save_every_time = 5000 #minutes
         self.seed = [1111]
         self.net_name = "tf_model"
-        self.save_name = "MB_trained_5_min"#"MB_R_long2" MB_R_DS1
-        self.folder_path = os.getcwd()+ "/files/models/MB_paper_stabilize/MB_learning_process2/"
+        self.save_name = "MB_vid"#"MB_R_long2" MB_R_DS1
+        self.folder_path = os.getcwd()+ "/files/models/MB_paper_stabilize/MB_learning_process1_0.05/"#MB_learning_process2/ MB_learning_process0.05/
         #self.save_file_path = os.getcwd()+ "/files/models/model_based/"+self.save_name+"/"f
         self.save_file_path = self.folder_path +self.save_name+"/"
 
-        self.restore_name = "MB_trained_5_min"#"MB_R_long1"#MB_R_long2
+        self.restore_name = "MB_vid"#"MB_R_long1"#MB_R_long2
         #self.restore_file_path = os.getcwd()+ "/files/models/model_based/"+self.restore_name+"/"
         self.restore_file_path = self.folder_path +self.restore_name+"/"
 
