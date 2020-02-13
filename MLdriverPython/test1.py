@@ -3,25 +3,31 @@
 #import matplotlib
 #import matplotlib.pyplot as plt
 #import pandas as pd
-import numpy as np
 #import tensorflow as tf
 #import threading
-from scipy.stats import chi2
+import matplotlib
 import matplotlib.pyplot as plt
+import numpy as np
 
-n = 100
-std = 5.86
 
-#standard deviation:
-tmp = (n-1)*std**2
-std_min = np.sqrt(tmp/chi2.ppf(0.995, n-1))#0.975
-std_max = np.sqrt(tmp/chi2.ppf(0.005, n-1))#0.025
-print("std_min:",std_min,"std_max:",std_max)
+men_means = [20, 34, 30, 35, 27]
+women_means = [25, 32, 34, 20, 25]
 
-#mean:
-z = 2.576#for 99% confidence
-mean_dev = z*std/np.sqrt(n)
-print("mean_dev:",mean_dev)
+x = np.arange(5)  # the label locations
+width = 0.35  # the width of the bars
+
+fig, ax = plt.subplots()
+rects1 = ax.bar(x - width/2, men_means, width, label='Men')
+rects2 = ax.bar(x + width/2, women_means, width, label='Women')
+
+# Add some text for labels, title and custom x-axis tick labels, etc.
+ax.set_xticks(x)
+ax.legend()
+
+
+#fig.tight_layout()
+
+plt.show()
 
 
 

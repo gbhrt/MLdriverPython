@@ -539,7 +539,8 @@ def comp_LTR_var(Agent, n_state_vec,n_state_vec_pred,type = "mean_error",max_fac
             #var_vec.append(var)
             #mean_vec.append(np.mean(error,dtype=np.float64))
             var = []
-            for max_factor in [x * 0.01 for x in range(1, 101)]:
+            #for max_factor in [x * 0.01 for x in range(1, 101)]:
+            for max_factor in [1.0,0.99,0.5]:#0.9,
                 var.append(error[math.ceil(max_factor*len(error)) -1])
             var_vec.append(var)
             mean_vec.append(np.mean(error,dtype=np.float64))

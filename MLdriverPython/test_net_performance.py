@@ -283,37 +283,52 @@ def plot_n_step_state(Agent,replay_memory):
 
 
 
-def plot_n_step_LTR_var(Agent,replay_memory):
-    max_n = 15
+def plot_n_step_LTR_var(Agent,replay_memory,compare_to_direct = False):
+    max_n = 16
     n_list = list(range(2,max_n))
 
     n_state_vec,n_state_vec_pred,n_pos_vec,n_pos_vec_pred,n_ang_vec,n_ang_vec_pred = predict_lib.get_all_n_step_states(Agent.Direct if Agent.trainHP.direct_predict_active else Agent.nets.TransNet, Agent.trainHP,replay_memory, max_n)
-
     var_vec,mean_vec = predict_lib.comp_LTR_var(Agent, n_state_vec,n_state_vec_pred,type = "max_error",max_factor = 1.0,print_error = False)
+    if compare_to_direct and not Agent.trainHP.direct_predict_active:
+        Agent.trainHP.direct_predict_active = True
+        n_state_vec,n_state_vec_pred,n_pos_vec,n_pos_vec_pred,n_ang_vec,n_ang_vec_pred = predict_lib.get_all_n_step_states(Agent.Direct if Agent.trainHP.direct_predict_active else Agent.nets.TransNet, Agent.trainHP,replay_memory, max_n)
+        var_vec_direct,mean_vec_direct = predict_lib.comp_LTR_var(Agent, n_state_vec,n_state_vec_pred,type = "max_error",max_factor = 1.0,print_error = False)
+        np_var_vec_direct = np.array(var_vec_direct)
+        np_var_vec_direct_tr = np_var_vec_direct.transpose()
 
     fig,ax = plt.subplots()
     
     
-    n_list = list(range(1,max_n))#for ploting from 1 -1
-    fontsize = 20
+    n_list = np.array(range(1,max_n))#for ploting from 1 -1
+    fontsize = 15
+    width = 0.35
 
-
-    ax.set_ylabel("LTR", fontsize=fontsize)
+    ax.set_ylabel("Normalized Lateral Acceleration", fontsize=fontsize)
     np_var_vec = np.array(var_vec)
-    print(np_var_vec)
     np_var_vec_tr = np_var_vec.transpose()
-    
-    print(np_var_vec_tr)
+
     mean = np.array(mean_vec) 
     #ax.tick_params(labelsize=15)
     ax.set_xticks(np.arange(1, max_n+1, 1.0))
-    for var in np_var_vec_tr:
-        ax.errorbar(n_list,var)
+    if compare_to_direct:
+        colors1 = plt.cm.Blues(np.linspace(0.5, 1.0, len(np_var_vec_tr)))
+        colors2 = plt.cm.Reds(np.linspace(0.5, 1.0, len(np_var_vec_tr)))
+        for var,var_direct,color1,color2,label in zip(np_var_vec_tr,np_var_vec_direct_tr,colors1,colors2, [1.0,0.99,0.5]):#,0.9
+            #ax.errorbar(n_list,var,label = str(label*100)+'%')
+            ax.bar(n_list - width/2,var,width,color = color1,label = str(label*100)+'% Learned')
+            ax.bar(n_list + width/2,var_direct,width,color = color2,label = str(label*100)+'% Direct')
+
+    else:
+        for var,label in zip(np_var_vec_tr, [1.0,0.99,0.5]):#,0.9
+            #ax.errorbar(n_list,var,label = str(label*100)+'%')
+            ax.bar(n_list,var,label = str(label*100)+'%')#,var
+
     #ax.errorbar(n_list,mean,alpha = 0.7)#,var
-    ax.fill_between(n_list,0,var,color = "#dddddd" )
+    #ax.fill_between(n_list,0,var,color = "#dddddd" )
 
 
     ax.set_xlabel('Step number',fontsize=fontsize)
+    plt.legend()
     plt.show()
 
 
@@ -363,7 +378,9 @@ def plot_n_step_var(Agent,replay_memory):
         mean = np.array(mean_vec)[:,ind]
         #axes[ind].plot(n_list,var)
         axes[ind].tick_params(labelsize=15)
-        axes[ind].errorbar(n_list,mean,alpha = 0.7)#,var
+        #axes[ind].errorbar(n_list,mean,alpha = 0.7)#,var
+        
+
         axes[ind].fill_between(n_list,mean+var,mean-var,color = "#dddddd" )
 
     axes[-1].set_xlabel('Step number',fontsize=fontsize)
@@ -515,9 +532,9 @@ def test_net(Agent):
     if Agent.HP.restore_flag:
         Agent.nets.restore_all(Agent.HP.restore_file_path,Agent.HP.net_name)
     
-    full_replay_memory = Agent.Replay.memory
-    train_replay_memory = full_replay_memory[int(test_part*len(full_replay_memory)):]
-    test_replay_memory = full_replay_memory[:int(test_part*len(full_replay_memory))]
+    full_replay_memory = Agent.Replay.memory#[:3000]
+    train_replay_memory = full_replay_memory[:1500]#[int(test_part*len(full_replay_memory)):]
+    test_replay_memory = full_replay_memory[1500:]#[:int(test_part*len(full_replay_memory))]
 
 
     Agent.Replay.memory = train_replay_memory#replace the replay memory with the train part
@@ -538,7 +555,7 @@ def test_net(Agent):
     
     Agent.save()
 
-    replay_memory = full_replay_memory#[:int(0.01*len(full_replay_memory))]#test_replay_memory# #test_replay_memory#test_replay_memory
+    replay_memory = test_replay_memory#full_replay_memory#[:int(0.01*len(full_replay_memory))]#test_replay_memory# #test_replay_memory#test_replay_memory
     #full_replay_memory#
     #replay_memory = filter_replay_memory(Agent,replay_memory)
     #Agent.trainHP.var_update_steps = len(replay_memory)
@@ -554,8 +571,8 @@ def test_net(Agent):
 
 
    # plot_n_step_var(Agent,replay_memory)
-    #plot_n_step_LTR_var(Agent,replay_memory)
-    one_step_pred_plot(Agent,replay_memory,compare_to_direct = True)
+    plot_n_step_LTR_var(Agent,replay_memory,compare_to_direct = True)
+    #one_step_pred_plot(Agent,replay_memory,compare_to_direct = True)
 
     #train_X,train_Y_,_,_ = convert_data(ReplayTrain,envData)
 

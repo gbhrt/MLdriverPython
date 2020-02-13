@@ -309,12 +309,7 @@ def train(env,HP,Agent,dataManager,guiShared,const_seed_flag = False,global_trai
     Agent.save()
     dataManager.save_data()
         
-    
-    #del env
-    #del HP
-    #del net
-    #del Replay
-    #del actionNoise
+
 
     return 
            

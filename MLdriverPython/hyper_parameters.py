@@ -94,12 +94,12 @@ class safetyHyperParameters:
         self.save_every = 100
         self.save_every_train_number = 25000000
         self.seed = [1111]#,1112,1113,1114,1115]
-        self.save_name ="SDDPG_direct_reward"#SDDPG_vel_and_steer_roll_reward2- roll reward, no safety, ~0.8 of VOD 20-30% fails 
+        self.save_name ="SDDPG_direct_reward1"#SDDPG_vel_and_steer_roll_reward2- roll reward, no safety, ~0.8 of VOD 20-30% fails 
         self.folder_path = os.getcwd()+ "/files/models/new_state/"
         #SDDPG_vel_and_steer_roll_reward3 -with roll feature, doesn't converge
         self.save_file_path = self.folder_path+self.save_name+"/"
 
-        self.restore_name = "SDDPG_direct_reward"#SDDPG_pure_persuit safety good but limit velocity because reward to low. SDDPG_pure_persuit1 - good
+        self.restore_name = "SDDPG_direct_reward1"#SDDPG_pure_persuit safety good but limit velocity because reward to low. SDDPG_pure_persuit1 - good
         #SDDPG_pure_persuit3 - conv_flag, path layer sizes 50,20
         #SDDPG_pure_persuit3 - conv_flag, path layer sizes 20,5
         self.restore_file_path = self.folder_path+self.restore_name+"/"
@@ -151,12 +151,12 @@ class ModelBasedHyperParameters:#global settings of the program.
         self.save_every_time = 5000 #minutes
         self.seed = [1111]
         self.net_name = "tf_model"
-        self.save_name = "MB_vid"#"MB_R_long2" MB_R_DS1
-        self.folder_path = os.getcwd()+ "/files/models/MB_paper_stabilize/MB_learning_process1_0.05/"#MB_learning_process2/ MB_learning_process0.05/
+        self.save_name = "MB_long01_short_train"#"MB_R_long2" MB_R_DS1
+        self.folder_path = os.getcwd()+ "/files/models/MB_paper_stabilize/MB_learning_process_no_stabilize1_0.07/"#MB_learning_process2/ MB_learning_process0.05/ MB_learning_process2_0.05/ MB_learning_process_no_stabilize1_0.05/
         #self.save_file_path = os.getcwd()+ "/files/models/model_based/"+self.save_name+"/"f
         self.save_file_path = self.folder_path +self.save_name+"/"
 
-        self.restore_name = "MB_vid"#"MB_R_long1"#MB_R_long2
+        self.restore_name = "MB_long01_short_train"#"MB_R_long1"#MB_R_long2
         #self.restore_file_path = os.getcwd()+ "/files/models/model_based/"+self.restore_name+"/"
         self.restore_file_path = self.folder_path +self.restore_name+"/"
 

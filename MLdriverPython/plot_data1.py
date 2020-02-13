@@ -568,7 +568,7 @@ if __name__ == "__main__":
     folder = "MB_paper_stabilize"
     #plot_fails_vel_comparison()
     baseline_folder = "MB_paper_stabilize"
-    baseline = "baseline"
+    baseline = 'VOD_baseline_0.07'#"baseline"
     names_vec = []
     #names = ['MB_var_check_linear2_'+str(var_constant) for var_constant in [0.01*i for i in range(0,15)]]#14
     #for name in names:
@@ -605,16 +605,27 @@ if __name__ == "__main__":
     #train_indexes = list(range(50))
     #names = ['VOD_learning_process_'+str(num) for num in train_indexes]
     #names = ['MB_learning_process_no_stabilize1_'+str(num) for num in train_indexes]
-
+    #train_indexes = list(range(50))
     #names = ['MB_learning_process2/MB_learning_process_no_stabilize1_'+str(num) for num in train_indexes]
-    #names_vec.append([names,['MB','blue']])
+    #names_vec.append([names,['MB','green']])
+
+    #train_indexes = list(range(50))
+    #names = ['MB_learning_process1MB_learning_process_'+str(num) for num in train_indexes]
+    #names_vec.append([names,['MB stabilize','green']])#'REVO_direct_reward_3','REVO_direct_rew ard_4' MB_evaluate_var_10
+
+
+    #train_indexes = list(range(50))
+    #names = ['MB_learning_process1_0.05/MB_learning_process_stabilize1_0.05_'+str(num) for num in train_indexes]
+    #names_vec.append([names,['stabilize 0.05','blue']])
+    train_indexes = list(range(6))
+    names = ['MB_learning_process_no_stabilize1_0.05/MB_learning_process_no_stabilize1_0.05_'+str(num) for num in train_indexes]
+    names_vec.append([names,['stabilize','blue']])
+
     train_indexes = list(range(50))
     names = ['MB_learning_process0.05/MB_learning_process_stabilize_0.05_'+str(num) for num in train_indexes]
-    names_vec.append([names,['stabilize 0.05','blue']])
+    names_vec.append([names,['stabilize','black']])
 
-    train_indexes = list(range(50))
-    names = ['MB_learning_process1MB_learning_process_'+str(num) for num in train_indexes]
-    names_vec.append([names,['MB stabilize','green']])#'REVO_direct_reward_3','REVO_direct_rew ard_4' MB_evaluate_var_10
+
 
 
 

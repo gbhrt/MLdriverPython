@@ -125,7 +125,7 @@ class TrainHyperParameters:
             self.const_var =1.0
         else:
             #0.5 not move. 0.2 < 0.5 of VOD. 0.1 =0.85 of VOD. 0 1+-0.05 of VOD com height = 1.7
-            self.one_step_var =0.05#0.04# 0.02 is good
+            self.one_step_var =0.07#0.04# 0.02 is good
             self.const_var = 1000.0#0.05#roll variance at the future states, constant because closed loop control?
             self.one_step_emergency_var = 0.05
             self.const_emergency_var = 0.2

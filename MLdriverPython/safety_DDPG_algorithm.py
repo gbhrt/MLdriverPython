@@ -24,7 +24,7 @@ def train(env,HP,net_drive,dataManager,net_stabilize = None,guiShared = None,con
   
     #pre-defined parameters:
 
-    HP.seed[0] = seed
+    seed = HP.seed[0]
     ###################
 
     da = 0.2
@@ -40,7 +40,7 @@ def train(env,HP,net_drive,dataManager,net_stabilize = None,guiShared = None,con
     l = int(math.sqrt(len(actions)))
 
     total_step_count = 0
-
+    evaluation_count = 0
     evaluation_flag = HP.evaluation_flag
 
     #env = environment1.OptimalVelocityPlanner(HP)
@@ -75,8 +75,8 @@ def train(env,HP,net_drive,dataManager,net_stabilize = None,guiShared = None,con
     reduce_vel = 0.0
     for i in range(HP.num_of_runs): #number of runs - run end at the end of the main path and if vehicle deviation error is to big
         if const_seed_flag:#not HP.run_same_path and HP.evaluation_flag and 
-            if i<len(HP.seed):
-                seed = HP.seed[i]
+            if evaluation_count<len(HP.seed) and not evaluation_flag:
+                seed = HP.seed[evaluation_count]
             else:
                 print("given seed list is too short! take random seed")
                 seed = int.from_bytes(os.urandom(8), byteorder="big")
@@ -333,7 +333,7 @@ def train(env,HP,net_drive,dataManager,net_stabilize = None,guiShared = None,con
         total_reward = sum(reward_vec)
 
         if not HP.gym_flag and evaluation_flag:#not HP.noise_flag
-
+            evaluation_count+=1
             #dist = sum(dataManager.real_path.velocity)*env.step_time#integral on velocities
             #analytic_dist = sum(dataManager.real_path.analytic_velocity)*env.step_time
             
