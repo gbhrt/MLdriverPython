@@ -65,15 +65,17 @@ def run_all(HP,guiShared):
     #names_vec.append([names,'learning_process',None])
     #names_vec.append([['MB_learn_var_3_actions_2'],'MB_R',0])
 
-    nums = list(range(100))
-    names = ['MB_learning_process_no_stabilize1_0.07_'+str(num) for num in nums]
-    names_vec.append([names,'learning_process',None])
+    # nums = list(range(100))
+    # names = ['MB_learning_process_no_stabilize1_0.07_'+str(num) for num in nums]
+    # names_vec.append([names,'learning_process',None])
     
     #var_constants_vec = [0.01*i for i in range(0,15)]
     #names = ['MB_no_stabilize_'+str(var_constant) for var_constant in var_constants_vec]
     #names_vec.append([names,'MB_var',None])
 
-
+    nums = list(range(100))
+    names = ['REVO_process/REVO_process_'+str(num) for num in nums]
+    names_vec.append([names,'learning_process_REVO',None])
 
     HP.evaluation_every = 999999999
     HP.max_steps = 99999999999
@@ -221,9 +223,9 @@ def run_all(HP,guiShared):
                 dataManager = data_manager1.DataManager(HP.save_file_path,restore_flag =False,save_name = 'data_manager')
                 env = environment1.OptimalVelocityPlanner(dataManager,env_mode=HP.env_mode)
                 if env.opened:     
-                    Agent.trainHP.num_of_runs = HP.num_of_runs
-                    model_based_algorithm.train(env,HP,Agent,dataManager,guiShared,global_train_count = 0,const_seed_flag = True)
-                del Agent
+                    net = DDPG_network(envData.observation_space.shape[0],envData.action_space.shape[0],\
+                    HP.alpha_actor,HP.alpha_critic,HP.alpha_analytic_actor,HP.alpha_analytic_critic,tau = HP.tau,seed = HP.seed[0],feature_data_n = envData.feature_data_num, conv_flag = HP.conv_flag)  
+                    safety_DDPG_algorithm.train(env,HP,net,dataManager,guiShared = guiShared,global_train_count = 0,const_seed_flag = True) 
                 del dataManager
                 del env
                 continue
@@ -423,7 +425,7 @@ class programThread (threading.Thread):
 
 
 if __name__ == "__main__": 
-    algo_type = "MB"#"MB"#"SDDPG"
+    algo_type = "SDDPG"#"MB"#"SDDPG"
 
     if algo_type == "SDDPG":
         HP = hyper_parameters.safetyHyperParameters()

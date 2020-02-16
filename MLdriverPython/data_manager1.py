@@ -388,6 +388,17 @@ class DataManager():
                 return False
             except:
                 print ("cannot restore data manager:", sys.exc_info()[0])
+                try:
+                    with open(self.restore_name, 'r') as f:
+                        #self.run_num,self.train_num,self.rewards,self.length,self.relative_reward, self.episode_end_mode,self.path_seed,self.paths = json.load(f)#,self.paths
+                        #self.run_num,self.train_num,self.rewards,self.length,self.relative_reward, self.episode_end_mode,self.path_seed,self.paths,self.violation_count = json.load(f)#,self.paths
+                        self.run_num,self.train_num,self.rewards,self.length,self.relative_reward, self.episode_end_mode,self.path_seed,self.paths = json.load(f)#,self.paths
+                        #self.run_num,self.train_num,self.rewards,self.length,self.relative_reward, self.episode_end_mode,self.path_seed,self.paths,self.violation_count,self.stabilize_count_brake,self.stabilize_count_steer = json.load(f)#,self.paths
+
+                    print("data manager restored for DDPG")
+                    return False
+                except:
+                    print ("cannot restore data manager:", sys.exc_info()[0])
             return True
 
            

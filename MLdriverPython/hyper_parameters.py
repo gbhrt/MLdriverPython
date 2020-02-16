@@ -52,7 +52,7 @@ class HyperParameters:
 
 class safetyHyperParameters:
     def __init__(self):
-        self.gui_flag = True
+        self.gui_flag = False
         #self.epsilon_start = 1.0
         #self.epsilon = 0.1
         self.gamma = 0.99
@@ -91,11 +91,11 @@ class safetyHyperParameters:
         self.restore_flag = False  
         self.skip_run = False
         self.reset_every = 3
-        self.save_every = 100
+        self.save_every = 99999999
         self.save_every_train_number = 25000000
         self.seed = [1111]#,1112,1113,1114,1115]
         self.save_name ="SDDPG_direct_reward1"#SDDPG_vel_and_steer_roll_reward2- roll reward, no safety, ~0.8 of VOD 20-30% fails 
-        self.folder_path = os.getcwd()+ "/files/models/new_state/"
+        self.folder_path = os.getcwd()+ "/files/models/MB_paper_stabilize/"
         #SDDPG_vel_and_steer_roll_reward3 -with roll feature, doesn't converge
         self.save_file_path = self.folder_path+self.save_name+"/"
 

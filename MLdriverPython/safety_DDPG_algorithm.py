@@ -71,11 +71,10 @@ def train(env,HP,net_drive,dataManager,net_stabilize = None,guiShared = None,con
       
     test_path_ind = 0
     
-    seed = HP.seed[0]
     reduce_vel = 0.0
     for i in range(HP.num_of_runs): #number of runs - run end at the end of the main path and if vehicle deviation error is to big
         if const_seed_flag:#not HP.run_same_path and HP.evaluation_flag and 
-            if evaluation_count<len(HP.seed) and not evaluation_flag:
+            if evaluation_count<len(HP.seed) and evaluation_flag:
                 seed = HP.seed[evaluation_count]
             else:
                 print("given seed list is too short! take random seed")

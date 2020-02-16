@@ -191,12 +191,12 @@ def get_training_process_data(folder,names_vec,train_indexes,baseline_folder,bas
                 print("cannot restore dataManager",name)
                 break
             vec_learning_process_rewards.append(get_relative_to_baseline_reward(dataManager,baseline_dist,baseline_seeds,length))
-            vec_learning_process_violation_count.append(dataManager.violation_count)
+            vec_learning_process_violation_count.append(dataManager.violation_count if len(dataManager.violation_count) > 0 else [0] * len(dataManager.length))
             vec_learning_process_fails.append([1 if end_mode == 'kipp' or end_mode == 'deviate' else 0 for end_mode in dataManager.episode_end_mode])
             vec_learning_process_episode_length.append(dataManager.length)
             vec_learning_process_reward_indexes = dataManager.run_num
-            vec_stabilize_count_brake.append(dataManager.stabilize_count_brake)
-            vec_stabilize_count_steer.append(dataManager.stabilize_count_steer)
+            vec_stabilize_count_brake.append(dataManager.stabilize_count_brake if len(dataManager.stabilize_count_brake) > 0 else [0] * len(dataManager.length))
+            vec_stabilize_count_steer.append(dataManager.stabilize_count_steer if len(dataManager.stabilize_count_steer) > 0 else [0] * len(dataManager.length))
 
 
         tr_vec_learning_process_rewards = list(map(list, zip(*vec_learning_process_rewards)))#transpose
@@ -221,7 +221,10 @@ def get_training_process_data(folder,names_vec,train_indexes,baseline_folder,bas
             in zip(tr_vec_learning_process_rewards,tr_vec_learning_process_violation_count,tr_vec_learning_process_fails,tr_vec_learning_process_episode_length,tr_vec_stabilize_count_brake,tr_vec_stabilize_count_steer):
             sum_episode_lengths = sum(episode_learning_process_episode_length)
             filtered_reward = [episode_learning_process_reward for episode_learning_process_reward in episode_learning_process_rewards if episode_learning_process_reward != 0 ]
-            rewards.append(sum(filtered_reward)/len(filtered_reward))
+            if len(filtered_reward) == 0:
+                rewards.append(0)
+            else:
+                rewards.append(sum(filtered_reward)/len(filtered_reward))
             var.append(np.std(episode_learning_process_rewards))
             violation_count.append(100*sum(episode_learning_process_violation_count)/sum_episode_lengths)
             fails.append(100*sum(episode_learning_process_fail)/len(episode_learning_process_episode_length))#sum_episode_lengths
@@ -600,7 +603,7 @@ if __name__ == "__main__":
     #avg_rewards_vec,var_rewards_vec = average_training_processes(rewards_vec)
     #avg_fails_vec,var_fails_vec = average_training_processes(fails_vec)
     
-    folder = 'MB_paper_stabilize'#/MB_learning_process2'
+    folder = 'new_state'#'MB_paper_stabilize'#/MB_learning_process2'
     names_vec = []
     #train_indexes = list(range(50))
     #names = ['VOD_learning_process_'+str(num) for num in train_indexes]
@@ -617,12 +620,16 @@ if __name__ == "__main__":
     #train_indexes = list(range(50))
     #names = ['MB_learning_process1_0.05/MB_learning_process_stabilize1_0.05_'+str(num) for num in train_indexes]
     #names_vec.append([names,['stabilize 0.05','blue']])
-    train_indexes = list(range(6))
-    names = ['MB_learning_process_no_stabilize1_0.05/MB_learning_process_no_stabilize1_0.05_'+str(num) for num in train_indexes]
-    names_vec.append([names,['stabilize','blue']])
+    # train_indexes = list(range(6))
+    # names = ['MB_learning_process_no_stabilize1_0.05/MB_learning_process_no_stabilize1_0.05_'+str(num) for num in train_indexes]
+    # names_vec.append([names,['stabilize','blue']])
 
-    train_indexes = list(range(50))
-    names = ['MB_learning_process0.05/MB_learning_process_stabilize_0.05_'+str(num) for num in train_indexes]
+    # train_indexes = list(range(50))
+    # names = ['MB_learning_process0.05/MB_learning_process_stabilize_0.05_'+str(num) for num in train_indexes]
+    # names_vec.append([names,['stabilize','black']])
+
+    train_indexes = list(range(40))
+    names = ['REVO_process/REVO_process_'+str(num) for num in train_indexes]
     names_vec.append([names,['stabilize','black']])
 
 
