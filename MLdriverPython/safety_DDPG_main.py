@@ -55,7 +55,7 @@ def run_all(HP,guiShared):
     #names = ['VOD_var_check_linear3_'+str(var_constant) for var_constant in var_constants_vec]
     #names_vec.append([names,'VOD',None])
     #linear_var = True
-    #var_constants_vec = [0.07]
+    #var_constants_vec = [0.1]
     #names = ['VOD_baseline_'+str(var_constant) for var_constant in var_constants_vec]
     #names_vec.append([names,'VOD',None])
     #linear_var = True
@@ -73,9 +73,13 @@ def run_all(HP,guiShared):
     #names = ['MB_no_stabilize_'+str(var_constant) for var_constant in var_constants_vec]
     #names_vec.append([names,'MB_var',None])
 
-    nums = list(range(100))
-    names = ['REVO_process/REVO_process_'+str(num) for num in nums]
-    names_vec.append([names,'learning_process_REVO',None])
+    #nums = list(range(50,100))
+    #names = ['REVO_process/REVO_process_'+str(num) for num in nums]
+    #names_vec.append([names,'learning_process_REVO',None])
+
+    nums = list(range(51,100))
+    names = ['MB_learning_process3_0.05/MB_learning_process_stabilize3_0.05_'+str(num) for num in nums]
+    names_vec.append([names,'learning_process',None])
 
     HP.evaluation_every = 999999999
     HP.max_steps = 99999999999
@@ -184,7 +188,7 @@ def run_all(HP,guiShared):
                 continue
             continue        
         elif method == 'learning_process':
-            HP.emergency_action_flag = False
+            HP.emergency_action_flag = True
             for name,num in zip(names,nums):
                 seed = HP.seed+HP.seed#full seed list
                 HP.seed = seed[num:num+len(HP.seed)]
@@ -425,7 +429,7 @@ class programThread (threading.Thread):
 
 
 if __name__ == "__main__": 
-    algo_type = "SDDPG"#"MB"#"SDDPG"
+    algo_type = "MB"#"MB"#"SDDPG"
 
     if algo_type == "SDDPG":
         HP = hyper_parameters.safetyHyperParameters()

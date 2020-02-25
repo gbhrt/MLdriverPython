@@ -16,6 +16,9 @@ import predict_lib
 from math import copysign
 from statsmodels.graphics.gofplots import qqplot
 
+from matplotlib import rcParams
+rcParams.update({'figure.autolayout': True})
+
 def save_data(file_name,data):
     with open(file_name, 'w') as f:#append data to the file
         json.dump(data,f)
@@ -242,22 +245,22 @@ def plot_n_step_state(Agent,replay_memory):
 
     fig2,axes = plt.subplots(len(Agent.trainHP.vehicle_ind_data),constrained_layout=True)
     plt.ion()
-    fontsize = 15
+    fontsize = 30
     n = 20
-    for i in range (63,64):# (len(replay_memory)-n):#:
+    for i in range (33,34):# (len(replay_memory)-n):#:
         print("index:",i)
         if waitFor.stop == [True]:
             break
         replay_memory_short = replay_memory[i:i+n]
-        vehicle_state_vec,action_vec,abs_pos_vec,abs_ang_vec = real_to_abs_n_steps(replay_memory_short)
-        pred_vehicle_state_vec,pred_abs_pos_vec,pred_abs_ang_vec = predict_lib.predict_n_steps(Agent,vehicle_state_vec[0],abs_pos_vec[0],abs_ang_vec[0],action_vec)
+        vehicle_state_vec,action_vec,abs_pos_vec,abs_ang_vec = predict_lib.real_to_abs_n_steps(replay_memory_short)
+        pred_vehicle_state_vec,pred_abs_pos_vec,pred_abs_ang_vec = predict_lib.predict_n_steps(Agent.nets.TransNet,Agent.trainHP,  vehicle_state_vec[0],abs_pos_vec[0],abs_ang_vec[0],action_vec)
         x,y = zip(*abs_pos_vec)
         p_x,p_y = zip(*pred_abs_pos_vec)
         #compare_states = zip(vehicle_state_vec,pred_vehicle_state_vec)
         
         fig2.suptitle('Multi-step prediction', fontsize=fontsize)
         
-        for feature,ind in Agent.trainHP.vehicle_ind_data.items():
+        for ind,feature in enumerate(['Velocity [m]', 'Steering [rad]']):
             real = np.array(vehicle_state_vec)[:,ind]
             pred = np.array(pred_vehicle_state_vec)[:,ind]
             error = pred - real
@@ -281,6 +284,43 @@ def plot_n_step_state(Agent,replay_memory):
     plt.ioff()
     plt.show()
 
+def compare_n_step_LTR_var(Agent,replay_memory):
+    max_n = 16
+    n_list = list(range(2,max_n))
+
+    n_state_vec,n_state_vec_pred,n_pos_vec,n_pos_vec_pred,n_ang_vec,n_ang_vec_pred = predict_lib.get_all_n_step_states(Agent.Direct if Agent.trainHP.direct_predict_active else Agent.nets.TransNet, Agent.trainHP,replay_memory, max_n)
+    var_vec,mean_vec = predict_lib.comp_LTR_var(Agent, n_state_vec,n_state_vec_pred,type = "mean_error",max_factor = 1.0,print_error = False)
+    np_var_vec = np.array(var_vec)
+    np_var_vec_tr = np_var_vec.transpose()
+
+    Agent.trainHP.direct_predict_active = True
+    n_state_vec,n_state_vec_pred,n_pos_vec,n_pos_vec_pred,n_ang_vec,n_ang_vec_pred = predict_lib.get_all_n_step_states(Agent.Direct if Agent.trainHP.direct_predict_active else Agent.nets.TransNet, Agent.trainHP,replay_memory, max_n)
+    var_vec_direct,mean_vec_direct = predict_lib.comp_LTR_var(Agent, n_state_vec,n_state_vec_pred,type = "mean_error",max_factor = 1.0,print_error = False)
+    np_var_vec_direct = np.array(var_vec_direct)
+    np_var_vec_direct_tr = np_var_vec_direct.transpose()
+
+    fig,ax = plt.subplots(figsize=(6.4, 2.4))
+    
+    
+    n_list = np.array(range(1,max_n))#for ploting from 1 -1
+    fontsize = 15
+
+    ax.set_ylabel("Mean error", fontsize=fontsize)
+
+
+    mean = np.array(mean_vec) 
+    #ax.tick_params(labelsize=15)
+    ax.set_xticks(np.arange(1, max_n+1, 1.0))
+
+    #for var,var_direct,color1,color2,label in zip(np_var_vec_tr,np_var_vec_direct_tr,colors1,colors2, [1.0,0.99,0.5]):#,0.9
+        #ax.errorbar(n_list,var,label = str(label*100)+'%')
+    ax.plot(n_list,np_var_vec_tr,color = 'blue', label = "Learned model")
+    ax.plot(n_list,np_var_vec_direct_tr,color ='red' ,label = "Bicycle model")
+  
+
+    ax.set_xlabel('Step number',fontsize=fontsize)
+    plt.legend()
+    plt.show()
 
 
 def plot_n_step_LTR_var(Agent,replay_memory,compare_to_direct = False):
@@ -296,14 +336,14 @@ def plot_n_step_LTR_var(Agent,replay_memory,compare_to_direct = False):
         np_var_vec_direct = np.array(var_vec_direct)
         np_var_vec_direct_tr = np_var_vec_direct.transpose()
 
-    fig,ax = plt.subplots()
+    fig,ax = plt.subplots(figsize=(6.4, 2.4))
     
     
     n_list = np.array(range(1,max_n))#for ploting from 1 -1
     fontsize = 15
     width = 0.35
 
-    ax.set_ylabel("Normalized Lateral Acceleration", fontsize=fontsize)
+    ax.set_ylabel("Prediction error", fontsize=fontsize)
     np_var_vec = np.array(var_vec)
     np_var_vec_tr = np_var_vec.transpose()
 
@@ -317,11 +357,13 @@ def plot_n_step_LTR_var(Agent,replay_memory,compare_to_direct = False):
             #ax.errorbar(n_list,var,label = str(label*100)+'%')
             ax.bar(n_list - width/2,var,width,color = color1,label = str(label*100)+'% Learned')
             ax.bar(n_list + width/2,var_direct,width,color = color2,label = str(label*100)+'% Direct')
+            
 
     else:
-        for var,label in zip(np_var_vec_tr, [1.0,0.99,0.5]):#,0.9
+        for var,label in zip(np_var_vec_tr, [1.0,0.99,0.9,0.5]):#,0.9
             #ax.errorbar(n_list,var,label = str(label*100)+'%')
-            ax.bar(n_list,var,label = str(label*100)+'%')#,var
+            #ax.bar(n_list,var,label = str(label*100)+'%')#,var
+            ax.plot(n_list,var,label = str(label*100)+'%')
 
     #ax.errorbar(n_list,mean,alpha = 0.7)#,var
     #ax.fill_between(n_list,0,var,color = "#dddddd" )
@@ -555,7 +597,7 @@ def test_net(Agent):
     
     Agent.save()
 
-    replay_memory = test_replay_memory#full_replay_memory#[:int(0.01*len(full_replay_memory))]#test_replay_memory# #test_replay_memory#test_replay_memory
+    replay_memory = full_replay_memory#t test_replay_memory#full_replay_memory#[:int(0.01*len(full_replay_memory))]#test_replay_memory# #test_replay_memory#test_replay_memory
     #full_replay_memory#
     #replay_memory = filter_replay_memory(Agent,replay_memory)
     #Agent.trainHP.var_update_steps = len(replay_memory)
@@ -567,11 +609,12 @@ def test_net(Agent):
     #print(TransNet_Y)
     
     
-    #plot_n_step_state(Agent,replay_memory)
+    plot_n_step_state(Agent,replay_memory)
 
 
    # plot_n_step_var(Agent,replay_memory)
-    plot_n_step_LTR_var(Agent,replay_memory,compare_to_direct = True)
+    #plot_n_step_LTR_var(Agent,replay_memory,compare_to_direct = False)
+    #compare_n_step_LTR_var(Agent,replay_memory)
     #one_step_pred_plot(Agent,replay_memory,compare_to_direct = True)
 
     #train_X,train_Y_,_,_ = convert_data(ReplayTrain,envData)

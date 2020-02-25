@@ -9,6 +9,9 @@ import library as lib
 import copy
 import classes
 
+from matplotlib import rcParams
+rcParams.update({'figure.autolayout': True})
+
 def change_failes_value(rewards,mode):
     relative_reward_changed = []
     for i in range(len(mode)):
@@ -193,6 +196,8 @@ def get_training_process_data(folder,names_vec,train_indexes,baseline_folder,bas
             vec_learning_process_rewards.append(get_relative_to_baseline_reward(dataManager,baseline_dist,baseline_seeds,length))
             vec_learning_process_violation_count.append(dataManager.violation_count if len(dataManager.violation_count) > 0 else [0] * len(dataManager.length))
             vec_learning_process_fails.append([1 if end_mode == 'kipp' or end_mode == 'deviate' else 0 for end_mode in dataManager.episode_end_mode])
+            if any(vec_learning_process_fails[-1]) == 1:
+                print("fail")
             vec_learning_process_episode_length.append(dataManager.length)
             vec_learning_process_reward_indexes = dataManager.run_num
             vec_stabilize_count_brake.append(dataManager.stabilize_count_brake if len(dataManager.stabilize_count_brake) > 0 else [0] * len(dataManager.length))
@@ -225,7 +230,7 @@ def get_training_process_data(folder,names_vec,train_indexes,baseline_folder,bas
                 rewards.append(0)
             else:
                 rewards.append(sum(filtered_reward)/len(filtered_reward))
-            var.append(np.std(episode_learning_process_rewards))
+            var.append(np.std(rewards))
             violation_count.append(100*sum(episode_learning_process_violation_count)/sum_episode_lengths)
             fails.append(100*sum(episode_learning_process_fail)/len(episode_learning_process_episode_length))#sum_episode_lengths
             fails_var.append(np.std(episode_learning_process_fail).astype(float))
@@ -417,7 +422,7 @@ def plot_fails_vel_comparison():
     #plt.plot(vel_MB_long,fail_MB_long,'*',c = 'black',label = 'MB_long01')
     #plt.legend()
 
-    plt.figure("Velocity - Violation count")
+    plt.figure("Velocity - Violation count",figsize=(6.4, 2.4))
     plt.xlabel('Velocity',fontsize = size)
     plt.ylabel('Violation count [%]',fontsize = size)
     #plt.plot(vel_VOD_const,violation_count_VOD_const,c = 'r',label = 'VOD_const')
@@ -431,17 +436,21 @@ def plot_fails_vel_comparison():
     #plt.plot(vel_MB_long,violation_count_MB_long,'*',c = 'black',label = 'MB_long01')
     #plt.legend()
 
-    plt.figure("Factor - Vel")
-    plt.xlabel('safety Factor',fontsize = size)
-    plt.ylabel('Vel',fontsize = size)
+    plt.figure("Factor - Vel",figsize=(6.4, 2.4))
+    plt.xlabel('Safety factor',fontsize = size)
+    plt.ylabel('Normalized\n average velocity',fontsize = size)
+    plt.ylim(0.4,1.6)
+    plt.xlim(-0.005,0.145)
     ##plt.plot(var_vec_VOD_const,vel_VOD_const,c = 'r',label = 'VOD_const')
     ##plt.plot(var_vec_VOD_const,vel_VOD_const,'o',c = 'r')
-    plt.plot(var_vec_VOD_linear,vel_VOD_linear,c = 'b',label = 'VOD_linear')
-    plt.plot(var_vec_VOD_linear,vel_VOD_linear,'o',c = 'b')
-    plt.plot(var_vec_MB_linear,vel_MB_linear,c = 'g',label = 'MB linear')
-    plt.plot(var_vec_MB_linear,vel_MB_linear,'o',c = 'g')
+    plt.plot(var_vec_VOD_linear,vel_VOD_linear,c = 'black',label = 'LMVO+FIM')
+    plt.plot(var_vec_VOD_linear,vel_VOD_linear,'o',c = 'black')
+    plt.plot(var_vec_MB_linear,vel_MB_linear,c = 'blue',label = 'LMVO')
+    plt.plot(var_vec_MB_linear,vel_MB_linear,'o',c = 'blue')
     ##plt.plot(var_vec_MB_long,violation_count_MB_long,'*',c = 'black',label = 'MB_long01')
-    #plt.legend()
+
+    plt.fill_between([-0.1,0.1],[-2,-2],[2,2],color = "red",alpha = 0.3 )
+    plt.legend()
 
     plt.figure("Factor - Violation count")
     plt.xlabel('safety Factor',fontsize = size)
@@ -571,7 +580,7 @@ if __name__ == "__main__":
     folder = "MB_paper_stabilize"
     #plot_fails_vel_comparison()
     baseline_folder = "MB_paper_stabilize"
-    baseline = 'VOD_baseline_0.07'#"baseline"
+    baseline = 'VOD_baseline_0.1'#'VOD_baseline_0.07'#"baseline"
     names_vec = []
     #names = ['MB_var_check_linear2_'+str(var_constant) for var_constant in [0.01*i for i in range(0,15)]]#14
     #for name in names:
@@ -588,7 +597,16 @@ if __name__ == "__main__":
     #names = ['MB_evaluate_var_'+str(var_constant) for var_constant in [i for i in range(3,15)]]
     #for name in names:
     #   names_vec.append([[name],[name,None]])
-    #comp_relative_reward(folder,names_vec,[0],baseline)#[5000*j for j in range(1,21)])
+
+    #names = ['MB_stabilize_'+str(var_constant) for var_constant in [i for i in [0.01*i for i in range(0,15)]]]
+    #for name in names:
+    #   names_vec.append([[name],[name,None]])
+    #comp_relative_reward(folder,names_vec,[0],baseline)
+
+    #names = ['MB_no_stabilize_'+str(var_constant) for var_constant in [i for i in [0.01*i for i in range(0,15)]]]
+    #for name in names:
+    #   names_vec.append([[name],[name,None]])
+    #comp_relative_reward(folder,names_vec,[0],baseline)
 
     #add_zero_data_manager(folder,names_vec)
     
@@ -603,7 +621,7 @@ if __name__ == "__main__":
     #avg_rewards_vec,var_rewards_vec = average_training_processes(rewards_vec)
     #avg_fails_vec,var_fails_vec = average_training_processes(fails_vec)
     
-    folder = 'new_state'#'MB_paper_stabilize'#/MB_learning_process2'
+    folder = 'MB_paper_stabilize'#'MB_paper_stabilize'#/MB_learning_process2'
     names_vec = []
     #train_indexes = list(range(50))
     #names = ['VOD_learning_process_'+str(num) for num in train_indexes]
@@ -620,17 +638,27 @@ if __name__ == "__main__":
     #train_indexes = list(range(50))
     #names = ['MB_learning_process1_0.05/MB_learning_process_stabilize1_0.05_'+str(num) for num in train_indexes]
     #names_vec.append([names,['stabilize 0.05','blue']])
-    # train_indexes = list(range(6))
-    # names = ['MB_learning_process_no_stabilize1_0.05/MB_learning_process_no_stabilize1_0.05_'+str(num) for num in train_indexes]
-    # names_vec.append([names,['stabilize','blue']])
 
-    # train_indexes = list(range(50))
-    # names = ['MB_learning_process0.05/MB_learning_process_stabilize_0.05_'+str(num) for num in train_indexes]
-    # names_vec.append([names,['stabilize','black']])
+    #final results:
+    train_indexes = list(range(100))
+    names = ['MB_learning_process_no_stabilize1_0.1/MB_learning_process_no_stabilize1_0.1_'+str(num) for num in train_indexes]
+    names_vec.append([names,['LMVO-0.1','orange']])
 
-    train_indexes = list(range(40))
-    names = ['REVO_process/REVO_process_'+str(num) for num in train_indexes]
-    names_vec.append([names,['stabilize','black']])
+    train_indexes = list(range(100))
+    names = ['MB_learning_process_no_stabilize1_0.06/MB_learning_process_no_stabilize1_0.06_'+str(num) for num in train_indexes]
+    names_vec.append([names,['LMVO-0.06','blue']])
+
+    train_indexes = list(range(100))
+    names = ['MB_learning_process3_0.05/MB_learning_process_stabilize3_0.05_'+str(num) for num in train_indexes]
+    names_vec.append([names,['LMVO+FIM','black']])
+
+
+    #train_indexes = list(range(100))
+    #names = ['REVO_process/REVO_process_'+str(num) for num in train_indexes]
+    #names_vec.append([names,['DDPG','green']])
+    #for name in names:
+    #    names_vec.append([[name],['DDPG',None]])
+    ###########################################################################
 
 
 
@@ -643,28 +671,37 @@ if __name__ == "__main__":
 
     
    
-
+    #indexes= list(range(0,200,20))
     xlabel = 'Episodes' #'Time steps'
     plt.figure(1)
     plt.tick_params(labelsize=12)
     plt.ylim(0,1.5)
-    plt.xticks(indexes)
+    #plt.xticks(indexes)
     plt.xlabel(xlabel,fontsize = size)#'Train iterations number'
     plt.ylabel('Normalized average velocity' ,fontsize = size)#'Relative progress'
     #for rewards,color in zip(rewards_vec,series_colors):
     #    for single_rewards in rewards:
     #        plt.scatter(trains[:len(single_rewards)],single_rewards,c = color,alpha = 0.5)#
     #plt.xlim(0,100000)
+
+    #plt.plot(reward_vec_indexes[0][:29],avg_rewards_vec[0][:29],'-',color = series_colors[0],label = series_names[0])
+    #tmp_reward_indexes = [index for index in reward_vec_indexes[1] if index <30]
+    #plt.plot(tmp_reward_indexes,avg_rewards_vec[1][:len(tmp_reward_indexes)],'-',color = series_colors[1],label = 'DDPG')
+    #tmp_reward_indexes = [index for index in reward_vec_indexes[1] if index >= 20]
+    #plt.plot(tmp_reward_indexes[:-1],avg_rewards_vec[1][len(avg_rewards_vec[1]) -len(tmp_reward_indexes)+1:],'--',color = series_colors[1])
+
+
     for reward_indexes,rewards,var,color,label in zip(reward_vec_indexes,avg_rewards_vec,var_rewards_vec,series_colors,series_names):
-        plt.plot(indexes[:len(rewards)],rewards,color = color,label = label)
-        plt.errorbar(indexes[:len(rewards)],rewards,var,c = color,alpha = 0.7)#reward_indexes[0]
+        plt.plot(reward_indexes[:len(rewards)],rewards[:len(rewards)],'-',color = color,label = label)
+        #plt.errorbar(reward_indexes[:len(rewards)],rewards,var,c = color,alpha = 0.7)#reward_indexes[0]
         #print("var:",var[0])
-    plt.plot([0,indexes[len(rewards)-1]],[1,1],linewidth = 2.0,c = 'r',label = 'Direct')#'VOD'
+    #plt.plot([0,indexes[len(rewards)-1]],[1,1],linewidth = 2.0,c = 'r',label = 'Direct')#'VOD'
+    plt.plot([0,reward_vec_indexes[1][len(avg_rewards_vec[1])-1]],[1,1],linewidth = 2.0,c = 'r',label = 'BiVO-0.1')#'VOD'
     plt.legend()
 
-    plt.figure(2)
+    plt.figure(2,figsize=(6.4, 2.4))
     plt.tick_params(labelsize=12)
-    plt.xticks(indexes)
+    #plt.xticks(indexes)
     #plt.xlim(0,100000)
    # plt.ylim(0,100)
     plt.xlabel(xlabel,fontsize = size)
@@ -672,14 +709,22 @@ if __name__ == "__main__":
     #for fails,color in zip(fails_vec,series_colors):
     #    for single_fails in fails:
     #        plt.scatter(indexes[:len(single_fails)],single_fails,c = color,alpha = 0.5)
-    for fails,var,color,label in zip(avg_fails_vec,var_fails_vec,series_colors,series_names):
-        plt.plot(indexes[:len(fails)],fails,color = color,label = label)
+
+    #plt.plot(reward_vec_indexes[0][:29],avg_fails_vec[0][:29],'-',color = series_colors[0],label = series_names[0])
+    #tmp_reward_indexes = [index for index in reward_vec_indexes[1] if index <30]
+    #plt.plot(tmp_reward_indexes,avg_fails_vec[1][:len(tmp_reward_indexes)],'-',color = series_colors[1],label = 'DDPG')
+    #tmp_reward_indexes = [index for index in reward_vec_indexes[1] if index >= 20]
+    #plt.plot(tmp_reward_indexes[:-1],avg_fails_vec[1][len(avg_fails_vec[1]) -len(tmp_reward_indexes)+1:],'--',color = series_colors[1])
+
+    for reward_indexes,fails,var,color,label in zip(reward_vec_indexes,avg_fails_vec,var_fails_vec,series_colors,series_names):
+        plt.plot(reward_indexes[:len(fails)],fails,color = color,label = label)
         #plt.errorbar(indexes[:len(fails)],fails,var,c = color,alpha = 0.7)
     plt.legend()
+    #plt.tight_layout()
 
     plt.figure(3)
     plt.tick_params(labelsize=12)
-    plt.xticks(indexes)
+   # plt.xticks(indexes)
     #plt.xlim(0,100000)
     #plt.ylim(0,100)
     plt.xlabel(xlabel,fontsize = size)
@@ -687,31 +732,34 @@ if __name__ == "__main__":
     #for fails,color in zip(fails_vec,series_colors):
     #    for single_fails in fails:
     #        plt.scatter(indexes[:len(single_fails)],single_fails,c = color,alpha = 0.5)
-    for violation_count,var,color,label in zip(violation_count_vec,var_fails_vec,series_colors,series_names):
-        plt.plot(indexes[:len(violation_count)],violation_count,color = color,label = label)
+    for reward_indexes,violation_count,var,color,label in zip(reward_vec_indexes,violation_count_vec,var_fails_vec,series_colors,series_names):
+        plt.plot(reward_indexes[:len(violation_count)],violation_count,color = color,label = label)
         #plt.errorbar(indexes[:len(fails)],fails,var,c = color,alpha = 0.7)
     plt.legend()
 
-    plt.figure(4)
+    plt.figure(4,figsize=(6.4, 2.4))
     plt.tick_params(labelsize=12)
-    plt.xticks(indexes)
+    #plt.xticks(indexes)
     #plt.xlim(0,100000)
     #plt.ylim(0,100)
     plt.xlabel(xlabel,fontsize = size)
-    plt.ylabel('Stabilization [%]',fontsize = size)
+    plt.ylabel('Intervention [%]',fontsize = size)
     #for fails,color in zip(fails_vec,series_colors):
     #    for single_fails in fails:
     #        plt.scatter(indexes[:len(single_fails)],single_fails,c = color,alpha = 0.5)
     #for stabilize_count_brake,stabilize_count_steer,color,label in zip(stabilize_count_brake_vec,stabilize_count_steer_vec,series_colors,series_names):
-    for stabilize_count_brake,stabilize_count_steer,color,label in zip(stabilize_count_brake_vec[1:],stabilize_count_steer_vec[1:],series_colors[1:],series_names[1:]):
-        plt.plot(indexes[:len(stabilize_count_brake)],stabilize_count_brake,color = None,label = label+' braking')
-        plt.plot(indexes[:len(stabilize_count_steer)],stabilize_count_steer,color = None,label = label+ ' steering')
+    for reward_indexes,stabilize_count_brake,stabilize_count_steer,color,label in zip(reward_vec_indexes,stabilize_count_brake_vec[2:],stabilize_count_steer_vec[2:],series_colors[2:],series_names[2:]):      
+        #plt.plot(reward_indexes[:len(stabilize_count_brake)],stabilize_count_brake,color = None,label = label+' braking')  
+        #plt.plot(reward_indexes[:len(stabilize_count_steer)],stabilize_count_steer,color = None,label = label+ ' steering')        
+        plt.plot(reward_indexes[:len(stabilize_count_brake)],[ c1+c2 for c1,c2 in zip(stabilize_count_brake,stabilize_count_steer)],color = 'black',label = 'Intervention')
+        #plt.plot(reward_indexes[:len(stabilize_count_steer)],stabilize_count_steer,color = None,label = label+ ' steering')
         #plt.errorbar(indexes[:len(fails)],fails,var,c = color,alpha = 0.7)
     plt.legend()
+    
 
     
 
 
 
-
+    #plt.tight_layout()
     plt.show()

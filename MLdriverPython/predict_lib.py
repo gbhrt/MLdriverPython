@@ -531,8 +531,9 @@ def comp_LTR_var(Agent, n_state_vec,n_state_vec_pred,type = "mean_error",max_fac
         pred = np.array([Agent.Direct.comp_LTR(vel,steer) for vel,steer in zip(vel_vec,steer_vec)])
         error = pred - real
         #error = (pred - real)/ np.array([r if abs( r) > 1e-5 else 1e-5 for r in real] ) 
-        error = [-x for x in error if x < 0] or None# take just negative values
+        
         if type == "max_error":
+            error = [-x for x in error if x < 0] or None# take just negative values
             error.sort()
 
             #var = error[math.floor(max_factor*len(error)) -1]
@@ -540,13 +541,22 @@ def comp_LTR_var(Agent, n_state_vec,n_state_vec_pred,type = "mean_error",max_fac
             #mean_vec.append(np.mean(error,dtype=np.float64))
             var = []
             #for max_factor in [x * 0.01 for x in range(1, 101)]:
-            for max_factor in [1.0,0.99,0.5]:#0.9,
+            for max_factor in [1.0,0.99,0.9,0.5]:#0.9,
                 var.append(error[math.ceil(max_factor*len(error)) -1])
             var_vec.append(var)
             mean_vec.append(np.mean(error,dtype=np.float64))
 
         elif type == "std":
             var_vec.append(np.std(error, dtype=np.float64)*3)#3*variance - 99.73 samples are inside
+        elif type == "sqr_error":
+            var_vec.append(np.sqrt( (error**2).mean()))
+            var_vec.append(var)
+            mean_vec.append(np.mean(error,dtype=np.float64))
+
+        if type == "mean_error":
+            var = (np.abs(error)).mean()
+            var_vec.append(var)
+            mean_vec.append(np.mean(error,dtype=np.float64))
         else:
             std = np.std(error, dtype=np.float64)
             n = len(error)

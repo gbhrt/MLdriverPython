@@ -5,7 +5,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>67d1be9f-78bf-410b-b3ad-9001facbb70e</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>safety_DDPG_main.py</StartupFile>
+    <StartupFile>plot_data1.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
