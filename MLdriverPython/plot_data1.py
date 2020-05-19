@@ -230,7 +230,9 @@ def get_training_process_data(folder,names_vec,train_indexes,baseline_folder,bas
                 rewards.append(0)
             else:
                 rewards.append(sum(filtered_reward)/len(filtered_reward))
-            var.append(np.std(rewards))
+            var.append(np.std(filtered_reward))
+            #var.append(np.std(rewards))
+            #var.append(np.var(rewards))
             violation_count.append(100*sum(episode_learning_process_violation_count)/sum_episode_lengths)
             fails.append(100*sum(episode_learning_process_fail)/len(episode_learning_process_episode_length))#sum_episode_lengths
             fails_var.append(np.std(episode_learning_process_fail).astype(float))
@@ -422,7 +424,7 @@ def plot_fails_vel_comparison():
     #plt.plot(vel_MB_long,fail_MB_long,'*',c = 'black',label = 'MB_long01')
     #plt.legend()
 
-    plt.figure("Velocity - Violation count",figsize=(6.4, 2.4))
+    plt.figure("Velocity - Violation count")#,figsize=(6.4, 2.4)
     plt.xlabel('Velocity',fontsize = size)
     plt.ylabel('Violation count [%]',fontsize = size)
     #plt.plot(vel_VOD_const,violation_count_VOD_const,c = 'r',label = 'VOD_const')
@@ -436,7 +438,7 @@ def plot_fails_vel_comparison():
     #plt.plot(vel_MB_long,violation_count_MB_long,'*',c = 'black',label = 'MB_long01')
     #plt.legend()
 
-    plt.figure("Factor - Vel",figsize=(6.4, 2.4))
+    plt.figure("Factor - Vel")#,figsize=(6.4, 2.4)
     plt.xlabel('Safety factor',fontsize = size)
     plt.ylabel('Normalized\n average velocity',fontsize = size)
     plt.ylim(0.4,1.6)
@@ -651,6 +653,7 @@ if __name__ == "__main__":
     train_indexes = list(range(100))
     names = ['MB_learning_process3_0.05/MB_learning_process_stabilize3_0.05_'+str(num) for num in train_indexes]
     names_vec.append([names,['LMVO+FIM','black']])
+    
 
 
     #train_indexes = list(range(100))
@@ -675,31 +678,54 @@ if __name__ == "__main__":
     xlabel = 'Episodes' #'Time steps'
     plt.figure(1)
     plt.tick_params(labelsize=12)
-    plt.ylim(0,1.5)
+    plt.ylim(0,1.6)
     #plt.xticks(indexes)
     plt.xlabel(xlabel,fontsize = size)#'Train iterations number'
     plt.ylabel('Normalized average velocity' ,fontsize = size)#'Relative progress'
-    #for rewards,color in zip(rewards_vec,series_colors):
+
+    #for rewards,color in zip(avg_rewards_vec,series_colors):
     #    for single_rewards in rewards:
     #        plt.scatter(trains[:len(single_rewards)],single_rewards,c = color,alpha = 0.5)#
     #plt.xlim(0,100000)
 
-    #plt.plot(reward_vec_indexes[0][:29],avg_rewards_vec[0][:29],'-',color = series_colors[0],label = series_names[0])
-    #tmp_reward_indexes = [index for index in reward_vec_indexes[1] if index <30]
-    #plt.plot(tmp_reward_indexes,avg_rewards_vec[1][:len(tmp_reward_indexes)],'-',color = series_colors[1],label = 'DDPG')
-    #tmp_reward_indexes = [index for index in reward_vec_indexes[1] if index >= 20]
-    #plt.plot(tmp_reward_indexes[:-1],avg_rewards_vec[1][len(avg_rewards_vec[1]) -len(tmp_reward_indexes)+1:],'--',color = series_colors[1])
+    #plot ddpg and lmvo+fim  ######################################################
+    #x= reward_vec_indexes[0][:29]
+    #y= np.array(avg_rewards_vec[0][:29])
+    #std = np.array(var_rewards_vec[0][:29])
+    #plt.plot(x,y,'-',color = series_colors[0],label = series_names[0])
+    #plt.fill_between(x,y+std,y-std,color =series_colors[0],alpha = 0.1)
 
+    #tmp_reward_indexes = [index for index in reward_vec_indexes[1] if index <30]
+    #x = tmp_reward_indexes
+    #y = np.array(avg_rewards_vec[1][:len(tmp_reward_indexes)])
+    ##std = np.array(var_rewards_vec[1][:len(tmp_reward_indexes)])
+    #plt.plot(x,y,'-',color = series_colors[1],label = 'DDPG')
+    ##plt.fill_between(x,y+std,y-std,color =series_colors[1],alpha = 0.1)
+
+    #tmp_reward_indexes = [index for index in reward_vec_indexes[1] if index >= 26]
+    #x = tmp_reward_indexes[:-1]
+    #y = np.array(avg_rewards_vec[1][len(avg_rewards_vec[1]) -len(tmp_reward_indexes)+1:])
+    #std = np.array(var_rewards_vec[1][len(var_rewards_vec[1]) -len(tmp_reward_indexes)+1:])
+    #plt.plot(x,y,'--',color = series_colors[1])
+
+    #tmp_reward_indexes = [index for index in reward_vec_indexes[1]]
+    #x = tmp_reward_indexes[:-1]
+    #y = np.array(avg_rewards_vec[1][:len(tmp_reward_indexes)])
+    #std = np.array(var_rewards_vec[1][:len(tmp_reward_indexes)])
+    #plt.fill_between(x,y+std,y-std,color = series_colors[1], alpha = 0.1)
+    ##############################################################################
 
     for reward_indexes,rewards,var,color,label in zip(reward_vec_indexes,avg_rewards_vec,var_rewards_vec,series_colors,series_names):
         plt.plot(reward_indexes[:len(rewards)],rewards[:len(rewards)],'-',color = color,label = label)
         #plt.errorbar(reward_indexes[:len(rewards)],rewards,var,c = color,alpha = 0.7)#reward_indexes[0]
+        plt.fill_between(reward_indexes[:len(rewards)],np.array(rewards)+np.array(var),np.array(rewards)-np.array(var),color = color, alpha = 0.1)
+
         #print("var:",var[0])
-    #plt.plot([0,indexes[len(rewards)-1]],[1,1],linewidth = 2.0,c = 'r',label = 'Direct')#'VOD'
-    plt.plot([0,reward_vec_indexes[1][len(avg_rewards_vec[1])-1]],[1,1],linewidth = 2.0,c = 'r',label = 'BiVO-0.1')#'VOD'
+    plt.plot([0,indexes[len(rewards)-1]],[1,1],linewidth = 2.0,c = 'r',label = 'Direct')#'VOD'
+    #plt.plot([0,reward_vec_indexes[1][len(avg_rewards_vec[1])-1]],[1,1],linewidth = 2.0,c = 'r',label = 'BiVO-0.1')#'VOD'
     plt.legend()
 
-    plt.figure(2,figsize=(6.4, 2.4))
+    plt.figure(2)#,figsize=(6.4, 2.4)
     plt.tick_params(labelsize=12)
     #plt.xticks(indexes)
     #plt.xlim(0,100000)

@@ -609,7 +609,7 @@ def test_net(Agent):
     #print(TransNet_Y)
     
     
-    plot_n_step_state(Agent,replay_memory)
+    #plot_n_step_state(Agent,replay_memory)
 
 
    # plot_n_step_var(Agent,replay_memory)

@@ -9,7 +9,9 @@ import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 
-
+x = [-1,0,1]
+s = np.std(x)
+print(s)
 men_means = [20, 34, 30, 35, 27]
 women_means = [25, 32, 34, 20, 25]
 
